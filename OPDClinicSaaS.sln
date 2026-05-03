@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OPDClinicSaaS", "OPDClinicSaaS.csproj", "{4F1817D7-6C9A-D8A7-3ACC-389A88E9DDDD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4F1817D7-6C9A-D8A7-3ACC-389A88E9DDDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F1817D7-6C9A-D8A7-3ACC-389A88E9DDDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F1817D7-6C9A-D8A7-3ACC-389A88E9DDDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F1817D7-6C9A-D8A7-3ACC-389A88E9DDDD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9F3C6ED3-BD43-4D7F-B027-20E66415DD9F}
+	EndGlobalSection
+EndGlobal
