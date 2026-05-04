@@ -1,0 +1,28 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model List<Models.Clinic>
+
+<h2>Clinics</h2>
+
+<a href="/Clinic/Create">Add Clinic</a>
+
+<table border="1">
+    <tr>
+        <th>Code</th>
+        <th>Name</th>
+        <th>Address</th>
+        <th>Contact</th>
+    </tr>
+
+@foreach (var c in Model)
+{
+    <tr>
+        <td>@c.ClinicCode</td>
+        <td>@c.Name</td>
+        <td>@c.Address</td>
+        <td>@c.ContactNumber</td>
+    </tr>
+}
+</table>

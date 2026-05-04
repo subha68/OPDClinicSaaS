@@ -1,0 +1,26 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model Models.Clinic
+
+<h2>Create Clinic</h2>
+
+<form asp-action="Create" method="post"> 
+    <div>
+        <label asp-for="Name"></label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+
+    <div>
+        <label asp-for="Address"></label>
+        <input asp-for="Address" class="form-control" />
+    </div>
+
+    <div>
+        <label asp-for="ContactNumber"></label>
+        <input asp-for="ContactNumber" class="form-control" />
+    </div>
+
+    <button type="submit">Save</button>
+</form>

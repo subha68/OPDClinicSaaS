@@ -1,4 +1,4 @@
-namespace OPDClinic.Web.Models
+namespace Models
 {
     public class User
     {

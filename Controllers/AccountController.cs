@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using OPDClinic.Web.DAL;
+using DAL;
 
-namespace OPDClinic.Web.Controllers
+namespace Controllers
 {
     public class AccountController : Controller
     {
@@ -13,9 +13,31 @@ namespace OPDClinic.Web.Controllers
             _userDAL = new UserDAL(configuration);
         }
 
+        [HttpGet]
         public IActionResult Login()
         {
             return View();
         }
+
+        [HttpPost]
+        public IActionResult Login(string username, string password)
+        {
+            var user = _userDAL.ValidateUser(username, password);
+
+            if (user != null)
+            {
+                HttpContext.Session.SetInt32("UserId", user.UserId);
+                HttpContext.Session.SetInt32("RoleId", user.RoleId);
+
+                if (user.ClinicId.HasValue)
+                    HttpContext.Session.SetInt32("ClinicId", user.ClinicId.Value);
+
+                return RedirectToAction("Index", "Home");
+            }
+
+            ViewBag.Error = "Invalid credentials";
+            return View();
+        }
+
     }
 }

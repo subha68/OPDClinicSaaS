@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OPD Clinic</title>
+</head>
+<body>
+
+<div>
+    <li class="nav-item">
+        <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
+
+        @if (Context.Session.GetInt32("RoleId") == 1)
+        {
+            <a class="nav-link" asp-controller="Clinic" asp-action="Index">Clinics</a>
+        }
+
+        <a class="nav-link" asp-controller="Account" asp-action="Logout">Logout</a>
+
+</div>
+
+@RenderBody()
+
+</body>
+</html>

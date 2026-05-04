@@ -1,18 +1,34 @@
 var builder = WebApplication.CreateBuilder(args);
 
-// Add MVC + Session
+// MVC
 builder.Services.AddControllersWithViews();
-builder.Services.AddSession();
+
+// Session config (IMPORTANT)
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    options.MinimumSameSitePolicy = SameSiteMode.Lax;
+});
 
 var app = builder.Build();
 
 app.UseStaticFiles();
 app.UseRouting();
+app.UseCookiePolicy();
 
-// Enable session BEFORE endpoints
+// MUST be in this order
 app.UseSession();
 
-// MVC routing
+app.UseAuthorization();
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}");

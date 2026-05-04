@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Data.SqlClient;
-using OPDClinic.Web.Models;
+using Models;
 
-namespace OPDClinic.Web.DAL
+namespace DAL
 {
     public class UserDAL
     {
@@ -14,7 +14,7 @@ namespace OPDClinic.Web.DAL
         }
 
         public User ValidateUser(string username, string password)
-        {
+        {           
             using (SqlConnection conn = _db.GetConnection())
             {
                 conn.Open();
