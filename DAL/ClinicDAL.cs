@@ -32,7 +32,7 @@ namespace DAL
             }
         }
 
-        public List<Clinic> GetAllClinics()
+        public List<Clinic> GetClinics()
         {
             var list = new List<Clinic>();
 

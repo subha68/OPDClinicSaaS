@@ -17,6 +17,7 @@ c:\Users\subha\ai-generated-saas\OPDClinicSaaS\bin\Debug\net10.0\OPDClinicSaaS.d
 c:\Users\subha\ai-generated-saas\OPDClinicSaaS\bin\Debug\net10.0\OPDClinicSaaS.runtimeconfig.json
 c:\Users\subha\ai-generated-saas\OPDClinicSaaS\bin\Debug\net10.0\OPDClinicSaaS.dll
 c:\Users\subha\ai-generated-saas\OPDClinicSaaS\bin\Debug\net10.0\OPDClinicSaaS.pdb
+c:\Users\subha\ai-generated-saas\OPDClinicSaaS\bin\Debug\net10.0\BCrypt.Net-Next.dll
 c:\Users\subha\ai-generated-saas\OPDClinicSaaS\bin\Debug\net10.0\System.Web.Mvc.dll
 c:\Users\subha\ai-generated-saas\OPDClinicSaaS\bin\Debug\net10.0\System.Web.Razor.dll
 c:\Users\subha\ai-generated-saas\OPDClinicSaaS\bin\Debug\net10.0\System.Web.Helpers.dll

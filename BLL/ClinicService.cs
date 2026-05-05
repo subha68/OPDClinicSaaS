@@ -20,7 +20,7 @@ namespace BLL
 
         public List<Clinic> GetClinics()
         {
-            return _dal.GetAllClinics();
+            return _dal.GetClinics();
         }
     }
 }

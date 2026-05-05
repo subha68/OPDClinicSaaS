@@ -1,0 +1,34 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model List<Models.User>
+
+<h2>Users</h2>
+
+<a asp-action="Create" class="btn btn-primary">Create User</a>
+
+<table class="table">
+    <tr>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Email</th>
+        <th>Contact Number</th>
+        <th>Username</th>
+        <th>Role</th>
+        <th>Clinic</th>
+    </tr>
+
+    @foreach (var u in Model)
+    {
+        <tr>
+            <td>@u.FirstName</td>
+            <td>@u.LastName</td>
+            <td>@u.Email</td>
+            <td>@u.ContactNumber</td>
+            <td>@u.Username</td>
+            <td>@u.RoleId</td>
+            <td>@u.ClinicId</td>
+        </tr>
+    }
+</table>

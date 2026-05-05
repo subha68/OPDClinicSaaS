@@ -8,6 +8,7 @@
     ".NETCoreApp,Version=v10.0": {
       "OPDClinicSaaS/1.0.0": {
         "dependencies": {
+          "BCrypt.Net-Next": "4.1.0",
           "Microsoft.AspNet.Mvc": "5.3.0",
           "Microsoft.Data.SqlClient": "7.0.1",
           "System.Configuration.ConfigurationManager": "10.0.7",
@@ -15,6 +16,14 @@
         },
         "runtime": {
           "OPDClinicSaaS.dll": {}
+        }
+      },
+      "BCrypt.Net-Next/4.1.0": {
+        "runtime": {
+          "lib/net10.0/BCrypt.Net-Next.dll": {
+            "assemblyVersion": "4.1.0.0",
+            "fileVersion": "4.1.0.0"
+          }
         }
       },
       "Microsoft.AspNet.Mvc/5.3.0": {
@@ -357,6 +366,13 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "BCrypt.Net-Next/4.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-5YT3DKllmtkyW68PjURu/V1TOe4MKiByKwsRNVcfYE1S5KuFTeozdmKzyNzolKiQF391OXCaQtINvYT3j1ERzQ==",
+      "path": "bcrypt.net-next/4.1.0",
+      "hashPath": "bcrypt.net-next.4.1.0.nupkg.sha512"
     },
     "Microsoft.AspNet.Mvc/5.3.0": {
       "type": "package",

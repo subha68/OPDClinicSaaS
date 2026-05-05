@@ -1,3 +1,6 @@
+using BLL;
+using DAL;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // MVC
@@ -17,6 +20,13 @@ builder.Services.Configure<CookiePolicyOptions>(options =>
 {
     options.MinimumSameSitePolicy = SameSiteMode.Lax;
 });
+
+builder.Services.AddScoped<UserDAL>();
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<ClinicDAL>();
+builder.Services.AddScoped<ClinicService>();
+builder.Services.AddScoped<RoleDAL>();
+builder.Services.AddScoped<RoleService>();
 
 var app = builder.Build();
 

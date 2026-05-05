@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "IzOqSq/THxg=",
+  "dgSpecHash": "ks7/YCrgmF8=",
   "success": true,
   "projectFilePath": "c:\\Users\\subha\\ai-generated-saas\\OPDClinicSaaS\\OPDClinicSaaS.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\subha\\.nuget\\packages\\bcrypt.net-next\\4.1.0\\bcrypt.net-next.4.1.0.nupkg.sha512",
     "C:\\Users\\subha\\.nuget\\packages\\microsoft.aspnet.mvc\\5.3.0\\microsoft.aspnet.mvc.5.3.0.nupkg.sha512",
     "C:\\Users\\subha\\.nuget\\packages\\microsoft.aspnet.razor\\3.3.0\\microsoft.aspnet.razor.3.3.0.nupkg.sha512",
     "C:\\Users\\subha\\.nuget\\packages\\microsoft.aspnet.webpages\\3.3.0\\microsoft.aspnet.webpages.3.3.0.nupkg.sha512",

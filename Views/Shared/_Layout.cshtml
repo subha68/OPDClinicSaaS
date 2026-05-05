@@ -6,15 +6,27 @@
 <body>
 
 <div>
+    @using Microsoft.AspNetCore.Http
     <li class="nav-item">
         <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
 
         @if (Context.Session.GetInt32("RoleId") == 1)
         {
-            <a class="nav-link" asp-controller="Clinic" asp-action="Index">Clinics</a>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Admin</a>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" asp-controller="Clinic" asp-action="Index">Clinics</a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" asp-controller="User" asp-action="Index">Users</a>
+                    </li>
+                </ul>
+            </li>
         }
 
         <a class="nav-link" asp-controller="Account" asp-action="Logout">Logout</a>
+    </li>
 
 </div>
 

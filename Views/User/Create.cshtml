@@ -1,0 +1,52 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model ViewModels.UserVM
+
+<h2>Create User</h2>
+
+<form asp-action="Create" method="post">
+
+    <div>
+        <label>FirstName</label>
+        <input asp-for="User.FirstName" />
+    </div>
+
+    <div>
+        <label>LastName</label>
+        <input asp-for="User.LastName" />
+    </div>
+
+    <div>
+        <label>Email</label>
+        <input asp-for="User.Email" />
+    </div>
+
+    <div>
+        <label>ContactNumber</label>
+        <input asp-for="User.ContactNumber" />
+    </div>
+
+    <div>
+        <label>Username</label>
+        <input asp-for="User.Username" />
+    </div>
+
+    <div>
+        <label>Password</label>
+        <input asp-for="User.PasswordHash" type="password" />
+    </div>
+
+    <div>
+        <label>Role</label>
+        <select asp-for="User.RoleId" asp-items="Model.Roles"></select>
+    </div>
+
+    <div>
+        <label>Clinic</label>
+        <select asp-for="User.ClinicId" asp-items="Model.Clinics"></select>
+    </div>
+
+    <button type="submit">Create</button>
+</form>
