@@ -6,14 +6,14 @@
 
 <h2>Clinics</h2>
 
-<a href="/Clinic/Create">Add Clinic</a>
+<a href="/Clinic/Create" class="btn btn-primary">Add Clinic</a>
 
 <table border="1">
     <tr>
         <th>Code</th>
         <th>Name</th>
         <th>Address</th>
-        <th>Contact</th>
+        <th>Phone</th>
     </tr>
 
 @foreach (var c in Model)
@@ -22,7 +22,7 @@
         <td>@c.ClinicCode</td>
         <td>@c.Name</td>
         <td>@c.Address</td>
-        <td>@c.ContactNumber</td>
+        <td>@c.Phone</td>
     </tr>
 }
 </table>

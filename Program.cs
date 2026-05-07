@@ -27,6 +27,14 @@ builder.Services.AddScoped<ClinicDAL>();
 builder.Services.AddScoped<ClinicService>();
 builder.Services.AddScoped<RoleDAL>();
 builder.Services.AddScoped<RoleService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<SessionHelper>();
+builder.Services.AddScoped<DepartmentDAL>();
+builder.Services.AddScoped<DepartmentService>();
+builder.Services.AddScoped<DoctorDAL>();
+builder.Services.AddScoped<DoctorService>();
+builder.Services.AddScoped<MenuDAL>();
+builder.Services.AddScoped<MenuService>();
 
 var app = builder.Build();
 

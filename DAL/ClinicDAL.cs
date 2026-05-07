@@ -15,18 +15,18 @@ namespace DAL
 
         public void AddClinic(Clinic clinic)
         {
-            using (var conn = _db.GetConnection())
+            using (SqlConnection conn = _db.GetConnection())
             {
                 conn.Open();
 
-                string query = @"INSERT INTO Clinics (ClinicCode, Name, Address, ContactNumber)
-                                 VALUES (@code, @name, @addr, @contact)";
+                string query = @"INSERT INTO Clinics (ClinicCode, Name, Address, Phone)
+                                 VALUES (@code, @name, @addr, @phone)";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@code", clinic.ClinicCode);
                 cmd.Parameters.AddWithValue("@name", clinic.Name);
                 cmd.Parameters.AddWithValue("@addr", clinic.Address);
-                cmd.Parameters.AddWithValue("@contact", clinic.ContactNumber);
+                cmd.Parameters.AddWithValue("@phone", clinic.Phone);
 
                 cmd.ExecuteNonQuery();
             }
@@ -51,7 +51,7 @@ namespace DAL
                         ClinicCode = reader["ClinicCode"].ToString(),
                         Name = reader["Name"].ToString(),
                         Address = reader["Address"].ToString(),
-                        ContactNumber = reader["ContactNumber"].ToString()
+                        Phone = reader["Phone"].ToString()
                     });
                 }
             }

@@ -1,0 +1,22 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model ViewModels.DepartmentVM
+
+<h2>Create Department</h2>
+
+@using (Html.BeginForm())
+{
+    <div>
+        Name:
+        @Html.TextBoxFor(m => m.Name)
+    </div>
+
+    <div>
+        Description:
+        @Html.TextBoxFor(m => m.Description)
+    </div>
+
+    <button type="submit">Save</button>
+}

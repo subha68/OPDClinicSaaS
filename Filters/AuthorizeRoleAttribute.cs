@@ -20,9 +20,9 @@ namespace Filters
             if (path.Contains("/Account/Login"))
                 return;
 
-            var roleId = context.HttpContext.Session.GetInt32("RoleId");
+            var roleId = context.HttpContext.Session.GetString("RoleId");
 
-            if (roleId == null || !_roles.Contains(roleId.Value))
+            if (roleId == null || !_roles.Contains(int.Parse(roleId)))
             {
                 context.Result = new RedirectToActionResult("Login", "Account", null);
             }

@@ -31,7 +31,8 @@ namespace DAL
                     return new User
                     {
                         UserId = (int)reader["UserId"],
-                        RoleId = (int)reader["RoleId"]
+                        RoleId = (int)reader["RoleId"],
+                        ClinicId = reader["ClinicId"] != DBNull.Value ? (int?)reader["ClinicId"] : null
                     };
                 }
             }
@@ -44,18 +45,18 @@ namespace DAL
             using (SqlConnection conn = _db.GetConnection())
             {
                 string query = @"INSERT INTO Users 
-                                (Username, PasswordHash, RoleId, ClinicId, FirstName, LastName, Email, ContactNumber)
-                                VALUES (@Username, @PasswordHash, @RoleId, @ClinicId, @FirstName, @LastName, @Email, @ContactNumber)";
+                                (Username, PasswordHash, RoleId, ClinicId, FirstName, LastName, Email, Phone)
+                                VALUES (@Username, @PasswordHash, @RoleId, @ClinicId, @FirstName, @LastName, @Email, @Phone)";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@Username", user.Username);
-                cmd.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
+                cmd.Parameters.AddWithValue("@PasswordHash", user.Password);
                 cmd.Parameters.AddWithValue("@RoleId", user.RoleId);
                 cmd.Parameters.AddWithValue("@ClinicId", user.ClinicId);
                 cmd.Parameters.AddWithValue("@FirstName", user.FirstName);
                 cmd.Parameters.AddWithValue("@LastName", user.LastName);
                 cmd.Parameters.AddWithValue("@Email", user.Email);
-                cmd.Parameters.AddWithValue("@ContactNumber", user.ContactNumber);
+                cmd.Parameters.AddWithValue("@Phone", user.Phone);
 
                 conn.Open();
                 cmd.ExecuteNonQuery();
@@ -80,11 +81,11 @@ namespace DAL
                         UserId = (int)reader["UserId"],
                         Username = reader["Username"].ToString(),
                         RoleId = (int)reader["RoleId"],
-                        ClinicId = (int)reader["ClinicId"],
+                        ClinicId = reader["ClinicId"] != DBNull.Value ? (int?)reader["ClinicId"] : null,
                         FirstName = reader["FirstName"].ToString(),
                         LastName = reader["LastName"].ToString(),
                         Email = reader["Email"].ToString(),
-                        ContactNumber = reader["ContactNumber"].ToString()
+                        Phone = reader["Phone"].ToString()
                     });
                 }
             }

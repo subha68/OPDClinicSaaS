@@ -13,7 +13,7 @@ public class UserService
     public void CreateUser(User user)
     {
         // 🔐 Hash password (basic for now)
-        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
+        user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
 
         _dal.Add(user);
     }

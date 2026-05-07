@@ -1,16 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using DAL;
+using BLL;
 
-namespace Controllers
+namespace Controllers   
 {
     public class AccountController : Controller
     {
         private readonly UserDAL _userDAL;
+        private readonly SessionHelper _session;
+        private readonly FeatureService _featureService;
 
-        public AccountController(IConfiguration configuration)
+
+        public AccountController(IConfiguration configuration, SessionHelper session)
         {
             _userDAL = new UserDAL(configuration);
+            _session = session;
+            _featureService = new FeatureService(configuration);
         }
 
         [HttpGet]
@@ -24,14 +30,29 @@ namespace Controllers
         {
             var user = _userDAL.ValidateUser(username, password);
 
+            foreach (var key in ModelState.Keys)
+            {
+                var errors = ModelState[key].Errors;
+                foreach (var err in errors)
+                {
+                    Console.WriteLine($"Field: {key} → Error: {err.ErrorMessage}");
+                }
+            }
+
             if (user != null)
             {
-                HttpContext.Session.SetInt32("UserId", user.UserId);
-                HttpContext.Session.SetInt32("RoleId", user.RoleId);
+                Console.WriteLine($"User validated: User Id - {user.UserId}, Role Id - {user.RoleId}, Clinic Id - {user.ClinicId}");
+                HttpContext.Session.SetString("RoleId", user.RoleId.ToString());
+                HttpContext.Session.SetString("UserId", user.UserId.ToString());
 
                 if (user.ClinicId.HasValue)
-                    HttpContext.Session.SetInt32("ClinicId", user.ClinicId.Value);
+                {
+                    HttpContext.Session.SetString("ClinicId", user.ClinicId?.ToString()?? "0");
+                }
+                var features = _featureService.GetFeatures(user.RoleId);
 
+                // store as CSV
+                HttpContext.Session.SetString("Features", string.Join(",", features.Select(f => f.Code)));
                 return RedirectToAction("Index", "Home");
             }
 

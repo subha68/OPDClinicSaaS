@@ -1,0 +1,22 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model List<ViewModels.DoctorVM>
+
+<h2>Doctors</h2>
+
+<a href="/Doctor/Create" class="btn btn-primary">Add Doctor</a>
+
+<table class="table">
+    <tr>
+        <th>Name</th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.FirstName @item.LastName</td>
+        </tr>
+    }
+</table>

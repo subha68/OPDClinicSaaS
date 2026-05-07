@@ -4,87 +4,84 @@ using BLL;
 using Models;
 using ViewModels;
 
-public class UserController : Controller
+namespace Controllers
 {
-    private readonly UserService _userService;
-    private readonly ClinicService _clinicService;
-    private readonly RoleService _roleService;
-
-    public UserController(UserService userService, ClinicService clinicService, RoleService roleService)
+    public class UserController : Controller
     {
-        _userService = userService;
-        _clinicService = clinicService;
-        _roleService = roleService;
-    }
+        private readonly UserService _userService;
+        private readonly ClinicService _clinicService;
+        private readonly RoleService _roleService;
 
-    public IActionResult Index()
-    {
-        var users = _userService.GetUsers();
-        return View(users);
-    }
-
-    [HttpGet]
-    public IActionResult Create()
-    {
-        var vm = new UserVM
+        public UserController(UserService userService, ClinicService clinicService, RoleService roleService)
         {
-            User = new User(),
-            Roles = GetRoles(),
-            Clinics = GetClinics()
-        };
-
-        return View(vm);
-    }
-
-    [HttpPost]
-    public IActionResult Create(UserVM vm)
-    {
-        foreach (var key in ModelState.Keys)
-        {
-            var errors = ModelState[key].Errors;
-            foreach (var err in errors)
-            {
-                Console.WriteLine($"Field: {key} → Error: {err.ErrorMessage}");
-            }
+            _userService = userService;
+            _clinicService = clinicService;
+            _roleService = roleService;
         }
 
-        if (!ModelState.IsValid)
+        public IActionResult Index()
         {
-            vm.Roles = GetRoles();
-            vm.Clinics = GetClinics();
+            var users = _userService.GetUsers();
+            return View(users);
+        }
+
+        [HttpGet]
+        public IActionResult Create()
+        {
+            var vm = new UserVM
+            {
+                User = new User(),
+                Roles = GetRoles(),
+                Clinics = GetClinics()
+            };
 
             return View(vm);
         }
 
-        _userService.CreateUser(vm.User);
-        return RedirectToAction("Index");
-    }
-
-    // 🔽 Helpers
-
-    private List<SelectListItem> GetRoles()
-    {
-       /* return new List<SelectListItem>
+        [HttpPost]
+        public IActionResult Create(UserVM vm)
         {
-            new("SuperAdmin", "1"),
-            new("ClinicAdmin", "2"),
-            new("Doctor", "4")
-        };*/
-        return _roleService.GetRoles()
-                .Select(r => new SelectListItem
-                {
-                    Value = r.RoleId.ToString(),
-                    Text = r.RoleName
-                }).ToList();
-    }
-
-    private List<SelectListItem> GetClinics()
-    {
-        return _clinicService.GetClinics()
-            .Select(c => new SelectListItem
+            foreach (var key in ModelState.Keys)
             {
-                Value = c.ClinicId.ToString(),
-                Text = c.Name
-            }).ToList();
+                var errors = ModelState[key].Errors;
+                foreach (var err in errors)
+                {
+                    Console.WriteLine($"Field: {key} → Error: {err.ErrorMessage}");
+                }
+            }
+
+            if (!ModelState.IsValid)
+            {
+                vm.Roles = GetRoles();
+                vm.Clinics = GetClinics();
+
+                return View(vm);
+            }
+
+            _userService.CreateUser(vm.User);
+            return RedirectToAction("Index");
+        }
+
+        // 🔽 Helpers
+
+        private List<SelectListItem> GetRoles()
+        {
+            return _roleService.GetRoles()
+                    .Select(r => new SelectListItem
+                    {
+                        Value = r.RoleId.ToString(),
+                        Text = r.RoleName
+                    }).ToList();
+        }
+
+        private List<SelectListItem> GetClinics()
+        {
+            return _clinicService.GetClinics()
+                .Select(c => new SelectListItem
+                {
+                    Value = c.ClinicId.ToString(),
+                    Text = c.Name
+                }).ToList();
+        }
     }
 }

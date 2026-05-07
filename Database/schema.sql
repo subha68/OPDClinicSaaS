@@ -6,33 +6,37 @@ GO
 
 -- Clinics
 CREATE TABLE Clinics (
-    ClinicId INT IDENTITY PRIMARY KEY,
-    ClinicCode VARCHAR(20) UNIQUE,
-    Name VARCHAR(100),
-    Logo VARBINARY(MAX),
-    Address VARCHAR(255),
-    ContactNumber VARCHAR(15)
+    ClinicId INT IDENTITY(1,1) PRIMARY KEY,
+    ClinicCode NVARCHAR(20) UNIQUE NOT NULL,
+    Name NVARCHAR(200) NOT NULL,
+    LogoPath NVARCHAR(500),
+    Address NVARCHAR(500),
+    Phone NVARCHAR(20),
+    Email NVARCHAR(100),
+    CreatedAt DATETIME DEFAULT GETDATE()
 );
 
 -- Roles
 CREATE TABLE Roles (
     RoleId INT PRIMARY KEY,
-    RoleName VARCHAR(50)
+    RoleName NVARCHAR(50) UNIQUE NOT NULL
 );
 
 -- Users
 CREATE TABLE Users (
     UserId INT IDENTITY PRIMARY KEY,
-    ClinicId INT NOT NULL,
+    ClinicId INT NULL,
     RoleId INT NOT NULL,
-    FirstName VARCHAR(50),
-    LastName VARCHAR(50),
-    Email VARCHAR(100),
-    ContactNumber VARCHAR(15),
-    Username VARCHAR(50) UNIQUE,
-    PasswordHash VARCHAR(255),
+    FirstName NVARCHAR(100),
+    LastName NVARCHAR(100),
+    Phone NVARCHAR(20),
+    Email NVARCHAR(100),
+    Username NVARCHAR(50) UNIQUE,
+    PasswordHash NVARCHAR(500),
     IsFirstLogin BIT DEFAULT 1,
-    IsActive BIT DEFAULT 1
+    IsActive BIT DEFAULT 1,
+    CreatedAt DATETIME DEFAULT GETDATE(),
+
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
     FOREIGN KEY (RoleId) REFERENCES Roles(RoleId)
 );
@@ -40,9 +44,11 @@ CREATE TABLE Users (
 -- Departments
 CREATE TABLE Departments (
     DepartmentId INT IDENTITY PRIMARY KEY,
-    ClinicId INT,
-    Name VARCHAR(100),
-    Description VARCHAR(255)
+    ClinicId INT NOT NULL,
+    Name NVARCHAR(100),
+    Description NVARCHAR(300),
+
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
 );
 
 -- Doctors
@@ -50,12 +56,146 @@ CREATE TABLE Doctors (
     DoctorId INT IDENTITY PRIMARY KEY,
     ClinicId INT,
     DepartmentId INT,
-    FirstName VARCHAR(50),
-    LastName VARCHAR(50),
-    Qualification VARCHAR(100),
-    Specialisation VARCHAR(100),
-    RegistrationNumber VARCHAR(50),
-    Email VARCHAR(100),
-    ContactNumber VARCHAR(15),
+    FirstName NVARCHAR(100),
+    LastName NVARCHAR(100),
+    RegistrationNo NVARCHAR(100),
+    Qualification NVARCHAR(200),
+
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
     FOREIGN KEY (DepartmentId) REFERENCES Departments(DepartmentId)
 );
+
+CREATE TABLE DoctorSchedules (
+    ScheduleId INT IDENTITY PRIMARY KEY,
+    DoctorId INT,
+    DayOfWeek INT,
+    StartTime TIME,
+    EndTime TIME,
+    SlotDuration INT,
+    Capacity INT,
+
+    FOREIGN KEY (DoctorId) REFERENCES Doctors(DoctorId)
+);
+
+CREATE TABLE Patients (
+    PatientId INT IDENTITY PRIMARY KEY,
+    ClinicId INT,
+    FirstName NVARCHAR(100),
+    LastName NVARCHAR(100),
+    Phone NVARCHAR(20),
+    DOB DATE,
+    Gender NVARCHAR(10),
+    Address NVARCHAR(300),
+
+    UNIQUE (FirstName, LastName, Phone, DOB),
+
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
+);
+
+CREATE TABLE Appointments (
+    AppointmentId INT IDENTITY PRIMARY KEY,
+    ClinicId INT,
+    DoctorId INT,
+    PatientId INT,
+    AppointmentDate DATE,
+    SlotTime TIME,
+    Status NVARCHAR(20),
+
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
+    FOREIGN KEY (DoctorId) REFERENCES Doctors(DoctorId),
+    FOREIGN KEY (PatientId) REFERENCES Patients(PatientId)
+);
+
+CREATE TABLE Vitals (
+    VitalId INT IDENTITY PRIMARY KEY,
+    AppointmentId INT,
+    BP NVARCHAR(20),
+    Height FLOAT,
+    Weight FLOAT,
+    SPO2 INT,
+    Pulse INT,
+    BMI AS (Weight / (Height * Height)) PERSISTED,  // Could not be created
+
+    FOREIGN KEY (AppointmentId) REFERENCES Appointments(AppointmentId)
+);
+
+CREATE TABLE MedicalHistories (
+    HistoryId INT IDENTITY PRIMARY KEY,
+    PatientId INT,
+    Details NVARCHAR(MAX),
+
+    FOREIGN KEY (PatientId) REFERENCES Patients(PatientId)
+);
+
+CREATE TABLE Medicines (
+    MedicineId INT IDENTITY PRIMARY KEY,
+    Name NVARCHAR(200)
+);
+
+CREATE TABLE Consultations (
+    ConsultationId INT IDENTITY PRIMARY KEY,
+    AppointmentId INT,
+    Diagnosis NVARCHAR(MAX),
+    Notes NVARCHAR(MAX),
+
+    FOREIGN KEY (AppointmentId) REFERENCES Appointments(AppointmentId)
+);
+
+CREATE TABLE Bills (
+    BillId INT IDENTITY PRIMARY KEY,
+    AppointmentId INT,
+    TotalAmount DECIMAL(10,2),
+    PaidAmount DECIMAL(10,2),
+    Status NVARCHAR(20),
+
+    FOREIGN KEY (AppointmentId) REFERENCES Appointments(AppointmentId)
+);
+
+CREATE TABLE Payments (
+    PaymentId INT IDENTITY PRIMARY KEY,
+    BillId INT,
+    Amount DECIMAL(10,2),
+    Mode NVARCHAR(50),
+    ReferenceNo NVARCHAR(100),
+    CreatedAt DATETIME DEFAULT GETDATE(),
+
+    FOREIGN KEY (BillId) REFERENCES Bills(BillId)
+);
+
+CREATE TABLE Refunds (
+    RefundId INT IDENTITY PRIMARY KEY,
+    BillId INT,
+    Amount DECIMAL(10,2),
+    Reason NVARCHAR(200),
+
+    FOREIGN KEY (BillId) REFERENCES Bills(BillId)
+);
+
+-- Features
+CREATE TABLE Features (
+    FeatureId INT IDENTITY PRIMARY KEY,
+    Name NVARCHAR(100),
+    Code NVARCHAR(100) UNIQUE
+);
+
+-- RoleFeature Mapping
+CREATE TABLE RoleFeatures (
+    Id INT IDENTITY PRIMARY KEY,
+    RoleId INT,
+    FeatureId INT,
+    FOREIGN KEY (RoleId) REFERENCES Roles(RoleId),
+    FOREIGN KEY (FeatureId) REFERENCES Features(FeatureId)
+);
+
+-- Menu (DB-driven)
+CREATE TABLE Menus (
+    MenuId INT IDENTITY PRIMARY KEY,
+    Title NVARCHAR(100),
+    Controller NVARCHAR(50),
+    Action NVARCHAR(50),
+    Icon NVARCHAR(50),
+    FeatureCode NVARCHAR(100),
+    ParentId INT NULL,
+    DisplayOrder INT
+);
+

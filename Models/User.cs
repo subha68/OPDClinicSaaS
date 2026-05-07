@@ -10,7 +10,7 @@ namespace Models
         public string Username { get; set; }
 
         [Required]
-        public string PasswordHash { get; set; }
+        public string Password { get; set; }
 
         [Required]
         public int RoleId { get; set; }
@@ -23,11 +23,12 @@ namespace Models
 
         public string Email { get; set; }
 
-        public string ContactNumber { get; set; }
+        public string Phone { get; set; }
     
         public int? ClinicId { get; set; }
 
         public bool IsFirstLogin { get; set; }
+        public bool IsActive { get; set; }
     }
 
 }

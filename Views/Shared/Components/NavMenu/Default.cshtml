@@ -1,0 +1,23 @@
+@model List<Models.MenuItem>
+
+@{
+    var currentController = ViewContext.RouteData.Values["controller"].ToString();
+}
+
+<ul class="navbar-nav me-auto">
+
+@foreach (var item in Model)
+{
+    var isActive = item.Controller == currentController ? "active" : "";
+
+    <li class="nav-item">
+        <a class="nav-link @isActive"
+           asp-controller="@item.Controller"
+           asp-action="@item.Action">
+
+            <i class="fa @item.Icon"></i> @item.Title
+        </a>
+    </li>
+}
+
+</ul>
