@@ -65,18 +65,6 @@ CREATE TABLE Doctors (
     FOREIGN KEY (DepartmentId) REFERENCES Departments(DepartmentId)
 );
 
-CREATE TABLE DoctorSchedules (
-    ScheduleId INT IDENTITY PRIMARY KEY,
-    DoctorId INT,
-    DayOfWeek INT,
-    StartTime TIME,
-    EndTime TIME,
-    SlotDuration INT,
-    Capacity INT,
-
-    FOREIGN KEY (DoctorId) REFERENCES Doctors(DoctorId)
-);
-
 CREATE TABLE Patients (
     PatientId INT IDENTITY PRIMARY KEY,
     ClinicId INT,
@@ -197,5 +185,69 @@ CREATE TABLE Menus (
     FeatureCode NVARCHAR(100),
     ParentId INT NULL,
     DisplayOrder INT
+);
+
+CREATE TABLE DoctorSchedules (
+    ScheduleId INT IDENTITY(1,1) PRIMARY KEY,
+    DoctorId INT NOT NULL,
+    ClinicId INT NOT NULL,
+
+    DayOfWeek INT NOT NULL,
+
+    StartTime TIME NOT NULL,
+    EndTime TIME NOT NULL,
+
+    SlotDurationMinutes INT NOT NULL DEFAULT 15,
+    MaxPatientsPerSlot INT NOT NULL DEFAULT 1,
+
+    IsActive BIT NOT NULL DEFAULT 1,
+
+    CreatedOn DATETIME NOT NULL DEFAULT GETDATE(),
+
+    FOREIGN KEY (DoctorId) REFERENCES Doctors(DoctorId),
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
+);
+
+CREATE TABLE DoctorScheduleException
+(
+    ExceptionId INT IDENTITY(1,1) PRIMARY KEY,
+
+    DoctorId INT NOT NULL,
+    ClinicId INT NOT NULL,
+
+    ExceptionDate DATE NOT NULL,
+
+    StartTime TIME NULL,
+    EndTime TIME NULL,
+
+    Reason NVARCHAR(200),
+
+    IsFullDay BIT NOT NULL DEFAULT 1,
+
+    FOREIGN KEY (DoctorId) REFERENCES Doctors(DoctorId),
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
+);
+
+CREATE TABLE AppointmentSlot
+(
+    SlotId INT IDENTITY(1,1) PRIMARY KEY,
+
+    DoctorId INT NOT NULL,
+    ClinicId INT NOT NULL,
+
+    SlotDate DATE NOT NULL,
+
+    StartDateTime DATETIME NOT NULL,
+    EndDateTime DATETIME NOT NULL,
+
+    Capacity INT NOT NULL DEFAULT 1,
+    BookedCount INT NOT NULL DEFAULT 0,
+
+    IsBlocked BIT NOT NULL DEFAULT 0,
+
+    CreatedOn DATETIME NOT NULL DEFAULT GETDATE(),
+
+    FOREIGN KEY (DoctorId) REFERENCES Doctors(DoctorId),
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
 );
 

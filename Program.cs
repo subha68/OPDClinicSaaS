@@ -35,6 +35,10 @@ builder.Services.AddScoped<DoctorDAL>();
 builder.Services.AddScoped<DoctorService>();
 builder.Services.AddScoped<MenuDAL>();
 builder.Services.AddScoped<MenuService>();
+builder.Services.AddScoped<AppointmentSlotDAL>();
+builder.Services.AddScoped<SlotGenerationService>();
+builder.Services.AddScoped<DoctorScheduleDAL>();
+builder.Services.AddScoped<DoctorScheduleService>();
 
 var app = builder.Build();
 

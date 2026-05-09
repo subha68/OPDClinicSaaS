@@ -10,7 +10,6 @@
 <div>
     @using Microsoft.AspNetCore.Http
     @inject IHttpContextAccessor HttpContextAccessor
-    @inject IHttpContextAccessor HttpContextAccessor
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
@@ -36,21 +35,26 @@
         </div>
     </nav>
     @{
-        var crumbs = BreadcrumbHelper.GetBreadcrumb(ViewContext);
+        var crumbs = BreadcrumbHelper.GetBreadcrumb(ViewContext) ?? new List<string>();
     }
 
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb m-2">
-            @foreach (var c in crumbs)
-            {
-                <li class="breadcrumb-item">@c</li>
-            }
-        </ol>
-    </nav>
+    @if (crumbs.Any())
+    {
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb m-2">
+                @foreach (var c in crumbs)
+                {
+                    <li class="breadcrumb-item">@c</li>
+                }
+            </ol>
+        </nav>
+    }
 </div>
 
 @RenderBody()
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

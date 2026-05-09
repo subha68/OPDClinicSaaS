@@ -1,0 +1,194 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model ViewModels.DoctorScheduleVM
+
+<h2>Create Doctor Schedule</h2>
+
+<div class="container mt-4">
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="fa fa-calendar"></i>
+                Doctor Schedule
+            </h4>
+        </div>
+
+        <div class="card-body">
+
+            <form asp-action="Save" method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" asp-for="ScheduleId" />
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger mb-3">
+                </div>
+
+                <!-- Doctor Dropdown -->
+                <div class="mb-3">
+                    <label asp-for="DoctorId"
+                           class="form-label">
+                        Doctor
+                    </label>
+
+                    <select asp-for="DoctorId"
+                            asp-items="ViewBag.Doctors"
+                            class="form-select">
+
+                        <option value="">
+                            -- Select Doctor --
+                        </option>
+
+                    </select>
+
+                    <span asp-validation-for="DoctorId"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <!-- Day Dropdown -->
+                <div class="mb-3">
+                    <label asp-for="DayOfWeek"
+                           class="form-label">
+                        Day
+                    </label>
+
+                    <select asp-for="DayOfWeek"
+                            class="form-select">
+
+                        <option value="">
+                            -- Select Day --
+                        </option>
+
+                        <option value="0">Sunday</option>
+                        <option value="1">Monday</option>
+                        <option value="2">Tuesday</option>
+                        <option value="3">Wednesday</option>
+                        <option value="4">Thursday</option>
+                        <option value="5">Friday</option>
+                        <option value="6">Saturday</option>
+
+                    </select>
+
+                    <span asp-validation-for="DayOfWeek"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <!-- Start Time -->
+                <div class="mb-3">
+                    <label asp-for="StartTime"
+                           class="form-label">
+                        Start Time
+                    </label>
+
+                    <input asp-for="StartTime"
+                           type="time"
+                           class="form-control" />
+
+                    <span asp-validation-for="StartTime"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <!-- End Time -->
+                <div class="mb-3">
+                    <label asp-for="EndTime"
+                           class="form-label">
+                        End Time
+                    </label>
+
+                    <input asp-for="EndTime"
+                           type="time"
+                           class="form-control" />
+
+                    <span asp-validation-for="EndTime"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <!-- Slot Duration -->
+                <div class="mb-3">
+                    <label asp-for="SlotDurationMinutes"
+                           class="form-label">
+                        Slot Duration (Minutes)
+                    </label>
+
+                    <input asp-for="SlotDurationMinutes"
+                           type="number"
+                           min="1"
+                           class="form-control" />
+
+                    <span asp-validation-for="SlotDurationMinutes"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <!-- Capacity -->
+                <div class="mb-3">
+                    <label asp-for="MaxPatientsPerSlot"
+                           class="form-label">
+                        Max Patients Per Slot
+                    </label>
+
+                    <input asp-for="MaxPatientsPerSlot"
+                           type="number"
+                           min="1"
+                           class="form-control" />
+
+                    <span asp-validation-for="MaxPatientsPerSlot"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <!-- Active -->
+                <div class="form-check mb-4">
+
+                    <input asp-for="IsActive"
+                           class="form-check-input" />
+
+                    <label asp-for="IsActive"
+                           class="form-check-label">
+                        Active Schedule
+                    </label>
+
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex gap-2">
+
+                    <button type="submit"
+                            class="btn btn-success">
+
+                        <i class="fa fa-save"></i>
+                        Save Schedule
+
+                    </button>
+
+                    <a asp-action="Index"
+                       class="btn btn-secondary">
+
+                        <i class="fa fa-arrow-left"></i>
+                        Back
+
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    @{
+        await Html.RenderPartialAsync(
+            "_ValidationScriptsPartial");
+    }
+}

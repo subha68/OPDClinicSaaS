@@ -1,0 +1,108 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model List<ViewModels.DoctorScheduleVM>
+
+<h2>Doctor Schedules for Clinic</h2>
+
+<a href="/DoctorSchedule/Create" class="btn btn-primary">Add Schedule</a>
+
+<div class="modal fade"
+     id="slotModal"
+     tabindex="-1">
+
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <form asp-action="GenerateSlots"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        Generate Appointment Slots
+                    </h5>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+
+                    <input type="hidden"
+                           id="doctorId"
+                           name="doctorId" />
+
+                    <div class="mb-3">
+                        <label>From Date</label>
+                        <input type="date"
+                               name="fromDate"
+                               class="form-control"
+                               required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label>To Date</label>
+                        <input type="date"
+                               name="toDate"
+                               class="form-control"
+                               required />
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit"
+                            class="btn btn-success">
+                        Generate
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<table class="table">
+    <tr>
+        <th>Doctor</th>
+        <th>Day</th>
+        <th>Start Time</th>
+        <th>End Time</th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.DoctorFirstName @item.DoctorLastName</td>
+            <td>@item.DayOfWeek</td>
+            <td>@item.StartTime</td>
+            <td>@item.EndTime</td>
+            <td>
+                <button type="button"
+                        class="btn btn-success btn-sm"
+                        onclick="openSlotModal(@item.DoctorId)">
+                    Generate Slots
+                </button>
+            </td>
+        </tr>
+    }
+</table>
+
+@section Scripts {
+<script>
+    function openSlotModal(doctorId) {
+        document.getElementById("doctorId").value = doctorId;
+
+        var modal =
+            new bootstrap.Modal(
+                document.getElementById("slotModal"));
+
+        modal.show();
+    }
+</script>
+}

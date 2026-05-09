@@ -42,14 +42,15 @@ INSERT INTO Features (Name, Code) VALUES
 ('Manage Departments', 'DEPT_VIEW'),
 ('Manage Doctors', 'DOC_VIEW'),
 ('Manage Users', 'USER_VIEW'),
-('Manage Clinics', 'CLINIC_VIEW');
+('Manage Clinics', 'CLINIC_VIEW'),
+('Doctor Schedule', 'DOCTOR_SCHEDULE');
 
 -- Role Mapping
 INSERT INTO RoleFeatures (RoleId, FeatureId)
 SELECT 1, FeatureId FROM Features WHERE Code IN ('CLINIC_VIEW');
 
 INSERT INTO RoleFeatures (RoleId, FeatureId)
-SELECT 2, FeatureId FROM Features WHERE Code IN ('DEPT_VIEW','DOC_VIEW','USER_VIEW');
+SELECT 2, FeatureId FROM Features WHERE Code IN ('DEPT_VIEW','DOC_VIEW','USER_VIEW','DOCTOR_SCHEDULE');
 
 -- Menus
 INSERT INTO Menus (Title, Controller, Action, Icon, FeatureCode, DisplayOrder)
@@ -57,5 +58,6 @@ VALUES
 ('Users','User','Index','fa-users','USER_VIEW',1),
 ('Departments','Department','Index','fa-building','DEPT_VIEW',2),
 ('Doctors','Doctor','Index','fa-user-md','DOC_VIEW',3),
-('Clinics','Clinic','Index','fa-hospital','CLINIC_VIEW',4);
+('Clinics','Clinic','Index','fa-hospital','CLINIC_VIEW',4),
+('Doctor Schedule','DoctorSchedule','Index','fa-calendar','DOCTOR_SCHEDULE',5);
 

@@ -5,11 +5,17 @@ public static class BreadcrumbHelper
 {
     public static List<string> GetBreadcrumb(ViewContext context)
     {
-        return new List<string>
-        {
-            "Home",
-            context.RouteData.Values["controller"].ToString(),
-            context.RouteData.Values["action"].ToString()
-        };
+        var controller = context?.RouteData?.Values["controller"]?.ToString() ?? "";
+        var action = context?.RouteData?.Values["action"]?.ToString() ?? "";
+
+        var crumbs = new List<string> { "Home" };
+
+        if (!string.IsNullOrEmpty(controller))
+            crumbs.Add(controller);
+
+        if (!string.IsNullOrEmpty(action))
+            crumbs.Add(action);
+
+        return crumbs;
     }
 }
