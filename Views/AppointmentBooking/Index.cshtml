@@ -1,0 +1,229 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model ViewModels.AppointmentBookingVM
+
+<h3>Appointment Booking</h3>
+
+<div class="row">
+    <div class="col-md-4">
+        <label>Department</label>
+        <select id="departmentId"
+                asp-for="DepartmentId"
+                asp-items="Model.Departments"
+                class="form-select">
+            <option value="">Select</option>
+        </select>
+    </div>
+
+    <div class="col-md-4">
+        <label>Doctor</label>
+        <select id="doctorId"
+                class="form-select">
+            <option value="">Select</option>
+        </select>
+    </div>
+
+    <div class="col-md-4">
+        <label>Actions</label>
+            <button id="btnList"
+                    type="button"
+                    class="btn btn-outline-secondary ms-2">
+                List View
+            </button>
+
+            <button id="btnCalendar"
+                    type="button"
+                    class="btn btn-outline-secondary ms-2">
+                Calendar View
+            </button>
+        </select>
+    </div>
+</div>
+
+<hr />
+
+<div id="slotList"></div>
+
+<div id="calendar" style="margin-top:20px;"></div>
+
+@section Scripts{
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+<script>
+
+let fcCalendar = null;
+
+$("#departmentId").change(function () {
+
+    let deptId = $(this).val();
+
+    $.get('/AppointmentBooking/GetDoctors',
+        { departmentId: deptId },
+        function(data){
+
+            let ddl = $("#doctorId");
+            ddl.empty();
+            ddl.append('<option value="">Select</option>');
+
+            $.each(data,function(i,v){
+                ddl.append(
+                    `<option value="${v.doctorId}">
+                        ${v.doctorName}
+                     </option>`);
+            });
+        });
+});
+
+$("#doctorId").change(loadSlots);
+
+$("#btnList").click(function () {
+    currentView = "list";
+    loadSlots();
+});
+
+$("#btnCalendar").click(function () {
+    currentView = "calendar";
+    loadSlots();
+});
+
+function loadSlots(){
+    let doctorId = $("#doctorId").val();
+
+    if(!doctorId) return;
+
+    $.get('/AppointmentBooking/GetSlots',
+        { doctorId: doctorId },
+        function(data){
+console.log(data);
+            if(currentView === "list")
+                renderList(data);
+            else
+                renderCalendar(data);
+        });
+}
+
+function renderList(data){
+
+    let grouped = {};
+
+    // group by date
+    $.each(data, function(i, s){
+
+        let dt = s.start.substring(0, 10); // yyyy-MM-dd
+
+        if (!grouped[dt])
+            grouped[dt] = [];
+
+        grouped[dt].push(s);
+    });
+
+    let html = "";
+
+    $.each(grouped, function(date, slots){
+
+        html += `
+            <div class="mb-3">
+                <div class="fw-bold mb-2">${date}</div>
+                <div class="d-flex flex-wrap gap-2">
+        `;
+
+        $.each(slots, function(i, s){
+
+            html += `
+                <button onclick="selectSlot(${s.id})"
+                                    style="
+                                        width:70px;
+                                        height:40px;
+                                        background:${s.color};
+                                        color:white;
+                                        border:none;
+                                        border-radius:6px;
+                                        display:flex;
+                                        align-items:center;
+                                        justify-content:center;
+                                        font-weight:bold;
+                                        font-size:12px;
+                                        cursor:pointer;
+                                    ">
+                    ${s.title}
+                </button>
+            `;
+        });
+
+        html += `
+                </div>
+            </div>
+            <hr/>
+        `;
+    });
+
+    $("#slotList").html(html);
+    $("#calendar").hide();
+    $("#slotList").show();
+}
+
+function selectSlot(slotId){
+    alert("Selected slot: " + slotId);
+
+    // later:
+    // window.location='/Patient/Register?slotId=' + slotId;
+}
+
+function renderCalendar(data){
+
+    $("#slotList").hide();
+    $("#calendar").show();
+    $("#calendar").html("");
+
+    if (fcCalendar) {
+        fcCalendar.destroy();
+        fcCalendar = null;
+    }
+
+    fcCalendar = new FullCalendar.Calendar(
+        document.getElementById("calendar"),
+        {
+            initialView: 'timeGridWeek',
+
+            height: 1200,              // overall calendar height
+            expandRows: true,         // stretch rows
+
+            slotMinTime: "08:00:00",
+            slotMaxTime: "22:00:00",
+
+            slotDuration: "00:15:00",     // each row = 15 mins
+            slotLabelInterval: "01:00",   // label every hour
+
+            allDaySlot: false,
+
+            events: data,
+
+            displayEventTime: false,
+
+            eventContent: function(arg) {
+                return {
+                    html: `<div style="
+                            height:100%;
+                            display:flex;
+                            align-items:center;
+                            justify-content:center;
+                            font-size:12px;
+                            font-weight:bold;">
+                            ${arg.event.title}
+                        </div>`
+                };
+            },
+
+            eventClick: function(info){
+                alert("Selected slot: " + info.event.title);
+            }
+        });
+
+    fcCalendar.render();
+}
+
+</script>
+}

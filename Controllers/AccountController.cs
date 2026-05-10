@@ -11,7 +11,6 @@ namespace Controllers
         private readonly SessionHelper _session;
         private readonly FeatureService _featureService;
 
-
         public AccountController(IConfiguration configuration, SessionHelper session)
         {
             _userDAL = new UserDAL(configuration);

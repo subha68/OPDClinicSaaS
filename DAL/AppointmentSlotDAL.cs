@@ -62,8 +62,7 @@ namespace DAL
 
         #region Get By Doctor
 
-        public List<AppointmentSlot> GetByDoctor(
-            int doctorId)
+        public List<AppointmentSlot> GetByDoctor(int doctorId)
         {
             List<AppointmentSlot> slots =
                 new List<AppointmentSlot>();
@@ -86,17 +85,13 @@ namespace DAL
                     WHERE DoctorId = @DoctorId
                     ORDER BY SlotDate, StartDateTime";
 
-                using (SqlCommand cmd =
-                    new SqlCommand(query, conn))
+                using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.AddWithValue(
-                        "@DoctorId",
-                        doctorId);
+                    cmd.Parameters.AddWithValue("@DoctorId", doctorId);
 
                     conn.Open();
 
-                    using (SqlDataReader reader =
-                        cmd.ExecuteReader())
+                    using (SqlDataReader reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
@@ -113,12 +108,9 @@ namespace DAL
 
         #region Get By Date
 
-        public List<AppointmentSlot> GetByDate(
-            int doctorId,
-            DateTime slotDate)
+        public List<AppointmentSlot> GetByDate(int doctorId, DateTime slotDate)
         {
-            List<AppointmentSlot> slots =
-                new List<AppointmentSlot>();
+            List<AppointmentSlot> slots = new List<AppointmentSlot>();
 
             using (SqlConnection conn = _db.GetConnection())
             {
@@ -434,40 +426,25 @@ namespace DAL
         {
             return new AppointmentSlot
             {
-                SlotId =
-                    Convert.ToInt32(reader["SlotId"]),
+                SlotId = Convert.ToInt32(reader["SlotId"]),
 
-                DoctorId =
-                    Convert.ToInt32(reader["DoctorId"]),
+                DoctorId = Convert.ToInt32(reader["DoctorId"]),
 
-                ClinicId =
-                    Convert.ToInt32(reader["ClinicId"]),
+                ClinicId = Convert.ToInt32(reader["ClinicId"]),
 
-                SlotDate =
-                    Convert.ToDateTime(reader["SlotDate"]),
+                SlotDate = Convert.ToDateTime(reader["SlotDate"]),
 
-                StartDateTime =
-                    Convert.ToDateTime(
-                        reader["StartDateTime"]),
+                StartDateTime = Convert.ToDateTime(reader["StartDateTime"]),
 
-                EndDateTime =
-                    Convert.ToDateTime(
-                        reader["EndDateTime"]),
+                EndDateTime = Convert.ToDateTime(reader["EndDateTime"]),
 
-                Capacity =
-                    Convert.ToInt32(reader["Capacity"]),
+                Capacity = Convert.ToInt32(reader["Capacity"]),
 
-                BookedCount =
-                    Convert.ToInt32(
-                        reader["BookedCount"]),
+                BookedCount = Convert.ToInt32(reader["BookedCount"]),
 
-                IsBlocked =
-                    Convert.ToBoolean(
-                        reader["IsBlocked"]),
+                IsBlocked = Convert.ToBoolean(reader["IsBlocked"]),
 
-                CreatedOn =
-                    Convert.ToDateTime(
-                        reader["CreatedOn"])
+                CreatedOn = Convert.ToDateTime(reader["CreatedOn"])
             };
         }
 

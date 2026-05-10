@@ -68,5 +68,39 @@ namespace DAL
 
             return list;
         }
+
+        public List<DoctorVM> GetDoctorsByDepartment(int clinicId, int departmentId)
+        {
+            List<DoctorVM> list = new List<DoctorVM>();
+
+            using (SqlConnection con = _db.GetConnection())
+            {
+                string query = @"SELECT d.*, dept.Name AS DepartmentName
+                                FROM Doctors d
+                                INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
+                                WHERE d.ClinicId = @ClinicId AND d.DepartmentId = @DepartmentId";
+
+                SqlCommand cmd = new SqlCommand(query, con);
+                cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+                cmd.Parameters.AddWithValue("@DepartmentId", departmentId);
+
+                con.Open();
+                SqlDataReader dr = cmd.ExecuteReader();
+
+                while (dr.Read())
+                {
+                    list.Add(new DoctorVM
+                    {
+                        DoctorId = Convert.ToInt32(dr["DoctorId"]),
+                        FirstName = dr["FirstName"].ToString(),
+                        LastName = dr["LastName"].ToString(),
+                        DepartmentId = Convert.ToInt32(dr["DepartmentId"])
+                    });
+                }
+            }
+
+            return list;
+        }
+
     }
 }

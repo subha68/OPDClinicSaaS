@@ -26,5 +26,10 @@ namespace BLL
         {
             return _dal.GetDoctorsByClinic(clinicId);
         }
+
+        public List<DoctorVM> GetDoctorsByDepartment(int clinicId, int departmentId)
+        {
+            return _dal.GetDoctorsByDepartment(clinicId, departmentId);
+        }
     }
 }

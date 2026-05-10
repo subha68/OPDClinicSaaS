@@ -89,6 +89,11 @@
                     Generate Slots
                 </button>
             </td>
+            <td>
+                <a asp-controller="AppointmentSlot" asp-action="Index" asp-route-doctorId="@item.DoctorId" class="btn btn-primary btn-sm">
+                        View Slots
+                </a>
+            </td>
         </tr>
     }
 </table>

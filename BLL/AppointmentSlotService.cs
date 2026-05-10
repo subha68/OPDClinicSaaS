@@ -10,12 +10,12 @@ namespace BLL
     /// Responsible for generating
     /// appointment slots from doctor schedules.
     /// </summary>
-    public class SlotGenerationService
+    public class AppointmentSlotService
     {
         private readonly DoctorScheduleDAL _scheduleDAL;
         private readonly AppointmentSlotDAL _slotDAL;
 
-        public SlotGenerationService(IConfiguration config)
+        public AppointmentSlotService(IConfiguration config)
         {
             _scheduleDAL = new DoctorScheduleDAL(config);
             _slotDAL = new AppointmentSlotDAL(config);
@@ -106,31 +106,18 @@ namespace BLL
         /// <summary>
         /// Creates AppointmentSlot object.
         /// </summary>
-        private AppointmentSlot BuildSlot(
-            DoctorScheduleVM schedule,
-            DateTime slotDate,
-            DateTime slotStart,
-            DateTime slotEnd)
+        private AppointmentSlot BuildSlot(DoctorScheduleVM schedule, DateTime slotDate, DateTime slotStart, DateTime slotEnd)
         {
             return new AppointmentSlot
             {
                 DoctorId = schedule.DoctorId,
-
                 ClinicId = schedule.ClinicId,
-
                 SlotDate = slotDate.Date,
-
                 StartDateTime = slotStart,
-
                 EndDateTime = slotEnd,
-
-                Capacity =
-                    schedule.MaxPatientsPerSlot,
-
+                Capacity = schedule.MaxPatientsPerSlot,
                 BookedCount = 0,
-
                 IsBlocked = false,
-
                 CreatedOn = DateTime.Now
             };
         }
@@ -210,5 +197,12 @@ namespace BLL
         }
 
         #endregion
+
+        public List<AppointmentSlot> GetAvailableSlots(int doctorId)
+        {
+            return _slotDAL.GetByDoctor(doctorId);
+
+        }
+
     }
 }

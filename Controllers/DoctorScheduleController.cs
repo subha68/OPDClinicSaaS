@@ -15,13 +15,13 @@ namespace Controllers
     {
         private readonly SessionHelper _session;
         private readonly DoctorScheduleService _scheduleService;
-        private readonly SlotGenerationService _slotGenerationService;
+        private readonly AppointmentSlotService _slotService;
         private readonly DoctorService _doctor;
 
         public DoctorScheduleController(IConfiguration config, SessionHelper session)
         {
             _scheduleService = new DoctorScheduleService(config);
-            _slotGenerationService = new SlotGenerationService(config);
+            _slotService = new AppointmentSlotService(config);
             _doctor = new DoctorService(config);
             _session = session;
         }
@@ -124,7 +124,7 @@ namespace Controllers
         {
             try
             {
-                _slotGenerationService.GenerateSlots(doctorId, fromDate, toDate);
+                _slotService.GenerateSlots(doctorId, fromDate, toDate);
 
                 TempData["SuccessMessage"] = "Appointment slots generated successfully.";
             }

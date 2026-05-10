@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("OPDClinicSaaS")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+024ba1f670ea22c6499948be8e004893b96e609f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a3eeb29f0684cbb5915073a9a6f61e93325dfec3")]
 [assembly: System.Reflection.AssemblyProductAttribute("OPDClinicSaaS")]
 [assembly: System.Reflection.AssemblyTitleAttribute("OPDClinicSaaS")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

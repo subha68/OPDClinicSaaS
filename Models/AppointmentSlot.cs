@@ -40,6 +40,32 @@ namespace Models
         /// </summary>
         public bool IsBlocked { get; set; }
 
+        public string Status
+        {
+            get
+            {
+                if (IsBlocked)
+                    return "Blocked";
+                else if (BookedCount >= Capacity)
+                    return "Booked";
+                else
+                    return "Available";
+            }
+        }
+
+        public string Color 
+        {
+            get
+            {
+                if (IsBlocked)
+                    return "gray";
+                else if (BookedCount >= Capacity)
+                    return "red";
+                else
+                    return "green";
+            }
+        }
+
         public DateTime CreatedOn { get; set; }
     }
 }
