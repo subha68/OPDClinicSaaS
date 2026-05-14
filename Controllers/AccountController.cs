@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using DAL;
 using BLL;
 
@@ -21,11 +23,15 @@ namespace Controllers
         [HttpGet]
         public IActionResult Login()
         {
+            Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+            Response.Headers["Pragma"] = "no-cache";
+            Response.Headers["Expires"] = "0";
+
             return View();
         }
 
         [HttpPost]
-        public IActionResult Login(string username, string password)
+        public async Task<IActionResult> Login(string username, string password)
         {
             var user = _userDAL.ValidateUser(username, password);
 
@@ -40,24 +46,61 @@ namespace Controllers
 
             if (user != null)
             {
-                Console.WriteLine($"User validated: User Id - {user.UserId}, Role Id - {user.RoleId}, Clinic Id - {user.ClinicId}");
+                var claims = new List<System.Security.Claims.Claim>
+                {
+                    new System.Security.Claims.Claim("UserId", user.UserId.ToString()),
+                    new System.Security.Claims.Claim("RoleId", user.RoleId.ToString())
+                };
+
+                if (user.ClinicId.HasValue)
+                {
+                    claims.Add(
+                        new System.Security.Claims.Claim(
+                            "ClinicId",
+                            user.ClinicId.Value.ToString()));
+                }
+
+                var identity = new System.Security.Claims.ClaimsIdentity(
+                    claims,
+                    CookieAuthenticationDefaults.AuthenticationScheme);
+
+                var principal =
+                    new System.Security.Claims.ClaimsPrincipal(identity);
+
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+                // keep your session too
                 HttpContext.Session.SetString("RoleId", user.RoleId.ToString());
                 HttpContext.Session.SetString("UserId", user.UserId.ToString());
 
                 if (user.ClinicId.HasValue)
-                {
-                    HttpContext.Session.SetString("ClinicId", user.ClinicId?.ToString()?? "0");
-                }
+                    HttpContext.Session.SetString("ClinicId", user.ClinicId.Value.ToString());
+
                 var features = _featureService.GetFeatures(user.RoleId);
 
-                // store as CSV
-                HttpContext.Session.SetString("Features", string.Join(",", features.Select(f => f.Code)));
+                HttpContext.Session.SetString(
+                    "Features",
+                    string.Join(",", features.Select(f => f.Code)));
+
                 return RedirectToAction("Index", "Home");
             }
 
             ViewBag.Error = "Invalid credentials";
             return View();
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
+        {
+            // Clear session
+            HttpContext.Session.Clear();
+
+            // Remove auth cookie
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            return RedirectToAction("Login", "Account");
+        }        
 
     }
 }

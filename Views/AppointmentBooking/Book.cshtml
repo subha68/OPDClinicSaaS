@@ -1,0 +1,70 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model AppointmentCreateVM
+
+<h3>Book Appointment</h3>
+
+<form asp-action="Book" method="post">
+
+    <input type="hidden" asp-for="DoctorId" />
+    <input type="hidden" asp-for="AppointmentDate" />
+    <input type="hidden" asp-for="SlotTime" />
+    <input type="hidden" asp-for="SlotId" />
+    <input type="hidden" asp-for="PatientId" />
+
+    <div class="mb-3">
+        <label>Mobile</label>
+        <input asp-for="PatientSearch" class="form-control" />
+                <button type="button"
+                class="btn btn-primary mt-2"
+                onclick="searchPatient()">
+            Search Patient
+        </button>
+    </div>
+
+    <hr />
+
+    <div class="mb-3">
+        <label>Patient Name</label>
+        <input asp-for="PatientName"
+               class="form-control"
+               readonly />
+    </div>
+
+    <div class="mb-3">
+        <label>Mobile</label>
+        <input asp-for="Mobile"
+               class="form-control"
+               readonly />
+    </div>
+
+    <button type="submit"
+            class="btn btn-success">
+        Confirm Booking
+    </button>
+
+</form>
+
+<script>
+    function searchPatient() {
+
+        var mobile = $("#PatientSearch").val();
+
+        $.get('/AppointmentBooking/SearchByMobile?mobile=' + mobile, 
+            function (data) {
+                if (data) {
+                    $("#PatientId").val(data.patientId);
+                    $("#PatientName").val(data.name);
+                    $("#Mobile").val(data.mobile);
+                }
+                else {
+                    alert("Patient not found");
+                    $("#PatientId").val("");
+                    $("#PatientName").val("");
+                    $("#Mobile").val("");
+                }
+            });
+    };
+</script>

@@ -201,7 +201,11 @@ namespace BLL
         public List<AppointmentSlot> GetAvailableSlots(int doctorId)
         {
             return _slotDAL.GetByDoctor(doctorId);
+        }
 
+        public bool IncrementBookedCount(int slotId)
+        {
+            return _slotDAL.IncrementBookedCount(slotId);
         }
 
     }

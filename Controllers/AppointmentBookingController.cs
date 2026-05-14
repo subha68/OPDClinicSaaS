@@ -4,21 +4,28 @@ using Microsoft.Extensions.Configuration;
 using ViewModels;
 using DAL;
 using BLL;
+using Models;
 
-namespace Controllers   
+namespace Controllers
 {
     public class AppointmentBookingController : Controller
     {
         private readonly DepartmentService _department;
         private readonly DoctorService _doctor;
         private readonly AppointmentSlotService _slot;
+        private readonly AppointmentService _appointment;
+        private readonly PatientService _patient;
         private readonly SessionHelper _session;
 
-        public AppointmentBookingController(IConfiguration configuration, SessionHelper session)
+        public AppointmentBookingController(
+            IConfiguration configuration,
+            SessionHelper session)
         {
             _department = new DepartmentService(configuration);
             _doctor = new DoctorService(configuration);
             _slot = new AppointmentSlotService(configuration);
+            _appointment = new AppointmentService(configuration);
+            _patient = new PatientService(configuration);
             _session = session;
         }
 
@@ -42,6 +49,7 @@ namespace Controllers
         public JsonResult GetDoctors(int departmentId)
         {
             int clinicId = _session.ClinicId;
+
             var doctors = _doctor.GetDoctorsByDepartment(clinicId, departmentId);
 
             return Json(doctors.Select(x => new
@@ -55,16 +63,70 @@ namespace Controllers
         public JsonResult GetSlots(int doctorId)
         {
             var slots = _slot.GetAvailableSlots(doctorId);
+
             return Json(slots.Select(x => new
             {
                 slotId = x.SlotId,
-                title = x.StartDateTime.ToString("HH:mm"), //$"{x.StartDateTime:HH:mm} - {x.EndDateTime:HH:mm}",
-                //slotDate = x.SlotDate.ToString("yyyy-MM-dd"),
-                start = x.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss"), //x.StartDateTime.ToString("HH:mm"),
-                end = x.EndDateTime.ToString("yyyy-MM-ddTHH:mm:ss"), //x.EndDateTime.ToString("HH:mm"),
-                //status = x.Status,
+                title = x.StartDateTime.ToString("HH:mm"),
+                start = x.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss"),
+                end = x.EndDateTime.ToString("yyyy-MM-ddTHH:mm:ss"),
                 color = x.Color
             }));
+        }
+
+        [HttpGet]
+        public IActionResult Book(int slotId, int doctorId, DateTime date, string time)
+        {
+            var vm = new AppointmentCreateVM
+            {
+                SlotId = slotId,
+                DoctorId = doctorId,
+                AppointmentDate = date,
+                SlotTime = time
+            };
+
+            return View(vm);
+        }
+
+        [HttpGet]
+        public JsonResult SearchByMobile(string mobile)
+        {
+            var patient = _patient.GetByMobile(mobile);
+
+            if (patient == null)
+                return Json(null);
+
+            return Json(new
+            {
+                patientId = patient.PatientId,
+                name = patient.FirstName + " " + patient.LastName,
+                mobile = patient.Phone
+            });
+        }
+
+        [HttpPost]
+        public IActionResult Book(AppointmentCreateVM vm)
+        {
+            if (!ModelState.IsValid)
+                return View(vm);
+
+            var appointment = new Appointment
+            {
+                DoctorId = vm.DoctorId,
+                ClinicId = _session.ClinicId,
+                PatientId = vm.PatientId,
+                AppointmentDate = vm.AppointmentDate,
+                SlotTime = DateTime.Parse(vm.SlotTime),
+                Status = "Booked"
+            };
+
+            _appointment.Insert(appointment);
+
+            _slot.IncrementBookedCount(vm.SlotId);
+
+            TempData["Success"] = "Appointment booked successfully";
+
+            return RedirectToAction("Index");
         }
     }
 }

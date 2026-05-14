@@ -1,8 +1,19 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using BLL;
 using DAL;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddSession();
+
+builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+    });
+    
 // MVC
 builder.Services.AddControllersWithViews();
 
@@ -49,6 +60,7 @@ app.UseCookiePolicy();
 // MUST be in this order
 app.UseSession();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

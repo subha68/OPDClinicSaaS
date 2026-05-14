@@ -17,7 +17,7 @@ namespace DAL
             _connectionString = configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("DefaultConnection string is not configured.");
 
-            // o connect to SQLServer Express from Command Line, use:
+            // To connect to SQLServer Express from Command Line, use:
             // sqlcmd -S LENOVO-SUBHASIS\SQLEXPRESS -No -E
         }
 

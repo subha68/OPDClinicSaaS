@@ -25,9 +25,11 @@
 
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link text-warning" asp-controller="Account" asp-action="Logout">
-                            Logout
-                        </a>
+                        <form asp-controller="Account" asp-action="Logout" method="post">
+                            <button type="submit" class="btn btn-link nav-link text-danger">
+                                Logout
+                            </button>
+                        </form>
                     </li>
                 </ul>
 

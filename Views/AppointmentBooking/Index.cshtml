@@ -97,7 +97,7 @@ function loadSlots(){
     $.get('/AppointmentBooking/GetSlots',
         { doctorId: doctorId },
         function(data){
-console.log(data);
+            console.log(data);
             if(currentView === "list")
                 renderList(data);
             else
@@ -133,7 +133,7 @@ function renderList(data){
         $.each(slots, function(i, s){
 
             html += `
-                <button onclick="selectSlot(${s.id})"
+                <button onclick="selectSlot(${s.slotId}, '${s.start}', '${s.title}')"
                                     style="
                                         width:70px;
                                         height:40px;
@@ -165,11 +165,15 @@ function renderList(data){
     $("#slotList").show();
 }
 
-function selectSlot(slotId){
-    alert("Selected slot: " + slotId);
+function selectSlot(slotId, start, title){
+    //alert("Selected slot: " + slotId);
 
-    // later:
-    // window.location='/Patient/Register?slotId=' + slotId;
+    window.location.href =
+        '/AppointmentBooking/Book'
+        + '?slotId=' + slotId
+        + '&doctorId=' + $("#doctorId").val()
+        + '&date=' + start
+        + '&time=' + title;
 }
 
 function renderCalendar(data){
@@ -218,7 +222,14 @@ function renderCalendar(data){
             },
 
             eventClick: function(info){
-                alert("Selected slot: " + info.event.title);
+                var slotId = info.event.extendedProps.slotId;
+
+                window.location.href =
+                    '/AppointmentBooking/Book'
+                    + '?slotId=' + slotId
+                    + '&doctorId=' + $("#doctorId").val()
+                    + '&date=' + info.event.start.toISOString()
+                    + '&time=' + info.event.title;
             }
         });
 
