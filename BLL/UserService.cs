@@ -5,19 +5,21 @@ public class UserService
 {
     private readonly UserDAL _dal;
 
-    public UserService(UserDAL dal)
+    public UserService(IConfiguration config)
     {
-        _dal = dal;
+        _dal = new UserDAL(config);
     }
 
-    public void CreateUser(User user)
+    public int CreateUser(User user)
     {
         // 🔐 Hash password (basic for now)
-        user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
 
-        _dal.Add(user);
+        return _dal.Add(user);
     }
 
     public List<User> GetUsers() => _dal.GetUsers();
+
+    public bool UsernameExists(string username) => _dal.GetUserCountByName(username) > 0;
 
 }

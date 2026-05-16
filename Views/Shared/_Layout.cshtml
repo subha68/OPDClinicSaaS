@@ -24,15 +24,59 @@
                 @await Component.InvokeAsync("NavMenu")
 
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <form asp-controller="Account" asp-action="Logout" method="post">
-                            <button type="submit" class="btn btn-link nav-link text-danger">
-                                Logout
-                            </button>
-                        </form>
-                    </li>
-                </ul>
+                    @if (HttpContextAccessor.HttpContext.Session.GetString("Username") != null)
+                    {
+                        var username = HttpContextAccessor.HttpContext.Session.GetString("Username");
+                        var role = HttpContextAccessor.HttpContext.Session.GetString("RoleName");
+                        var displayName = HttpContextAccessor.HttpContext.Session.GetString("FirstName") + " " 
+                                                    + HttpContextAccessor.HttpContext.Session.GetString("LastName");
 
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle"
+                                href="#"
+                                id="userMenu"
+                                role="button"
+                                data-bs-toggle="dropdown">
+                                <i class="fa fa-user-circle"></i>
+                                Welcome @displayName
+                            </a>
+
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <span class="dropdown-item-text">
+                                        User: @username
+                                    </span>
+                                </li>
+
+                                <li>
+                                    <span class="dropdown-item-text">
+                                        Role: @role
+                                    </span>
+                                </li>
+
+                                <li>
+                                    <span class="dropdown-item-text">
+                                        Name: @displayName
+                                    </span>
+                                </li>
+
+                                <li><hr class="dropdown-divider" /></li>
+
+                                <li>
+                                    <form asp-controller="Account"
+                                        asp-action="Logout"
+                                        method="post"
+                                        style="display:inline;">
+                                        <button type="submit"
+                                                class="dropdown-item">
+                                            Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    }
+                </ul>
             </div>
         </div>
     </nav>

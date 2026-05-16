@@ -47,5 +47,51 @@ namespace DAL
             }
             return list;
         }
+
+        public Role GetRoleByName(string roleName)
+        {
+            using (SqlConnection conn = _db.GetConnection())
+            {
+                string query = "SELECT * FROM Roles WHERE RoleName = @RoleName";
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@RoleName", roleName);
+
+                conn.Open();
+                var reader = cmd.ExecuteReader();
+
+                if (reader.Read())
+                {
+                    return new Role
+                    {
+                        RoleId = (int)reader["RoleId"],
+                        RoleName = reader["RoleName"].ToString()
+                    };
+                }
+            }
+            return null; // Not found
+        }
+
+        public Role GetRoleById(int roleId)
+        {
+            using (SqlConnection conn = _db.GetConnection())
+            {
+                string query = "SELECT * FROM Roles WHERE RoleId = @RoleId";
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@RoleId", roleId);
+
+                conn.Open();
+                var reader = cmd.ExecuteReader();
+
+                if (reader.Read())
+                {
+                    return new Role
+                    {
+                        RoleId = (int)reader["RoleId"],
+                        RoleName = reader["RoleName"].ToString()
+                    };
+                }
+            }
+            return null; // Not found
+        }
     }
 }

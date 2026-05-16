@@ -19,17 +19,19 @@ VALUES
 (1,2,'clinicadmin','admin123'),
 (1,3,'user1','user123'),
 (1,4,'doctor1','doc123'),
-(1,5,'billing1','bill123');
+(1,5,'billing1','bill123'),
+(1,6,'doctor2','doc123'),
+(1,7,'doctor3','doc123');
 
 -- Departments
 INSERT INTO Departments (ClinicId, Name)
 VALUES (1,'General'), (1,'Cardiology'), (1,'ENT');
 
 -- Doctors
-INSERT INTO Doctors (ClinicId, DepartmentId, FirstName)
+INSERT INTO Doctors (ClinicId, DepartmentId, FirstName, LastName, UserId, RegistrationNo, Qualification)
 VALUES
-(1,1,'Dr. Amit'),
-(1,2,'Dr. Roy');
+(1,1,'Dr. Amit','Sharma',4,'REG001','MD'),
+(1,2,'Dr. Roy','Kumar',6,'REG002','MBBS');
 
 -- Patients
 INSERT INTO Patients (ClinicId, FirstName, LastName, Phone, DOB)
@@ -44,14 +46,25 @@ INSERT INTO Features (Name, Code) VALUES
 ('Manage Users', 'USER_VIEW'),
 ('Manage Clinics', 'CLINIC_VIEW'),
 ('Doctor Schedule', 'DOCTOR_SCHEDULE'),
-('Appointment Booking', 'APPOINTMENT_BOOKING');
+('Appointment Booking', 'APPOINTMENT_BOOKING'),
+('Consultation Management', 'CONSULTATION_MANAGEMENT'),
+('Billing Management', 'BILLING_MANAGEMENT');
 
 -- Role Mapping
 INSERT INTO RoleFeatures (RoleId, FeatureId)
 SELECT 1, FeatureId FROM Features WHERE Code IN ('CLINIC_VIEW');
 
 INSERT INTO RoleFeatures (RoleId, FeatureId)
-SELECT 2, FeatureId FROM Features WHERE Code IN ('DEPT_VIEW','DOC_VIEW','USER_VIEW','DOCTOR_SCHEDULE', 'APPOINTMENT_BOOKING');
+SELECT 2, FeatureId FROM Features WHERE Code IN ('DEPT_VIEW','DOC_VIEW','USER_VIEW','DOCTOR_SCHEDULE');
+
+INSERT INTO RoleFeatures (RoleId, FeatureId)
+SELECT 3, FeatureId FROM Features WHERE Code IN ('APPOINTMENT_BOOKING');
+
+INSERT INTO RoleFeatures (RoleId, FeatureId)
+SELECT 4, FeatureId FROM Features WHERE Code IN ('CONSULTATION_MANAGEMENT');
+
+INSERT INTO RoleFeatures (RoleId, FeatureId)
+SELECT 5, FeatureId FROM Features WHERE Code IN ('BILLING_MANAGEMENT');
 
 -- Menus
 INSERT INTO Menus (Title, Controller, Action, Icon, FeatureCode, DisplayOrder)
@@ -61,5 +74,7 @@ VALUES
 ('Doctors','Doctor','Index','fa-user-md','DOC_VIEW',3),
 ('Clinics','Clinic','Index','fa-hospital','CLINIC_VIEW',4),
 ('Doctor Schedule','DoctorSchedule','Index','fa-calendar','DOCTOR_SCHEDULE',5),
-('Appointment Booking','AppointmentBooking','Index','fa-calendar-check','APPOINTMENT_BOOKING',6);
+('Appointment Booking','AppointmentBooking','Index','fa-calendar-check','APPOINTMENT_BOOKING',6),
+('Consultation','DoctorConsultation','Index','fa-stethoscope','CONSULTATION_MANAGEMENT',7),
+('Billing','Billing','Index','fa-file-invoice-dollar','BILLING_MANAGEMENT',8);
 

@@ -8,17 +8,18 @@ namespace ViewModels
     {
         public int DoctorId { get; set; }
         public int ClinicId { get; set; }
+        public int UserId { get; set; }
 
-        [Required]
-        public int DepartmentId { get; set; }
-
-        [Required]
         public string FirstName { get; set; }
-
         public string LastName { get; set; }
 
+        public int DepartmentId { get; set; }
         public string RegistrationNo { get; set; }
         public string Qualification { get; set; }
+
+        public string Username { get; set; }
+        public string Password { get; set; }
+
         public List<SelectListItem>? Departments { get; set; }
     }
 }

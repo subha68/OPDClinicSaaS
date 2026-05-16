@@ -60,10 +60,15 @@ CREATE TABLE Doctors (
     LastName NVARCHAR(100),
     RegistrationNo NVARCHAR(100),
     Qualification NVARCHAR(200),
+    UserId INT NULL
 
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
-    FOREIGN KEY (DepartmentId) REFERENCES Departments(DepartmentId)
+    FOREIGN KEY (DepartmentId) REFERENCES Departments(DepartmentId),
+    FOREIGN KEY (UserId) REFERENCES Users(UserId)
 );
+
+ALTER TABLE Doctors
+ADD CONSTRAINT UQ_Doctor_User UNIQUE(UserId);
 
 CREATE TABLE Patients (
     PatientId INT IDENTITY PRIMARY KEY,
@@ -123,6 +128,7 @@ CREATE TABLE Medicines (
 CREATE TABLE Consultations (
     ConsultationId INT IDENTITY PRIMARY KEY,
     AppointmentId INT,
+    Symptoms NVARCHAR(MAX),
     Diagnosis NVARCHAR(MAX),
     Notes NVARCHAR(MAX),
 
@@ -249,5 +255,20 @@ CREATE TABLE AppointmentSlot
 
     FOREIGN KEY (DoctorId) REFERENCES Doctors(DoctorId),
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
+);
+
+CREATE TABLE PharmacologyAdvices
+(
+    PrescriptionId INT IDENTITY PRIMARY KEY,
+    ConsultationId INT NOT NULL,
+    AppointmentId INT NOT NULL,
+    MedicineName NVARCHAR(200),
+    Dosage NVARCHAR(100),
+    Frequency NVARCHAR(100),
+    Duration NVARCHAR(100),
+    Instructions NVARCHAR(500),
+
+    FOREIGN KEY (ConsultationId) REFERENCES Consultations(ConsultationId),
+    FOREIGN KEY (AppointmentId) REFERENCES Appointments(AppointmentId)
 );
 

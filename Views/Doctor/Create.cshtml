@@ -8,16 +8,48 @@
 
 @using (Html.BeginForm())
 {
-    <div>First Name: @Html.TextBoxFor(m => m.FirstName)</div>
-    <div>Last Name: @Html.TextBoxFor(m => m.LastName)</div>
+    <div>
+        First Name:
+        @Html.TextBoxFor(m => m.FirstName)
+    </div>
+
+    <div>
+        Last Name:
+        @Html.TextBoxFor(m => m.LastName)
+    </div>
 
     <div>
         Department:
-        @Html.DropDownListFor(m => m.DepartmentId, Model.Departments, "--Select--")
+        @Html.DropDownListFor(m => m.DepartmentId,
+            Model.Departments,
+            "--Select--")
     </div>
 
-    <div>Registration No: @Html.TextBoxFor(m => m.RegistrationNo)</div>
-    <div>Qualification: @Html.TextBoxFor(m => m.Qualification)</div>
+    <div>
+        Registration No:
+        @Html.TextBoxFor(m => m.RegistrationNo)
+    </div>
+
+    <div>
+        Qualification:
+        @Html.TextBoxFor(m => m.Qualification)
+    </div>
+
+    <hr />
+
+    <h4>Doctor Login Credentials</h4>
+
+    <div>
+        Username:
+        @Html.TextBoxFor(m => m.Username)
+    </div>
+
+    <div>
+        Password:
+        @Html.PasswordFor(m => m.Password)
+    </div>
+
+    <br />
 
     <button type="submit">Save</button>
 }

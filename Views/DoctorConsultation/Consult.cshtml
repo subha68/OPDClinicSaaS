@@ -1,0 +1,128 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model ViewModels.ConsultationVM
+
+<h3>Consultation</h3>
+
+<form asp-action="Consult" method="post">
+
+    <input type="hidden" asp-for="AppointmentId" />
+
+    <div class="mb-3">
+        <label class="form-label">Patient Name</label>
+        <input asp-for="PatientName"
+               class="form-control"
+               readonly />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Symptoms</label>
+        <textarea asp-for="Symptoms"
+                  class="form-control"
+                  rows="3">
+        </textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Diagnosis</label>
+        <textarea asp-for="Diagnosis"
+                  class="form-control"
+                  rows="3">
+        </textarea>
+    </div>
+
+    <h4>Medicines</h4>
+
+    <table class="table" id="medicineTable">
+        <thead>
+            <tr>
+                <th>Medicine</th>
+                <th>Dosage</th>
+                <th>Frequency</th>
+                <th>Duration</th>
+                <th>Instructions</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <button type="button"
+            class="btn btn-primary"
+            onclick="addRow()">
+        Add Medicine
+    </button>
+
+    <div class="mb-3">
+        <label class="form-label">Notes</label>
+        <textarea asp-for="Notes"
+                  class="form-control"
+                  rows="3">
+        </textarea>
+    </div>
+
+    <button type="submit"
+            class="btn btn-success">
+        Complete Consultation
+    </button>
+
+    <a asp-action="Index"
+       class="btn btn-secondary">
+        Cancel
+    </a>
+
+</form>
+
+<script>
+let rowIndex = 0;
+
+function addRow() {
+
+    let row = `
+    <tr>
+        <td>
+            <input name="PharmacologyAdvices[${rowIndex}].MedicineName"
+                   class="form-control"/>
+        </td>
+
+        <td>
+            <input name="PharmacologyAdvices[${rowIndex}].Dosage"
+                   class="form-control"/>
+        </td>
+
+        <td>
+            <input name="PharmacologyAdvices[${rowIndex}].Frequency"
+                   class="form-control"/>
+        </td>
+
+        <td>
+            <input name="PharmacologyAdvices[${rowIndex}].Duration"
+                   class="form-control"/>
+        </td>
+
+        <td>
+            <input name="PharmacologyAdvices[${rowIndex}].Instructions"
+                   class="form-control"/>
+        </td>
+
+        <td>
+            <button type="button"
+                    class="btn btn-danger"
+                    onclick="removeRow(this)">
+                X
+            </button>
+        </td>
+    </tr>`;
+
+    $("#medicineTable tbody").append(row);
+
+    rowIndex++;
+}
+
+function removeRow(btn) {
+    $(btn).closest("tr").remove();
+}
+</script>

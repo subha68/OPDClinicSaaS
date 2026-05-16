@@ -3,7 +3,8 @@ using Models;
 using ViewModels;
 
 namespace BLL
-{    public class PatientService
+{    
+    public class PatientService
     {
         private readonly PatientDAL _dal;
 

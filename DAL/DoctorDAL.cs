@@ -102,5 +102,23 @@ namespace DAL
             return list;
         }
 
+        public int GetDoctorIdByUserId(int userId)
+        {
+            using (SqlConnection con = _db.GetConnection())
+            {
+                string query = "SELECT DoctorId FROM Doctors WHERE UserId=@UserId";
+
+                SqlCommand cmd = new SqlCommand(query, con);
+
+                cmd.Parameters.AddWithValue("@UserId", userId);
+
+                con.Open();
+
+                object result = cmd.ExecuteScalar();
+
+                return result != null ? Convert.ToInt32(result) : 0;
+            }
+        }
+
     }
 }

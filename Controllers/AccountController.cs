@@ -12,12 +12,16 @@ namespace Controllers
         private readonly UserDAL _userDAL;
         private readonly SessionHelper _session;
         private readonly FeatureService _featureService;
+        private readonly RoleService _role;
+        private readonly DoctorService _doctor;
 
         public AccountController(IConfiguration configuration, SessionHelper session)
         {
             _userDAL = new UserDAL(configuration);
             _session = session;
             _featureService = new FeatureService(configuration);
+            _role = new RoleService(configuration);
+            _doctor = new DoctorService(configuration);
         }
 
         [HttpGet]
@@ -70,8 +74,18 @@ namespace Controllers
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
                 // keep your session too
+                String rolename = _role.GetRoleName(user.RoleId);
+                if (rolename == "Doctor")
+                {
+                    int doctorid = _doctor.GetDoctorIdByUserId(user.UserId);
+                    HttpContext.Session.SetString("DoctorId", doctorid.ToString());
+                }
                 HttpContext.Session.SetString("RoleId", user.RoleId.ToString());
                 HttpContext.Session.SetString("UserId", user.UserId.ToString());
+                HttpContext.Session.SetString("Username", username);
+                HttpContext.Session.SetString("RoleName", rolename);
+                HttpContext.Session.SetString("FirstName", user.FirstName);
+                HttpContext.Session.SetString("LastName", user.LastName);
 
                 if (user.ClinicId.HasValue)
                     HttpContext.Session.SetString("ClinicId", user.ClinicId.Value.ToString());
@@ -91,14 +105,12 @@ namespace Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Logout()
+        public IActionResult Logout()
         {
             // Clear session
             HttpContext.Session.Clear();
 
             // Remove auth cookie
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-
             return RedirectToAction("Login", "Account");
         }        
 

@@ -32,7 +32,12 @@ namespace DAL
                     {
                         UserId = (int)reader["UserId"],
                         RoleId = (int)reader["RoleId"],
-                        ClinicId = reader["ClinicId"] != DBNull.Value ? (int?)reader["ClinicId"] : null
+                        ClinicId = reader["ClinicId"] != DBNull.Value ? (int?)reader["ClinicId"] : null,
+                        Username = reader["Username"] != DBNull.Value ? reader["Username"].ToString() : null,
+                        FirstName = reader["FirstName"] != DBNull.Value ? reader["FirstName"].ToString() : null,
+                        LastName = reader["LastName"] != DBNull.Value ? reader["LastName"].ToString() : null,
+                        Email = reader["Email"] != DBNull.Value ? reader["Email"].ToString() : null,
+                        Phone = reader["Phone"] != DBNull.Value ? reader["Phone"].ToString() : null
                     };
                 }
             }
@@ -40,17 +45,20 @@ namespace DAL
             return null;
         }
 
-        public void Add(User user)
+        public int Add(User user)
         {
+            int userId = 0;
+
             using (SqlConnection conn = _db.GetConnection())
             {
                 string query = @"INSERT INTO Users 
                                 (Username, PasswordHash, RoleId, ClinicId, FirstName, LastName, Email, Phone)
-                                VALUES (@Username, @PasswordHash, @RoleId, @ClinicId, @FirstName, @LastName, @Email, @Phone)";
+                                VALUES (@Username, @PasswordHash, @RoleId, @ClinicId, @FirstName, @LastName, @Email, @Phone);
+                                SELECT SCOPE_IDENTITY();";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@Username", user.Username);
-                cmd.Parameters.AddWithValue("@PasswordHash", user.Password);
+                cmd.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
                 cmd.Parameters.AddWithValue("@RoleId", user.RoleId);
                 cmd.Parameters.AddWithValue("@ClinicId", user.ClinicId);
                 cmd.Parameters.AddWithValue("@FirstName", user.FirstName);
@@ -59,7 +67,27 @@ namespace DAL
                 cmd.Parameters.AddWithValue("@Phone", user.Phone);
 
                 conn.Open();
-                cmd.ExecuteNonQuery();
+                //cmd.ExecuteNonQuery();
+                userId = Convert.ToInt32(cmd.ExecuteScalar());
+            }
+            return userId;
+        }
+
+        public int GetUserCountByName(string username)
+        {
+            using (SqlConnection con = _db.GetConnection())
+            {
+                string query = "SELECT COUNT(*) FROM [User] WHERE Username=@Username";
+
+                SqlCommand cmd = new SqlCommand(query, con);
+
+                cmd.Parameters.AddWithValue("@Username", username);
+
+                con.Open();
+
+                int count = Convert.ToInt32(cmd.ExecuteScalar());
+
+                return count;
             }
         }
 

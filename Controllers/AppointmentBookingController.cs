@@ -110,13 +110,13 @@ namespace Controllers
             if (!ModelState.IsValid)
                 return View(vm);
 
-            var appointment = new Appointment
+            var appointment = new AppointmentVM
             {
                 DoctorId = vm.DoctorId,
                 ClinicId = _session.ClinicId,
                 PatientId = vm.PatientId,
                 AppointmentDate = vm.AppointmentDate,
-                SlotTime = DateTime.Parse(vm.SlotTime),
+                SlotTime = TimeSpan.Parse(vm.SlotTime),
                 Status = "Booked"
             };
 
