@@ -4,18 +4,21 @@ using ViewModels;
 
 namespace BLL
 {    
-    public class PharmacologyService
+    public class PharmacologyService : BaseService<PharmacologyAdviceVM>
     {
-        private readonly PharmacologyDAL _dal;
+        private readonly PharmacologyDAL _pharmacologyDAL;
 
         public PharmacologyService(IConfiguration config)
         {
-            _dal = new PharmacologyDAL(config);
+            _pharmacologyDAL = new PharmacologyDAL(config);
+            _dal = _pharmacologyDAL;
         }
 
-        public void Add(int appointmentId, PharmacologyAdviceVM advice)
+        public void Add(int consultationId, int appointmentId, PharmacologyAdviceVM advice)
         {
-            _dal.Add(appointmentId, advice);
+            _pharmacologyDAL.consultationId = consultationId;
+            _pharmacologyDAL.appointmentId = appointmentId;
+            _pharmacologyDAL.Add(advice);
         }
 
     }

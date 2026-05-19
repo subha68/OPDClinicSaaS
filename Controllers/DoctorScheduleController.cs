@@ -14,47 +14,35 @@ namespace Controllers
     public class DoctorScheduleController : Controller
     {
         private readonly SessionHelper _session;
-        private readonly DoctorScheduleService _scheduleService;
-        private readonly AppointmentSlotService _slotService;
+        private readonly DoctorScheduleService _schedule;
+        private readonly AppointmentSlotService _slot;
         private readonly DoctorService _doctor;
 
         public DoctorScheduleController(IConfiguration config, SessionHelper session)
         {
-            _scheduleService = new DoctorScheduleService(config);
-            _slotService = new AppointmentSlotService(config);
+            _schedule = new DoctorScheduleService(config);
+            _slot = new AppointmentSlotService(config);
             _doctor = new DoctorService(config);
             _session = session;
         }
 
-        #region Index
-
-        /// <summary>
-        /// Displays all schedules.
-        /// </summary>
         public IActionResult Index(int? doctorId)
         {
             List<DoctorScheduleVM> schedules;
 
             if (doctorId.HasValue && doctorId.Value > 0)
             {
-                schedules = _scheduleService.GetByDoctor(doctorId.Value);
+                schedules = _schedule.GetByDoctor(doctorId.Value);
             }
             else
             {
-                int clinicId = Convert.ToInt32(_session.ClinicId);
-                schedules = _scheduleService.GetByClinic(clinicId);
+                _schedule.clinicId = Convert.ToInt32(_session.ClinicId);
+                schedules = _schedule.List();
             }
 
             return View(schedules);
         }
 
-        #endregion
-
-        #region Create GET
-
-        /// <summary>
-        /// Loads create schedule screen.
-        /// </summary>
         [HttpGet]
         public IActionResult Create()
         {
@@ -72,14 +60,6 @@ namespace Controllers
             return View(model);
         }
 
-        #endregion
-
-        #region Create POST / Save
-
-        /// <summary>
-        /// Saves doctor schedule.
-        /// Handles both insert and update.
-        /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Save(DoctorScheduleVM model)
@@ -94,10 +74,7 @@ namespace Controllers
                     return View("Create", model);
                 }
 
-                // Example:
-                // model.ClinicId = LoggedInClinicId;
-
-                _scheduleService.SaveSchedule(model);
+                _schedule.Add(model);
 
                 TempData["SuccessMessage"] = "Doctor schedule saved successfully.";
 
@@ -111,20 +88,13 @@ namespace Controllers
             }
         }
 
-        #endregion
-
-        #region Generate Slots
-
-        /// <summary>
-        /// Generates slots for doctor.
-        /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult GenerateSlots(int doctorId, DateTime fromDate, DateTime toDate)
         {
             try
             {
-                _slotService.GenerateSlots(doctorId, fromDate, toDate);
+                _slot.GenerateSlots(doctorId, fromDate, toDate);
 
                 TempData["SuccessMessage"] = "Appointment slots generated successfully.";
             }
@@ -136,16 +106,10 @@ namespace Controllers
             return RedirectToAction("Index");
         }
 
-        #endregion
-
-        #region Helpers
-
-        /// <summary>
-        /// Loads doctor dropdown.
-        /// </summary>
         private void LoadDoctors(int ClinicId = 0)
         {
-            var doctors = _doctor.GetDoctors(ClinicId) ?? new List<DoctorVM>();
+            _doctor.clinicId = ClinicId;
+            var doctors = _doctor.List() ?? new List<DoctorVM>();
 
             ViewBag.Doctors =
                 new SelectList(
@@ -155,6 +119,5 @@ namespace Controllers
                     "LastName");
         }
 
-        #endregion
     }
 }

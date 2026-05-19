@@ -6,20 +6,14 @@ using System.Collections.Generic;
 
 namespace BLL
 {
-    public class AppointmentService
+    public class AppointmentService : BaseService<AppointmentVM>
     {
         private readonly AppointmentDAL _appointmentDAL;
-        private readonly ConsultationDAL _consultationDAL;
 
         public AppointmentService(IConfiguration config)
         {
             _appointmentDAL = new AppointmentDAL(config);
-            _consultationDAL = new ConsultationDAL(config);
-        }
-
-        public void Insert(AppointmentVM obj)
-        {
-            _appointmentDAL.Insert(obj);
+            _dal = _appointmentDAL;
         }
 
         public List<AppointmentVM> GetTodaysAppointments(int doctorId)
@@ -32,14 +26,5 @@ namespace BLL
             _appointmentDAL.UpdateStatus(appointmentId, status);
         }
 
-        public ConsultationVM GetConsultationVM(int appointmentId)
-        {
-            return _appointmentDAL.GetConsultationVM(appointmentId);
-        }
-
-        public void SaveConsultation(ConsultationVM vm)
-        {
-            _consultationDAL.SaveConsultation(vm);
-        }
     }
 }

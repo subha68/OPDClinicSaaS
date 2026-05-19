@@ -33,9 +33,9 @@ namespace Controllers
         {
             var vm = new AppointmentBookingVM();
 
-            int clinicId = _session.ClinicId;
+            _department.clinicId = _session.ClinicId;
 
-            vm.Departments = _department.GetDepartments(clinicId)
+            vm.Departments = _department.List()
                 .Select(x => new SelectListItem
                 {
                     Value = x.DepartmentId.ToString(),
@@ -120,7 +120,7 @@ namespace Controllers
                 Status = "Booked"
             };
 
-            _appointment.Insert(appointment);
+            _appointment.Add(appointment);
 
             _slot.IncrementBookedCount(vm.SlotId);
 

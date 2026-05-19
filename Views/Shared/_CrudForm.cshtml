@@ -1,0 +1,45 @@
+@model dynamic
+
+<div class="page-shell">
+    <div class="glass-card">
+
+        <h2 class="page-title">@ViewBag.PageTitle</h2>
+
+        <form method="post">
+
+            @foreach (var field in ViewBag.Fields)
+            {
+                <div class="mb-3">
+                    <label>@field.Label</label>
+
+                    @if(field.Type == "text")
+                    {
+                        <input name="@field.Name"
+                               value="@Model?.GetType().GetProperty(field.Name)?.GetValue(Model)"
+                               class="form-control" />
+                    }
+
+                    @if(field.Type == "dropdown")
+                    {
+                        @Html.DropDownList(
+                            field.Name,
+                            ViewBag.Dropdowns[field.Name],
+                            "-- Select --",
+                            new { @class="form-select" })
+                    }
+                </div>
+            }
+
+            <button class="btn btn-future">
+                Save
+            </button>
+
+            <a asp-action="Index"
+               class="btn btn-outline-secondary ms-2">
+               Cancel
+            </a>
+
+        </form>
+
+    </div>
+</div>

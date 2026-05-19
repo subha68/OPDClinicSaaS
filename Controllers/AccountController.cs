@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using DAL;
 using BLL;
+using Helpers;
 
 namespace Controllers   
 {
@@ -14,6 +15,7 @@ namespace Controllers
         private readonly FeatureService _featureService;
         private readonly RoleService _role;
         private readonly DoctorService _doctor;
+        private readonly ClinicService _clinic;
 
         public AccountController(IConfiguration configuration, SessionHelper session)
         {
@@ -22,6 +24,7 @@ namespace Controllers
             _featureService = new FeatureService(configuration);
             _role = new RoleService(configuration);
             _doctor = new DoctorService(configuration);
+            _clinic = new ClinicService(configuration);
         }
 
         [HttpGet]
@@ -31,22 +34,28 @@ namespace Controllers
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["Expires"] = "0";
 
+            var clinicId = ClinicContextHelper.GetClinicId(HttpContext);
+            var clinicCode = ClinicContextHelper.GetClinicCode(HttpContext);
+
+            HttpContext.Session.SetString("ClinicId", clinicId == null ? "" : clinicId.Value.ToString());
+            HttpContext.Session.SetString("ClinicCode", clinicCode ?? "");
+
+            ViewBag.ClinicId = clinicId;
+            ViewBag.ClinicCode = clinicCode;
+
             return View();
         }
 
         [HttpPost]
         public async Task<IActionResult> Login(string username, string password)
         {
-            var user = _userDAL.ValidateUser(username, password);
+            var clinicId = ClinicContextHelper.GetClinicId(HttpContext);
+            var clinicCode = ClinicContextHelper.GetClinicCode(HttpContext);
+            HttpContext.Session.SetString("ClinicId", clinicId == null ? "" : clinicId.Value.ToString());
+            HttpContext.Session.SetString("ClinicCode", clinicCode ?? "");
+            ViewBag.ClinicCode = clinicCode;
 
-            foreach (var key in ModelState.Keys)
-            {
-                var errors = ModelState[key].Errors;
-                foreach (var err in errors)
-                {
-                    Console.WriteLine($"Field: {key} → Error: {err.ErrorMessage}");
-                }
-            }
+            var user = _userDAL.ValidateUser(username, password, clinicId);
 
             if (user != null)
             {
@@ -84,11 +93,12 @@ namespace Controllers
                 HttpContext.Session.SetString("UserId", user.UserId.ToString());
                 HttpContext.Session.SetString("Username", username);
                 HttpContext.Session.SetString("RoleName", rolename);
-                HttpContext.Session.SetString("FirstName", user.FirstName);
-                HttpContext.Session.SetString("LastName", user.LastName);
+                HttpContext.Session.SetString("FirstName", user.FirstName ?? "");
+                HttpContext.Session.SetString("LastName", user.LastName ?? "");
+                HttpContext.Session.SetString("DisplayName", (user.FirstName ?? "") + " " + (user.LastName ?? ""));
 
-                if (user.ClinicId.HasValue)
-                    HttpContext.Session.SetString("ClinicId", user.ClinicId.Value.ToString());
+                //if (user.ClinicId.HasValue)
+                //    HttpContext.Session.SetString("ClinicId", user.ClinicId.Value.ToString());
 
                 var features = _featureService.GetFeatures(user.RoleId);
 
@@ -112,7 +122,43 @@ namespace Controllers
 
             // Remove auth cookie
             return RedirectToAction("Login", "Account");
-        }        
+        }
+
+        [HttpPost]
+        public IActionResult ValidateOrganisation(string clinicCode)
+        {
+            if (string.IsNullOrWhiteSpace(clinicCode))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Organisation code required."
+                });
+            }
+
+            var clinic = _clinic.ValidateClinicCode(clinicCode);
+
+            if (clinic == null)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Invalid organisation code."
+                });
+            }
+
+            HttpContext.Session.SetString("ClinicCode", clinic.ClinicCode);
+            HttpContext.Session.SetString("ClinicId", clinic.ClinicId.ToString());
+
+            ClinicContextHelper.Save(HttpContext, clinic.ClinicId, clinic.ClinicCode);
+
+            return Json(new
+            {
+                success = true,
+                clinicCode = clinic.ClinicCode,
+                clinicId = clinic.ClinicId
+            });
+        }       
 
     }
 }

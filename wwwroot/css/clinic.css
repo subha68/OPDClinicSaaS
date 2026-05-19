@@ -1,0 +1,45 @@
+.btn-add{
+    background:linear-gradient(90deg,#2563eb,#7c3aed);
+    color:white;
+    padding:14px 26px;
+    border-radius:16px;
+    text-decoration:none;
+    font-weight:600;
+}
+
+.clinic-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    gap:24px;
+}
+
+.clinic-card{
+    background:rgba(255,255,255,.95);
+    border-radius:22px;
+    padding:28px;
+    box-shadow:0 10px 30px rgba(0,0,0,.05);
+    transition:.25s;
+}
+
+.clinic-card:hover{
+    transform:translateY(-6px);
+}
+
+.clinic-icon{
+    width:58px;
+    height:58px;
+    border-radius:50%;
+    background:#eff6ff;
+    color:#2563eb;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:24px;
+    margin-bottom:18px;
+}
+
+.clinic-name{
+    font-size:22px;
+    font-weight:700;
+    margin-bottom:6px;
+}

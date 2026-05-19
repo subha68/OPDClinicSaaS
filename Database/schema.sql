@@ -259,7 +259,7 @@ CREATE TABLE AppointmentSlot
 
 CREATE TABLE PharmacologyAdvices
 (
-    PrescriptionId INT IDENTITY PRIMARY KEY,
+    PharmacologyId INT IDENTITY PRIMARY KEY,
     ConsultationId INT NOT NULL,
     AppointmentId INT NOT NULL,
     MedicineName NVARCHAR(200),

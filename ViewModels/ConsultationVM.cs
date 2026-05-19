@@ -5,6 +5,7 @@ namespace ViewModels
 {
     public class ConsultationVM
     {
+        public int ConsultationId { get; set; }
         public int AppointmentId { get; set; }
 
         public string PatientName { get; set; }

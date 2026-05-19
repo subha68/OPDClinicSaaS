@@ -29,19 +29,19 @@ namespace Controllers
 
         public ActionResult Index()
         {
-            int clinicId = Convert.ToInt32(_session.ClinicId);
-            var list = _doctor.GetDoctors(clinicId);
+            _doctor.clinicId = Convert.ToInt32(_session.ClinicId);
+            var list = _doctor.List();
 
             return View(list);
         }
 
         public ActionResult Create()
         {
-            int clinicId = Convert.ToInt32(_session.ClinicId);
+            _department.clinicId = Convert.ToInt32(_session.ClinicId);
 
             var model = new DoctorVM
             {
-                Departments = _department.GetDepartments(clinicId)
+                Departments = _department.List()
                     .Select(d => new SelectListItem
                     {
                         Value = d.DepartmentId.ToString(),
@@ -61,7 +61,8 @@ namespace Controllers
                 {
                     ModelState.AddModelError("Username", "Username already exists");
                 }
-                vm.Departments = _department.GetDepartments(vm.ClinicId)
+                _department.clinicId = Convert.ToInt32(_session.ClinicId);
+                vm.Departments = _department.List()
                     .Select(d => new SelectListItem
                     {
                         Value = d.DepartmentId.ToString(),
@@ -82,7 +83,7 @@ namespace Controllers
                 LastName = vm.LastName
             };
 
-            int newUserId = _user.CreateUser(user);
+            int newUserId = _user.Add(user);
 
             // STEP 2: create doctor
             var doctor = new DoctorVM
@@ -97,7 +98,7 @@ namespace Controllers
                 UserId = newUserId
             };
 
-            _doctor.CreateDoctor(doctor, vm.ClinicId);
+            _doctor.Add(doctor);
 
             return RedirectToAction("Index");
         }

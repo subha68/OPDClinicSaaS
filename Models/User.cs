@@ -14,6 +14,7 @@ namespace Models
 
         [Required]
         public int RoleId { get; set; }
+        public string? RoleName { get; set; }
 
         [Required]
         public string FirstName { get; set; }
@@ -21,11 +22,12 @@ namespace Models
         [Required]
         public string LastName { get; set; }
 
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
-        public string Phone { get; set; }
+        public string? Phone { get; set; }
     
         public int? ClinicId { get; set; }
+        public string? ClinicName { get; set; }
 
         public bool IsFirstLogin { get; set; }
         public bool IsActive { get; set; }

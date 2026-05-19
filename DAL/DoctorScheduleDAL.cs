@@ -7,7 +7,7 @@ using System.Data;
 
 namespace DAL
 {
-    public class DoctorScheduleDAL
+    public class DoctorScheduleDAL : IDAL<DoctorScheduleVM>
     {
         private readonly DbHelper _db;
 
@@ -15,8 +15,6 @@ namespace DAL
         {
             _db = new DbHelper(configuration);
         }
-
-        #region Get All Schedules
 
         public List<DoctorScheduleVM> GetAllDoctorSchedulesByClinic(int clinicId)
         {
@@ -59,10 +57,6 @@ namespace DAL
 
             return schedules;
         }
-
-        #endregion
-
-        #region Get By Doctor
 
         public List<DoctorScheduleVM> GetByDoctor(int doctorId)
         {
@@ -108,11 +102,7 @@ namespace DAL
             return schedules;
         }
 
-        #endregion
-
-        #region Insert Schedule
-
-        public int Insert(DoctorScheduleVM model)
+        public int Add(DoctorScheduleVM model)
         {
             using (SqlConnection con = _db.GetConnection())
             {
@@ -163,10 +153,6 @@ namespace DAL
             }
         }
 
-        #endregion
-
-        #region Update Schedule
-
         public bool Update(DoctorScheduleVM model)
         {
             using (SqlConnection con = _db.GetConnection())
@@ -205,10 +191,6 @@ namespace DAL
             }
         }
 
-        #endregion
-
-        #region Delete Schedule
-
         public bool Delete(int scheduleId)
         {
             using (SqlConnection con = _db.GetConnection())
@@ -230,14 +212,16 @@ namespace DAL
             }
         }
 
-        #endregion
+        public List<DoctorScheduleVM> GetAll()
+        {
+            // This method is not used in our current design, but we need to implement it to satisfy the IDAL interface.
+            // In a real application, we might want to throw a NotImplementedException or return an empty list instead.
+            return new List<DoctorScheduleVM>();
+        }
 
-        #region Overlap Validation
-
-        /// <summary>
         /// Checks whether another active schedule overlaps
         /// with the provided schedule timings.
-        /// </summary>
+
         public bool ExistsOverlap(
             int doctorId,
             int dayOfWeek,
@@ -287,10 +271,47 @@ namespace DAL
             }
         }
 
-        #endregion
+        public DoctorScheduleVM Get(int scheduleId)
+        {
+            using (SqlConnection con = _db.GetConnection())
+            {
+                string query = @"
+                    SELECT
+                        ScheduleId,
+                        Doctors.DoctorId,
+                        Doctors.FirstName AS DoctorFirstName,
+                        Doctors.LastName AS DoctorLastName,
+                        Clinics.ClinicId,
+                        Clinics.Name AS ClinicName,
+                        DayOfWeek,
+                        StartTime,
+                        EndTime,
+                        SlotDurationMinutes,
+                        MaxPatientsPerSlot,
+                        IsActive,
+                        CreatedOn
+                    FROM DoctorSchedules
+                    INNER JOIN Doctors ON DoctorSchedules.DoctorId = Doctors.DoctorId
+                    INNER JOIN Clinics ON DoctorSchedules.ClinicId = Clinics.ClinicId
+                    WHERE ScheduleId = @ScheduleId";
 
-        #region Private Mapper
+                SqlCommand cmd = new SqlCommand(query, con);
+                cmd.Parameters.AddWithValue("@ScheduleId", scheduleId);
 
+                con.Open();
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        return MapReader(reader);
+                    }
+                }
+            }
+
+            return null; // Not found
+        }
+        
         private DoctorScheduleVM MapReader(SqlDataReader reader)
         {
             return new DoctorScheduleVM
@@ -315,6 +336,5 @@ namespace DAL
             };
         }
 
-        #endregion
     }
 }

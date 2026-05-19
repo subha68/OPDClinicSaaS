@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace BLL
 {
-    public class DoctorScheduleService
+    public class DoctorScheduleService : BaseService<DoctorScheduleVM>
     {
         private readonly DoctorScheduleDAL _scheduleDAL;
         private readonly AppointmentSlotDAL _slotDAL;
@@ -15,11 +15,10 @@ namespace BLL
         {
             _scheduleDAL = new DoctorScheduleDAL(config);
             _slotDAL = new AppointmentSlotDAL(config);
+            _dal = _scheduleDAL;
         }
 
-        #region Get Methods
-
-        public List<DoctorScheduleVM> GetByClinic(int clinicId)
+        public override List<DoctorScheduleVM> List()
         {
             return _scheduleDAL.GetAllDoctorSchedulesByClinic(clinicId);
         }
@@ -29,15 +28,10 @@ namespace BLL
             return _scheduleDAL.GetByDoctor(doctorId);
         }
 
-        #endregion
-
-        #region Save Schedule
-
-        /// <summary>
         /// Validates and saves doctor schedule.
         /// Handles both Insert and Update.
-        /// </summary>
-        public void SaveSchedule(DoctorScheduleVM model)
+
+        public override int Add(DoctorScheduleVM model)
         {
             ValidateSchedule(model);
 
@@ -56,7 +50,7 @@ namespace BLL
 
             if (model.ScheduleId > 0)
             {
-                bool updated = _scheduleDAL.Update(model);
+                bool updated = _dal.Update(model);
 
                 if (!updated)
                 {
@@ -65,7 +59,7 @@ namespace BLL
             }
             else
             {
-                int scheduleId = _scheduleDAL.Insert(model);
+                int scheduleId = _dal.Add(model);
 
                 if (scheduleId <= 0)
                 {
@@ -74,15 +68,10 @@ namespace BLL
 
                 model.ScheduleId = scheduleId;
             }
+
+            return model.ScheduleId;
         }
 
-        #endregion
-
-        #region Validate Schedule
-
-        /// <summary>
-        /// Validates schedule business rules.
-        /// </summary>
         public void ValidateSchedule(DoctorScheduleVM model)
         {
             if (model == null)
@@ -141,11 +130,7 @@ namespace BLL
             }
         }
 
-        #endregion
-
-        #region Delete Schedule
-
-        public void DeleteSchedule(int scheduleId)
+        public override bool Delete(int scheduleId)
         {
             if (scheduleId <= 0)
             {
@@ -158,16 +143,13 @@ namespace BLL
             {
                 throw new Exception("Unable to delete schedule.");
             }
+
+            return deleted;
         }
 
-        #endregion
-
-        #region Generate Slots
-
-        /// <summary>
         /// Generates appointment slots
         /// between given date range.
-        /// </summary>
+
         public void GenerateSlots(
             int doctorId,
             DateTime fromDate,
@@ -213,10 +195,6 @@ namespace BLL
                 currentDate = currentDate.AddDays(1);
             }
         }
-
-        #endregion
-
-        #region Generate Slots For Day
 
         private void GenerateSlotsForDay(
             DoctorScheduleVM schedule,
@@ -269,14 +247,11 @@ namespace BLL
                             CreatedOn = DateTime.Now
                         };
 
-                    _slotDAL.Insert(slot);
+                    _slotDAL.Add(slot);
                 }
 
-                currentSlotStart =
-                    currentSlotEnd;
+                currentSlotStart = currentSlotEnd;
             }
         }
-
-        #endregion
     }
 }

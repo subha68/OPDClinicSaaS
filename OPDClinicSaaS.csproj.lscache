@@ -125,6 +125,7 @@ ViewModels/
  DepartmentVM.cs
  DoctorScheduleVM.cs
  DoctorVM.cs
+ LoginVM.cs
  PharmacologyAdviceVM.cs
  UserVM.cs
 

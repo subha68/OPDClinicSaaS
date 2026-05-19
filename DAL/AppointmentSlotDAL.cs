@@ -6,7 +6,7 @@ using Microsoft.Data.SqlClient;
 
 namespace DAL
 {
-    public class AppointmentSlotDAL
+    public class AppointmentSlotDAL : IDAL<AppointmentSlot>
     {
         private readonly DbHelper _db;
 
@@ -14,8 +14,6 @@ namespace DAL
         {
             _db = new DbHelper(config);
         }
-
-        #region Get All Slots
 
         public List<AppointmentSlot> GetAll()
         {
@@ -58,9 +56,46 @@ namespace DAL
             return slots;
         }
 
-        #endregion
+        public AppointmentSlot Get(int slotId)
+        {
+            using (SqlConnection conn = _db.GetConnection())
+            {
+                string query = @"
+                    SELECT
+                        SlotId,
+                        DoctorId,
+                        ClinicId,
+                        SlotDate,
+                        StartDateTime,
+                        EndDateTime,
+                        Capacity,
+                        BookedCount,
+                        IsBlocked,
+                        CreatedOn
+                    FROM AppointmentSlot
+                    WHERE SlotId = @SlotId";
 
-        #region Get By Doctor
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue(
+                        "@SlotId",
+                        slotId);
+
+                    conn.Open();
+
+                    using (SqlDataReader reader =
+                        cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            return MapReader(reader);
+                        }
+                    }
+                }
+
+                return null; // Not found
+            }
+        }
 
         public List<AppointmentSlot> GetByDoctor(int doctorId)
         {
@@ -103,10 +138,6 @@ namespace DAL
 
             return slots;
         }
-
-        #endregion
-
-        #region Get By Date
 
         public List<AppointmentSlot> GetByDate(int doctorId, DateTime slotDate)
         {
@@ -158,11 +189,7 @@ namespace DAL
             return slots;
         }
 
-        #endregion
-
-        #region Insert Slot
-
-        public int Insert(AppointmentSlot model)
+        public int Add(AppointmentSlot model)
         {
             using (SqlConnection conn = _db.GetConnection())
             {
@@ -238,10 +265,6 @@ namespace DAL
             }
         }
 
-        #endregion
-
-        #region Update Slot
-
         public bool Update(AppointmentSlot model)
         {
             using (SqlConnection conn = _db.GetConnection())
@@ -275,17 +298,12 @@ namespace DAL
 
                     conn.Open();
 
-                    int rowsAffected =
-                        cmd.ExecuteNonQuery();
+                    int rowsAffected = cmd.ExecuteNonQuery();
 
                     return rowsAffected > 0;
                 }
             }
         }
-
-        #endregion
-
-        #region Delete Slot
 
         public bool Delete(int slotId)
         {
@@ -312,13 +330,8 @@ namespace DAL
             }
         }
 
-        #endregion
-
-        #region Check Slot Exists
-
-        /// <summary>
         /// Prevent duplicate slot generation.
-        /// </summary>
+
         public bool ExistsSlot(
             int doctorId,
             DateTime startDateTime,
@@ -357,10 +370,6 @@ namespace DAL
                 }
             }
         }
-
-        #endregion
-
-        #region Slot Capacity Helpers
 
         public bool IsSlotAvailable(int slotId)
         {
@@ -417,10 +426,6 @@ namespace DAL
             }
         }
 
-        #endregion
-
-        #region Private Mapper
-
         private AppointmentSlot MapReader(
             SqlDataReader reader)
         {
@@ -448,6 +453,5 @@ namespace DAL
             };
         }
 
-        #endregion
     }
 }

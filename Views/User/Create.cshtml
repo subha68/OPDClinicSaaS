@@ -4,49 +4,101 @@
 
 @model ViewModels.UserVM
 
-<h2>Create User</h2>
+@{
+    bool isEdit = Model != null && Model.User.UserId > 0;
+    ViewData["Title"] = isEdit ? "Update User" : "Add User";
+}
 
-<form asp-action="Create" method="post">
+<div class="container">
+    <div class="card shadow p-4">
+        <h3 class="mb-4">
+            @(isEdit ? "Update User" : "Add User")
+        </h3>
 
-    <div>
-        <label>FirstName</label>
-        <input asp-for="User.FirstName" />
+        <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+
+            @Html.AntiForgeryToken()
+
+            @if (isEdit)
+            {
+                <input type="hidden" asp-for="User.UserId" />
+            }
+
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="User.Username" class="form-label"></label>
+                <input asp-for="User.Username" class="form-control" />
+                <span asp-validation-for="User.Username" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="User.PasswordHash" class="form-label"></label>
+                <input asp-for="User.PasswordHash" type="password" class="form-control" />
+                <span asp-validation-for="User.PasswordHash" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="User.FirstName" class="form-label"></label>
+                <input asp-for="User.FirstName" class="form-control" />
+                <span asp-validation-for="User.FirstName" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="User.LastName" class="form-label"></label>
+                <input asp-for="User.LastName" class="form-control" />
+                <span asp-validation-for="User.LastName" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="User.Email" class="form-label"></label>
+                <input asp-for="User.Email" class="form-control" />
+                <span asp-validation-for="User.Email" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="User.Phone" class="form-label"></label>
+                <input asp-for="User.Phone" class="form-control" />
+                <span asp-validation-for="User.Phone" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="User.ClinicId" class="form-label">Clinic</label>
+                <select asp-for="User.ClinicId"
+                        asp-items="Model.Clinics"
+                        class="form-select">
+                    <option value="">Select Clinic</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="User.RoleId" class="form-label">Role</label>
+                <select asp-for="User.RoleId"
+                        asp-items="Model.Roles"
+                        class="form-select">
+                    <option value="">Select Role</option>
+                </select>
+            </div>
+
+            <div class="form-check mb-3">
+                <input asp-for="User.IsActive" class="form-check-input" />
+                <label asp-for="User.IsActive" class="form-check-label"></label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                @(isEdit ? "Update" : "Save")
+            </button>
+
+            <a asp-action="Index" class="btn btn-secondary">
+                Cancel
+            </a>
+
+        </form>
     </div>
+</div>
 
-    <div>
-        <label>LastName</label>
-        <input asp-for="User.LastName" />
-    </div>
-
-    <div>
-        <label>Email</label>
-        <input asp-for="User.Email" />
-    </div>
-
-    <div>
-        <label>Phone</label>
-        <input asp-for="User.Phone" />
-    </div>
-
-    <div>
-        <label>Username</label>
-        <input asp-for="User.Username" />
-    </div>
-
-    <div>
-        <label>Password</label>
-        <input asp-for="User.PasswordHash" type="password" />
-    </div>
-
-    <div>
-        <label>Role</label>
-        <select asp-for="User.RoleId" asp-items="Model.Roles"></select>
-    </div>
-
-    <div>
-        <label>Clinic</label>
-        <select asp-for="User.ClinicId" asp-items="Model.Clinics"></select>
-    </div>
-
-    <button type="submit">Create</button>
-</form>
+@section Scripts{
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

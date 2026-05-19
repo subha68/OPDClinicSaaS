@@ -14,6 +14,7 @@ namespace ViewModels
         public string LastName { get; set; }
 
         public int DepartmentId { get; set; }
+        public string DepartmentName { get; set; }
         public string RegistrationNo { get; set; }
         public string Qualification { get; set; }
 

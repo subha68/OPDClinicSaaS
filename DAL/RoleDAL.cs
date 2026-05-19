@@ -4,7 +4,7 @@ using Models;
 
 namespace DAL
 {
-    public class RoleDAL
+    public class RoleDAL : IDAL<Role>
     {
         private readonly DbHelper _db;
 
@@ -13,19 +13,47 @@ namespace DAL
             _db = new DbHelper(configuration);
         }
 
-        public void Add(Role role)
+        public int Add(Role role)
         {
             using (SqlConnection conn = _db.GetConnection())
             {
-                string query = @"INSERT INTO Roles (RoleName) VALUES (@RoleName)";
+                string query = @"INSERT INTO Roles (RoleName) VALUES (@RoleName);
+                                    SELECT SCOPE_IDENTITY();";
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@RoleName", role.RoleName);
                 conn.Open();
-                cmd.ExecuteNonQuery();
+                return Convert.ToInt32(cmd.ExecuteScalar());
             }
         }
 
-        public List<Role> GetRoles()
+        public bool Update(Role role)
+        {
+            using (SqlConnection conn = _db.GetConnection())
+            {
+                string query = @"UPDATE Roles SET RoleName = @RoleName WHERE RoleId = @RoleId";
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@RoleName", role.RoleName);
+                cmd.Parameters.AddWithValue("@RoleId", role.RoleId);
+                conn.Open();
+                int rowsAffected = cmd.ExecuteNonQuery();
+                return rowsAffected > 0;
+            }
+        }
+
+        public bool Delete(int id)
+        {
+            using (SqlConnection conn = _db.GetConnection())
+            {
+                string query = @"DELETE FROM Roles WHERE RoleId = @RoleId";
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@RoleId", id);
+                conn.Open();
+                int rowsAffected = cmd.ExecuteNonQuery();
+                return rowsAffected > 0;
+            }
+        }
+
+        public List<Role> GetAll()
         {
             var list = new List<Role>();
 
@@ -71,7 +99,7 @@ namespace DAL
             return null; // Not found
         }
 
-        public Role GetRoleById(int roleId)
+        public Role Get(int roleId)
         {
             using (SqlConnection conn = _db.GetConnection())
             {

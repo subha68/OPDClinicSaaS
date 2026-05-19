@@ -8,16 +8,20 @@ namespace Controllers
     [AuthorizeRole(1)] // SuperAdmin only
     public class ClinicController : Controller
     {
-        private readonly ClinicService _service;
+        private readonly ClinicService _clinic;
+        private readonly SessionHelper _session;
 
-        public ClinicController(IConfiguration config)
+        public ClinicController(IConfiguration config, SessionHelper session)
         {
-            _service = new ClinicService(config);
+            _clinic = new ClinicService(config);
+            _session = session;
         }
 
         public IActionResult Index()
         {
-            var clinics = _service.GetClinics();
+            int? clinicId = _session.ClinicId;
+            string roleName = _session.RoleName;
+            var clinics = roleName == "SuperAdmin" ? _clinic.List() : new List<Clinic> { _clinic.Get(clinicId.Value) };
             return View(clinics);
         }
 
@@ -49,7 +53,7 @@ namespace Controllers
                 return View(clinic);
             }
 
-            _service.CreateClinic(clinic);
+            _clinic.Add(clinic);
 
             return RedirectToAction("Index");
         }

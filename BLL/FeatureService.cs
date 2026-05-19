@@ -3,18 +3,19 @@ using Models;
 
 namespace BLL
 {
-    public class FeatureService
+    public class FeatureService : BaseService<Feature>
     {
-        private readonly FeatureDAL _dal;
+        private readonly FeatureDAL _featureDAL;
 
         public FeatureService(IConfiguration config)
         {
-            _dal = new FeatureDAL(config);
+            _featureDAL = new FeatureDAL(config);
+            _dal = _featureDAL;
         }
 
         public List<Feature> GetFeatures(int roleId)
         {
-            return _dal.GetFeaturesByRole(roleId);
+            return _featureDAL.GetFeaturesByRole(roleId);
         }
     }
 }

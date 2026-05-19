@@ -1,0 +1,47 @@
+@model IEnumerable<dynamic>
+
+<div class="page-shell">
+    <div class="glass-card">
+
+        <div class="d-flex justify-content-between mb-4">
+            <h2 class="page-title">@ViewBag.PageTitle</h2>
+
+            <a asp-action="Create" class="btn btn-future">
+                + Add New
+            </a>
+        </div>
+
+        <table class="table table-hover table-future">
+            <thead>
+                <tr>
+                    @foreach (string col in ViewBag.Columns)
+                    {
+                        <th>@col</th>
+                    }
+                    <th class="text-center">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+            @foreach (var row in Model)
+            {
+                <tr>
+                    @foreach (string prop in ViewBag.Properties)
+                    {
+                        <td>@row.GetType().GetProperty(prop).GetValue(row)</td>
+                    }
+
+                    <td class="text-center">
+                        <a asp-action="Edit"
+                           asp-route-id="@row.UserId"
+                           class="btn btn-sm btn-outline-primary">
+                            Edit
+                        </a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+    </div>
+</div>

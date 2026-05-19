@@ -1,25 +1,31 @@
 using DAL;
 using Models;
 
-public class UserService
+namespace BLL
 {
-    private readonly UserDAL _dal;
-
-    public UserService(IConfiguration config)
+    public class UserService : BaseService<User>
     {
-        _dal = new UserDAL(config);
+        private readonly UserDAL _userDAL;
+
+        public UserService(IConfiguration config)
+        {
+            _userDAL = new UserDAL(config);
+            _dal = _userDAL;
+        }
+
+        public override int Add(User user)
+        {
+            // 🔐 Hash password (basic for now)
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
+
+            return _dal.Add(user);
+        }
+
+        public User GetById(int userId) => _dal.Get(userId);
+
+        public override List<User> List() => _dal.GetAll();
+        public List<User> ListByClinic(int clinicId) => _userDAL.GetAllByClinic(clinicId);
+        public bool UsernameExists(string username) => _userDAL.GetUserCountByName(username) > 0;
+
     }
-
-    public int CreateUser(User user)
-    {
-        // 🔐 Hash password (basic for now)
-        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
-
-        return _dal.Add(user);
-    }
-
-    public List<User> GetUsers() => _dal.GetUsers();
-
-    public bool UsernameExists(string username) => _dal.GetUserCountByName(username) > 0;
-
 }

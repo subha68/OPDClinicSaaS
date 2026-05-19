@@ -13,17 +13,18 @@ namespace Controllers
     public class DepartmentController : Controller
     {
         private readonly SessionHelper _session;
-        private DepartmentService _service;
+        private DepartmentService _department;
 
         public DepartmentController(IConfiguration config, SessionHelper session)
         {
-            _service = new DepartmentService(config);
+            _department = new DepartmentService(config);
             _session = session;
         }
 
         public ActionResult Index()
         {
-            var list = _service.GetDepartments(_session.ClinicId);
+            _department.setClinicId(_session.ClinicId);
+            var list = _department.List();
             return View(list);
         }
 
@@ -39,7 +40,8 @@ namespace Controllers
 
             if (ModelState.IsValid)
             {
-                _service.CreateDepartment(model, clinicId);
+                _department.setClinicId(clinicId);
+                _department.Add(model);
                 return RedirectToAction("Index");
             }
 

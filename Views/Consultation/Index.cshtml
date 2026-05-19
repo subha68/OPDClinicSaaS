@@ -72,7 +72,7 @@
                     <td>
                         @if (item.Status == "Booked")
                         {
-                            <a asp-controller="DoctorConsultation"
+                            <a asp-controller="Consultation"
                                asp-action="Start"
                                asp-route-appointmentId="@item.AppointmentId"
                                class="btn btn-success btn-sm">
@@ -81,7 +81,7 @@
                         }
                         else if (item.Status == "In Consultation")
                         {
-                            <a asp-controller="DoctorConsultation"
+                            <a asp-controller="Consultation"
                                asp-action="Consult"
                                asp-route-appointmentId="@item.AppointmentId"
                                class="btn btn-warning btn-sm">
@@ -93,6 +93,23 @@
                             <span class="text-muted">
                                 Completed
                             </span>
+                        }
+                    </td>
+                    <td>
+                        @if (item.Status == "Completed")
+                        {
+                        <a asp-controller="Consultation"
+                            asp-action="Preview"
+                            asp-route-appointmentId="@item.AppointmentId"
+                            class="btn btn-success">
+                                <i class="fa fa-file-prescription"></i> Prescription
+                            </a>
+                        }
+                        else
+                        {
+                            <button class="btn btn-secondary" disabled>
+                                <i class="fa fa-file-prescription"></i> Prescription
+                            </button>
                         }
                     </td>
                 </tr>

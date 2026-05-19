@@ -4,18 +4,19 @@ using ViewModels;
 
 namespace BLL
 {    
-    public class PatientService
+    public class PatientService : BaseService<Patient>
     {
-        private readonly PatientDAL _dal;
+        private readonly PatientDAL _patientDAL;
 
         public PatientService(IConfiguration config)
         {
-            _dal = new PatientDAL(config);
+            _patientDAL = new PatientDAL(config);
+            _dal = _patientDAL;
         }
 
         public Patient GetByMobile(string mobile)
         {
-            return _dal.GetByMobile(mobile);
+            return _patientDAL.GetByMobile(mobile);
         }
 
     }

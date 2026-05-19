@@ -3,38 +3,39 @@ using Models;
 using ViewModels;
 
 namespace BLL
-{    public class DoctorService
+{    public class DoctorService : BaseService<DoctorVM>
     {
-        private readonly DoctorDAL _dal;
+        private readonly DoctorDAL _doctorDAL;
 
         public DoctorService(IConfiguration config)
         {
-            _dal = new DoctorDAL(config);
+            _doctorDAL = new DoctorDAL(config);
+            _dal = _doctorDAL;
         }
 
-        public void CreateDoctor(DoctorVM model, int clinicId)
+        public override int Add(DoctorVM model)
         {
             model.ClinicId = clinicId;
 
             if (model.DepartmentId == 0)
                 throw new Exception("Department required");
 
-            _dal.AddDoctor(model);
+            return _dal.Add(model);
         }
 
-        public List<DoctorVM> GetDoctors(int clinicId)
+        public override List<DoctorVM> List()
         {
-            return _dal.GetDoctorsByClinic(clinicId);
+            return _doctorDAL.GetDoctorsByClinic(clinicId);
         }
 
         public List<DoctorVM> GetDoctorsByDepartment(int clinicId, int departmentId)
         {
-            return _dal.GetDoctorsByDepartment(clinicId, departmentId);
+            return _doctorDAL.GetDoctorsByDepartment(clinicId, departmentId);
         }
 
         public int GetDoctorIdByUserId(int userId)
         {
-            return _dal.GetDoctorIdByUserId(userId);
+            return _doctorDAL.GetDoctorIdByUserId(userId);
         }
     }
 }

@@ -2,33 +2,90 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-@model List<Models.User>
+@model IEnumerable<Models.User>
 
-<h2>Users</h2>
+@{
+    ViewData["Title"] = "Users";
+}
 
-<a asp-action="Create" class="btn btn-primary">Create User</a>
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>User Management</h3>
+        <a asp-action="Create" class="btn btn-primary">
+            + Add User
+        </a>
+    </div>
 
-<table class="table">
-    <tr>
-        <th>First Name</th>
-        <th>Last Name</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Username</th>
-        <th>Role</th>
-        <th>Clinic</th>
-    </tr>
-
-    @foreach (var u in Model)
+    @if (TempData["Success"] != null)
     {
-        <tr>
-            <td>@u.FirstName</td>
-            <td>@u.LastName</td>
-            <td>@u.Email</td>
-            <td>@u.Phone</td>
-            <td>@u.Username</td>
-            <td>@u.RoleId</td>
-            <td>@u.ClinicId</td>
-        </tr>
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
     }
-</table>
+
+    <table class="table table-bordered table-hover shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Username</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Clinic</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th width="180">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Any())
+            {
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td>@user.Username</td>
+                        <td>@user.FirstName</td>
+                        <td>@user.LastName</td>
+                        <td>@user.Email</td>
+                        <td>@user.Phone</td>
+                        <td>@user.ClinicName</td>
+                        <td>@user.RoleName</td>
+                        <td>
+                            @if (user.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Inactive</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Edit"
+                               asp-route-id="@user.UserId"
+                               class="btn btn-sm btn-warning">
+                                Edit
+                            </a>
+
+                            <a asp-action="Delete"
+                               asp-route-id="@user.UserId"
+                               class="btn btn-sm btn-danger"
+                               onclick="return confirm('Delete this user?');">
+                                Delete
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" class="text-center">
+                        No users found
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+

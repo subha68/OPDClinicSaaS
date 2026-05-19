@@ -1,28 +1,32 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using QuestPDF.Fluent;
 using DAL;
 using BLL;
 using Models;
 using ViewModels;
 using Filters;
+using Documents;
 
 namespace Controllers
 {
     [AuthorizeRole(4)] // Doctor
 
-    public class DoctorConsultationController : Controller
+    public class ConsultationController : Controller
     {
         private readonly SessionHelper _session;
         private AppointmentService _appointment;
+        private ConsultationService _consultation;
         private DoctorService _doctor;
         private PharmacologyService _pharmacology;
 
-        public DoctorConsultationController(IConfiguration config, SessionHelper session)
+        public ConsultationController(IConfiguration config, SessionHelper session)
         {
             _appointment = new AppointmentService(config);
             _session = session;
             _doctor = new DoctorService(config);
             _pharmacology = new PharmacologyService(config);
+            _consultation = new ConsultationService(config);
         }
 
         public IActionResult Index()
@@ -44,7 +48,7 @@ namespace Controllers
         [HttpGet]
         public IActionResult Consult(int appointmentId)
         {
-            var vm = _appointment.GetConsultationVM(appointmentId);
+            var vm = _consultation.GetConsultationVM(appointmentId);
 
             return View(vm);
         }
@@ -52,11 +56,11 @@ namespace Controllers
         [HttpPost]
         public IActionResult Consult(ConsultationVM vm)
         {
-            _appointment.SaveConsultation(vm);
+            int consultationId = _consultation.SaveConsultation(vm);
 
             foreach(var med in vm.pharmacologyAdvices)
             {
-                _pharmacology.Add(vm.AppointmentId, med);
+                _pharmacology.Add(consultationId, vm.AppointmentId, med);
             }
 
             _appointment.UpdateStatus(vm.AppointmentId, "Completed");
@@ -64,6 +68,27 @@ namespace Controllers
             TempData["Success"] = "Consultation completed";
 
             return RedirectToAction("Index");
+        }
+
+        public IActionResult Preview(int appointmentId)
+        {
+            var vm = _consultation.GetPrescription(appointmentId);
+
+            return View(vm);
+        }
+
+        public IActionResult Download(int appointmentId)
+        {
+            var vm = _consultation.GetPrescription(appointmentId);
+
+            var pdf = new PrescriptionPdfDocument(vm);
+
+            byte[] bytes = pdf.GeneratePdf();
+
+            return File(
+                bytes,
+                "application/pdf",
+                $"Prescription_{appointmentId}.pdf");
         }
     }
 }

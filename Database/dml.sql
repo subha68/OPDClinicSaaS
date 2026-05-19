@@ -52,7 +52,7 @@ INSERT INTO Features (Name, Code) VALUES
 
 -- Role Mapping
 INSERT INTO RoleFeatures (RoleId, FeatureId)
-SELECT 1, FeatureId FROM Features WHERE Code IN ('CLINIC_VIEW');
+SELECT 1, FeatureId FROM Features WHERE Code IN ('CLINIC_VIEW', 'USER_VIEW');
 
 INSERT INTO RoleFeatures (RoleId, FeatureId)
 SELECT 2, FeatureId FROM Features WHERE Code IN ('DEPT_VIEW','DOC_VIEW','USER_VIEW','DOCTOR_SCHEDULE');
@@ -75,6 +75,6 @@ VALUES
 ('Clinics','Clinic','Index','fa-hospital','CLINIC_VIEW',4),
 ('Doctor Schedule','DoctorSchedule','Index','fa-calendar','DOCTOR_SCHEDULE',5),
 ('Appointment Booking','AppointmentBooking','Index','fa-calendar-check','APPOINTMENT_BOOKING',6),
-('Consultation','DoctorConsultation','Index','fa-stethoscope','CONSULTATION_MANAGEMENT',7),
+('Consultation','Consultation','Index','fa-stethoscope','CONSULTATION_MANAGEMENT',7),
 ('Billing','Billing','Index','fa-file-invoice-dollar','BILLING_MANAGEMENT',8);
 

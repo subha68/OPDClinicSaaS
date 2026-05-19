@@ -1,0 +1,63 @@
+.page-shell {
+    min-height: 100vh;
+    padding: 30px;
+    background: linear-gradient(135deg,#eef6ff,#f9fbff);
+}
+
+.glass-card {
+    background: rgba(255,255,255,.85);
+    backdrop-filter: blur(14px);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.08);
+    border: 1px solid rgba(255,255,255,.4);
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #215a9b;
+    margin-bottom: 25px;
+}
+
+.form-control,
+.form-select {
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid #d8e3f2;
+    transition: .3s;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #4d9fff;
+    box-shadow: 0 0 12px rgba(77,159,255,.25);
+}
+
+.btn-future {
+    border-radius: 14px;
+    padding: 10px 24px;
+    font-weight: 600;
+    background: linear-gradient(90deg,#3498ff,#7b61ff);
+    border: none;
+    color: white;
+}
+
+.btn-future:hover {
+    transform: translateY(-2px);
+    transition: .25s;
+}
+
+.table-future {
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+.table-future thead {
+    background: linear-gradient(90deg,#2d6cdf,#5aa6ff);
+    color: white;
+}
+
+.table-future tbody tr:hover {
+    background: #f4f9ff;
+}

@@ -4,7 +4,7 @@ using Models;
 
 namespace DAL
 {
-    public class FeatureDAL
+    public class FeatureDAL : IDAL<Feature>
     {
         private readonly DbHelper _db;
 
@@ -13,21 +13,86 @@ namespace DAL
             _db = new DbHelper(config);
         }
 
-        public void AddFeature(Feature feature)
+        public int Add(Feature model)
         {
             using (SqlConnection conn = _db.GetConnection())
             {
                 conn.Open();
 
                 string query = @"INSERT INTO Features (Name, Code)
-                                 VALUES (@name, @code)";
+                                 VALUES (@name, @code);
+                                SELECT SCOPE_IDENTITY();";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@code", feature.Code);
-                cmd.Parameters.AddWithValue("@name", feature.Name);
+                cmd.Parameters.AddWithValue("@code", model.Code);
+                cmd.Parameters.AddWithValue("@name", model.Name);
 
-                cmd.ExecuteNonQuery();
+                model.FeatureId = Convert.ToInt32(cmd.ExecuteScalar());
             }
+
+            return model.FeatureId;
+        }
+
+        public bool Update(Feature model)
+        {
+            using (SqlConnection conn = _db.GetConnection())
+            {
+                conn.Open();
+
+                string query = @"UPDATE Features
+                                SET Name = @name,
+                                    Code = @code
+                                WHERE FeatureId = @id";
+
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@code", model.Code);
+                cmd.Parameters.AddWithValue("@name", model.Name);
+                cmd.Parameters.AddWithValue("@id", model.FeatureId);
+
+                int rowsAffected = cmd.ExecuteNonQuery();
+                return rowsAffected > 0;
+            }
+        }
+
+        public bool Delete(int id)
+        {
+            using (SqlConnection conn = _db.GetConnection())
+            {
+                conn.Open();
+
+                string query = @"DELETE FROM Features WHERE FeatureId = @id";
+
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@id", id);
+
+                int rowsAffected = cmd.ExecuteNonQuery();
+                return rowsAffected > 0;
+            }
+        }
+
+        public List<Feature> GetAll()
+        {
+            var list = new List<Feature>();
+
+            using (var conn = _db.GetConnection())
+            {
+                conn.Open();
+
+                var cmd = new SqlCommand("SELECT * FROM Features", conn);
+                var reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    list.Add(new Feature
+                    {
+                        FeatureId = (int)reader["FeatureId"],
+                        Name = reader["Name"].ToString(),
+                        Code = reader["Code"].ToString()
+                    });
+                }
+            }
+
+            return list;
         }
 
         public List<Feature> GetFeaturesByRole(int roleId)
@@ -54,6 +119,30 @@ namespace DAL
             }
 
             return list;
+        }
+
+        public Feature Get(int featureId)
+        {
+            using (SqlConnection conn = _db.GetConnection())
+            {
+                string query = "SELECT * FROM Features WHERE FeatureId = @FeatureId";
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@FeatureId", featureId);
+
+                conn.Open();
+                var reader = cmd.ExecuteReader();
+
+                if (reader.Read())
+                {
+                    return new Feature
+                    {
+                        FeatureId = (int)reader["FeatureId"],
+                        Name = reader["Name"].ToString(),
+                        Code = reader["Code"].ToString()
+                    };
+                }
+            }
+            return null; // Not found
         }
     }
 }

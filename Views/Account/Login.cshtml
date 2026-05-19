@@ -6,20 +6,291 @@
     ViewBag.Title = "Login";
 }
 
-<h2>Login</h2>
+@model ViewModels.LoginVM
 
-<form method="post" asp-controller="Account" asp-action="Login">
-    <div>
-        <label>Username</label>
-        <input type="text" name="username" required />
+@{
+    ViewData["Title"] = "Login";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles{
+    <link rel="stylesheet" href="~/css/login.css" asp-append-version="true" />
+}
+
+<div class="login-page">
+
+    <!-- TOP BAR -->
+    <div class="top-bar">
+
+        <div class="top-left-text">
+            Making the Healthcare and Wellness <br />
+            Journey Smoother Together
+        </div>
+
+        <div class="top-right">
+
+            <!-- ORG SELECTOR -->
+            <div class="org-selector" id="orgSelector">
+                <div class="org-icon">
+                    <i class="fa-solid fa-hospital"></i>
+                </div>
+                <div class="org-code" id="selectedOrgCode">
+                    @(!string.IsNullOrWhiteSpace(ViewBag.ClinicCode) 
+                                ? ViewBag.ClinicCode 
+                                : "Select Organisation")  
+                </div>
+            </div>
+
+            <!-- BRAND -->
+            <div class="brand">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-staff-snake"></i>
+                </div>
+                <div>
+                    <div class="brand-name">
+                        Clinics<span>RUs</span>
+                    </div>
+                    <div class="brand-tagline">
+                        Smart Clinics. Better Care.
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div>
-        <label>Password</label>
-        <input type="password" name="password" required />
+    <div class="page">
+        <div class="left-panel">
+            <div class="hero-title">
+                The Smart Way to<br/>
+                Run Your <span>OPD Clinic</span>
+            </div>
+
+            <div class="hero-subtitle">
+                ClinicsRUs is a complete solution that simplifies appointments,
+                consultations, billing and more so that you can focus on what matters most - providing excellent care
+                to your Patients.
+            </div>
+
+            <div class="features">
+                <div class="feature">
+                    <i class="fa-solid fa-calendar-check"></i>
+                    <div>
+                        <h4>Streamlined Workflows</h4>
+                        <p>Manage appointments, consultations and follow-ups.</p>
+                    </div>
+                </div>
+
+                <div class="feature">
+                    <i class="fa-solid fa-chart-column"></i>
+                    <div>
+                        <h4>Real-time Insights</h4>
+                        <p>Get actionable reports and dashboards instantly.</p>
+                    </div>
+                </div>
+
+                <div class="feature">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <div>
+                        <h4>Secure & Reliable</h4>
+                        <p>Enterprise-grade security for your clinic data.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="right-panel">
+
+            <div class="login-card">
+
+                <h2>Welcome Back</h2>
+                <p>Login to your ClinicsRUs account</p>
+
+                <form asp-controller="Account" asp-action="Login" method="post">
+
+                    <div asp-validation-summary="All"></div>
+
+                    <div class="form-group">
+                        <label asp-for="Username" class="form-label">
+                            Email / Username
+                        </label>
+
+                        <div class="input-wrap">
+                            <i class="fa-regular fa-user input-icon-left"></i>
+
+                            <input asp-for="Username"
+                                class="form-control custom-input"
+                                placeholder="you@example.com" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Password" class="form-label">
+                            Password
+                        </label>
+
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-lock input-icon-left"></i>
+
+                            <input asp-for="Password"
+                                id="passwordBox"
+                                type="password"
+                                class="form-control custom-input"
+                                placeholder="Enter your password" />
+
+                            <i class="fa-regular fa-eye-slash input-icon-right"
+                            id="togglePassword"></i>
+                        </div>
+                    </div>
+
+                    <div class="remember-row">
+                        <div class="form-check">
+                            <input asp-for="RememberMe" class="form-check-input" />
+                            <label asp-for="RememberMe" class="form-check-label">
+                                Remember me
+                            </label>
+                        </div>
+                        <a href="#">Forgot Password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-login">
+                        Login
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
     </div>
+</div>
 
-    <button type="submit">Login</button>
-</form>
+<!-- Organisation Modal -->
+<div class="modal fade"
+     id="organisationModal"
+     tabindex="-1">
 
-<p style="color:red">@ViewBag.Error</p>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content p-4"
+             style="border-radius:20px;">
+
+            <div class="modal-header border-0">
+                <h4>Select Organisation</h4>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <label class="form-label">
+                    Enter Organisation Code
+                </label>
+
+                <input type="text"
+                       id="orgCodeInput"
+                       class="form-control"
+                       placeholder="e.g. CRU001" />
+
+                <div id="orgError"
+                     class="text-danger mt-2"
+                     style="display:none;">
+                </div>
+
+            </div>
+
+            <div class="modal-footer border-0">
+                <button class="btn btn-primary"
+                        id="btnValidateOrg">
+                    Validate
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+<partial name="_ValidationScriptsPartial" />
+
+<script>
+$("#togglePassword").click(function () {
+
+    let box = $("#passwordBox");
+
+    if (box.attr("type") === "password") {
+        box.attr("type", "text");
+        $(this)
+            .removeClass("fa-eye-slash")
+            .addClass("fa-eye");
+    }
+    else {
+        box.attr("type", "password");
+        $(this)
+            .removeClass("fa-eye")
+            .addClass("fa-eye-slash");
+    }
+});
+
+window.onload = function () {
+    document.querySelectorAll('.custom-input')
+        .forEach(x => x.style.fontSize = '22px');
+};
+
+$(document).ready(function () {
+
+    // open modal
+    $("#orgSelector").click(function () {
+        $("#organisationModal").modal("show");
+    });
+
+    // validate
+    $("#btnValidateOrg").click(function () {
+
+        let code =
+            $("#orgCodeInput").val().trim();
+
+        if(code === ""){
+            $("#orgError")
+                .text("Organisation code required")
+                .show();
+            return;
+        }
+
+        $.ajax({
+            url: '/Account/ValidateOrganisation',
+            type: 'POST',
+            data: { clinicCode: code },
+
+            success: function (r) {
+
+                if (r.success) {
+
+                    $("#selectedOrgCode")
+                        .text(r.clinicCode);
+
+                    $("#organisationModal")
+                        .modal('hide');
+
+                    $("#orgError").hide();
+                }
+                else {
+                    $("#orgError")
+                        .text(r.message)
+                        .show();
+                }
+            },
+
+            error: function () {
+                $("#orgError")
+                    .text("Validation failed.")
+                    .show();
+            }
+        });
+    });
+
+});
+
+</script>
+}
