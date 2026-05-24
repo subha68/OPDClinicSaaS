@@ -9,10 +9,15 @@
 <form asp-action="Book" method="post">
 
     <input type="hidden" asp-for="DoctorId" />
-    <input type="hidden" asp-for="AppointmentDate" />
+    <input type="hidden"
+       id="AppointmentDate"
+       name="AppointmentDate"
+       value="@Model.AppointmentDate.ToString("yyyy-MM-dd")" />
     <input type="hidden" asp-for="SlotTime" />
     <input type="hidden" asp-for="SlotId" />
     <input type="hidden" asp-for="PatientId" />
+    <input type="hidden" asp-for="VisitId" />
+    <input type="hidden" asp-for="IsVisitLocked" />
 
     <div class="mb-3">
         <label>Mobile</label>
@@ -40,6 +45,35 @@
                readonly />
     </div>
 
+    <div class="mb-3">
+        <label>Visit Type</label>
+
+        <div>
+            <input type="radio"
+                asp-for="VisitType"
+                value="New"
+                id="vtNew"
+                disabled="@Model.IsVisitLocked" />
+            <label for="vtNew">New</label>
+
+            <input type="radio"
+                asp-for="VisitType"
+                value="Follow Up"
+                id="vtFollow"
+                class="ms-3"
+                disabled="@Model.IsVisitLocked" />
+            <label for="vtFollow">Follow Up</label>
+
+            <input type="radio"
+                asp-for="VisitType"
+                value="Report"
+                id="vtReport"
+                class="ms-3"
+                disabled="@Model.IsVisitLocked" />
+            <label for="vtReport">Report</label>
+        </div>
+    </div>
+
     <button type="submit"
             class="btn btn-success">
         Confirm Booking
@@ -58,6 +92,8 @@
                     $("#PatientId").val(data.patientId);
                     $("#PatientName").val(data.name);
                     $("#Mobile").val(data.mobile);
+
+                    checkVisit();
                 }
                 else {
                     alert("Patient not found");
@@ -67,4 +103,28 @@
                 }
             });
     };
+
+function checkVisit() {
+    var patientId = $("#PatientId").val();
+    var date = $("#AppointmentDate").val();
+
+    $.get('/AppointmentBooking/GetVisit?patientId='
+            + patientId +
+            '&visitDate=' + date,
+            function (data) {
+                if (data && data.visitId > 0) {
+                    $("#VisitId").val(data.visitId);
+                    $("input[name='VisitType'][value='" + data.visitType + "']").prop("checked", true);
+                    $("input[name='VisitType']").prop("disabled", true);
+                    $("#IsVisitLocked").val(true);
+                }
+                else {
+                    $("#VisitId").val(0);
+                    $("input[name='VisitType']").prop("disabled", false);
+                    $("input[name='VisitType'][value='New']").prop("checked", true);
+                    $("#IsVisitLocked").val(false);
+                }
+            });
+    }
+
 </script>

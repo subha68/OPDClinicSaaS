@@ -34,7 +34,5 @@ namespace ViewModels
         public int MaxPatientsPerSlot { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedOn { get; set; }
-
-        public List<DoctorVM>? Doctors { get; set; }
     }
 }

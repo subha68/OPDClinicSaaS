@@ -13,30 +13,14 @@ namespace BLL
             _dal = _roleDAL;
         }
 
-
-        public List<Role> GetRoles() => _dal.GetAll();
-
-        public int GetRoleIdByName(string roleName)
+        public Role GetRoleByName(string roleName)
         {
             var role = _roleDAL.GetRoleByName(roleName);
             if (role == null)
                 throw new Exception($"Role '{roleName}' not found.");
 
-            return role.RoleId;
+            return role;
         }
 
-        public string GetRoleName(int roleId)
-        {
-            var role = _dal.Get(roleId);
-            if (role == null)
-                throw new Exception($"Role with ID '{roleId}' not found.");
-
-            return role.RoleName;
-        }
-        
-        public void CreateRole(Role role)
-        {
-            _dal.Add(role);
-        }
     }
 }

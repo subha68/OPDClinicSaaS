@@ -27,27 +27,26 @@ namespace Controllers
             int? clinicId = _session.ClinicId;
             string roleName = _session.RoleName;
             var users = roleName == "SuperAdmin" ? _user.List() : _user.ListByClinic(clinicId.Value);
+
             return View(users);
         }
 
         [HttpGet]
         public IActionResult Create()
         {
-            var vm = new UserVM
-            {
-                User = new User(),
-                Roles = GetRoles(),
-                Clinics = GetClinics()
-            };
+            var model = new User();
 
-            return View(vm);
+            ViewBag.Roles = GetRoles();
+            ViewBag.Clinics = GetClinics();
+
+            return View(model);
         }
 
         [HttpPost]
-        public IActionResult Create(UserVM vm)
+        public IActionResult Create(User model)
         {
-            vm.User.ClinicName = vm.User.ClinicId.HasValue ? _clinic.Get(vm.User.ClinicId.Value)?.Name : null;
-            vm.User.RoleName = _role.Get(vm.User.RoleId).RoleName;
+            model.ClinicName = model.ClinicId.HasValue ? _clinic.Get(model.ClinicId.Value)?.Name : null;
+            model.RoleName = _role.Get(model.RoleId).RoleName;
 
             foreach (var key in ModelState.Keys)
             {
@@ -60,13 +59,13 @@ namespace Controllers
 
             if (!ModelState.IsValid)
             {
-                vm.Roles = GetRoles();
-                vm.Clinics = GetClinics();
+                ViewBag.Roles = GetRoles();
+                ViewBag.Clinics = GetClinics();
 
-                return View(vm);
+                return View(model);
             }
 
-            _user.Add(vm.User);
+            _user.Add(model);
             return RedirectToAction("Index");
         }
 
@@ -78,22 +77,18 @@ namespace Controllers
             if (user == null)
                 return NotFound();
 
-            var vm = new UserVM
-            {
-                User = user,
-                Roles = GetRoles(),
-                Clinics = GetClinics()
-            };
+            ViewBag.Roles = GetRoles();
+            ViewBag.Clinics = GetClinics();
 
-            return View("Create", vm);   // reuse same screen
+            return View("Create", user);   // reuse same screen
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(UserVM vm)
+        public IActionResult Edit(User model)
         {
-            vm.User.ClinicName = vm.User.ClinicId.HasValue ? _clinic.Get(vm.User.ClinicId.Value)?.Name : null;
-            vm.User.RoleName = _role.Get(vm.User.RoleId).RoleName;
+            model.ClinicName = model.ClinicId.HasValue ? _clinic.Get(model.ClinicId.Value)?.Name : null;
+            model.RoleName = _role.Get(model.RoleId).RoleName;
 
             if (!ModelState.IsValid)
             {
@@ -106,13 +101,13 @@ namespace Controllers
                     }
                 }
 
-                vm.Roles = GetRoles();
-                vm.Clinics = GetClinics();
-                
-                return View("Create", vm);
+                ViewBag.Roles = GetRoles();
+                ViewBag.Clinics = GetClinics();
+
+                return View("Create", model);
             }
 
-            _user.Update(vm.User);
+            _user.Update(model);
 
             TempData["Success"] = "User updated successfully.";
             return RedirectToAction("Index");
@@ -130,7 +125,7 @@ namespace Controllers
 
         private List<SelectListItem> GetRoles()
         {
-            return _role.GetRoles()
+            return _role.List()
                     .Select(r => new SelectListItem
                     {
                         Value = r.RoleId.ToString(),

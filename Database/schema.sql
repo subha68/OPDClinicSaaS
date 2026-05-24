@@ -85,23 +85,37 @@ CREATE TABLE Patients (
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
 );
 
+CREATE TABLE Visits (
+    VisitId INT IDENTITY PRIMARY KEY,
+    VisitDate DATE NOT NULL,
+    VisitType NVARCHAR(10) NOT NULL,
+    ClinicId INT NOT NULL,
+    PatientId INT NOT NULL,
+
+    FOREIGN KEY (PatientId) REFERENCES Patients(PatientId),
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
+);
+
+
 CREATE TABLE Appointments (
     AppointmentId INT IDENTITY PRIMARY KEY,
-    ClinicId INT,
-    DoctorId INT,
-    PatientId INT,
+    ClinicId INT NOT NULL,
+    DoctorId INT NOT NULL,
+    PatientId INT NOT NULL,
+    VisitId INT NOT NULL,
     AppointmentDate DATE,
     SlotTime TIME,
     Status NVARCHAR(20),
 
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
     FOREIGN KEY (DoctorId) REFERENCES Doctors(DoctorId),
-    FOREIGN KEY (PatientId) REFERENCES Patients(PatientId)
+    FOREIGN KEY (PatientId) REFERENCES Patients(PatientId),
+    FOREIGN KEY (VisitId) REFERENCES Visits(VisitId)   
 );
 
 CREATE TABLE Vitals (
     VitalId INT IDENTITY PRIMARY KEY,
-    AppointmentId INT,
+    VisitId INT NOT NULL,
     BP NVARCHAR(20),
     Height FLOAT,
     Weight FLOAT,
@@ -109,7 +123,7 @@ CREATE TABLE Vitals (
     Pulse INT,
     BMI AS (Weight / (Height * Height)) PERSISTED,  // Could not be created
 
-    FOREIGN KEY (AppointmentId) REFERENCES Appointments(AppointmentId)
+    FOREIGN KEY (VisitId) REFERENCES Visits(VisitId)
 );
 
 CREATE TABLE MedicalHistories (
@@ -137,12 +151,12 @@ CREATE TABLE Consultations (
 
 CREATE TABLE Bills (
     BillId INT IDENTITY PRIMARY KEY,
-    AppointmentId INT,
+    VisitId INT,
     TotalAmount DECIMAL(10,2),
     PaidAmount DECIMAL(10,2),
     Status NVARCHAR(20),
 
-    FOREIGN KEY (AppointmentId) REFERENCES Appointments(AppointmentId)
+    FOREIGN KEY (VisitId) REFERENCES Visits(VisitId)
 );
 
 CREATE TABLE Payments (
@@ -261,14 +275,12 @@ CREATE TABLE PharmacologyAdvices
 (
     PharmacologyId INT IDENTITY PRIMARY KEY,
     ConsultationId INT NOT NULL,
-    AppointmentId INT NOT NULL,
     MedicineName NVARCHAR(200),
     Dosage NVARCHAR(100),
     Frequency NVARCHAR(100),
     Duration NVARCHAR(100),
     Instructions NVARCHAR(500),
 
-    FOREIGN KEY (ConsultationId) REFERENCES Consultations(ConsultationId),
-    FOREIGN KEY (AppointmentId) REFERENCES Appointments(AppointmentId)
+    FOREIGN KEY (ConsultationId) REFERENCES Consultations(ConsultationId)
 );
 

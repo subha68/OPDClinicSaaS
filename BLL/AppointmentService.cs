@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace BLL
 {
-    public class AppointmentService : BaseService<AppointmentVM>
+    public class AppointmentService : BaseService<Appointment>
     {
         private readonly AppointmentDAL _appointmentDAL;
 
@@ -16,11 +16,16 @@ namespace BLL
             _dal = _appointmentDAL;
         }
 
-        public List<AppointmentVM> GetTodaysAppointments(int doctorId)
+        public List<Appointment> GetTodaysAppointments(int doctorId)
         {
             return _appointmentDAL.GetTodaysAppointments(doctorId);
         }
 
+        public List<Appointment> GetByPatientId(int patientId)
+        {
+            return _appointmentDAL.GetByPatientId(patientId);
+        }
+        
         public void UpdateStatus(int appointmentId, string status)
         {
             _appointmentDAL.UpdateStatus(appointmentId, status);

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace BLL
 {
-    public class ConsultationService : BaseService<ConsultationVM>
+    public class ConsultationService : BaseService<Consultation>
     {
         private readonly ConsultationDAL _consultationDAL;
 
@@ -16,19 +16,29 @@ namespace BLL
             _dal = _consultationDAL;
         }
 
-        public ConsultationVM GetConsultationVM(int appointmentId)
+        public Consultation GetConsultation(int appointmentId)
         {
-            return _consultationDAL.GetConsultationVM(appointmentId);
+            return _consultationDAL.GetConsultation(appointmentId);
         }
 
-        public int SaveConsultation(ConsultationVM vm)
+        public int SaveConsultation(Consultation model)
         {
-            return _dal.Add(vm);
+            return _dal.Add(model);
         }
 
         public PrescriptionVM GetPrescription(int appointmentId)
         {
             return _consultationDAL.GetPrescription(appointmentId);
+        }
+
+        public List<Consultation> GetConsultationsByPatientId(int patientId)
+        {
+            return _consultationDAL.GetConsultationsByPatientId(patientId);
+        }
+
+        public List<PrescriptionVM> GetPrescriptionsByPatientId(int patientId)
+        {
+            return _consultationDAL.GetPrescriptionsByPatientId(patientId);
         }
     }
 }

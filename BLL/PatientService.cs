@@ -19,7 +19,14 @@ namespace BLL
             return _patientDAL.GetByMobile(mobile);
         }
 
-    }
+        public List<Patient> Search(string? patientId,
+                                    string? phone,
+                                    string? name,
+                                    int clinicId)
+        {
+            return _patientDAL.Search(clinicId, patientId, phone, name);
+        }
 
+    }
 }
 

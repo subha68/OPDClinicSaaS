@@ -1,26 +1,27 @@
-@{
-    Layout = "~/Views/Shared/_Layout.cshtml";
-}
-
 @model Models.Clinic
 
-<h2>Create Clinic</h2>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
 
-<form asp-action="Create" method="post"> 
-    <div>
-        <label asp-for="Name"></label>
-        <input asp-for="Name" class="form-control" />
-    </div>
+    bool isEdit =
+        Model != null &&
+        Model.ClinicId > 0;
 
-    <div>
-        <label asp-for="Address"></label>
-        <input asp-for="Address" class="form-control" />
-    </div>
+    ViewBag.PageTitle = isEdit ? "Edit Clinic" : "Create Clinic";
 
-    <div>
-        <label asp-for="Phone"></label>
-        <input asp-for="Phone" class="form-control" />
-    </div>
+    ViewBag.Fields = new[]
+    {
+        new { Name="Name", Label="Clinic Name", Type="text", Col="12"},
+        new { Name="Address", Label="Address", Type="text", Col="12"},
+        new { Name="Phone", Label="Phone", Type="text", Col="6"},
+        new { Name="ClinicCode", Label="Clinic Code", Type="text", Col="6"}
+    };
 
-    <button type="submit">Save</button>
-</form>
+    ViewBag.Dropdowns = new Dictionary<string, object>()
+    {
+    };
+
+    ViewBag.KeyField = "ClinicId";
+}
+
+@await Html.PartialAsync("_CrudForm", Model)

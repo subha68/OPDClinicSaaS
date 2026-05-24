@@ -1,51 +1,15 @@
+@model IEnumerable<Models.Clinic>
+
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Clinic Management";
+
+    ViewBag.PageTitle = "Clinic Management";
+
+    ViewBag.Columns = new[] { "Clinic Name", "Address", "Phone", "Clinic Code" };
+    ViewBag.Properties = new[] { "Name", "Address", "Phone", "ClinicCode" };
+
+    ViewBag.KeyField = "ClinicId";
 }
 
-@model List<Models.Clinic>
-
-@section Styles{
-    <link rel="stylesheet" href="~/css/clinic.css" asp-append-version="true" />
-}
-
-<div class="d-flex justify-content-between mb-4">
-
-    <div>
-        <h1 class="page-title">Clinics</h1>
-        <p class="page-subtitle">
-            Manage all clinic locations
-        </p>
-    </div>
-
-    <a asp-action="Create" class="btn-add">
-        <i class="fa-solid fa-plus"></i>
-        Add Clinic
-    </a>
-</div>
-
-<div class="clinic-grid">
-
-@foreach(var item in Model)
-{
-    <div class="clinic-card">
-        <div class="clinic-icon">
-            <i class="fa-solid fa-hospital"></i>
-        </div>
-
-        <h4>@item.Name</h4>
-        <p>@item.ClinicCode</p>
-        <p>@item.Address</p>
-
-        <div class="actions">
-            <a asp-action="Edit" asp-route-id="@item.ClinicId">
-                Edit
-            </a>
-
-            <a asp-action="Details" asp-route-id="@item.ClinicId">
-                View
-            </a>
-        </div>
-    </div>
-}
-
-</div>
+@await Html.PartialAsync("_CrudList", Model)

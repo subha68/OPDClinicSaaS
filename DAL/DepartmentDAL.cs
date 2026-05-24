@@ -1,11 +1,10 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Models;
-using ViewModels;
 
 namespace DAL
 {
-    public class DepartmentDAL : IDAL<DepartmentVM>
+    public class DepartmentDAL : IDAL<Department>
     {
         private readonly DbHelper _db;
 
@@ -14,7 +13,7 @@ namespace DAL
             _db = new DbHelper(config);
         }
 
-        public int Add(DepartmentVM model)
+        public int Add(Department model)
         {
             using (SqlConnection con = _db.GetConnection())
             {
@@ -32,7 +31,7 @@ namespace DAL
             }
         }
 
-        public bool Update(DepartmentVM model)
+        public bool Update(Department model)
         {
             using (SqlConnection con = _db.GetConnection())
             {
@@ -67,13 +66,13 @@ namespace DAL
             }
         }
 
-        public List<DepartmentVM> GetAll()
+        public List<Department> GetAll()
         {
-            List<DepartmentVM> list = new List<DepartmentVM>();
+            List<Department> list = new List<Department>();
 
             using (SqlConnection con = _db.GetConnection())
             {
-                string query = "SELECT * FROM Departments";
+                string query = "SELECT d.*, c.Name as ClinicName FROM Departments d, Clinics c WHERE d.ClinicId = c.ClinicId";
 
                 SqlCommand cmd = new SqlCommand(query, con);
                 con.Open();
@@ -81,12 +80,13 @@ namespace DAL
 
                 while (dept.Read())
                 {
-                    list.Add(new DepartmentVM
+                    list.Add(new Department
                     {
                         DepartmentId = Convert.ToInt32(dept["DepartmentId"]),
                         ClinicId = Convert.ToInt32(dept["ClinicId"]),
                         Name = dept["Name"].ToString(),
-                        Description = dept["Description"].ToString()
+                        Description = dept["Description"].ToString(),
+                        ClinicName = dept["ClinicName"].ToString()
                     });
                 }
             }
@@ -94,11 +94,11 @@ namespace DAL
             return list;
         }
 
-        public DepartmentVM Get(int id)
+        public Department Get(int id)
         {
             using (SqlConnection con = _db.GetConnection())
             {
-                string query = "SELECT * FROM Departments WHERE DepartmentId = @DepartmentId";
+                string query = "SELECT d.*, c.Name as ClinicName FROM Departments d, Clinics c WHERE d.ClinicId = c.ClinicId AND d.DepartmentId = @DepartmentId";
 
                 SqlCommand cmd = new SqlCommand(query, con);
                 cmd.Parameters.AddWithValue("@DepartmentId", id);
@@ -108,12 +108,13 @@ namespace DAL
 
                 if (dept.Read())
                 {
-                    return new DepartmentVM
+                    return new Department
                     {
                         DepartmentId = Convert.ToInt32(dept["DepartmentId"]),
                         ClinicId = Convert.ToInt32(dept["ClinicId"]),
                         Name = dept["Name"].ToString(),
-                        Description = dept["Description"].ToString()
+                        Description = dept["Description"].ToString(),
+                        ClinicName = dept["ClinicName"].ToString()
                     };
                 }
             }
@@ -121,13 +122,13 @@ namespace DAL
             return null; // Not found
         }
 
-        public List<DepartmentVM> GetDepartmentsByClinic(int clinicId)
+        public List<Department> GetDepartmentsByClinic(int clinicId)
         {
-            List<DepartmentVM> list = new List<DepartmentVM>();
+            List<Department> list = new List<Department>();
 
             using (SqlConnection con = _db.GetConnection())
             {
-                string query = "SELECT * FROM Departments WHERE ClinicId=@ClinicId";
+                string query = "SELECT d.*, c.Name as ClinicName FROM Departments d, Clinics c WHERE d.ClinicId = c.ClinicId AND d.ClinicId=@ClinicId";
 
                 SqlCommand cmd = new SqlCommand(query, con);
                 cmd.Parameters.AddWithValue("@ClinicId", clinicId);
@@ -137,11 +138,13 @@ namespace DAL
 
                 while (dept.Read())
                 {
-                    list.Add(new DepartmentVM
+                    list.Add(new Department
                     {
                         DepartmentId = Convert.ToInt32(dept["DepartmentId"]),
+                        ClinicId = Convert.ToInt32(dept["ClinicId"]),
                         Name = dept["Name"].ToString(),
-                        Description = dept["Description"].ToString()
+                        Description = dept["Description"].ToString(),
+                        ClinicName = dept["ClinicName"].ToString()
                     });
                 }
             }

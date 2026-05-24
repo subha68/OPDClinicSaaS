@@ -7,7 +7,7 @@ using Microsoft.Data.SqlClient;
 
 namespace DAL
 {
-    public class ConsultationDAL : IDAL<ConsultationVM>
+    public class ConsultationDAL : IDAL<Consultation>
     {
         private readonly DbHelper _db;
 
@@ -16,7 +16,7 @@ namespace DAL
             _db = new DbHelper(config);
         }
 
-        public int Add(ConsultationVM vm)
+        public int Add(Consultation model)
         {
             int consultationId = 0;
 
@@ -41,10 +41,10 @@ namespace DAL
                     SELECT SCOPE_IDENTITY();";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@AppointmentId", vm.AppointmentId);
-                cmd.Parameters.AddWithValue("@Symptoms", vm.Symptoms ?? "");
-                cmd.Parameters.AddWithValue("@Diagnosis", vm.Diagnosis ?? "");
-                cmd.Parameters.AddWithValue("@Notes", vm.Notes ?? "");
+                cmd.Parameters.AddWithValue("@AppointmentId", model.AppointmentId);
+                cmd.Parameters.AddWithValue("@Symptoms", model.Symptoms ?? "");
+                cmd.Parameters.AddWithValue("@Diagnosis", model.Diagnosis ?? "");
+                cmd.Parameters.AddWithValue("@Notes", model.Notes ?? "");
 
                 conn.Open();
 
@@ -55,7 +55,7 @@ namespace DAL
             return consultationId;
         }
 
-        public bool Update(ConsultationVM vm)
+        public bool Update(Consultation model)
         {
             using (SqlConnection conn = _db.GetConnection())
             {
@@ -68,11 +68,11 @@ namespace DAL
                     WHERE ConsultationId = @ConsultationId";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@Symptoms", vm.Symptoms ?? "");
-                cmd.Parameters.AddWithValue("@Diagnosis", vm.Diagnosis ?? "");
-                cmd.Parameters.AddWithValue("@Notes", vm.Notes ?? "");
-                cmd.Parameters.AddWithValue("@ConsultationId", vm.ConsultationId);
-                cmd.Parameters.AddWithValue("@AppointmentId", vm.AppointmentId);
+                cmd.Parameters.AddWithValue("@Symptoms", model.Symptoms ?? "");
+                cmd.Parameters.AddWithValue("@Diagnosis", model.Diagnosis ?? "");
+                cmd.Parameters.AddWithValue("@Notes", model.Notes ?? "");
+                cmd.Parameters.AddWithValue("@ConsultationId", model.ConsultationId);
+                cmd.Parameters.AddWithValue("@AppointmentId", model.AppointmentId);
 
                 conn.Open();
 
@@ -97,9 +97,9 @@ namespace DAL
             }
         }
 
-        public List<ConsultationVM> GetAll()
+        public List<Consultation> GetAll()
         {
-            List<ConsultationVM> consultations = new List<ConsultationVM>();
+            List<Consultation> consultations = new List<Consultation>();
 
             using (SqlConnection conn = _db.GetConnection())
             {
@@ -113,7 +113,7 @@ namespace DAL
                 {
                     while (dr.Read())
                     {
-                        consultations.Add(new ConsultationVM
+                        consultations.Add(new Consultation
                         {
                             ConsultationId = Convert.ToInt32(dr["ConsultationId"]),
                             AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
@@ -128,16 +128,16 @@ namespace DAL
             return consultations;
         }
 
-        public ConsultationVM Get(int consultationId)
+        public Consultation Get(int id)
         {
-            ConsultationVM consultation = null;
+            Consultation consultation = null;
 
             using (SqlConnection conn = _db.GetConnection())
             {
                 string query = @"SELECT ConsultationId, AppointmentId, Symptoms, Diagnosis, Notes FROM Consultations WHERE ConsultationId = @id";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", consultationId);
+                cmd.Parameters.AddWithValue("@id", id);
 
                 conn.Open();
 
@@ -145,7 +145,7 @@ namespace DAL
                 {
                     if (dr.Read())
                     {
-                        consultation = new ConsultationVM
+                        consultation = new Consultation
                         {
                             ConsultationId = Convert.ToInt32(dr["ConsultationId"]),
                             AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
@@ -160,9 +160,9 @@ namespace DAL
             return consultation;
         }
 
-        public ConsultationVM GetConsultationVM(int appointmentId)
+        public Consultation GetConsultation(int appointmentId)
         {
-            ConsultationVM vm = null;
+            Consultation consultation = null;
 
             using var con = _db.GetConnection();
 
@@ -201,7 +201,7 @@ namespace DAL
 
             if (dr.Read())
             {
-                vm = new ConsultationVM
+                consultation = new Consultation
                 {
                     AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
                     //AppointmentDate = Convert.ToDateTime(dr["AppointmentDate"]),
@@ -214,7 +214,54 @@ namespace DAL
                 };
             }
 
-            return vm;
+            return consultation;
+        }
+
+        public List<Consultation> GetConsultationsByPatientId(int patientId)
+        {
+            List<Consultation> consultations = new List<Consultation>();
+
+            using var con = _db.GetConnection();
+
+            string sql = @"SELECT c.ConsultationId, c.AppointmentId, c.Symptoms, c.Diagnosis, c.Notes,
+                                a.AppointmentDate, a.SlotTime,
+                                p.PatientId,
+                                p.FirstName + ' ' + p.LastName as PatientName,
+                                d.DoctorId,
+                                d.FirstName + ' ' + d.LastName as DoctorName
+                            FROM Consultations c
+                            INNER JOIN Appointments a ON c.AppointmentId = a.AppointmentId
+                            INNER JOIN Patients p ON a.PatientId = p.PatientId
+                            INNER JOIN Doctors d ON a.DoctorId = d.DoctorId
+                            WHERE p.PatientId = @PatientId";
+
+            using var cmd = new SqlCommand(sql, con);
+
+            cmd.Parameters.AddWithValue("@PatientId", patientId);
+
+            con.Open();
+
+            using var dr = cmd.ExecuteReader();
+
+            while (dr.Read())
+            {
+                consultations.Add(new Consultation
+                {
+                    AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
+                    //AppointmentDate = Convert.ToDateTime(dr["AppointmentDate"]),
+                    //SlotTime = Convert.ToDateTime(dr["SlotTime"]),
+                    PatientId = Convert.ToInt32(dr["PatientId"]),
+                    PatientName = dr["PatientName"].ToString(),
+                    //Age = Convert.ToInt32(dr["Age"]),
+                    DoctorId = Convert.ToInt32(dr["DoctorId"]),
+                    DoctorName = dr["DoctorName"].ToString(),
+                    Symptoms = dr["Symptoms"].ToString(),
+                    Diagnosis = dr["Diagnosis"].ToString(),
+                    Notes = dr["Notes"].ToString()
+                });
+            }
+
+            return consultations;
         }
 
         public PrescriptionVM GetPrescription(int appointmentId)
@@ -287,7 +334,7 @@ namespace DAL
 
             rdr.Close();
 
-            vm.Medicines = new List<PharmacologyAdviceVM>();
+            vm.Medicines = new List<PharmacologyAdvice>();
 
             string medSql = @"
                 SELECT MedicineName,
@@ -306,7 +353,7 @@ namespace DAL
 
             while (medRdr.Read())
             {
-                vm.Medicines.Add(new PharmacologyAdviceVM
+                vm.Medicines.Add(new PharmacologyAdvice
                 {
                     MedicineName = medRdr["MedicineName"].ToString(),
                     Dosage = medRdr["Dosage"].ToString(),
@@ -317,6 +364,110 @@ namespace DAL
             }
 
             return vm;
+        }
+
+        public List<PrescriptionVM> GetPrescriptionsByPatientId(int patientId)
+        {
+            var prescriptions = new List<PrescriptionVM>();
+
+            using SqlConnection conn = _db.GetConnection();
+
+            conn.Open();
+
+            // consultation + doctor + patient + clinic
+            string sql = @"
+            SELECT
+                d.FirstName + ' ' + d.LastName AS DoctorName,
+                d.Qualification,
+                d.RegistrationNo,
+                c.Name ClinicName,
+                c.Address ClinicAddress,
+                p.PatientId,
+                p.FirstName + ' ' + p.LastName AS PatientName,
+                p.Phone AS PatientPhoneNo,
+                DATEDIFF(YEAR, p.DOB, GETDATE())
+                    - CASE
+                            WHEN DATEADD(YEAR,
+                                        DATEDIFF(YEAR, p.DOB, GETDATE()),
+                                        p.DOB) > GETDATE()
+                            THEN 1
+                            ELSE 0
+                        END AS Age,
+                p.Gender,
+                a.AppointmentDate,
+                a.SlotTime,
+                con.Symptoms,
+                con.Diagnosis,
+                con.Notes,
+                con.ConsultationId,
+                a.AppointmentId
+            FROM Appointments a
+            JOIN Consultations con ON a.AppointmentId=con.AppointmentId
+            JOIN Patients p ON a.PatientId=p.PatientId
+            JOIN Doctors d ON a.DoctorId=d.DoctorId
+            JOIN Clinics c ON a.ClinicId=c.ClinicId
+            WHERE a.AppointmentId=@PatientId";
+
+            using (SqlCommand cmd = new(sql, conn))
+            {
+                cmd.Parameters.AddWithValue("@PatientId", patientId);
+
+                using var rdr = cmd.ExecuteReader();
+
+                while (rdr.Read())
+                {
+                    var vm = new PrescriptionVM();
+
+                    vm.DoctorName = rdr["DoctorName"].ToString();
+                    vm.Qualification = rdr["Qualification"].ToString();
+                    vm.RegistrationNumber = rdr["RegistrationNo"].ToString();
+
+                    vm.ClinicName = rdr["ClinicName"].ToString();
+                    vm.ClinicAddress = rdr["ClinicAddress"].ToString();
+
+                    vm.PatientId = Convert.ToInt32(rdr["PatientId"]);
+                    vm.PatientName = rdr["PatientName"].ToString();
+                    vm.Age = Convert.ToInt32(rdr["Age"]);
+                    vm.Gender = rdr["Gender"].ToString();
+                    vm.PatientPhoneNo = rdr["PatientPhoneNo"].ToString();
+                    vm.VisitDateTime = Convert.ToDateTime(rdr["AppointmentDate"]).Add((TimeSpan)rdr["SlotTime"]);
+                    vm.Symptoms = rdr["Symptoms"].ToString();
+                    vm.Diagnosis = rdr["Diagnosis"].ToString();
+                    vm.Notes = rdr["Notes"].ToString();
+                    vm.AppointmentId = Convert.ToInt32(rdr["AppointmentId"]);
+
+                    int conId = Convert.ToInt32(rdr["ConsultationId"]);
+
+                    string medSql = @"
+                        SELECT MedicineName,
+                                Dosage,
+                                Frequency,
+                                Duration,
+                                Instructions
+                        FROM PharmacologyAdvices
+                        WHERE ConsultationId=@ConsultationId
+                        ORDER BY PharmacologyId";
+
+                    SqlCommand medCmd = new(medSql, conn);
+                    medCmd.Parameters.AddWithValue("@ConsultationId", conId);
+
+                    using var medRdr = medCmd.ExecuteReader();
+
+                    while (medRdr.Read())
+                    {
+                        vm.Medicines.Add(new PharmacologyAdvice
+                        {
+                            MedicineName = medRdr["MedicineName"].ToString(),
+                            Dosage = medRdr["Dosage"].ToString(),
+                            Frequency = medRdr["Frequency"].ToString(),
+                            Duration = medRdr["Duration"].ToString(),
+                            Instructions = medRdr["Instructions"].ToString()
+                        });
+                    }
+                }
+            }
+
+            return prescriptions;
         }
     }
 

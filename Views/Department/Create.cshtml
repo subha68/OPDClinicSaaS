@@ -1,22 +1,26 @@
+@model Models.Department
+
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    bool isEdit =
+        Model != null &&
+        Model.DepartmentId > 0;
+
+    ViewBag.PageTitle = isEdit ? "Edit Department" : "Create Department";
+
+    ViewBag.Fields = new[]
+    {
+        new { Name="Name", Label="Name", Type="text", Col="6"},
+        new { Name="Description", Label="Description", Type="text", Col="6"},
+        new { Name="ClinicName", Label="Clinic", Type="readonly", Col="6"}
+    };
+
+    ViewBag.Dropdowns = new Dictionary<string, object>()
+    {
+    };
+
+    ViewBag.KeyField = "DepartmentId";
 }
 
-@model ViewModels.DepartmentVM
-
-<h2>Create Department</h2>
-
-@using (Html.BeginForm())
-{
-    <div>
-        Name:
-        @Html.TextBoxFor(m => m.Name)
-    </div>
-
-    <div>
-        Description:
-        @Html.TextBoxFor(m => m.Description)
-    </div>
-
-    <button type="submit">Save</button>
-}
+@await Html.PartialAsync("_CrudForm", Model)

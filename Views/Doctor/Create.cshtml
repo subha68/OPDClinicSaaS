@@ -1,55 +1,31 @@
+@model Models.Doctor
+
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    bool isEdit =
+        Model != null &&
+        Model.DoctorId > 0;
+
+    ViewBag.PageTitle = isEdit ? "Edit Doctor" : "Create Doctor";
+
+    ViewBag.Fields = new[]
+    {
+        new { Name="FirstName", Label="First Name", Type="text", Col="6"},
+        new { Name="LastName", Label="Last Name", Type="text", Col="6"},
+        new { Name="DepartmentId", Label="Department", Type="dropdown", Col="6"},
+        new { Name="RegistrationNo", Label="Registration No", Type="text", Col="6"},
+        new { Name="Qualification", Label="Qualification", Type="text", Col="12"},
+        new { Name="Username", Label="User Name", Type="text", Col="6"},
+        new { Name="Password", Label="Password", Type="password", Col="6"}
+    };
+
+    ViewBag.Dropdowns = new Dictionary<string, object>()
+    {
+        { "DepartmentId", ViewBag.Departments }
+    };
+
+    ViewBag.KeyField = "DoctorId";
 }
 
-@model ViewModels.DoctorVM
-
-<h2>Create Doctor</h2>
-
-@using (Html.BeginForm())
-{
-    <div>
-        First Name:
-        @Html.TextBoxFor(m => m.FirstName)
-    </div>
-
-    <div>
-        Last Name:
-        @Html.TextBoxFor(m => m.LastName)
-    </div>
-
-    <div>
-        Department:
-        @Html.DropDownListFor(m => m.DepartmentId,
-            Model.Departments,
-            "--Select--")
-    </div>
-
-    <div>
-        Registration No:
-        @Html.TextBoxFor(m => m.RegistrationNo)
-    </div>
-
-    <div>
-        Qualification:
-        @Html.TextBoxFor(m => m.Qualification)
-    </div>
-
-    <hr />
-
-    <h4>Doctor Login Credentials</h4>
-
-    <div>
-        Username:
-        @Html.TextBoxFor(m => m.Username)
-    </div>
-
-    <div>
-        Password:
-        @Html.PasswordFor(m => m.Password)
-    </div>
-
-    <br />
-
-    <button type="submit">Save</button>
-}
+@await Html.PartialAsync("_CrudForm", Model)

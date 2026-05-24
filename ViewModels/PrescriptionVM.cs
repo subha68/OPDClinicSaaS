@@ -26,6 +26,6 @@ namespace ViewModels
         public string? Diagnosis { get; set; }
         public string? Notes { get; set; }
 
-        public List<PharmacologyAdviceVM> Medicines { get; set; }    
+        public List<PharmacologyAdvice> Medicines { get; set; }    
     }
 }

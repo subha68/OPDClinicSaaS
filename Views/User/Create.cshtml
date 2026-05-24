@@ -1,104 +1,33 @@
+@model Models.User
+
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    bool isEdit =
+        Model != null &&
+        Model.UserId > 0;
+
+    ViewBag.PageTitle = isEdit ? "Edit User" : "Create User";
+
+    ViewBag.Fields = new[]
+    {
+        new { Name="FirstName", Label="First Name", Type="text", Col="6"},
+        new { Name="LastName", Label="Last Name", Type="text", Col="6"},
+        new { Name="Email", Label="Email", Type="text", Col="6"},
+        new { Name="Phone", Label="Phone", Type="text", Col="6"},
+        new { Name="Username", Label="User Name", Type="text", Col="6"},
+        new { Name="PasswordHash", Label="Password", Type="password", Col="6"},
+        new { Name="RoleId", Label="Role", Type="dropdown", Col="6"},
+        new { Name="ClinicId", Label="Clinic", Type="dropdown", Col="6"}
+    };
+
+    ViewBag.Dropdowns = new Dictionary<string, object>()
+    {
+        { "RoleId", ViewBag.Roles },
+        { "ClinicId", ViewBag.Clinics }
+    };
+
+    ViewBag.KeyField = "UserId";
 }
 
-@model ViewModels.UserVM
-
-@{
-    bool isEdit = Model != null && Model.User.UserId > 0;
-    ViewData["Title"] = isEdit ? "Update User" : "Add User";
-}
-
-<div class="container">
-    <div class="card shadow p-4">
-        <h3 class="mb-4">
-            @(isEdit ? "Update User" : "Add User")
-        </h3>
-
-        <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
-
-            @Html.AntiForgeryToken()
-
-            @if (isEdit)
-            {
-                <input type="hidden" asp-for="User.UserId" />
-            }
-
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-            <div class="mb-3">
-                <label asp-for="User.Username" class="form-label"></label>
-                <input asp-for="User.Username" class="form-control" />
-                <span asp-validation-for="User.Username" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="User.PasswordHash" class="form-label"></label>
-                <input asp-for="User.PasswordHash" type="password" class="form-control" />
-                <span asp-validation-for="User.PasswordHash" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="User.FirstName" class="form-label"></label>
-                <input asp-for="User.FirstName" class="form-control" />
-                <span asp-validation-for="User.FirstName" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="User.LastName" class="form-label"></label>
-                <input asp-for="User.LastName" class="form-control" />
-                <span asp-validation-for="User.LastName" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="User.Email" class="form-label"></label>
-                <input asp-for="User.Email" class="form-control" />
-                <span asp-validation-for="User.Email" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="User.Phone" class="form-label"></label>
-                <input asp-for="User.Phone" class="form-control" />
-                <span asp-validation-for="User.Phone" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="User.ClinicId" class="form-label">Clinic</label>
-                <select asp-for="User.ClinicId"
-                        asp-items="Model.Clinics"
-                        class="form-select">
-                    <option value="">Select Clinic</option>
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="User.RoleId" class="form-label">Role</label>
-                <select asp-for="User.RoleId"
-                        asp-items="Model.Roles"
-                        class="form-select">
-                    <option value="">Select Role</option>
-                </select>
-            </div>
-
-            <div class="form-check mb-3">
-                <input asp-for="User.IsActive" class="form-check-input" />
-                <label asp-for="User.IsActive" class="form-check-label"></label>
-            </div>
-
-            <button type="submit" class="btn btn-primary">
-                @(isEdit ? "Update" : "Save")
-            </button>
-
-            <a asp-action="Index" class="btn btn-secondary">
-                Cancel
-            </a>
-
-        </form>
-    </div>
-</div>
-
-@section Scripts{
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}
+@await Html.PartialAsync("_CrudForm", Model)

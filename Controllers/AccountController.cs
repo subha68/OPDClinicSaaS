@@ -83,7 +83,7 @@ namespace Controllers
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
                 // keep your session too
-                String rolename = _role.GetRoleName(user.RoleId);
+                String rolename = _role.Get(user.RoleId).RoleName;
                 if (rolename == "Doctor")
                 {
                     int doctorid = _doctor.GetDoctorIdByUserId(user.UserId);

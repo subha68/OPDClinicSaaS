@@ -1,10 +1,9 @@
 using DAL;
 using Models;
-using ViewModels;
 
 namespace BLL
 {
-    public class DepartmentService : BaseService<DepartmentVM>
+    public class DepartmentService : BaseService<Department>
     {
         private readonly DepartmentDAL _departmentDAL;
         public DepartmentService(IConfiguration config)
@@ -13,7 +12,7 @@ namespace BLL
             _dal = _departmentDAL;
         }
 
-        public override int Add(DepartmentVM model)
+        public override int Add(Department model)
         {
             model.ClinicId = clinicId;
 
@@ -23,7 +22,7 @@ namespace BLL
             return base.Add(model);
         }
 
-        public override List<DepartmentVM> List()
+        public override List<Department> List()
         {
             return _departmentDAL.GetDepartmentsByClinic(clinicId);
         }

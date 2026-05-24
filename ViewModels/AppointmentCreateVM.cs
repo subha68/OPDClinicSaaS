@@ -12,4 +12,8 @@ public class AppointmentCreateVM
     public string PatientName { get; set; }
     public string PatientSearch { get; set; }
 
+    public string VisitType { get; set; } = "New";
+    public bool IsVisitLocked { get; set; } = false;
+    public int VisitId { get; set; }
+
 }

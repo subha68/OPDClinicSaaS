@@ -5,7 +5,7 @@ using ViewModels;
 
 namespace DAL
 {
-    public class DoctorDAL : IDAL<DoctorVM>
+    public class DoctorDAL : IDAL<Doctor>
     {
         private readonly DbHelper _db;
 
@@ -14,7 +14,7 @@ namespace DAL
             _db = new DbHelper(config);
         }
 
-        public int Add(DoctorVM model)
+        public int Add(Doctor model)
         {
             using (SqlConnection con = _db.GetConnection())
             {
@@ -38,13 +38,14 @@ namespace DAL
             }
         }
 
-        public bool Update(DoctorVM model)
+        public bool Update(Doctor model)
         {
+            int rowsAffected_doctor = 0;
+
             using (SqlConnection con = _db.GetConnection())
             {
                 string query = @"UPDATE Doctors
-                                SET ClinicId = @ClinicId,
-                                    DepartmentId = @DepartmentId,
+                                SET DepartmentId = @DepartmentId,
                                     FirstName = @FirstName,
                                     LastName = @LastName,
                                     RegistrationNo = @RegNo,
@@ -53,7 +54,6 @@ namespace DAL
 
                 SqlCommand cmd = new SqlCommand(query, con);
 
-                cmd.Parameters.AddWithValue("@ClinicId", model.ClinicId);
                 cmd.Parameters.AddWithValue("@DepartmentId", model.DepartmentId);
                 cmd.Parameters.AddWithValue("@FirstName", model.FirstName);
                 cmd.Parameters.AddWithValue("@LastName", model.LastName ?? "");
@@ -62,13 +62,40 @@ namespace DAL
                 cmd.Parameters.AddWithValue("@DoctorId", model.DoctorId);
 
                 con.Open();
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
+                rowsAffected_doctor = cmd.ExecuteNonQuery();
             }
+
+            // Also update the associated User record's name fields
+            int rowsAffected_user   = 0;
+
+            using (SqlConnection con = _db.GetConnection())
+            {   
+                string query = @"UPDATE Users
+                                SET FirstName = @FirstName,
+                                    LastName = @LastName,
+                                    Username = @Username,
+                                    PasswordHash = @PasswordHash
+                                WHERE UserId = @UserId";
+
+                SqlCommand cmd = new SqlCommand(query, con);
+                cmd.Parameters.AddWithValue("@FirstName", model.FirstName);
+                cmd.Parameters.AddWithValue("@LastName", model.LastName ?? "");
+                cmd.Parameters.AddWithValue("@Username", model.Username);
+                cmd.Parameters.AddWithValue("@PasswordHash", model.Password); // In real app, hash the password
+                cmd.Parameters.AddWithValue("@UserId", model.UserId);
+
+                con.Open();
+                rowsAffected_user = cmd.ExecuteNonQuery();
+            }
+
+            return rowsAffected_user > 0 && rowsAffected_doctor > 0;
         }
 
         public bool Delete(int id)
         {
+            int rowsAffected_doctor = 0;
+            int userId = Get(id).UserId;
+
             using (SqlConnection con = _db.GetConnection())
             {
                 string query = @"DELETE FROM Doctors WHERE DoctorId = @DoctorId";
@@ -77,20 +104,36 @@ namespace DAL
                 cmd.Parameters.AddWithValue("@DoctorId", id);
 
                 con.Open();
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
+                rowsAffected_doctor = cmd.ExecuteNonQuery();
             }
-        }
 
-        public List<DoctorVM> GetAll()
-        {
-            List<DoctorVM> list = new List<DoctorVM>();
+            int rowsAffected_user = 0;
 
             using (SqlConnection con = _db.GetConnection())
             {
-                string query = @"SELECT d.*, dept.Name AS DepartmentName
+                string query = @"DELETE FROM Users WHERE UserId = @UserId";
+
+                SqlCommand cmd = new SqlCommand(query, con);
+                cmd.Parameters.AddWithValue("@UserId", id);
+
+                con.Open();
+                rowsAffected_user = cmd.ExecuteNonQuery();
+            }
+            
+
+            return rowsAffected_doctor > 0 && rowsAffected_user > 0;
+        }
+
+        public List<Doctor> GetAll()
+        {
+            List<Doctor> list = new List<Doctor>();
+
+            using (SqlConnection con = _db.GetConnection())
+            {
+                string query = @"SELECT d.*, dept.Name AS DepartmentName, c.Name AS ClinicName
                                 FROM Doctors d
-                                INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId";
+                                INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
+                                INNER JOIN Clinics c ON d.ClinicId = c.ClinicId";
 
                 SqlCommand cmd = new SqlCommand(query, con);
 
@@ -99,16 +142,18 @@ namespace DAL
 
                 while (dr.Read())
                 {
-                    list.Add(new DoctorVM
+                    list.Add(new Doctor
                     {
                         DoctorId = Convert.ToInt32(dr["DoctorId"]),
                         ClinicId = Convert.ToInt32(dr["ClinicId"]),
+                        UserId = Convert.ToInt32(dr["UserId"]),
                         DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
                         FirstName = dr["FirstName"].ToString(),
                         LastName = dr["LastName"].ToString(),
                         RegistrationNo = dr["RegistrationNo"].ToString(),
                         Qualification = dr["Qualification"].ToString(),
-                        DepartmentName = dr["DepartmentName"].ToString()
+                        DepartmentName = dr["DepartmentName"].ToString(),
+                        ClinicName = dr["ClinicName"].ToString()
                     });
                 }
             }
@@ -116,13 +161,14 @@ namespace DAL
             return list;
         }
 
-        public DoctorVM Get(int doctorId)
+        public Doctor Get(int doctorId)
         {
             using (SqlConnection con = _db.GetConnection())
             {
-                string query = @"SELECT d.*, dept.Name AS DepartmentName
+                string query = @"SELECT d.*, dept.Name AS DepartmentName, c.Name AS ClinicName
                                 FROM Doctors d
                                 INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
+                                INNER JOIN Clinics c ON d.ClinicId = c.ClinicId
                                 WHERE d.DoctorId = @DoctorId";
 
                 SqlCommand cmd = new SqlCommand(query, con);
@@ -133,16 +179,18 @@ namespace DAL
 
                 if (dr.Read())
                 {
-                    return new DoctorVM
+                    return new Doctor
                     {
                         DoctorId = Convert.ToInt32(dr["DoctorId"]),
                         ClinicId = Convert.ToInt32(dr["ClinicId"]),
+                        UserId = Convert.ToInt32(dr["UserId"]),
                         DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
                         FirstName = dr["FirstName"].ToString(),
                         LastName = dr["LastName"].ToString(),
                         RegistrationNo = dr["RegistrationNo"].ToString(),
                         Qualification = dr["Qualification"].ToString(),
-                        DepartmentName = dr["DepartmentName"].ToString()
+                        DepartmentName = dr["DepartmentName"].ToString(),
+                        ClinicName = dr["ClinicName"].ToString()
                     };
                 }
             }
@@ -150,15 +198,16 @@ namespace DAL
             return null; // Not found
         }
 
-        public List<DoctorVM> GetDoctorsByClinic(int clinicId)
+        public List<Doctor> GetDoctorsByClinic(int clinicId)
         {
-            List<DoctorVM> list = new List<DoctorVM>();
+            List<Doctor> list = new List<Doctor>();
 
             using (SqlConnection con = _db.GetConnection())
             {
-                string query = @"SELECT d.*, dept.Name AS DepartmentName
+                string query = @"SELECT d.*, dept.Name AS DepartmentName, c.Name AS ClinicName
                                 FROM Doctors d
                                 INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
+                                INNER JOIN Clinics c ON d.ClinicId = c.ClinicId
                                 WHERE d.ClinicId = @ClinicId";
 
                 SqlCommand cmd = new SqlCommand(query, con);
@@ -169,12 +218,15 @@ namespace DAL
 
                 while (dr.Read())
                 {
-                    list.Add(new DoctorVM
+                    list.Add(new Doctor
                     {
                         DoctorId = Convert.ToInt32(dr["DoctorId"]),
+                        ClinicId = Convert.ToInt32(dr["ClinicId"]),
                         FirstName = dr["FirstName"].ToString(),
                         LastName = dr["LastName"].ToString(),
-                        DepartmentId = Convert.ToInt32(dr["DepartmentId"])
+                        DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
+                        DepartmentName = dr["DepartmentName"].ToString(),
+                        ClinicName = dr["ClinicName"].ToString()
                     });
                 }
             }
@@ -182,15 +234,16 @@ namespace DAL
             return list;
         }
 
-        public List<DoctorVM> GetDoctorsByDepartment(int clinicId, int departmentId)
+        public List<Doctor> GetDoctorsByDepartment(int clinicId, int departmentId)
         {
-            List<DoctorVM> list = new List<DoctorVM>();
+            List<Doctor> list = new List<Doctor>();
 
             using (SqlConnection con = _db.GetConnection())
             {
-                string query = @"SELECT d.*, dept.Name AS DepartmentName
+                string query = @"SELECT d.*, dept.Name AS DepartmentName, c.Name AS ClinicName
                                 FROM Doctors d
                                 INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
+                                INNER JOIN Clinics c ON d.ClinicId = c.ClinicId
                                 WHERE d.ClinicId = @ClinicId AND d.DepartmentId = @DepartmentId";
 
                 SqlCommand cmd = new SqlCommand(query, con);
@@ -202,12 +255,14 @@ namespace DAL
 
                 while (dr.Read())
                 {
-                    list.Add(new DoctorVM
+                    list.Add(new Doctor
                     {
                         DoctorId = Convert.ToInt32(dr["DoctorId"]),
                         FirstName = dr["FirstName"].ToString(),
                         LastName = dr["LastName"].ToString(),
-                        DepartmentId = Convert.ToInt32(dr["DepartmentId"])
+                        DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
+                        DepartmentName = dr["DepartmentName"].ToString(),
+                        ClinicName = dr["ClinicName"].ToString()
                     });
                 }
             }

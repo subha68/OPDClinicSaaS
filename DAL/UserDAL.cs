@@ -195,7 +195,7 @@ namespace DAL
 
             using (SqlConnection conn = _db.GetConnection())
             {
-                SqlCommand cmd = new SqlCommand(@"SELECT u.*, c.ClinicName, r.RoleName 
+                SqlCommand cmd = new SqlCommand(@"SELECT u.*, c.Name as ClinicName, r.RoleName 
                                                 FROM Users u 
                                                 LEFT JOIN Clinics c ON u.ClinicId = c.ClinicId 
                                                 LEFT JOIN Roles r ON u.RoleId = r.RoleId", conn);

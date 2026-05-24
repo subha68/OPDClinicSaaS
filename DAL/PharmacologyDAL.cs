@@ -5,7 +5,7 @@ using ViewModels;
 
 namespace DAL
 {
-    public class PharmacologyDAL : IDAL<PharmacologyAdviceVM>
+    public class PharmacologyDAL : IDAL<PharmacologyAdvice>
     {
         private readonly DbHelper _db;
         public int consultationId = 0;
@@ -16,7 +16,7 @@ namespace DAL
             _db = new DbHelper(config);
         }
     
-        public int Add(PharmacologyAdviceVM advice)
+        public int Add(PharmacologyAdvice advice)
         {    
             using (SqlConnection conn = _db.GetConnection())
             {
@@ -58,7 +58,7 @@ namespace DAL
             }
         }
 
-        public bool Update(PharmacologyAdviceVM model)
+        public bool Update(PharmacologyAdvice model)
         {
             using (SqlConnection conn = _db.GetConnection())
             {
@@ -106,9 +106,9 @@ namespace DAL
             }
         }
 
-        public List<PharmacologyAdviceVM> GetAll()
+        public List<PharmacologyAdvice> GetAll()
         {
-            var list = new List<PharmacologyAdviceVM>();
+            var list = new List<PharmacologyAdvice>();
 
             using (var conn = _db.GetConnection())
             {
@@ -126,7 +126,7 @@ namespace DAL
                 {
                     while (reader.Read())
                     {
-                        var advice = new PharmacologyAdviceVM
+                        var advice = new PharmacologyAdvice
                         {
                             MedicineName = reader["MedicineName"].ToString(),
                             Dosage = reader["Dosage"].ToString(),
@@ -142,7 +142,7 @@ namespace DAL
             return list;
         }
 
-        public PharmacologyAdviceVM Get(int id)
+        public PharmacologyAdvice Get(int id)
         {
             using (var conn = _db.GetConnection())
             {
@@ -160,7 +160,7 @@ namespace DAL
                 {
                     if (reader.Read())
                     {
-                        return new PharmacologyAdviceVM
+                        return new PharmacologyAdvice
                         {
                             MedicineName = reader["MedicineName"].ToString(),
                             Dosage = reader["Dosage"].ToString(),

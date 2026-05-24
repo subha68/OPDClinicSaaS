@@ -19,6 +19,7 @@ namespace DAL
 
             // To connect to SQLServer Express from Command Line, use:
             // sqlcmd -S LENOVO-SUBHASIS\SQLEXPRESS -No -E
+            // Server=localhost\SQLEXPRESS02;Database=master;Trusted_Connection=True;
         }
 
         public SqlConnection GetConnection()

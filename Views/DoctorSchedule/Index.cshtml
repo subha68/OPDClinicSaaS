@@ -10,18 +10,20 @@
 
 <div class="modal fade"
      id="slotModal"
-     tabindex="-1">
+     tabindex="-1"
+     data-bs-focus="false"
+     aria-labelledby="slotModalLabel"
+     aria-hidden="true">
 
     <div class="modal-dialog">
         <div class="modal-content">
 
-            <form asp-action="GenerateSlots"
-                  method="post">
+            <form asp-action="GenerateSlots" method="post">
 
                 @Html.AntiForgeryToken()
 
                 <div class="modal-header">
-                    <h5 class="modal-title">
+                    <h5 class="modal-title" id="slotModalLabel">
                         Generate Appointment Slots
                     </h5>
                     <button type="button"
@@ -37,16 +39,18 @@
                            name="doctorId" />
 
                     <div class="mb-3">
-                        <label>From Date</label>
+                        <label for="fromDate">From Date</label>
                         <input type="date"
+                               id="fromDate"
                                name="fromDate"
                                class="form-control"
                                required />
                     </div>
 
                     <div class="mb-3">
-                        <label>To Date</label>
+                        <label for="toDate">To Date</label>
                         <input type="date"
+                               id="toDate"
                                name="toDate"
                                class="form-control"
                                required />
@@ -84,8 +88,8 @@
             <td>@item.EndTime</td>
             <td>
                 <button type="button"
-                        class="btn btn-success btn-sm"
-                        onclick="openSlotModal(@item.DoctorId)">
+                        class="btn btn-success btn-sm slot-btn"
+                        data-doctorid="@item.DoctorId">
                     Generate Slots
                 </button>
             </td>
@@ -100,14 +104,19 @@
 
 @section Scripts {
 <script>
-    function openSlotModal(doctorId) {
-        document.getElementById("doctorId").value = doctorId;
+document.addEventListener("DOMContentLoaded", function () {
 
-        var modal =
-            new bootstrap.Modal(
-                document.getElementById("slotModal"));
+    const modalEl = document.getElementById('slotModal');
+    const modal = new bootstrap.Modal(modalEl);
 
-        modal.show();
-    }
+    document.querySelectorAll('.slot-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const doctorId = this.dataset.doctorid;
+            document.getElementById('doctorId').value = doctorId;
+            modal.show();
+        });
+    });
+
+});
 </script>
 }

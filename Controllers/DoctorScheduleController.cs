@@ -109,7 +109,7 @@ namespace Controllers
         private void LoadDoctors(int ClinicId = 0)
         {
             _doctor.clinicId = ClinicId;
-            var doctors = _doctor.List() ?? new List<DoctorVM>();
+            var doctors = _doctor.List() ?? new List<Doctor>();
 
             ViewBag.Doctors =
                 new SelectList(

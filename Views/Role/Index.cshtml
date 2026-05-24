@@ -1,0 +1,15 @@
+@model IEnumerable<Models.Role>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Role Management";
+
+    ViewBag.PageTitle = "Role Management";
+
+    ViewBag.Columns = new[] { "Role Name" };
+    ViewBag.Properties = new[] { "RoleName" };
+
+    ViewBag.KeyField = "RoleId";
+}
+
+@await Html.PartialAsync("_CrudList", Model)

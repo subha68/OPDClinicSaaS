@@ -13,13 +13,14 @@ namespace Models
         public string LastName { get; set; }
 
         [Required]
-        public string DOB { get; set; }
+        public DateTime DOB { get; set; }
 
         [Required]
         public string Gender { get; set; }
 
         public string? Address { get; set; }
 
+        [Required]
         public string Phone { get; set; }
     
         public int? ClinicId { get; set; }

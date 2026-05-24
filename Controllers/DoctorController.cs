@@ -17,6 +17,7 @@ namespace Controllers
         private DepartmentService _department;
         private UserService _user;
         private RoleService _role;
+        private ClinicService _clinic;
 
         public DoctorController(IConfiguration config, SessionHelper session)
         {
@@ -24,6 +25,7 @@ namespace Controllers
             _department = new DepartmentService(config);
             _user = new UserService(config);
             _role = new RoleService(config);
+            _clinic = new ClinicService(config);
             _session = session;
         }
 
@@ -35,66 +37,58 @@ namespace Controllers
             return View(list);
         }
 
+        [HttpGet]
         public ActionResult Create()
         {
+            var model = new Doctor();
+            
             _department.clinicId = Convert.ToInt32(_session.ClinicId);
-
-            var model = new DoctorVM
-            {
-                Departments = _department.List()
-                    .Select(d => new SelectListItem
-                    {
-                        Value = d.DepartmentId.ToString(),
-                        Text = d.Name
-                    }).ToList()
-            };
+            ViewBag.Departments = GetDepartments();
 
             return View(model);
         }
 
         [HttpPost]
-        public ActionResult Create(DoctorVM vm)
+        public ActionResult Create(Doctor model)
         {
+            model.ClinicId = Convert.ToInt32(_session.ClinicId);
+
             if (!ModelState.IsValid)
             {
-                if (vm.Username != null && _user.UsernameExists(vm.Username))
+                if (model.Username != null && _user.UsernameExists(model.Username))
                 {
                     ModelState.AddModelError("Username", "Username already exists");
                 }
                 _department.clinicId = Convert.ToInt32(_session.ClinicId);
-                vm.Departments = _department.List()
-                    .Select(d => new SelectListItem
-                    {
-                        Value = d.DepartmentId.ToString(),
-                        Text = d.Name
-                    }).ToList();
-                return View(vm);
+                ViewBag.Departments = GetDepartments();
+
+                return View(model);
             }
 
-            int doctorRoleId =_role.GetRoleIdByName("Doctor");
+            int doctorRoleId =_role.GetRoleByName("Doctor").RoleId;
 
             // STEP 1: create user
             var user = new User
             {
-                Username = vm.Username,
-                PasswordHash = vm.Password,
+                Username = model.Username,
+                PasswordHash = model.Password,
                 RoleId = doctorRoleId,   // Doctor Role
-                FirstName = vm.FirstName,
-                LastName = vm.LastName
+                FirstName = model.FirstName,
+                LastName = model.LastName
             };
 
             int newUserId = _user.Add(user);
 
             // STEP 2: create doctor
-            var doctor = new DoctorVM
+            var doctor = new Doctor
             {
-                FirstName = vm.FirstName,
-                LastName = vm.LastName,
-                DepartmentId = vm.DepartmentId,
-                RegistrationNo = vm.RegistrationNo,
-                Qualification = vm.Qualification,
-                ClinicId = vm.ClinicId,
-                Username = vm.Username,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                DepartmentId = model.DepartmentId,
+                RegistrationNo = model.RegistrationNo,
+                Qualification = model.Qualification,
+                ClinicId = model.ClinicId,
+                Username = model.Username,
                 UserId = newUserId
             };
 
@@ -102,5 +96,67 @@ namespace Controllers
 
             return RedirectToAction("Index");
         }
+
+        [HttpGet]
+        public IActionResult Edit(int id)
+        {
+            var doctor = _doctor.Get(id);
+
+            if (doctor == null)
+                return NotFound();
+
+            ViewBag.Departments = GetDepartments();
+
+            return View("Create", doctor);   // reuse same screen
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Edit(Doctor model)
+        {
+            model.ClinicId = Convert.ToInt32(_session.ClinicId);
+
+            if (!ModelState.IsValid)
+            {
+                foreach (var key in ModelState.Keys)
+                {
+                    var errors = ModelState[key].Errors;
+                    foreach (var err in errors)
+                    {
+                        Console.WriteLine($"Field: {key} → Error: {err.ErrorMessage}");
+                    }
+                }
+
+                ViewBag.Departments = GetDepartments();
+
+                return View("Create", model);
+            }
+
+            _doctor.Update(model);
+
+            TempData["Success"] = "Doctor updated successfully.";
+            return RedirectToAction("Index");
+        }
+
+        public IActionResult Delete(int id)
+        {
+            _doctor.Delete(id);
+
+            TempData["Success"] = "Doctor deleted successfully.";
+            return RedirectToAction("Index");
+        }
+
+        private List<SelectListItem> GetDepartments()
+        {
+            _department.clinicId = Convert.ToInt32(_session.ClinicId);
+
+            return _department.List()
+                    .Select(d => new SelectListItem
+                    {
+                        Value = d.DepartmentId.ToString(),
+                        Text = d.Name
+                    }).ToList();
+        }
+
     }
 }

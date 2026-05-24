@@ -1,13 +1,12 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Models;
 
-namespace ViewModels
+namespace Models
 {
-    public class DepartmentVM
+    public class Department
     {
         public int DepartmentId { get; set; }
         public int ClinicId { get; set; }
+        public string? ClinicName { get; set; }
 
         [Required]
         public string Name { get; set; }

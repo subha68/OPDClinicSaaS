@@ -1,0 +1,54 @@
+@model ViewModels.PatientHistoryVM
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h3>Patient History</h3>
+
+<div class="card p-3 mb-3">
+    <h5>@Model.Patient.FirstName @Model.Patient.LastName</h5>
+    <div>Patient ID: @Model.Patient.PatientId</div>
+    <div>Phone: @Model.Patient.Phone</div>
+</div>
+
+<table class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Visit Type</th>
+            <th>Doctor</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @if (Model.Prescriptions.Any())
+    {
+        foreach (var Prescription in Model.Prescriptions)
+        {
+            <tr>
+                <td>@Prescription.VisitDateTime.ToString("dd-MMM-yyyy HH:mm")</td>
+                <td>@Prescription.DoctorName</td>
+                <td>
+                    <a asp-controller="Consultation"
+                       asp-action="Details"
+                       asp-route-id="@Prescription.AppointmentId"
+                       class="btn btn-sm btn-info">
+                        View
+                    </a>
+                </td>
+            </tr>
+        }
+    }
+    else
+    {
+        <tr>
+            <td colspan="5" class="text-center">
+                No visit history found
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<a asp-action="Search" class="btn btn-secondary">Back</a>

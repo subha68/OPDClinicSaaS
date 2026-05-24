@@ -1,0 +1,24 @@
+@model Models.Role
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    bool isEdit =
+        Model != null &&
+        Model.RoleId > 0;
+
+    ViewBag.PageTitle = isEdit ? "Edit Role" : "Create Role";
+
+    ViewBag.Fields = new[]
+    {
+        new { Name="RoleName", Label="Role Name", Type="text", Col="6"}
+    };
+
+    ViewBag.Dropdowns = new Dictionary<string, object>()
+    {
+    };
+
+    ViewBag.KeyField = "RoleId";
+}
+
+@await Html.PartialAsync("_CrudForm", Model)

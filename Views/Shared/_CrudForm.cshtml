@@ -6,30 +6,55 @@
         <h2 class="page-title">@ViewBag.PageTitle</h2>
 
         <form method="post">
-
-            @foreach (var field in ViewBag.Fields)
-            {
-                <div class="mb-3">
-                    <label>@field.Label</label>
-
-                    @if(field.Type == "text")
-                    {
-                        <input name="@field.Name"
-                               value="@Model?.GetType().GetProperty(field.Name)?.GetValue(Model)"
-                               class="form-control" />
-                    }
-
-                    @if(field.Type == "dropdown")
-                    {
-                        @Html.DropDownList(
-                            field.Name,
-                            ViewBag.Dropdowns[field.Name],
-                            "-- Select --",
-                            new { @class="form-select" })
-                    }
-                </div>
+            @{
+                var keyProp = Model?.GetType().GetProperty(ViewBag.KeyField);
+                var keyValue = keyProp?.GetValue(Model);
             }
 
+            <input type="hidden"
+                name="@ViewBag.KeyField"
+                value="@keyValue" />
+
+            <div class="row">
+                @foreach (var field in ViewBag.Fields)
+                {
+                    <div class="col-md-@field.Col mb-4">
+                        <label>@field.Label</label>
+
+                        @if(field.Type == "text")
+                        {
+                            <input name="@field.Name"
+                                value="@Model?.GetType().GetProperty(field.Name)?.GetValue(Model)"
+                                class="form-control" />
+                        }
+
+                        @if(field.Type == "readonly")
+                        {
+                            <input name="@field.Name"
+                                value="@Model?.GetType().GetProperty(field.Name)?.GetValue(Model)"
+                                class="form-control"
+                                readonly />
+                        }
+
+                        @if (field.Type == "password")
+                        {
+                            <input type="password"
+                                name="@field.Name"
+                                class="form-control"
+                                placeholder="Enter password" />
+                        }
+
+                        @if(field.Type == "dropdown")
+                        {
+                            @Html.DropDownList(
+                                field.Name,
+                                ViewBag.Dropdowns[field.Name],
+                                "-- Select --",
+                                new { @class="form-select" })
+                        }
+                    </div>
+                }
+            </div>
             <button class="btn btn-future">
                 Save
             </button>

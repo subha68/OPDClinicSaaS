@@ -28,7 +28,9 @@ namespace Controllers
         [HttpGet]
         public IActionResult Create()
         {
-            return View();
+            var model = new Clinic();
+
+            return View(model);
         }
 
         [HttpPost]
@@ -55,6 +57,51 @@ namespace Controllers
 
             _clinic.Add(clinic);
 
+            return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public IActionResult Edit(int id)
+        {
+            var clinic = _clinic.Get(id);
+            if (clinic == null)
+            {
+                return NotFound();
+            }
+            return View("Create", clinic);
+        }
+
+        [HttpPost]
+        public IActionResult Edit(Clinic clinic)
+        {
+            if (clinic == null)
+            {
+                return Content("Model is NULL");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                foreach (var key in ModelState.Keys)
+                {
+                    var errors = ModelState[key].Errors;
+                    foreach (var err in errors)
+                    {
+                        Console.WriteLine($"Field: {key} → Error: {err.ErrorMessage}");
+                    }
+                }
+
+                return View(clinic);
+            }
+
+            _clinic.Update(clinic);
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public IActionResult Delete(int id)
+        {
+            _clinic.Delete(id);
             return RedirectToAction("Index");
         }
     }

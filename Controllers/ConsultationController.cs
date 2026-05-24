@@ -48,22 +48,22 @@ namespace Controllers
         [HttpGet]
         public IActionResult Consult(int appointmentId)
         {
-            var vm = _consultation.GetConsultationVM(appointmentId);
+            var vm = _consultation.GetConsultation(appointmentId);
 
             return View(vm);
         }
 
         [HttpPost]
-        public IActionResult Consult(ConsultationVM vm)
+        public IActionResult Consult(Consultation model)
         {
-            int consultationId = _consultation.SaveConsultation(vm);
+            int consultationId = _consultation.SaveConsultation(model);
 
-            foreach(var med in vm.pharmacologyAdvices)
+            foreach(var med in model.pharmacologyAdvices)
             {
-                _pharmacology.Add(consultationId, vm.AppointmentId, med);
+                _pharmacology.Add(consultationId, model.AppointmentId, med);
             }
 
-            _appointment.UpdateStatus(vm.AppointmentId, "Completed");
+            _appointment.UpdateStatus(model.AppointmentId, "Completed");
 
             TempData["Success"] = "Consultation completed";
 

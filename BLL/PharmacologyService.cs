@@ -4,7 +4,7 @@ using ViewModels;
 
 namespace BLL
 {    
-    public class PharmacologyService : BaseService<PharmacologyAdviceVM>
+    public class PharmacologyService : BaseService<PharmacologyAdvice>
     {
         private readonly PharmacologyDAL _pharmacologyDAL;
 
@@ -14,7 +14,7 @@ namespace BLL
             _dal = _pharmacologyDAL;
         }
 
-        public void Add(int consultationId, int appointmentId, PharmacologyAdviceVM advice)
+        public void Add(int consultationId, int appointmentId, PharmacologyAdvice advice)
         {
             _pharmacologyDAL.consultationId = consultationId;
             _pharmacologyDAL.appointmentId = appointmentId;

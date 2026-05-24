@@ -1,16 +1,15 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Models;
 
-namespace ViewModels
+namespace Models
 {
-    public class PharmacologyAdviceVM
+    public class PharmacologyAdvice
     {
         public int PrescriptionId { get; set; }
         public int ConsultationId { get; set; }
         public int AppointmentId { get; set; }
 
-        public string MedicineName { get; set; }
+        public string? MedicineName { get; set; }
         public string? Dosage { get; set; }
         public string? Frequency { get; set; }
         public string? Duration { get; set; }

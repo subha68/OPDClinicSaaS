@@ -15,6 +15,7 @@ namespace Controllers
         private readonly AppointmentSlotService _slot;
         private readonly AppointmentService _appointment;
         private readonly PatientService _patient;
+        private readonly VisitService _visit;
         private readonly SessionHelper _session;
 
         public AppointmentBookingController(
@@ -26,6 +27,7 @@ namespace Controllers
             _slot = new AppointmentSlotService(configuration);
             _appointment = new AppointmentService(configuration);
             _patient = new PatientService(configuration);
+            _visit = new VisitService(configuration);
             _session = session;
         }
 
@@ -75,17 +77,64 @@ namespace Controllers
         }
 
         [HttpGet]
-        public IActionResult Book(int slotId, int doctorId, DateTime date, string time)
+        public IActionResult Book(int slotId, int doctorId, DateTime date, string time, int patientId)
         {
             var vm = new AppointmentCreateVM
             {
                 SlotId = slotId,
+                VisitId = 0,
                 DoctorId = doctorId,
                 AppointmentDate = date,
-                SlotTime = time
+                SlotTime = time,
+                PatientId = patientId
             };
 
             return View(vm);
+        }
+
+        [HttpPost]
+        public IActionResult Book(AppointmentCreateVM vm)
+        {
+            if (!ModelState.IsValid)
+                return View(vm);
+
+            Visit visit = _visit.GetByPatientAndDate(vm.PatientId, vm.AppointmentDate);
+
+            if (visit == null)
+            {
+                visit = new Visit
+                {
+                    VisitDate = vm.AppointmentDate,
+                    VisitType = vm.VisitType,
+                    ClinicId = _session.ClinicId,
+                    PatientId = vm.PatientId
+                };
+
+                vm.VisitId = _visit.Add(visit);
+            }
+            else
+            {
+                vm.VisitId = visit.VisitId;
+            }
+
+            var appointment = new Appointment
+            {
+                DoctorId = vm.DoctorId,
+                ClinicId = _session.ClinicId,
+                PatientId = vm.PatientId,
+                VisitId = vm.VisitId,
+                AppointmentDate = vm.AppointmentDate,
+                SlotTime = TimeSpan.Parse(vm.SlotTime),
+                Status = "Booked"
+            };
+
+            _appointment.Add(appointment);
+
+            _slot.IncrementBookedCount(vm.SlotId);
+
+            TempData["Success"] = "Appointment booked successfully";
+
+            return RedirectToAction("Index");
         }
 
         [HttpGet]
@@ -104,29 +153,19 @@ namespace Controllers
             });
         }
 
-        [HttpPost]
-        public IActionResult Book(AppointmentCreateVM vm)
+        [HttpGet]
+        public JsonResult GetVisit(int patientId, DateTime visitDate)
         {
-            if (!ModelState.IsValid)
-                return View(vm);
+            var visit = _visit.GetByPatientAndDate(patientId, visitDate);
 
-            var appointment = new AppointmentVM
+            if (visit == null)
+                return Json(null);
+
+            return Json(new
             {
-                DoctorId = vm.DoctorId,
-                ClinicId = _session.ClinicId,
-                PatientId = vm.PatientId,
-                AppointmentDate = vm.AppointmentDate,
-                SlotTime = TimeSpan.Parse(vm.SlotTime),
-                Status = "Booked"
-            };
-
-            _appointment.Add(appointment);
-
-            _slot.IncrementBookedCount(vm.SlotId);
-
-            TempData["Success"] = "Appointment booked successfully";
-
-            return RedirectToAction("Index");
+                visitId = visit.VisitId,
+                visitType = visit.VisitType
+            });
         }
     }
 }

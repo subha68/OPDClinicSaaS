@@ -1,26 +1,15 @@
+@model IEnumerable<Models.Department>
+
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Department Management";
+
+    ViewBag.PageTitle = "Department Management";
+
+    ViewBag.Columns = new[] { "Name", "Description", "Clinic" };
+    ViewBag.Properties = new[] { "Name", "Description", "ClinicName" };
+
+    ViewBag.KeyField = "DepartmentId";
 }
 
-@model List<ViewModels.DepartmentVM>
-
-<h2>Departments</h2>
-
-<a href="/Department/Create" class="btn btn-primary">Add Department</a>
-
-<table border="1">
-    <tr>
-        <th>Clinic ID</th>
-        <th>Name</th>
-        <th>Description</th>
-    </tr>
-
-@foreach (var c in Model)
-{
-    <tr>
-        <td>@c.ClinicId</td>
-        <td>@c.Name</td>
-        <td>@c.Description</td>
-    </tr>
-}
-</table>
+@await Html.PartialAsync("_CrudList", Model)

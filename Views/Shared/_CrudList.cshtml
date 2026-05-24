@@ -25,6 +25,10 @@
             <tbody>
             @foreach (var row in Model)
             {
+                var keyValue = row.GetType()
+                                  .GetProperty(ViewBag.KeyField)
+                                  ?.GetValue(row);
+
                 <tr>
                     @foreach (string prop in ViewBag.Properties)
                     {
@@ -33,9 +37,16 @@
 
                     <td class="text-center">
                         <a asp-action="Edit"
-                           asp-route-id="@row.UserId"
-                           class="btn btn-sm btn-outline-primary">
+                           asp-route-id="@keyValue"
+                            class="btn btn-sm btn-outline-primary">
                             Edit
+                        </a>
+
+                        <a asp-action="Delete"
+                            asp-route-id="@keyValue"
+                            class="btn btn-sm btn-outline-danger"
+                            onclick="return confirm('Are you sure you want to delete this record?');">
+                            Delete
                         </a>
                     </td>
                 </tr>

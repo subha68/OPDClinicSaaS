@@ -20,14 +20,18 @@ namespace DAL
             {
                 conn.Open();
 
-                string query = @"INSERT INTO Patients (FirstName, LastName, Phone)
-                                 VALUES (@first, @last, @phone);
+                string query = @"INSERT INTO Patients (FirstName, LastName, Phone, DOB, Gender, Address, ClinicId)
+                                 VALUES (@first, @last, @phone, @dob, @gender, @address, @clinicId);
                                 SELECT SCOPE_IDENTITY();";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@first", patient.FirstName);
                 cmd.Parameters.AddWithValue("@last", patient.LastName);
                 cmd.Parameters.AddWithValue("@phone", patient.Phone);
+                cmd.Parameters.AddWithValue("@dob", patient.DOB);
+                cmd.Parameters.AddWithValue("@gender", patient.Gender);
+                cmd.Parameters.AddWithValue("@address", patient.Address);
+                cmd.Parameters.AddWithValue("@clinicId", patient.ClinicId);
 
                 return Convert.ToInt32(cmd.ExecuteScalar());
             }
@@ -42,13 +46,19 @@ namespace DAL
                 string query = @"UPDATE Patients
                                  SET FirstName = @first,
                                      LastName = @last,
-                                     Phone = @phone
+                                     Phone = @phone,
+                                     DOB = @dob,
+                                     Gender = @gender,
+                                     Address = @address
                                  WHERE PatientId = @id";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@first", patient.FirstName);
                 cmd.Parameters.AddWithValue("@last", patient.LastName);
                 cmd.Parameters.AddWithValue("@phone", patient.Phone);
+                cmd.Parameters.AddWithValue("@dob", patient.DOB);
+                cmd.Parameters.AddWithValue("@gender", patient.Gender);
+                cmd.Parameters.AddWithValue("@address", patient.Address);
                 cmd.Parameters.AddWithValue("@id", patient.PatientId);
 
                 int rowsAffected = cmd.ExecuteNonQuery();
@@ -91,7 +101,11 @@ namespace DAL
                         PatientId = Convert.ToInt32(dr["PatientId"]),
                         FirstName = dr["FirstName"].ToString(),
                         LastName = dr["LastName"].ToString(),
-                        Phone = dr["Phone"].ToString()
+                        Phone = dr["Phone"].ToString(),
+                        DOB = Convert.ToDateTime(dr["DOB"]),
+                        Gender = dr["Gender"].ToString(),
+                        Address = dr["Address"].ToString(),
+                        ClinicId = Convert.ToInt32(dr["ClinicId"])
                     });
                 }
             }
@@ -118,7 +132,11 @@ namespace DAL
                         PatientId = Convert.ToInt32(dr["PatientId"]),
                         FirstName = dr["FirstName"].ToString(),
                         LastName = dr["LastName"].ToString(),
-                        Phone = dr["Phone"].ToString()
+                        Phone = dr["Phone"].ToString(),
+                        DOB = Convert.ToDateTime(dr["DOB"]),
+                        Gender = dr["Gender"].ToString(),
+                        Address = dr["Address"].ToString(),
+                        ClinicId = Convert.ToInt32(dr["ClinicId"])
                     };
                 }
             }
@@ -145,13 +163,74 @@ namespace DAL
                         PatientId = Convert.ToInt32(dr["PatientId"]),
                         FirstName = dr["FirstName"].ToString(),
                         LastName = dr["LastName"].ToString(),
-                        Phone = dr["Phone"].ToString()
+                        Phone = dr["Phone"].ToString(),
+                        DOB = Convert.ToDateTime(dr["DOB"]),
+                        Gender = dr["Gender"].ToString(),
+                        Address = dr["Address"].ToString(),
+                        ClinicId = Convert.ToInt32(dr["ClinicId"])
                     };
                 }
             }
 
             return null;
         }
+
+        public List<Patient> Search(int clinicId, string? patientId, string? phone, string? name)
+        {
+            var patients = new List<Patient>();
+
+            SqlConnection con = _db.GetConnection();
+
+            string sql = @"
+                SELECT PatientId, FirstName, LastName, DOB, Gender, Address, Phone, ClinicId
+                FROM Patients
+                WHERE
+                    (@PatientId IS NULL OR PatientId LIKE '%' + @PatientId + '%')
+                AND (@Phone IS NULL OR Phone LIKE '%' + @Phone + '%')
+                AND (
+                        @Name IS NULL
+                        OR FirstName LIKE '%' + @Name + '%'
+                        OR LastName LIKE '%' + @Name + '%'
+                    )
+                AND ClinicId = @ClinicId
+                ORDER BY PatientId DESC";
+
+            using var cmd = new SqlCommand(sql, con);
+
+            cmd.Parameters.AddWithValue("@PatientId",
+                string.IsNullOrWhiteSpace(patientId) ? DBNull.Value : patientId);
+
+            cmd.Parameters.AddWithValue("@Phone",
+                string.IsNullOrWhiteSpace(phone) ? DBNull.Value : phone);
+
+            cmd.Parameters.AddWithValue("@Name",
+                string.IsNullOrWhiteSpace(name) ? DBNull.Value : name);
+
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+
+            con.Open();
+
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                patients.Add(new Patient
+                {
+                    PatientId = Convert.ToInt32(reader["PatientId"]),
+                    FirstName = reader["FirstName"].ToString(),
+                    LastName = reader["LastName"].ToString(),
+                    DOB = Convert.ToDateTime(reader["DOB"]),
+                    Gender = reader["Gender"].ToString(),
+                    Address = reader["Address"]?.ToString(),
+                    Phone = reader["Phone"].ToString(),
+                    ClinicId = Convert.ToInt32(reader["ClinicId"])
+                });
+            }
+
+            return patients;
+        }
+
+
     }
 }
 

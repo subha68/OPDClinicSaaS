@@ -13,39 +13,87 @@ namespace Controllers
     public class DepartmentController : Controller
     {
         private readonly SessionHelper _session;
-        private DepartmentService _department;
+        private readonly DepartmentService _department;
+        private readonly ClinicService _clinic;
+
 
         public DepartmentController(IConfiguration config, SessionHelper session)
         {
             _department = new DepartmentService(config);
+            _clinic = new ClinicService(config);
             _session = session;
         }
 
         public ActionResult Index()
         {
-            _department.setClinicId(_session.ClinicId);
+            _department.clinicId = _session.ClinicId;
             var list = _department.List();
             return View(list);
         }
 
         public ActionResult Create()
         {
-            return View();
+            var model = new Department();
+            model.ClinicId = _session.ClinicId;
+            model.ClinicName = _clinic.Get(model.ClinicId).Name;
+            return View(model);
         }
 
         [HttpPost]
-        public ActionResult Create(DepartmentVM model)
+        public ActionResult Create(Department model)
         {
-            int clinicId = _session.ClinicId;
-
             if (ModelState.IsValid)
             {
-                _department.setClinicId(clinicId);
                 _department.Add(model);
+
                 return RedirectToAction("Index");
             }
 
             return View(model);
         }
+
+        public ActionResult Edit(int id)
+        {
+            var dept = _department.Get(id);
+            if (dept == null)
+                return NotFound();
+
+            return View("Create", dept);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Edit(Department model)
+        {
+            //model.ClinicName = _clinic.Get(model.ClinicId).Name;
+
+            if (!ModelState.IsValid)
+            {
+                foreach (var key in ModelState.Keys)
+                {
+                    var errors = ModelState[key].Errors;
+                    foreach (var err in errors)
+                    {
+                        Console.WriteLine($"Field: {key} → Error: {err.ErrorMessage}");
+                    }
+                }
+
+                return View("Create", model);
+            }
+
+            _department.Update(model);
+
+            TempData["Success"] = "Department updated successfully.";
+            return RedirectToAction("Index");
+        }
+
+        public IActionResult Delete(int id)
+        {
+            _department.Delete(id);
+
+            TempData["Success"] = "Department deleted successfully.";
+            return RedirectToAction("Index");
+        }
+
     }
 }

@@ -7,7 +7,7 @@ using Microsoft.Data.SqlClient;
 
 namespace DAL
 {
-    public class AppointmentDAL : IDAL<AppointmentVM>
+    public class AppointmentDAL : IDAL<Appointment>
     {
         private readonly DbHelper _db;
 
@@ -16,7 +16,7 @@ namespace DAL
             _db = new DbHelper(config);
         }
 
-        public int Add(AppointmentVM model)
+        public int Add(Appointment model)
         {
             using (SqlConnection conn = _db.GetConnection())
             {
@@ -26,6 +26,7 @@ namespace DAL
                         DoctorId,
                         ClinicId,
                         PatientId,
+                        VisitId,
                         AppointmentDate,
                         SlotTime,
                         Status
@@ -35,6 +36,7 @@ namespace DAL
                         @DoctorId,
                         @ClinicId,
                         @PatientId,
+                        @VisitId,
                         @AppointmentDate,
                         @SlotTime,
                         @Status
@@ -47,6 +49,7 @@ namespace DAL
                     cmd.Parameters.AddWithValue("@DoctorId", model.DoctorId);
                     cmd.Parameters.AddWithValue("@ClinicId", model.ClinicId);
                     cmd.Parameters.AddWithValue("@PatientId", model.PatientId);
+                    cmd.Parameters.AddWithValue("@VisitId", model.VisitId);
                     cmd.Parameters.AddWithValue("@AppointmentDate", model.AppointmentDate);
                     cmd.Parameters.AddWithValue("@SlotTime", model.SlotTime);
                     cmd.Parameters.AddWithValue("@Status", model.Status);
@@ -58,14 +61,13 @@ namespace DAL
             }
         }
 
-        public bool Update(AppointmentVM model)
+        public bool Update(Appointment model)
         {
             using (SqlConnection conn = _db.GetConnection())
             {
                 string query = @"
                     UPDATE Appointments
                     SET DoctorId = @DoctorId,
-                        ClinicId = @ClinicId,
                         PatientId = @PatientId,
                         AppointmentDate = @AppointmentDate,
                         SlotTime = @SlotTime,
@@ -75,7 +77,6 @@ namespace DAL
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("@DoctorId", model.DoctorId);
-                    cmd.Parameters.AddWithValue("@ClinicId", model.ClinicId);
                     cmd.Parameters.AddWithValue("@PatientId", model.PatientId);
                     cmd.Parameters.AddWithValue("@AppointmentDate", model.AppointmentDate);
                     cmd.Parameters.AddWithValue("@SlotTime", model.SlotTime);
@@ -108,9 +109,9 @@ namespace DAL
             }
         }
 
-        public List<AppointmentVM> GetAll()
+        public List<Appointment> GetAll()
         {
-            var list = new List<AppointmentVM>();
+            var list = new List<Appointment>();
 
             using (SqlConnection conn = _db.GetConnection())
             {
@@ -118,15 +119,21 @@ namespace DAL
                     SELECT
                         a.AppointmentId,
                         a.AppointmentDate,
+                        v.VisitId,
                         a.SlotTime,
                         a.Status,
                         p.FirstName + ' ' + p.LastName as PatientName,
-                        d.FirstName + ' ' + d.LastName as DoctorName
+                        d.FirstName + ' ' + d.LastName as DoctorName,
+                        c.ClinicName
                     FROM Appointments a
                     INNER JOIN Patients p
                         ON a.PatientId = p.PatientId
                     INNER JOIN Doctors d
-                        ON a.DoctorId = d.DoctorId";
+                        ON a.DoctorId = d.DoctorId
+                    INNER JOIN Clinics c
+                        ON a.ClinicId = c.ClinicId
+                    INNER JOIN Visits v
+                        ON a.VisitId = v.VisitId";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
@@ -136,14 +143,16 @@ namespace DAL
                     {
                         while (dr.Read())
                         {
-                            list.Add(new AppointmentVM
+                            list.Add(new Appointment
                             {
                                 AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
                                 AppointmentDate = Convert.ToDateTime(dr["AppointmentDate"]),
                                 SlotTime = (TimeSpan)dr["SlotTime"],
                                 Status = dr["Status"].ToString(),
                                 PatientName = dr["PatientName"].ToString(),
-                                DoctorName = dr["DoctorName"].ToString()
+                                DoctorName = dr["DoctorName"].ToString(),
+                                ClinicName = dr["ClinicName"].ToString(),
+                                VisitId = Convert.ToInt32(dr["VisitId"])
                             });
                         }
                     }
@@ -153,9 +162,9 @@ namespace DAL
             return list;
         }
 
-        public AppointmentVM Get(int appointmentId)
+        public Appointment Get(int appointmentId)
         {
-            AppointmentVM appointment = null;
+            Appointment appointment = null;
 
             using (SqlConnection conn = _db.GetConnection())
             {
@@ -164,14 +173,20 @@ namespace DAL
                         a.AppointmentId,
                         a.AppointmentDate,
                         a.SlotTime,
+                        v.VisitId,
                         a.Status,
                         p.FirstName + ' ' + p.LastName as PatientName,
-                        d.FirstName + ' ' + d.LastName as DoctorName
+                        d.FirstName + ' ' + d.LastName as DoctorName,
+                        c.ClinicName
                     FROM Appointments a
                     INNER JOIN Patients p
                         ON a.PatientId = p.PatientId
                     INNER JOIN Doctors d
                         ON a.DoctorId = d.DoctorId
+                    INNER JOIN Clinics c
+                        ON a.ClinicId = c.ClinicId
+                    INNER JOIN Visits v
+                        ON a.VisitId = v.VisitId
                     WHERE a.AppointmentId = @AppointmentId";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
@@ -184,14 +199,16 @@ namespace DAL
                     {
                         if (dr.Read())
                         {
-                            appointment = new AppointmentVM
+                            appointment = new Appointment
                             {
                                 AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
                                 AppointmentDate = Convert.ToDateTime(dr["AppointmentDate"]),
                                 SlotTime = (TimeSpan)dr["SlotTime"],
                                 Status = dr["Status"].ToString(),
                                 PatientName = dr["PatientName"].ToString(),
-                                DoctorName = dr["DoctorName"].ToString()
+                                DoctorName = dr["DoctorName"].ToString(),
+                                ClinicName = dr["ClinicName"].ToString(),
+                                VisitId = Convert.ToInt32(dr["VisitId"])
                             };
                         }
                     }
@@ -201,9 +218,9 @@ namespace DAL
             return appointment;
         }
         
-        public List<AppointmentVM> GetTodaysAppointments(int doctorId)
+        public List<Appointment> GetTodaysAppointments(int doctorId)
         {
-            var list = new List<AppointmentVM>();
+            var list = new List<Appointment>();
 
             using var con = _db.GetConnection();
 
@@ -212,14 +229,20 @@ namespace DAL
                     a.AppointmentId,
                     a.AppointmentDate,
                     a.SlotTime,
+                    v.VisitId,
                     a.Status,
                     p.FirstName + ' ' + p.LastName as PatientName,
-                    d.FirstName + ' ' + d.LastName as DoctorName
+                    d.FirstName + ' ' + d.LastName as DoctorName,
+                    c.Name as ClinicName
                 FROM Appointments a
                 INNER JOIN Patients p
                     ON a.PatientId = p.PatientId
                 INNER JOIN Doctors d
                     ON a.DoctorId = d.DoctorId
+                INNER JOIN Clinics c
+                    ON a.ClinicId = c.ClinicId
+                INNER JOIN Visits v
+                    ON a.VisitId = v.VisitId
                 WHERE a.DoctorId = @DoctorId
                     AND CAST(a.AppointmentDate as date)=CAST(GETDATE() as date)
                 ORDER BY a.SlotTime";
@@ -234,14 +257,70 @@ namespace DAL
 
             while (dr.Read())
             {
-                list.Add(new AppointmentVM
+                list.Add(new Appointment
                 {
                     AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
                     AppointmentDate = Convert.ToDateTime(dr["AppointmentDate"]),
                     SlotTime = (TimeSpan)dr["SlotTime"],
                     Status = dr["Status"].ToString(),
                     PatientName = dr["PatientName"].ToString(),
-                    DoctorName = dr["DoctorName"].ToString()
+                    DoctorName = dr["DoctorName"].ToString(),
+                    ClinicName = dr["ClinicName"].ToString(),
+                    VisitId = Convert.ToInt32(dr["VisitId"])
+                });
+            }
+
+            return list;
+        }
+
+        public List<Appointment> GetByPatientId(int patientId)
+        {
+            var list = new List<Appointment>();
+
+            using var con = _db.GetConnection();
+
+            string sql = @"
+                SELECT
+                    a.AppointmentId,
+                    a.AppointmentDate,
+                    a.SlotTime,
+                    a.Status,
+                    p.FirstName + ' ' + p.LastName as PatientName,
+                    d.FirstName + ' ' + d.LastName as DoctorName,
+                    c.ClinicName,
+                    v.VisitId
+                FROM Appointments a
+                INNER JOIN Patients p
+                    ON a.PatientId = p.PatientId
+                INNER JOIN Doctors d
+                    ON a.DoctorId = d.DoctorId
+                INNER JOIN Clinics c
+                    ON a.ClinicId = c.ClinicId
+                INNER JOIN Visits v
+                    ON a.VisitId = v.VisitId
+                WHERE a.PatientId = @PatientId
+                ORDER BY a.AppointmentDate DESC, a.SlotTime DESC";
+
+            using var cmd = new SqlCommand(sql, con);
+
+            cmd.Parameters.AddWithValue("@PatientId", patientId);
+
+            con.Open();
+
+            using var dr = cmd.ExecuteReader();
+
+            while (dr.Read())
+            {
+                list.Add(new Appointment
+                {
+                    AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
+                    AppointmentDate = Convert.ToDateTime(dr["AppointmentDate"]),
+                    SlotTime = (TimeSpan)dr["SlotTime"],
+                    Status = dr["Status"].ToString(),
+                    PatientName = dr["PatientName"].ToString(),
+                    DoctorName = dr["DoctorName"].ToString(),
+                    ClinicName = dr["ClinicName"].ToString(),
+                    VisitId = Convert.ToInt32(dr["VisitId"])
                 });
             }
 
