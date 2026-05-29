@@ -1,0 +1,21 @@
+@model IEnumerable<Models.BillingCharge>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Billing Charge Management";
+
+    ViewBag.PageTitle = "Billing Charge Management";
+
+    ViewBag.Fields = new []
+    {
+        new { Name="ChargeCode", Label="Charge Code", Type="text", Color=""},
+        new { Name="ChargeName", Label="Charge Name", Type="text", Color="" },
+        new { Name="Description", Label="Description", Type="text", Color="" },
+        new { Name="Rate", Label="Rate", Type="number", Color="" },
+        new { Name="IsActive", Label="Active", Type="checkbox", Color="" }
+    };
+
+    ViewBag.KeyField = "ChargeId";
+}
+
+@await Html.PartialAsync("_CrudList", Model)

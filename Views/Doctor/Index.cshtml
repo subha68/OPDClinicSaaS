@@ -6,8 +6,17 @@
 
     ViewBag.PageTitle = "Doctor Management";
 
-    ViewBag.Columns = new[] { "First Name", "Last Name", "Department", "Registration No", "Qualification", "Username", "Password", "Clinic" };
-    ViewBag.Properties = new[] { "FirstName", "LastName", "DepartmentName", "RegistrationNo", "Qualification", "Username", "Password", "ClinicName" };
+    ViewBag.Fields = new []
+    {
+        new { Name="FirstName", Label="First Name", Type="text", Color="" },
+        new { Name="LastName", Label="Last Name", Type="text", Color="" },
+        new { Name="DepartmentName", Label="Department", Type="text", Color="" },
+        new { Name="RegistrationNo", Label="Registration No", Type="text", Color="" },
+        new { Name="Qualification", Label="Qualification", Type="text", Color="" },
+        new { Name="Username", Label="Username", Type="text", Color="" },
+        new { Name="Password", Label="Password", Type="password", Color="" },
+        new { Name="ClinicName", Label="Clinic", Type="text", Color="" }
+    };
 
     ViewBag.KeyField = "DoctorId";
 }

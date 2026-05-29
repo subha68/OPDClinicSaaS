@@ -6,8 +6,16 @@
 
     ViewBag.PageTitle = "User Management";
 
-    ViewBag.Columns = new[] { "First Name", "Last Name", "Email", "Phone", "User Name", "Role", "Clinic" };
-    ViewBag.Properties = new[] { "FirstName", "LastName", "Email", "Phone", "Username", "RoleName", "ClinicName" };
+    ViewBag.Fields = new []
+    {
+        new { Name="FirstName", Label="First Name", Type="text", Color="" },
+        new { Name="LastName", Label="Last Name", Type="text", Color="" },
+        new { Name="Email", Label="Email", Type="text", Color="" },
+        new { Name="Phone", Label="Phone", Type="text", Color="" },
+        new { Name="Username", Label="User Name", Type="text", Color="" },
+        new { Name="RoleName", Label="Role", Type="text", Color="" },
+        new { Name="ClinicName", Label="Clinic", Type="text", Color="" }
+    };
 
     ViewBag.KeyField = "UserId";
 }

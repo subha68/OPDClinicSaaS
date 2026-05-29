@@ -1,0 +1,32 @@
+@model List<ViewModels.BreadcrumbItemVM>
+
+<nav aria-label="breadcrumb">
+
+    <ol class="breadcrumb">
+
+        @for (int i = 0; i < Model.Count; i++)
+        {
+            var item = Model[i];
+
+            if (i == Model.Count - 1)
+            {
+                <li class="breadcrumb-item active">
+                    @item.Text
+                </li>
+            }
+            else
+            {
+                <li class="breadcrumb-item">
+                    <a asp-controller="@item.Controller"
+                       asp-action="@item.Action"
+                       asp-route-id="@item.Id"
+                       asp-route-patientId="@item.PatientId">
+                        @item.Text
+                    </a>
+                </li>
+            }
+        }
+
+    </ol>
+
+</nav>

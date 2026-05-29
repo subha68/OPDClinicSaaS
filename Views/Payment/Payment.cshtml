@@ -1,0 +1,152 @@
+@model ViewModels.PaymentCreateVM
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    ViewData["Title"] = "Payment";
+}
+
+<h3>Receive Payment</h3>
+
+@await Html.PartialAsync("_Breadcrumb",
+    new List<ViewModels.BreadcrumbItemVM>
+    {
+        new ViewModels.BreadcrumbItemVM
+        {
+            Text = "Patients",
+            Controller = "Patient",
+            Action = "Index"
+        },
+
+        new ViewModels.BreadcrumbItemVM
+        {
+            Text = "Bills",
+            Controller = "Billing",
+            Action = "SearchByPatientId",
+            PatientId = Model.Bill.PatientId
+        },
+
+        new ViewModels.BreadcrumbItemVM
+        {
+            Text = "Payments"
+        }
+    })
+
+<hr />
+
+<div class="mb-3">
+    <b>Bill No:</b> @Model.Bill.BillId
+</div>
+
+<div class="mb-3">
+    <b>Total Bill:</b> @Model.Bill.GrossAmount
+</div>
+
+<div class="mb-3">
+    <b>Total Paid:</b> @Model.Bill.TotalPaidAmount
+</div>
+
+<div class="mb-3">
+    <b>Balance:</b> @Model.Bill.BalanceAmount
+</div>
+
+<div class="mb-3">
+    <b>Status:</b> @Model.Bill.Status
+</div>
+
+<hr />
+
+@await Html.PartialAsync("_BackButton", new ViewModels.BackButtonVM
+    {
+        Controller = "Billing",
+        Action = "SearchByPatientId",
+        PatientId = @Model.Bill.PatientId,
+        Text = "Back to Bills"
+    })
+
+@if(Model.Bill.BalanceAmount > 0)
+{
+    <form method="post">
+
+        <input type="hidden"
+               name="Payment.BillId"
+               value="@Model.Bill.BillId" />
+
+        <div class="mb-3">
+            <label>Amount</label>
+
+            <input type="number"
+                   step="0.01"
+                   name="Payment.Amount"
+                   class="form-control"
+                   value="@Model.Bill.BalanceAmount" />
+        </div>
+
+        <div class="mb-3">
+            <label>Mode</label>
+
+            <select name="Payment.Mode"
+                    class="form-control">
+
+                <option value="Cash">Cash</option>
+                <option value="Card">Card</option>
+                <option value="UPI">UPI</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label>Reference No</label>
+
+            <input type="text"
+                   name="Payment.ReferenceNo"
+                   class="form-control" />
+        </div>
+
+        <button type="submit"
+                class="btn btn-success">
+            Save Payment
+        </button>
+    </form>
+
+}
+
+<hr />
+
+<h4>Payment History</h4>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Mode</th>
+            <th>Reference</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        @foreach(var p in Model.Bill.Payments)
+        {
+            <tr>
+                <td>
+                    @p.CreatedAt.ToString("dd/MM/yyyy hh:mm tt")
+                </td>
+
+                <td>
+                    @p.Amount
+                </td>
+
+                <td>
+                    @p.Mode
+                </td>
+
+                <td>
+                    @p.ReferenceNo
+                </td>
+            </tr>
+        }
+
+    </tbody>
+</table>

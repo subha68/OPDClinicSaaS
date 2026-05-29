@@ -6,8 +6,14 @@
 
     ViewBag.PageTitle = "Clinic Management";
 
-    ViewBag.Columns = new[] { "Clinic Name", "Address", "Phone", "Clinic Code" };
-    ViewBag.Properties = new[] { "Name", "Address", "Phone", "ClinicCode" };
+    ViewBag.Fields = new []
+    {
+        new { Name="ClinicCode", Label="Clinic Code", Type="text", Color=""},
+        new { Name="Name", Label="Clinic Name", Type="text", Color="" },
+        new { Name="Address", Label="Address", Type="text", Color="" },
+        new { Name="Phone", Label="Phone", Type="text", Color="" }
+    };
+
 
     ViewBag.KeyField = "ClinicId";
 }

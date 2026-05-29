@@ -230,6 +230,86 @@ namespace DAL
             return patients;
         }
 
+        public List<Patient> SearchByText(int clinicId, string searchString)
+        {
+            var patients = new List<Patient>();
+
+            SqlConnection con = _db.GetConnection();
+
+            string sql = @"
+                SELECT PatientId, FirstName, LastName, DOB, Gender, Address, Phone, ClinicId
+                FROM Patients
+                WHERE
+                   (PatientId LIKE '%' + @searchString + '%')
+                OR (Phone LIKE '%' + @searchString + '%')
+                OR (FirstName + ' ' + LastName LIKE '%' + @searchString + '%')
+                AND ClinicId = @ClinicId
+                ORDER BY PatientId DESC";
+
+            using var cmd = new SqlCommand(sql, con);
+
+            cmd.Parameters.AddWithValue("@searchString", searchString);
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+
+            con.Open();
+
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                patients.Add(new Patient
+                {
+                    PatientId = Convert.ToInt32(reader["PatientId"]),
+                    FirstName = reader["FirstName"].ToString(),
+                    LastName = reader["LastName"].ToString(),
+                    DOB = Convert.ToDateTime(reader["DOB"]),
+                    Gender = reader["Gender"].ToString(),
+                    Address = reader["Address"]?.ToString(),
+                    Phone = reader["Phone"].ToString(),
+                    ClinicId = Convert.ToInt32(reader["ClinicId"])
+                });
+            }
+
+            return patients;
+        }
+
+        public List<Patient> ListByClinic(int clinicId)
+        {
+            var patients = new List<Patient>();
+
+            SqlConnection con = _db.GetConnection();
+
+            string sql = @"
+                SELECT PatientId, FirstName, LastName, DOB, Gender, Address, Phone, ClinicId
+                FROM Patients
+                WHERE ClinicId = @ClinicId
+                ORDER BY PatientId DESC";
+
+            using var cmd = new SqlCommand(sql, con);
+
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+
+            con.Open();
+
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                patients.Add(new Patient
+                {
+                    PatientId = Convert.ToInt32(reader["PatientId"]),
+                    FirstName = reader["FirstName"].ToString(),
+                    LastName = reader["LastName"].ToString(),
+                    DOB = Convert.ToDateTime(reader["DOB"]),
+                    Gender = reader["Gender"].ToString(),
+                    Address = reader["Address"]?.ToString(),
+                    Phone = reader["Phone"].ToString(),
+                    ClinicId = Convert.ToInt32(reader["ClinicId"])
+                });
+            }
+
+            return patients;
+        }
 
     }
 }

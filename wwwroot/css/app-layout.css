@@ -228,4 +228,18 @@ body {
     .page-body{
         padding:20px;
     }
+
+    .no-print {
+        display: none;
+    }
+
+    body {
+        background: white;
+    }
+
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+
 }

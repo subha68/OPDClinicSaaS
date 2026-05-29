@@ -6,8 +6,10 @@
 
     ViewBag.PageTitle = "Role Management";
 
-    ViewBag.Columns = new[] { "Role Name" };
-    ViewBag.Properties = new[] { "RoleName" };
+    ViewBag.Fields = new []
+    {
+        new { Name="RoleName", Label="Role Name", Type="text", Color="" }
+    };
 
     ViewBag.KeyField = "RoleId";
 }

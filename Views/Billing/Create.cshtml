@@ -1,0 +1,219 @@
+@model Models.Bill
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h3>Create Bill</h3>
+
+<form asp-action="Create" method="post">
+
+    <div class="mb-3">
+        <label>Date</label>
+        <input asp-for="BillDate" type="date" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Patient</label>
+        <select asp-for="PatientId"
+                asp-items="ViewBag.Patients"
+                class="form-control"
+                id="PatientId">
+            <option value="">--select--</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label>Visit</label>
+        <select asp-for="VisitId"
+                class="form-control"
+                id="VisitId">
+            <option value="">--select--</option>
+        </select>
+    </div>
+
+    <hr />
+
+    <table class="table" id="billTable">
+        <thead>
+            <tr>
+                <th>Charge</th>
+                <th>Rate</th>
+                <th>Qty</th>
+                <th>Disc %</th>
+                <th>Net</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <button type="button"
+        class="btn btn-primary"
+        id="addLine">
+        Add Charge
+    </button>
+
+
+    <hr />
+
+    <div class="mb-3">
+        <label>Total</label>
+        <input id="Total" class="form-control" readonly />
+    </div>
+
+    <button class="btn btn-success">
+        Save Bill
+    </button>
+
+</form>
+
+@section Scripts{
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script>
+
+    let lineIndex = 0;
+
+    $(document).ready(function () {
+
+        $("#PatientId").change(function () {
+
+            let patientId = $(this).val();
+            let billDate = $("#BillDate").val();
+
+            if (!patientId || !billDate)
+                return;
+
+            $.get('@Url.Action("GetVisits","Billing")',
+                {
+                    patientId: patientId,
+                    billDate: billDate
+                },
+                function (res) {
+
+                    $("#VisitId").empty();
+                    $("#VisitId").append('<option value="">--select--</option>');
+
+                    $.each(res.visits, function (i, v) {
+                        $("#VisitId").append(
+                            `<option value="${v.visitId}">${v.text}</option>`
+                        );
+                    });
+
+                    if (res.selectedVisitId) {
+                        $("#VisitId").val(res.selectedVisitId);
+                    }
+                });
+        });
+
+    });
+
+    $("#addLine").click(function(){
+
+        let row = `
+        let lineIndex = 0;
+
+        <tr>
+            <td>
+                <select name="BillLines[${lineIndex}].BillingChargeId"
+                        class="form-control charge">
+                    <option value="">--select--</option>
+                    @foreach(var c in (IEnumerable<SelectListItem>)ViewBag.BillingCharges)
+                    {
+                        <option value="@c.Value">@c.Text</option>
+                    }
+                </select>
+            </td>
+
+            <td>
+                <input name="BillLines[${lineIndex}].Rate"
+                    class="form-control rate" />
+            </td>
+
+            <td>
+                <input name="BillLines[${lineIndex}].Quantity"
+                    value="1"
+                    class="form-control qty" />
+            </td>
+
+            <td>
+                <input name="BillLines[${lineIndex}].DiscountPercent"
+                    value="0"
+                    class="form-control disc" />
+            </td>
+
+            <td>
+                <input name="BillLines[${lineIndex}].LineAmount"
+                    class="form-control lineAmount"
+                    readonly />
+            </td>
+
+            <td>
+                <button type="button"
+                        class="btn btn-danger remove">
+                    X
+                </button>
+            </td>
+        </tr>`;
+
+        $("#billTable tbody").append(row);
+        lineIndex++;
+    });
+
+
+    $(document).on("change",".charge", function(){
+
+        let row = $(this).closest("tr");
+        let id = $(this).val();
+
+        $.get('/Billing/GetChargeRate',
+            { id:id },
+            function(rate){
+                row.find(".rate").val(rate);
+                calculateRow(row);
+            });
+    });
+
+
+    $(document).on("keyup change", 
+        ".rate,.qty,.disc",
+        function(){
+            let row = $(this).closest("tr");
+            calculateRow(row);
+        });
+
+    function calculateRow(row){
+
+        let rate = parseFloat(row.find(".rate").val()) || 0;
+        let qty  = parseFloat(row.find(".qty").val()) || 0;
+        let disc = parseFloat(row.find(".disc").val()) || 0;
+
+        let net = rate * qty * (1 - disc/100);
+
+        row.find(".lineAmount").val(net.toFixed(2));
+
+        calculateTotal();
+    }
+
+
+    function calculateTotal(){
+
+        let total = 0;
+
+        $(".lineAmount").each(function(){
+            total += parseFloat($(this).val()) || 0;
+        });
+
+        $("#Total").val(total.toFixed(2));
+    }
+
+
+    $(document).on("click",".remove",function(){
+        $(this).closest("tr").remove();
+        calculateTotal();
+    });
+
+    </script>
+}

@@ -1,0 +1,9 @@
+@model ViewModels.BackButtonVM
+
+<a asp-controller="@Model.Controller"
+   asp-action="@Model.Action"
+   asp-route-id="@Model.Id"
+   asp-route-patientId="@Model.PatientId"
+   class="btn btn-outline-secondary mb-3">
+    ← @Model.Text
+</a>

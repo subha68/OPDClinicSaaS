@@ -1,0 +1,28 @@
+@model Models.BillingCharge
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    bool isEdit =
+        Model != null &&
+        Model.ChargeId > 0;
+
+    ViewBag.PageTitle = isEdit ? "Edit Billing Charge" : "Create Billing Charge";
+
+    ViewBag.Fields = new[]
+    {
+        new { Name="ChargeCode", Label="Charge Code", Type="text", Col="6"},
+        new { Name="ChargeName", Label="Charge Name", Type="text", Col="6"},
+        new { Name="Description", Label="Description", Type="text", Col="12"},
+        new { Name="Rate", Label="Rate", Type="number", Col="6"},
+        new { Name="IsActive", Label="Active", Type="checkbox", Col="6"}
+    };
+
+    ViewBag.Dropdowns = new Dictionary<string, object>()
+    {
+    };
+
+    ViewBag.KeyField = "ChargeId";
+}
+
+@await Html.PartialAsync("_CrudForm", Model)

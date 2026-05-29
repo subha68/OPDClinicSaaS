@@ -18,41 +18,85 @@
             <div class="row">
                 @foreach (var field in ViewBag.Fields)
                 {
-                    <div class="col-md-@field.Col mb-4">
-                        <label>@field.Label</label>
+                    @if(field.Type == "text")
+                    {
+                        <div class="col-md-@field.Col mb-4">
+                            <label>@field.Label</label>
 
-                        @if(field.Type == "text")
-                        {
                             <input name="@field.Name"
                                 value="@Model?.GetType().GetProperty(field.Name)?.GetValue(Model)"
-                                class="form-control" />
-                        }
+                                class="form-control"/>
+                        </div>
+                    }
 
-                        @if(field.Type == "readonly")
-                        {
+                    @if(field.Type == "readonly")
+                    {
+                        <div class="col-md-@field.Col mb-4">
+                            <label>@field.Label</label>
                             <input name="@field.Name"
                                 value="@Model?.GetType().GetProperty(field.Name)?.GetValue(Model)"
                                 class="form-control"
                                 readonly />
-                        }
+                        </div>
+                    }
 
-                        @if (field.Type == "password")
-                        {
+                    @if(field.Type == "hidden")
+                    {
+                        <input name="@field.Name"
+                            value="@Model?.GetType().GetProperty(field.Name)?.GetValue(Model)"
+                            type="hidden" />
+                    }
+
+                    @if (field.Type == "password")
+                    {
+                        <div class="col-md-@field.Col mb-4">
+                            <label>@field.Label</label>
                             <input type="password"
                                 name="@field.Name"
                                 class="form-control"
                                 placeholder="Enter password" />
-                        }
+                        </div>
+                    }
 
-                        @if(field.Type == "dropdown")
-                        {
+                    @if(field.Type == "dropdown")
+                    {
+                        <div class="col-md-@field.Col mb-4">
+                            <label>@field.Label</label>
                             @Html.DropDownList(
                                 field.Name,
                                 ViewBag.Dropdowns[field.Name],
                                 "-- Select --",
                                 new { @class="form-select" })
-                        }
-                    </div>
+                        </div>
+                    }
+
+                    @if(field.Type == "number")
+                    {
+                        <div class="col-md-@field.Col mb-4">
+                            <label>@field.Label</label>
+                            <input name="@field.Name"
+                                value="@Model?.GetType().GetProperty(field.Name)?.GetValue(Model)"
+                                class="form-control"
+                                step="0.01" />
+                        </div>
+
+                    }
+
+                    @if(field.Type == "checkbox")
+                    {
+                        <div class="col-md-@field.Col mb-4">
+                            <label>@field.Label</label>
+                            @{var isChecked = Convert.ToBoolean(
+                                                            Model?.GetType().GetProperty(field.Name)?.GetValue(Model) ?? false
+                                                        );}
+
+                            <input type="checkbox"
+                                name="@field.Name"
+                                value="true"
+                                class="form-check-input"
+                                checked="@isChecked" />
+                        </div>
+                    }
                 }
             </div>
             <button class="btn btn-future">

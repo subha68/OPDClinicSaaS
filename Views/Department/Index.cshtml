@@ -6,8 +6,12 @@
 
     ViewBag.PageTitle = "Department Management";
 
-    ViewBag.Columns = new[] { "Name", "Description", "Clinic" };
-    ViewBag.Properties = new[] { "Name", "Description", "ClinicName" };
+    ViewBag.Fields = new []
+    {
+        new { Name="Name", Label="Department Name", Type="text", Color="" },
+        new { Name="Description", Label="Description", Type="text", Color="" },
+        new { Name="ClinicName", Label="Clinic", Type="text", Color="" }
+    };
 
     ViewBag.KeyField = "DepartmentId";
 }

@@ -96,7 +96,6 @@ CREATE TABLE Visits (
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
 );
 
-
 CREATE TABLE Appointments (
     AppointmentId INT IDENTITY PRIMARY KEY,
     ClinicId INT NOT NULL,
@@ -149,14 +148,42 @@ CREATE TABLE Consultations (
     FOREIGN KEY (AppointmentId) REFERENCES Appointments(AppointmentId)
 );
 
+CREATE TABLE BillingCharges (
+    ChargeId INT IDENTITY PRIMARY KEY,
+    ClinicId INT NOT NULL,
+    ChargeCode NVARCHAR(20),
+    ChargeName NVARCHAR(100) NOT NULL,
+    Description NVARCHAR(250),
+    Rate DECIMAL(18,2) NOT NULL,
+    IsActive BIT DEFAULT 1
+);
+
 CREATE TABLE Bills (
     BillId INT IDENTITY PRIMARY KEY,
+    BillDate DATE NOT NULL,
     VisitId INT,
-    TotalAmount DECIMAL(10,2),
+    GrossAmount DECIMAL(10,2),
+    DiscountAmount DECIMAL(10,2),
+    NetAmount DECIMAL(10,2),
     PaidAmount DECIMAL(10,2),
     Status NVARCHAR(20),
 
     FOREIGN KEY (VisitId) REFERENCES Visits(VisitId)
+);
+
+CREATE TABLE BillLines (
+    LineId INT IDENTITY PRIMARY KEY,
+    BillId INT NOT NULL,
+    ChargeId INT,
+    Quantity INT,
+    Rate DECIMAL(18,2),
+    GrossAmount DECIMAL(18,2),
+    DiscountPercent DECIMAL(3,2),
+    DiscountAmount DECIMAL(18,2),
+    NetAmount DECIMAL(18,2),
+
+    FOREIGN KEY (BillId) REFERENCES Bills(BillId),
+    FOREIGN KEY (ChargeId) REFERENCES BillingCharges(ChargeId)
 );
 
 CREATE TABLE Payments (

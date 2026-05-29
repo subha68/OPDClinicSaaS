@@ -50,7 +50,8 @@ INSERT INTO Features (Name, Code) VALUES
 ('Appointment Booking', 'APPOINTMENT_BOOKING'),
 ('Consultation Management', 'CONSULTATION_MANAGEMENT'),
 ('Billing Management', 'BILLING_MANAGEMENT'),
-('Patient Search', 'PATIENT_SEARCH');
+('Patient Search', 'PATIENT_SEARCH'),
+('Billing Charges', 'BILLING_CHARGES');
 
 -- Role Mapping
 INSERT INTO RoleFeatures (RoleId, FeatureId)
@@ -66,7 +67,7 @@ INSERT INTO RoleFeatures (RoleId, FeatureId)
 SELECT 4, FeatureId FROM Features WHERE Code IN ('CONSULTATION_MANAGEMENT', 'PATIENT_SEARCH');
 
 INSERT INTO RoleFeatures (RoleId, FeatureId)
-SELECT 5, FeatureId FROM Features WHERE Code IN ('BILLING_MANAGEMENT', 'PATIENT_SEARCH');
+SELECT 5, FeatureId FROM Features WHERE Code IN ('BILLING_CHARGES', 'PATIENT_SEARCH');
 
 -- Menus
 INSERT INTO Menus (Title, Controller, Action, Icon, FeatureCode, DisplayOrder)
@@ -79,6 +80,7 @@ VALUES
 ('Doctor Schedule','DoctorSchedule','Index','fa-calendar','DOCTOR_SCHEDULE',6),
 ('Appointment Booking','AppointmentBooking','Index','fa-calendar-check','APPOINTMENT_BOOKING',7),
 ('Consultation','Consultation','Index','fa-stethoscope','CONSULTATION_MANAGEMENT',8),
-('Billing','Billing','Index','fa-file-invoice-dollar','BILLING_MANAGEMENT',9),
-('Patient Search', 'Patient', 'Search', 'fa fa-user-injured', 'PATIENT_SEARCH', 10);
+('Patient Billing','Billing','Index','fa-file-invoice-dollar','BILLING_MANAGEMENT',9),
+('Patient Search', 'Patient', 'Search', 'fa fa-user-injured', 'PATIENT_SEARCH', 10),
+('Billing Charges', 'BillingCharge', 'Index', 'fa fa-money-bill', 'BILLING_CHARGES', 11);
 

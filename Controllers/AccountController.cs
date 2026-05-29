@@ -160,5 +160,20 @@ namespace Controllers
             });
         }       
 
+        [HttpPost]
+        public IActionResult ClearOrganisation()
+        {
+            HttpContext.Session.Remove("ClinicCode");
+            HttpContext.Session.Remove("ClinicId");
+
+            ClinicContextHelper.Clear(HttpContext);
+
+            return Json(new
+            {
+                success = true
+            });
+        }
+
+
     }
 }

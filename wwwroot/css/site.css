@@ -44,3 +44,19 @@ footer{
         display:none;
     }
 }
+
+.btn-outline-secondary {
+    border-radius: 8px;
+    padding: 6px 14px;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.page-title {
+    margin: 0;
+}

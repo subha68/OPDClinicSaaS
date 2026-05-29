@@ -27,6 +27,37 @@ namespace BLL
             return _patientDAL.Search(clinicId, patientId, phone, name);
         }
 
+        public List<Patient> SearchByText(string searchString, int clinicId)
+        {
+            return _patientDAL.SearchByText(clinicId, searchString);
+        }
+
+        public List<Patient> ListByClinic(int clinicId)
+        {
+            return _patientDAL.ListByClinic(clinicId);
+        }
+
+        public Patient GetFirstOrDefault(List<Patient> patients)
+        {
+            Patient p;
+            
+            if (patients == null || patients.Count == 0)
+            {
+                p = new Patient
+                {
+                    PatientId = 0,
+                    FirstName = "No",
+                    LastName = "Record"
+                };
+            }
+            else
+            {
+                p = patients[0];
+            }
+
+            return p;
+        }
+
     }
 }
 

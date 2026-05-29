@@ -1,0 +1,49 @@
+@model IEnumerable<dynamic>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    ViewBag.PageTitle = "Patient Bills";
+
+    ViewBag.ShowPatientSearch = true;
+
+    ViewBag.CreateButtonText = "+ Add New Bill";
+    ViewBag.CreateUrl = Url.Action("Create");
+
+    ViewBag.KeyField = "BillId";
+
+    ViewBag.Fields = new []
+    {
+        new { Name="VisitDate", Label="Visit Date", Type="date", Color=""},
+        new { Name="DoctorName", Label="Doctor Visited", Type="text", Color="" },
+        new { Name="BillDate", Label="Bill Date", Type="date", Color="" },
+        new { Name="BillAmount", Label="Bill Amount", Type="number", Color="" },
+        new { Name="Status", Label="Status", Type="text", Color="StatusColor" }
+    };
+
+    ViewBag.Functions = new Dictionary<string, Func<dynamic, string>>
+    {
+        {"StatusColor", row => {
+                                        string status = row.Status as string;
+
+                                        return status switch
+                                        {
+                                            "Paid" => "green",
+                                            "Due" => "red",
+                                            "Partially Paid" => "orange",
+                                            _ => ""
+                                        };
+                                    }
+        }
+    };
+
+    ViewBag.CustomActions = new []
+    {
+        new { Label = "View Bill", Controller = "Billing", Action = "Print", Type = "info" },
+        new { Label = "Pay", Controller = "Payment", Action = "Pay", Type = "success" }
+    };
+
+
+}
+
+@await Html.PartialAsync("_CrudList", Model)
