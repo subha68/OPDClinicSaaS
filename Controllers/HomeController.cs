@@ -6,7 +6,7 @@ namespace Controllers
 {
     public class HomeController : Controller
     {
-        //private readonly SessionHelper _session;
+
         public IActionResult Index()
         {
             var userId = HttpContext.Session.GetString("UserId"); 

@@ -39,7 +39,13 @@ namespace DAL
         {
             using SqlConnection con = _db.GetConnection();
 
-            string query = @"SELECT * FROM Payments WHERE PaymentId=@PaymentId";
+            string query = @"SELECT p.*, v.PatientId 
+                                FROM Payments p 
+                                INNER JOIN Bills b 
+                                    ON p.BillId = b.BillId 
+                                INNER JOIN Visits v 
+                                    ON b.VisitId = v.VisitId 
+                                WHERE p.PaymentId=@PaymentId";
 
             SqlCommand cmd = new SqlCommand(query, con);
 
@@ -58,6 +64,7 @@ namespace DAL
                     Amount = Convert.ToDecimal(rdr["Amount"]),
                     Mode = rdr["Mode"].ToString(),
                     ReferenceNo = rdr["ReferenceNo"].ToString(),
+                    PatientId = Convert.ToInt32(rdr["PatientId"]),
                     CreatedAt = Convert.ToDateTime(rdr["CreatedAt"])
                 };
             }
@@ -87,9 +94,11 @@ namespace DAL
             using SqlConnection con = _db.GetConnection();
 
             string query = @"
-                SELECT *
-                FROM Payments
-                WHERE BillId=@BillId
+                SELECT p.*, v.PatientId
+                FROM Payments p
+                INNER JOIN Bills b ON p.BillId = b.BillId
+                INNER JOIN Visits v ON b.VisitId = v.VisitId
+                WHERE p.BillId=@BillId
                 ORDER BY CreatedAt
             ";
 
@@ -110,6 +119,7 @@ namespace DAL
                     Amount = Convert.ToDecimal(rdr["Amount"]),
                     Mode = rdr["Mode"].ToString(),
                     ReferenceNo = rdr["ReferenceNo"].ToString(),
+                    PatientId = Convert.ToInt32(rdr["PatientId"]),
                     CreatedAt = Convert.ToDateTime(rdr["CreatedAt"])
                 });
             }
@@ -134,6 +144,46 @@ namespace DAL
             con.Open();
 
             return Convert.ToDecimal(cmd.ExecuteScalar());
+        }
+
+        public List<Payment> ListByPatient(int patientId)
+        {
+            List<Payment> list = new();
+
+            using SqlConnection con = _db.GetConnection();
+
+            string query = @"
+                SELECT p.*, v.PatientId
+                FROM Payments p
+                INNER JOIN Bills b ON p.BillId = b.BillId
+                INNER JOIN Visits v ON b.VisitId = v.VisitId
+                WHERE v.PatientId=@PatientId
+                ORDER BY CreatedAt
+            ";
+
+            SqlCommand cmd = new SqlCommand(query, con);
+
+            cmd.Parameters.AddWithValue("@PatientId", patientId);
+
+            con.Open();
+
+            SqlDataReader rdr = cmd.ExecuteReader();
+
+            while (rdr.Read())
+            {
+                list.Add(new Payment
+                {
+                    PaymentId = Convert.ToInt32(rdr["PaymentId"]),
+                    BillId = Convert.ToInt32(rdr["BillId"]),
+                    Amount = Convert.ToDecimal(rdr["Amount"]),
+                    Mode = rdr["Mode"].ToString(),
+                    ReferenceNo = rdr["ReferenceNo"].ToString(),
+                    PatientId = Convert.ToInt32(rdr["PatientId"]),
+                    CreatedAt = Convert.ToDateTime(rdr["CreatedAt"])
+                });
+            }
+
+            return list;
         }
     }
 }

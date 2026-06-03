@@ -26,7 +26,7 @@ namespace DAL
                 SqlCommand cmd = new SqlCommand(query, conn);
 
                 cmd.Parameters.AddWithValue("@BillId", line.BillId);
-                cmd.Parameters.AddWithValue("@ChargeId", line.BillingChargeId);
+                cmd.Parameters.AddWithValue("@ChargeId", line.ChargeId);
                 cmd.Parameters.AddWithValue("@Rate", line.Rate);
                 cmd.Parameters.AddWithValue("@Quantity", line.Quantity);
                 cmd.Parameters.AddWithValue("@GrossAmount", line.GrossAmount);
@@ -43,7 +43,15 @@ namespace DAL
             using (SqlConnection conn = _db.GetConnection())
             {
                 conn.Open();
-                var query = "SELECT * FROM BillLines WHERE LineId = @LineId";
+                var query = @"SELECT l.*, v.PatientId, bc.ChargeCode, bc.Description
+                                    FROM BillLines l 
+                                    JOIN Bills b 
+                                        ON l.BillId = b.BillId
+                                    JOIN Visits v 
+                                        ON b.VisitId = v.VisitId
+                                    JOIN BillingCharges bc 
+                                        ON l.ChargeId = bc.ChargeId
+                                    WHERE l.LineId = @LineId";
                 SqlCommand cmd = new SqlCommand(query, conn);
 
                 cmd.Parameters.AddWithValue("@LineId", id);
@@ -56,10 +64,13 @@ namespace DAL
                         {
                             LineId = Convert.ToInt32(reader["LineId"]),
                             BillId = Convert.ToInt32(reader["BillId"]),
-                            BillingChargeId = Convert.ToInt32(reader["ChargeId"]),
+                            ChargeId = Convert.ToInt32(reader["ChargeId"]),
                             Rate = Convert.ToDecimal(reader["Rate"]),
                             Quantity = Convert.ToInt32(reader["Quantity"]),
-                            DiscountPercent = Convert.ToDecimal(reader["DiscountPercent"])
+                            DiscountPercent = Convert.ToDecimal(reader["DiscountPercent"]),
+                            PatientId = Convert.ToInt32(reader["PatientId"]),
+                            ChargeCode = reader["ChargeCode"].ToString(),
+                            ChargeDescription = reader["Description"].ToString()
                         };
                     }
                 }
@@ -99,7 +110,7 @@ namespace DAL
                 SqlCommand cmd = new SqlCommand(query, conn);
 
                 cmd.Parameters.AddWithValue("@BillId", model.BillId);
-                cmd.Parameters.AddWithValue("@ChargeId", model.BillingChargeId);
+                cmd.Parameters.AddWithValue("@ChargeId", model.ChargeId);
                 cmd.Parameters.AddWithValue("@Rate", model.Rate);
                 cmd.Parameters.AddWithValue("@Quantity", model.Quantity);
                 cmd.Parameters.AddWithValue("@DiscountPercent", model.DiscountPercent);
@@ -118,7 +129,12 @@ namespace DAL
             using (SqlConnection conn = _db.GetConnection())
             {
                 conn.Open();
-                var query = "SELECT * FROM BillLines";
+                var query = @"SELECT l.*, v.PatientId 
+                                FROM BillLines l 
+                                JOIN Bills b 
+                                    ON l.BillId = b.BillId
+                                JOIN Visits v 
+                                    ON b.VisitId = v.VisitId";
                 SqlCommand cmd = new SqlCommand(query, conn);
 
                 using (SqlDataReader reader = cmd.ExecuteReader())
@@ -129,10 +145,11 @@ namespace DAL
                         {
                             LineId = Convert.ToInt32(reader["LineId"]),
                             BillId = Convert.ToInt32(reader["BillId"]),
-                            BillingChargeId = Convert.ToInt32(reader["BillingChargeId"]),
+                            ChargeId = Convert.ToInt32(reader["ChargeId"]),
                             Rate = Convert.ToDecimal(reader["Rate"]),
                             Quantity = Convert.ToInt32(reader["Quantity"]),
-                            DiscountPercent = Convert.ToDecimal(reader["DiscountPercent"])
+                            DiscountPercent = Convert.ToDecimal(reader["DiscountPercent"]),
+                            PatientId = Convert.ToInt32(reader["PatientId"])
                         });
                     }
                 }
@@ -148,7 +165,16 @@ namespace DAL
             using (SqlConnection conn = _db.GetConnection())
             {
                 conn.Open();
-                var query = "SELECT * FROM BillLines WHERE BillId = @BillId";
+                var query = @"SELECT l.*, bc.ChargeCode, bc.Description, v.PatientId 
+                                FROM BillLines l 
+                                JOIN Bills b 
+                                    ON l.BillId = b.BillId 
+                                JOIN Visits v 
+                                    ON b.VisitId = v.VisitId
+                                JOIN BillingCharges bc 
+                                    ON l.ChargeId = bc.ChargeId
+                                WHERE l.BillId = @BillId";
+
                 SqlCommand cmd = new SqlCommand(query, conn);
 
                 cmd.Parameters.AddWithValue("@BillId", billId);
@@ -161,16 +187,61 @@ namespace DAL
                         {
                             LineId = Convert.ToInt32(reader["LineId"]),
                             BillId = Convert.ToInt32(reader["BillId"]),
-                            BillingChargeId = Convert.ToInt32(reader["ChargeId"]),
+                            ChargeId = Convert.ToInt32(reader["ChargeId"]),
+                            ChargeCode = reader["ChargeCode"].ToString(),
+                            ChargeDescription = reader["Description"].ToString(),
                             Rate = Convert.ToDecimal(reader["Rate"]),
                             Quantity = Convert.ToInt32(reader["Quantity"]),
-                            DiscountPercent = Convert.ToDecimal(reader["DiscountPercent"])
+                            DiscountPercent = Convert.ToDecimal(reader["DiscountPercent"]),
+                            PatientId = Convert.ToInt32(reader["PatientId"])
                         });
                     }
                 }
             }
 
             return lines;
+        }
+
+        public List<BillLine> ListByPatient(int patientId)
+        {
+            List<BillLine> lines = new List<BillLine>();
+
+            using (SqlConnection conn = _db.GetConnection())
+            {
+                conn.Open();
+                var query = @"SELECT l.*, v.PatientId, bc.ChargeCode, bc.Description 
+                                FROM BillLines l 
+                                JOIN Bills b 
+                                    ON l.BillId = b.BillId
+                                JOIN Visits v ON b.VisitId = v.VisitId
+                                JOIN BillingCharges bc ON l.ChargeId = bc.ChargeId
+                                WHERE v.PatientId = @PatientId";
+                SqlCommand cmd = new SqlCommand(query, conn);
+
+                cmd.Parameters.AddWithValue("@PatientId", patientId);
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        lines.Add(new BillLine
+                        {
+                            LineId = Convert.ToInt32(reader["LineId"]),
+                            BillId = Convert.ToInt32(reader["BillId"]),
+                            ChargeId = Convert.ToInt32(reader["ChargeId"]),
+                            ChargeCode = reader["ChargeCode"].ToString(),
+                            ChargeDescription = reader["Description"].ToString(),
+                            Rate = Convert.ToDecimal(reader["Rate"]),
+                            Quantity = Convert.ToInt32(reader["Quantity"]),
+                            DiscountPercent = Convert.ToDecimal(reader["DiscountPercent"]),
+                            PatientId = Convert.ToInt32(reader["PatientId"])
+                        });
+                    }
+                }
+
+                return lines;
+            }
+
         }
 
     }

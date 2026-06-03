@@ -97,6 +97,17 @@
                                 checked="@isChecked" />
                         </div>
                     }
+
+                    @if (field.Type == "date")
+                    {
+                        <div class="col-md-@field.Col mb-4">
+                            <label>@field.Label</label>
+                            <input type="date"
+                                name="@field.Name"
+                                value="@((Model?.GetType().GetProperty(field.Name)?.GetValue(Model) is DateTime dt) ? dt.ToString("yyyy-MM-dd") : "")"
+                                class="form-control" />
+                        </div>
+                    }
                 }
             </div>
             <button class="btn btn-future">

@@ -2,7 +2,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-@model AppointmentCreateVM
+@model ViewModels.AppointmentCreateVM
 
 <h3>Book Appointment</h3>
 
@@ -20,11 +20,7 @@
     <input type="hidden" asp-for="IsVisitLocked" />
 
     <div class="mb-3">
-        <label>Mobile</label>
-        <input asp-for="PatientSearch" class="form-control" />
-                <button type="button"
-                class="btn btn-primary mt-2"
-                onclick="searchPatient()">
+        <button type="button" class="btn btn-primary mt-2" onclick="searchPatient()">
             Search Patient
         </button>
     </div>
@@ -40,7 +36,7 @@
 
     <div class="mb-3">
         <label>Mobile</label>
-        <input asp-for="Mobile"
+        <input asp-for="PatientPhone"
                class="form-control"
                readonly />
     </div>
@@ -82,27 +78,20 @@
 </form>
 
 <script>
-    function searchPatient() {
+function searchPatient() {
 
-        var mobile = $("#PatientSearch").val();
+    var doctorId = $("#DoctorId").val();
+    var appointmentDate = $("#AppointmentDate").val();
+    var slotId = $("#SlotId").val();
+    var slotTime = $("#SlotTime").val();
 
-        $.get('/AppointmentBooking/SearchByMobile?mobile=' + mobile, 
-            function (data) {
-                if (data) {
-                    $("#PatientId").val(data.patientId);
-                    $("#PatientName").val(data.name);
-                    $("#Mobile").val(data.mobile);
-
-                    checkVisit();
-                }
-                else {
-                    alert("Patient not found");
-                    $("#PatientId").val("");
-                    $("#PatientName").val("");
-                    $("#Mobile").val("");
-                }
-            });
-    };
+    window.location =
+        '/AppointmentBooking/SearchPatient?' +
+        'doctorId=' + doctorId +
+        '&appointmentDate=' + encodeURIComponent(appointmentDate) +
+        '&slotId=' + slotId +
+        '&slotTime=' + encodeURIComponent(slotTime);
+}
 
 function checkVisit() {
     var patientId = $("#PatientId").val();

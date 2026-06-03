@@ -1,5 +1,6 @@
 using DAL;
 using Models;
+using ViewModels;
 
 namespace BLL
 {
@@ -7,11 +8,14 @@ namespace BLL
     {
         private readonly PaymentDAL _paymentDAL;
         private readonly BillDAL _billDAL;
+        private readonly VisitDAL _visitDAL;
 
-        public PaymentService(IConfiguration config)
+        public PaymentService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
+                                : base(config, httpContextAccessor)
         {
             _paymentDAL = new PaymentDAL(config);
             _billDAL = new BillDAL(config);
+            _visitDAL = new VisitDAL(config);
             _dal = _paymentDAL;
         }
 
@@ -30,18 +34,7 @@ namespace BLL
 
             decimal totalPaid = _paymentDAL.GetTotalPaid(billId);
 
-            string status = "Due";
-
-            if (totalPaid > 0 && totalPaid < bill.NetAmount)
-            {
-                status = "Partially Paid";
-            }
-            else if (totalPaid >= bill.NetAmount)
-            {
-                status = "Paid";
-            }
-
-            _billDAL.UpdateStatus(billId, status);
+            _billDAL.UpdatePayment(billId, totalPaid);
         }
 
         public List<Payment> GetPaymentsByBill(int billId)
@@ -53,5 +46,6 @@ namespace BLL
         {
             return _paymentDAL.GetTotalPaid(billId);
         }
+
     }
 }

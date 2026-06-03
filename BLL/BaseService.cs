@@ -1,17 +1,29 @@
 using DAL;
 using Models;
+using Helpers;
 
 namespace BLL
 {
     public abstract class BaseService<T>
     {
         public IDAL<T> _dal;
-        public int clinicId = 0;
 
-        public void setClinicId(int id)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly SessionHelper _session;
+
+        protected BaseService()
         {
-            clinicId = id;
         }
+
+        protected BaseService(IConfiguration config, IHttpContextAccessor httpContextAccessor)
+        {
+            _httpContextAccessor = httpContextAccessor;
+            _session = new SessionHelper(_httpContextAccessor);
+        }
+
+        public int ClinicId => Convert.ToInt32(_session.ClinicId);
+        public int UserId => Convert.ToInt32(_session.UserId);
+        public string RoleName => _session.RoleName;
 
         public virtual int Add(T model)
         {
@@ -37,5 +49,6 @@ namespace BLL
         {
             return _dal.GetAll();
         }
+
     }
 }

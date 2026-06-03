@@ -5,6 +5,7 @@ using ViewModels;
 using DAL;
 using BLL;
 using Models;
+using Helpers;
 
 namespace Controllers
 {
@@ -16,26 +17,25 @@ namespace Controllers
         private readonly AppointmentService _appointment;
         private readonly PatientService _patient;
         private readonly VisitService _visit;
-        private readonly SessionHelper _session;
 
-        public AppointmentBookingController(
-            IConfiguration configuration,
-            SessionHelper session)
+        public AppointmentBookingController(DepartmentService department, 
+                                            DoctorService doctor, 
+                                            AppointmentSlotService slot, 
+                                            AppointmentService appointment, 
+                                            PatientService patient, 
+                                            VisitService visit)
         {
-            _department = new DepartmentService(configuration);
-            _doctor = new DoctorService(configuration);
-            _slot = new AppointmentSlotService(configuration);
-            _appointment = new AppointmentService(configuration);
-            _patient = new PatientService(configuration);
-            _visit = new VisitService(configuration);
-            _session = session;
+            _department = department;
+            _doctor = doctor;
+            _slot = slot;
+            _appointment = appointment;
+            _patient = patient;
+            _visit = visit;
         }
 
         public IActionResult Index()
         {
             var vm = new AppointmentBookingVM();
-
-            _department.clinicId = _session.ClinicId;
 
             vm.Departments = _department.List()
                 .Select(x => new SelectListItem
@@ -50,9 +50,7 @@ namespace Controllers
         [HttpGet]
         public JsonResult GetDoctors(int departmentId)
         {
-            int clinicId = _session.ClinicId;
-
-            var doctors = _doctor.GetDoctorsByDepartment(clinicId, departmentId);
+            var doctors = _doctor.GetDoctorsByDepartment(departmentId);
 
             return Json(doctors.Select(x => new
             {
@@ -77,16 +75,28 @@ namespace Controllers
         }
 
         [HttpGet]
-        public IActionResult Book(int slotId, int doctorId, DateTime date, string time, int patientId)
+        public IActionResult Book(int doctorId, DateTime appointmentDate, int slotId, string slotTime, int patientId)
         {
+            string patientName = "";
+            string patientPhone = "";
+
+            if (patientId != 0)
+            {
+                Patient patient = _patient.Get(patientId);
+                patientName = patient.FirstName + " " + patient.LastName;
+                patientPhone = patient.Phone;
+            }
+
             var vm = new AppointmentCreateVM
             {
                 SlotId = slotId,
                 VisitId = 0,
                 DoctorId = doctorId,
-                AppointmentDate = date,
-                SlotTime = time,
-                PatientId = patientId
+                AppointmentDate = appointmentDate,
+                SlotTime = slotTime,
+                PatientId = patientId,
+                PatientName = patientName,
+                PatientPhone = patientPhone
             };
 
             return View(vm);
@@ -98,59 +108,25 @@ namespace Controllers
             if (!ModelState.IsValid)
                 return View(vm);
 
-            Visit visit = _visit.GetByPatientAndDate(vm.PatientId, vm.AppointmentDate);
-
-            if (visit == null)
-            {
-                visit = new Visit
-                {
-                    VisitDate = vm.AppointmentDate,
-                    VisitType = vm.VisitType,
-                    ClinicId = _session.ClinicId,
-                    PatientId = vm.PatientId
-                };
-
-                vm.VisitId = _visit.Add(visit);
-            }
-            else
-            {
-                vm.VisitId = visit.VisitId;
-            }
-
-            var appointment = new Appointment
-            {
-                DoctorId = vm.DoctorId,
-                ClinicId = _session.ClinicId,
-                PatientId = vm.PatientId,
-                VisitId = vm.VisitId,
-                AppointmentDate = vm.AppointmentDate,
-                SlotTime = TimeSpan.Parse(vm.SlotTime),
-                Status = "Booked"
-            };
-
-            _appointment.Add(appointment);
-
-            _slot.IncrementBookedCount(vm.SlotId);
-
-            TempData["Success"] = "Appointment booked successfully";
+            int appointmentId = _appointment.BookAppointment(vm);
 
             return RedirectToAction("Index");
         }
 
         [HttpGet]
-        public JsonResult SearchByMobile(string mobile)
+        public IActionResult SearchPatient(int doctorId, DateTime appointmentDate, int slotId, string slotTime)
         {
-            var patient = _patient.GetByMobile(mobile);
-
-            if (patient == null)
-                return Json(null);
-
-            return Json(new
-            {
-                patientId = patient.PatientId,
-                name = patient.FirstName + " " + patient.LastName,
-                mobile = patient.Phone
-            });
+            return RedirectToAction(
+                "Search",
+                "Patient",
+                new
+                {
+                    returnTo = "AppointmentBooking",
+                    doctorId = doctorId,
+                    appointmentDate = appointmentDate,
+                    slotId = slotId,
+                    slotTime = slotTime
+                });
         }
 
         [HttpGet]

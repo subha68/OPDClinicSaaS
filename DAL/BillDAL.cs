@@ -22,8 +22,8 @@ namespace DAL
             {
                 conn.Open();
 
-                string query = @"INSERT INTO Bills (VisitId, BillDate, GrossAmount, DiscountAmount, NetAmount, PaidAmount, Status) 
-                                 VALUES (@visitId, @billDate, @grossAmount, @discountAmount, @netAmount, @paidAmount, @status);
+                string query = @"INSERT INTO Bills (VisitId, BillDate, GrossAmount, DiscountAmount, NetAmount, PaidAmount) 
+                                 VALUES (@visitId, @billDate, @grossAmount, @discountAmount, @netAmount, @paidAmount);
                                 SELECT SCOPE_IDENTITY();";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
@@ -33,7 +33,6 @@ namespace DAL
                 cmd.Parameters.AddWithValue("@discountAmount", bill.DiscountAmount);
                 cmd.Parameters.AddWithValue("@netAmount", bill.NetAmount);
                 cmd.Parameters.AddWithValue("@paidAmount", 0); // Assuming new bills are unpaid
-                cmd.Parameters.AddWithValue("@status", bill.Status);
                 //cmd.Parameters.AddWithValue("@clinicId", bill.ClinicId);
 
                 billId = Convert.ToInt32(cmd.ExecuteScalar());
@@ -43,8 +42,8 @@ namespace DAL
             {
                 conn.Open();
 
-                string query = @"INSERT INTO Bills (VisitId, BillDate, GrossAmount, DiscountAmount, NetAmount, PaidAmount, Status) 
-                                 VALUES (@visitId, @billDate, @grossAmount, @discountAmount, @netAmount, @paidAmount, @status);
+                string query = @"INSERT INTO Bills (VisitId, BillDate, GrossAmount, DiscountAmount, NetAmount, PaidAmount) 
+                                 VALUES (@visitId, @billDate, @grossAmount, @discountAmount, @netAmount, @paidAmount);
                                 SELECT SCOPE_IDENTITY();";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
@@ -54,7 +53,6 @@ namespace DAL
                 cmd.Parameters.AddWithValue("@discountAmount", bill.DiscountAmount);
                 cmd.Parameters.AddWithValue("@netAmount", bill.NetAmount);
                 cmd.Parameters.AddWithValue("@paidAmount", 0); // Assuming new bills are unpaid
-                cmd.Parameters.AddWithValue("@status", bill.Status);
                 //cmd.Parameters.AddWithValue("@clinicId", bill.ClinicId);
 
                 billId = Convert.ToInt32(cmd.ExecuteScalar());
@@ -77,8 +75,7 @@ namespace DAL
                                      GrossAmount = @grossAmount,
                                      DiscountAmount = @discountAmount,
                                      NetAmount = @netAmount,
-                                     PaidAmount = @paidAmount,
-                                     Status = @status
+                                     PaidAmount = @paidAmount
                                  WHERE BillId = @id";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
@@ -89,7 +86,6 @@ namespace DAL
                 cmd.Parameters.AddWithValue("@discountAmount", bill.DiscountAmount);
                 cmd.Parameters.AddWithValue("@netAmount", bill.NetAmount);
                 cmd.Parameters.AddWithValue("@paidAmount", bill.TotalPaidAmount);
-                cmd.Parameters.AddWithValue("@status", bill.Status);
                 cmd.Parameters.AddWithValue("@id", bill.BillId);
 
                 int rowsAffected = cmd.ExecuteNonQuery();
@@ -97,18 +93,18 @@ namespace DAL
             }
         }
 
-        public bool UpdateStatus(int billId, string status)
+        public bool UpdatePayment(int billId, decimal totalPaid)
         {
             using (SqlConnection conn = _db.GetConnection())
             {
                 conn.Open();
 
                 string query = @"UPDATE Bills
-                                 SET Status = @status
+                                 SET PaidAmount = @paidAmount
                                  WHERE BillId = @billId";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@status", status);
+                cmd.Parameters.AddWithValue("@paidAmount", totalPaid);
                 cmd.Parameters.AddWithValue("@billId", billId);
 
                 int rowsAffected = cmd.ExecuteNonQuery();
@@ -138,10 +134,10 @@ namespace DAL
             using (SqlConnection conn = _db.GetConnection())
             {
                 string query = @"SELECT b.*,
-                                        p.PatientId 
+                                        v.PatientId,
+                                        v.VisitDate 
                                 FROM Bills b 
                                 JOIN Visits v ON b.VisitId = v.VisitId
-                                JOIN Patients p ON v.PatientId = p.PatientId
                                 WHERE b.BillId = @id";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
@@ -150,6 +146,8 @@ namespace DAL
                 conn.Open();
                 var reader = cmd.ExecuteReader();
 
+                var bill = new Bill();
+
                 if (reader.Read())
                 {
                     return new Bill
@@ -157,12 +155,11 @@ namespace DAL
                         BillId = (int)reader["BillId"],
                         PatientId = (int)reader["PatientId"],
                         VisitId = (int)reader["VisitId"],
+                        VisitDate = (DateTime)reader["VisitDate"],
                         BillDate = (DateTime)reader["BillDate"],
                         GrossAmount = (decimal)reader["GrossAmount"],
                         DiscountAmount = (decimal)reader["DiscountAmount"],
-                        NetAmount = (decimal)reader["NetAmount"],
-                        TotalPaidAmount = (decimal)reader["PaidAmount"],
-                        Status = reader["Status"].ToString()
+                        TotalPaidAmount = (decimal)reader["PaidAmount"]
                     };
                 }
             }
@@ -176,7 +173,10 @@ namespace DAL
 
             using (SqlConnection conn = _db.GetConnection())
             {
-                string query = @"SELECT * FROM Bills";
+                string query = @"SELECT b.*, v.VisitDate 
+                                    FROM Bills b 
+                                    JOIN Visits v 
+                                        ON b.VisitId = v.VisitId";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
 
@@ -188,14 +188,12 @@ namespace DAL
                     list.Add(new Bill
                     {
                         BillId = (int)reader["BillId"],
-                        PatientId = (int)reader["PatientId"],
                         VisitId = (int)reader["VisitId"],
+                        VisitDate = (DateTime)reader["VisitDate"],
                         BillDate = (DateTime)reader["BillDate"],
                         GrossAmount = (decimal)reader["GrossAmount"],
                         DiscountAmount = (decimal)reader["DiscountAmount"],
-                        NetAmount = (decimal)reader["NetAmount"],
-                        TotalPaidAmount = (decimal)reader["PaidAmount"],
-                        Status = reader["Status"].ToString()
+                        TotalPaidAmount = (decimal)reader["PaidAmount"]
                     });
                 }
             }
@@ -209,7 +207,11 @@ namespace DAL
 
             using (SqlConnection conn = _db.GetConnection())
             {
-                string query = @"SELECT b.* FROM Bills b JOIN Visits v ON b.VisitId = v.VisitId WHERE v.ClinicId = @clinicId";
+                string query = @"SELECT b.*, v.VisitDate 
+                                    FROM Bills b 
+                                    JOIN Visits v 
+                                        ON b.VisitId = v.VisitId 
+                                    WHERE v.ClinicId = @clinicId";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@clinicId", clinicId);
@@ -222,14 +224,12 @@ namespace DAL
                     list.Add(new Bill
                     {
                         BillId = (int)reader["BillId"],
-                        PatientId = (int)reader["PatientId"],
                         VisitId = (int)reader["VisitId"],
+                        VisitDate = (DateTime)reader["VisitDate"],
                         BillDate = (DateTime)reader["BillDate"],
                         GrossAmount = (decimal)reader["GrossAmount"],
                         DiscountAmount = (decimal)reader["DiscountAmount"],
-                        NetAmount = (decimal)reader["NetAmount"],
-                        TotalPaidAmount = (decimal)reader["PaidAmount"],
-                        Status = reader["Status"].ToString()
+                        TotalPaidAmount = (decimal)reader["PaidAmount"]
                     });
                 }
             }
@@ -237,25 +237,17 @@ namespace DAL
 
         }
 
-        public List<BillListVM> GetBillsByPatient(int clinicId, int patientId)
+        public List<Bill> ListByPatient(int clinicId, int patientId)
         {
-            var list = new List<BillListVM>();
+            var list = new List<Bill>();
 
             using (SqlConnection conn = _db.GetConnection())
             {
-                string query = @"SELECT b.BillId, 
-                                        v.VisitDate, 
-                                        d.FirstName AS DoctorFirstName, 
-                                        d.LastName AS DoctorLastName, 
-                                        b.BillDate, 
-                                        b.NetAmount,
-                                        b.PaidAmount,
-                                        b.Status
+                string query = @"SELECT b.*, p.PatientId, v.VisitDate
                                  FROM Bills b
                                  JOIN Visits v ON b.VisitId = v.VisitId
-                                 JOIN Appointments a ON v.VisitId = a.VisitId
-                                 JOIN Doctors d ON a.DoctorId = d.DoctorId
-                                 WHERE v.PatientId = @patientId
+                                 JOIN Patients p ON v.PatientId = p.PatientId
+                                 WHERE p.PatientId = @patientId
                                  AND v.ClinicId = @clinicId
                                  ORDER BY b.BillDate DESC";
 
@@ -268,15 +260,16 @@ namespace DAL
 
                 while (reader.Read())
                 {
-                    list.Add(new BillListVM
+                    list.Add(new Bill
                     {
                         BillId = (int)reader["BillId"],
+                        PatientId = (int)reader["PatientId"],
+                        VisitId = (int)reader["VisitId"],
                         VisitDate = (DateTime)reader["VisitDate"],
-                        DoctorName = reader["DoctorFirstName"].ToString() + " " + reader["DoctorLastName"].ToString(),
                         BillDate = (DateTime)reader["BillDate"],
-                        BillAmount = (decimal)reader["NetAmount"],
-                        PaidAmount = (decimal)reader["PaidAmount"],
-                        Status = reader["Status"].ToString()
+                        GrossAmount = (decimal)reader["GrossAmount"],
+                        DiscountAmount = (decimal)reader["DiscountAmount"],
+                        TotalPaidAmount = (decimal)reader["PaidAmount"]
                     });
                 }
             }

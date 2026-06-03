@@ -3,6 +3,7 @@ using DAL;
 using BLL;
 using Models;
 using ViewModels;
+using Helpers;
 
 namespace Controllers
 {
@@ -10,14 +11,11 @@ namespace Controllers
     {
         private readonly BillService _bill;
         private readonly PaymentService _payment;
-        private readonly SessionHelper _session;
 
-
-        public PaymentController(IConfiguration config, SessionHelper session)
+        public PaymentController(BillService bill, PaymentService payment)
         {
-            _bill = new BillService(config);
-            _payment = new PaymentService(config);
-            _session = session;
+            _bill = bill;
+            _payment = payment;
         }
 
         [HttpGet]
@@ -28,8 +26,6 @@ namespace Controllers
             bill.Payments = _payment.GetPaymentsByBill(id);
 
             bill.TotalPaidAmount = _payment.GetTotalPaid(id);
-
-            bill.BalanceAmount = bill.GrossAmount - bill.TotalPaidAmount;
 
             PaymentCreateVM vm = new PaymentCreateVM
             {

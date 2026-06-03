@@ -19,26 +19,24 @@
 
     <div class="col-md-4">
         <label>Doctor</label>
-        <select id="doctorId"
-                class="form-select">
+        <select id="doctorId" asp-for="DoctorId" class="form-select">
             <option value="">Select</option>
         </select>
     </div>
 
     <div class="col-md-4">
         <label>Actions</label>
-            <button id="btnList"
-                    type="button"
-                    class="btn btn-outline-secondary ms-2">
-                List View
-            </button>
+        <button id="btnList"
+                type="button"
+                class="btn btn-outline-secondary ms-2">
+            List View
+        </button>
 
-            <button id="btnCalendar"
-                    type="button"
-                    class="btn btn-outline-secondary ms-2">
-                Calendar View
-            </button>
-        </select>
+        <button id="btnCalendar"
+                type="button"
+                class="btn btn-outline-secondary ms-2">
+            Calendar View
+        </button>
     </div>
 </div>
 
@@ -55,6 +53,7 @@
 <script>
 
 let fcCalendar = null;
+let currentView = "list";
 
 $("#departmentId").change(function () {
 
@@ -170,10 +169,11 @@ function selectSlot(slotId, start, title){
 
     window.location.href =
         '/AppointmentBooking/Book'
-        + '?slotId=' + slotId
-        + '&doctorId=' + $("#doctorId").val()
-        + '&date=' + start
-        + '&time=' + title;
+        + '?doctorId=' + $("#doctorId").val()
+        + '&appointmentDate=' + start
+        + '&slotId=' + slotId
+        + '&slotTime=' + title;
+
 }
 
 function renderCalendar(data){
@@ -226,10 +226,10 @@ function renderCalendar(data){
 
                 window.location.href =
                     '/AppointmentBooking/Book'
-                    + '?slotId=' + slotId
-                    + '&doctorId=' + $("#doctorId").val()
-                    + '&date=' + info.event.start.toISOString()
-                    + '&time=' + info.event.title;
+                    + '?doctorId=' + $("#doctorId").val()
+                    + '&appointmentDate=' + info.event.start.toISOString()
+                    + '&slotId=' + slotId
+                    + '&slotTime=' + info.event.title;
             }
         });
 

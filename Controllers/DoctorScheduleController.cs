@@ -7,23 +7,24 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
+using Helpers;
 
 namespace Controllers
 {
     //[AuthorizeFeature("DOCTOR_SCHEDULE")]
     public class DoctorScheduleController : Controller
     {
-        private readonly SessionHelper _session;
         private readonly DoctorScheduleService _schedule;
         private readonly AppointmentSlotService _slot;
         private readonly DoctorService _doctor;
 
-        public DoctorScheduleController(IConfiguration config, SessionHelper session)
+        public DoctorScheduleController(DoctorScheduleService schedule, 
+                                        AppointmentSlotService slot, 
+                                        DoctorService doctor)
         {
-            _schedule = new DoctorScheduleService(config);
-            _slot = new AppointmentSlotService(config);
-            _doctor = new DoctorService(config);
-            _session = session;
+            _schedule = schedule;
+            _slot = slot;
+            _doctor = doctor;
         }
 
         public IActionResult Index(int? doctorId)
@@ -36,7 +37,6 @@ namespace Controllers
             }
             else
             {
-                _schedule.clinicId = Convert.ToInt32(_session.ClinicId);
                 schedules = _schedule.List();
             }
 
@@ -46,8 +46,7 @@ namespace Controllers
         [HttpGet]
         public IActionResult Create()
         {
-            int clinicId = Convert.ToInt32(_session.ClinicId);
-            LoadDoctors(clinicId);
+            LoadDoctors();
 
             DoctorScheduleVM model =
                 new DoctorScheduleVM
@@ -66,7 +65,7 @@ namespace Controllers
         {
             try
             {
-                model.ClinicId = Convert.ToInt32(_session.ClinicId);
+                model.ClinicId = _schedule.ClinicId;
                 LoadDoctors();
 
                 if (!ModelState.IsValid)
@@ -106,9 +105,8 @@ namespace Controllers
             return RedirectToAction("Index");
         }
 
-        private void LoadDoctors(int ClinicId = 0)
+        private void LoadDoctors()
         {
-            _doctor.clinicId = ClinicId;
             var doctors = _doctor.List() ?? new List<Doctor>();
 
             ViewBag.Doctors =

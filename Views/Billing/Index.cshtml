@@ -5,23 +5,34 @@
 
     ViewBag.PageTitle = "Patient Bills";
 
-    ViewBag.ShowPatientSearch = true;
-
-    ViewBag.CreateButtonText = "+ Add New Bill";
-    ViewBag.CreateUrl = Url.Action("Create");
+    ViewBag.CustomHeaderActions = new []
+    {
+        new { Label="Search Patient", Controller = "Billing", Action = "SearchPatient" },
+        new { Label="+ Add New Bill", Controller = "Billing", Action = "Create" }
+    };
 
     ViewBag.KeyField = "BillId";
+
+    ViewBag.HeaderFields = new[]
+    {
+        new { Name="PatientId", Label="Patient ID", Type="text", Col="2", Value = ViewBag.Patient?.PatientId },
+        new { Name="FirstName", Label="First Name", Type="text", Col="4", Value = ViewBag.Patient?.FirstName },
+        new { Name="LastName", Label="Last Name", Type="text", Col="4", Value = ViewBag.Patient?.LastName },
+        new { Name="Age", Label="Age", Type="text", Col="2", Value = ViewBag.Patient?.Age },
+        new { Name="Gender", Label="Gender", Type="text", Col="2", Value = ViewBag.Patient?.Gender }
+    };
 
     ViewBag.Fields = new []
     {
         new { Name="VisitDate", Label="Visit Date", Type="date", Color=""},
-        new { Name="DoctorName", Label="Doctor Visited", Type="text", Color="" },
         new { Name="BillDate", Label="Bill Date", Type="date", Color="" },
-        new { Name="BillAmount", Label="Bill Amount", Type="number", Color="" },
+        new { Name="NetAmount", Label="Bill Amount", Type="number", Color="" },
+        new { Name="TotalPaidAmount", Label="Paid Amount", Type="number", Color="" },
+        new { Name="BalanceAmount", Label="Due Amount", Type="number", Color="" },
         new { Name="Status", Label="Status", Type="text", Color="StatusColor" }
     };
 
-    ViewBag.Functions = new Dictionary<string, Func<dynamic, string>>
+    ViewBag.ColorFunctions = new Dictionary<string, Func<dynamic, string>>
     {
         {"StatusColor", row => {
                                         string status = row.Status as string;
@@ -37,10 +48,20 @@
         }
     };
 
-    ViewBag.CustomActions = new []
+    ViewBag.CheckFunctions = new Dictionary<string, Func<dynamic, bool>>
     {
-        new { Label = "View Bill", Controller = "Billing", Action = "Print", Type = "info" },
-        new { Label = "Pay", Controller = "Payment", Action = "Pay", Type = "success" }
+        {"StatusCheck", row => {
+                                        string status = row.Status as string;
+
+                                        return status != "Paid";
+                                    }
+        }
+    };
+
+    ViewBag.CustomLineActions = new []
+    {
+        new { Label = "View Bill", Controller = "Billing", Action = "Print", Type = "info", condition="" },
+        new { Label = "Pay", Controller = "Payment", Action = "Pay", Type = "success", condition = "StatusCheck" }
     };
 
 

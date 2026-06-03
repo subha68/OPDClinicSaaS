@@ -4,6 +4,7 @@ using BLL;
 using Models;
 using ViewModels;
 using Filters;
+using Helpers;
 
 public class BillingController : Controller
 {
@@ -13,17 +14,20 @@ public class BillingController : Controller
     private readonly PatientService _patient;
     private readonly ClinicService _clinic;
     private readonly PaymentService _payment;
-    private readonly SessionHelper _session;
 
-    public BillingController(IConfiguration config, SessionHelper session)
+    public BillingController(BillService bill, 
+                             VisitService visit, 
+                             BillingChargeService billingCharge, 
+                             PatientService patient, 
+                             ClinicService clinic, 
+                             PaymentService payment)
     {
-        _bill = new BillService(config);
-        _visit = new VisitService(config);
-        _billingCharge = new BillingChargeService(config);
-        _patient = new PatientService(config);
-        _clinic = new ClinicService(config);
-        _payment = new PaymentService(config);
-        _session = session;
+        _bill = bill;
+        _visit = visit;
+        _billingCharge = billingCharge;
+        _patient = patient;
+        _clinic = clinic;
+        _payment = payment;
     }
 
     public IActionResult Index()
@@ -33,21 +37,22 @@ public class BillingController : Controller
     }
 
     [HttpGet]
-    public IActionResult Search(string searchText)
+    public IActionResult SearchPatient()
     {
-        int clinicId = _session.ClinicId;
-        var patients = _patient.SearchByText(searchText, clinicId);
-        var patient = _patient.GetFirstOrDefault(patients);
-        var bills = _bill.ListByPatient(clinicId, patient.PatientId);
-
-        return View("Index", bills);
+        return RedirectToAction(
+                    "Search",
+                    "Patient",
+                    new
+                    {
+                        returnTo = "Billing"
+                    });
     }
 
     [HttpGet]
-    public IActionResult SearchByPatientId(int patientId)
+    public IActionResult SearchByPatient(int patientId)
     {
-        int clinicId = _session.ClinicId;
-        var bills = _bill.ListByPatient(clinicId, patientId);
+        var bills = _bill.ListByPatient(patientId);
+        ViewBag.Patient = _patient.Get(patientId);
 
         return View("Index", bills);
     }
@@ -76,18 +81,7 @@ public class BillingController : Controller
     [HttpPost]
     public IActionResult Create(Bill model)
     {
-        model.Visit = _visit.Get(model.VisitId);
-        model.PatientId = model.Visit.PatientId;
-        model.Patient = _patient.Get(model.PatientId);
-        model.ClinicId = model.Visit.ClinicId;
-        model.Clinic = _clinic.Get(model.ClinicId);
-
-        model.GrossAmount = model.BillLines.Sum(x => x.Rate * x.Quantity);
-        model.DiscountAmount = model.BillLines.Sum(x => (x.Rate * x.Quantity * x.DiscountPercent / 100));
-        model.NetAmount = model.GrossAmount - model.DiscountAmount;
-        model.AmountInWords = NumberToWords((int)model.NetAmount);
-
-        if (!ModelState.IsValid)
+        /* if (!ModelState.IsValid)
         {
             foreach (var key in ModelState.Keys)
             {
@@ -101,7 +95,7 @@ public class BillingController : Controller
             ViewBag.Patients = GetPatients();
             ViewBag.BillingCharges = GetBillingCharges();
             return View(model);
-        }
+        } */
 
         int billId = _bill.Add(model);
 
@@ -153,22 +147,13 @@ public class BillingController : Controller
     public IActionResult Print(int id)
     {
         var bill = _bill.Get(id);
-        bill.Visit = _visit.Get(bill.VisitId);
-        bill.PatientId = bill.Visit.PatientId;
-        bill.Patient = _patient.Get(bill.PatientId);
-        bill.ClinicId = bill.Visit.ClinicId;
-        bill.Clinic = _clinic.Get(bill.ClinicId);
-
-        bill.Payments = _payment.GetPaymentsByBill(id);
-        bill.TotalPaidAmount = _payment.GetTotalPaid(id);
-        bill.BalanceAmount = bill.NetAmount - bill.TotalPaidAmount;
 
         return View(bill);
     }
 
     private List<SelectListItem> GetPatients()
     {
-        return _patient.List(/*_session.ClinicId*/)
+        return _patient.List()
             .Select(x => new SelectListItem
             {
                 Value = x.PatientId.ToString(),
@@ -178,7 +163,7 @@ public class BillingController : Controller
 
     private List<SelectListItem> GetBillingCharges()
     {
-            return _billingCharge.ListByClinic(_session.ClinicId)
+            return _billingCharge.List()
                 .Where(x => x.IsActive)
                 .Select(x => new SelectListItem
                 {
@@ -187,11 +172,4 @@ public class BillingController : Controller
                 }).ToList();
     }
 
-    //----------------------------------------
-    // simple number-to-words
-    //----------------------------------------
-    private string NumberToWords(int n)
-    {
-        return n.ToString(); // replace later with Humanizer if needed
-    }
 }

@@ -10,21 +10,13 @@ namespace Controllers
 {
     public class AccountController : Controller
     {
-        private readonly UserDAL _userDAL;
-        private readonly SessionHelper _session;
-        private readonly FeatureService _featureService;
-        private readonly RoleService _role;
-        private readonly DoctorService _doctor;
+        private readonly UserService _user;
         private readonly ClinicService _clinic;
 
-        public AccountController(IConfiguration configuration, SessionHelper session)
+        public AccountController(UserService user, ClinicService clinic)
         {
-            _userDAL = new UserDAL(configuration);
-            _session = session;
-            _featureService = new FeatureService(configuration);
-            _role = new RoleService(configuration);
-            _doctor = new DoctorService(configuration);
-            _clinic = new ClinicService(configuration);
+            _user = user;
+            _clinic = clinic;
         }
 
         [HttpGet]
@@ -55,7 +47,7 @@ namespace Controllers
             HttpContext.Session.SetString("ClinicCode", clinicCode ?? "");
             ViewBag.ClinicCode = clinicCode;
 
-            var user = _userDAL.ValidateUser(username, password, clinicId);
+            var user = _user.ValidateUser(username, password);
 
             if (user != null)
             {
@@ -77,17 +69,17 @@ namespace Controllers
                     claims,
                     CookieAuthenticationDefaults.AuthenticationScheme);
 
-                var principal =
-                    new System.Security.Claims.ClaimsPrincipal(identity);
+                var principal = new System.Security.Claims.ClaimsPrincipal(identity);
 
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
                 // keep your session too
-                String rolename = _role.Get(user.RoleId).RoleName;
-                if (rolename == "Doctor")
+                String rolename = _user.GetUserRole(user).RoleName;
+                int doctorId = _user.GetUserDoctor(user)?.DoctorId ?? 0;
+
+                if (doctorId != 0)
                 {
-                    int doctorid = _doctor.GetDoctorIdByUserId(user.UserId);
-                    HttpContext.Session.SetString("DoctorId", doctorid.ToString());
+                    HttpContext.Session.SetString("DoctorId", doctorId.ToString());
                 }
                 HttpContext.Session.SetString("RoleId", user.RoleId.ToString());
                 HttpContext.Session.SetString("UserId", user.UserId.ToString());
@@ -96,15 +88,7 @@ namespace Controllers
                 HttpContext.Session.SetString("FirstName", user.FirstName ?? "");
                 HttpContext.Session.SetString("LastName", user.LastName ?? "");
                 HttpContext.Session.SetString("DisplayName", (user.FirstName ?? "") + " " + (user.LastName ?? ""));
-
-                //if (user.ClinicId.HasValue)
-                //    HttpContext.Session.SetString("ClinicId", user.ClinicId.Value.ToString());
-
-                var features = _featureService.GetFeatures(user.RoleId);
-
-                HttpContext.Session.SetString(
-                    "Features",
-                    string.Join(",", features.Select(f => f.Code)));
+                HttpContext.Session.SetString("Features", _user.GetUserFeaturesAsString(user));
 
                 return RedirectToAction("Index", "Home");
             }
@@ -174,6 +158,12 @@ namespace Controllers
             });
         }
 
+        // use - https://localhost:7036/Account/SuperAdminSetup
+        public IActionResult SuperAdminSetup()
+        {
+            _user.SetupSuperAdmin();
+            return RedirectToAction("Login", "Account");
+        }
 
     }
 }

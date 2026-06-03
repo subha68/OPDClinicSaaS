@@ -7,7 +7,8 @@ namespace BLL
     {
         private readonly ClinicDAL _clinicDAL;
 
-        public ClinicService(IConfiguration config)
+        public ClinicService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
+                                : base(config, httpContextAccessor)
         {
             _clinicDAL = new ClinicDAL(config);
             _dal = _clinicDAL;
@@ -29,7 +30,7 @@ namespace BLL
             return base.List();
         }
 
-        public Clinic Get(int clinicId)
+        public override Clinic Get(int clinicId)
         {
             return _dal.Get(clinicId);
         }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using BLL;
 using Models;
 using Filters;
+using Helpers;
 
 namespace Controllers
 {
@@ -9,19 +10,15 @@ namespace Controllers
     public class ClinicController : Controller
     {
         private readonly ClinicService _clinic;
-        private readonly SessionHelper _session;
 
-        public ClinicController(IConfiguration config, SessionHelper session)
+        public ClinicController(ClinicService clinic)
         {
-            _clinic = new ClinicService(config);
-            _session = session;
+            _clinic = clinic;
         }
 
         public IActionResult Index()
         {
-            int? clinicId = _session.ClinicId;
-            string roleName = _session.RoleName;
-            var clinics = roleName == "SuperAdmin" ? _clinic.List() : new List<Clinic> { _clinic.Get(clinicId.Value) };
+            var clinics = _clinic.RoleName == "SuperAdmin" ? _clinic.List() : new List<Clinic> { _clinic.Get(_clinic.ClinicId) };
             return View(clinics);
         }
 

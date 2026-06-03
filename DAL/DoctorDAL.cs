@@ -19,9 +19,9 @@ namespace DAL
             using (SqlConnection con = _db.GetConnection())
             {
                 string query = @"INSERT INTO Doctors 
-                                (ClinicId, DepartmentId, FirstName, LastName, RegistrationNo, Qualification)
+                                (ClinicId, DepartmentId, FirstName, LastName, RegistrationNo, Qualification, UserId)
                                 VALUES
-                                (@ClinicId, @DepartmentId, @FirstName, @LastName, @RegNo, @Qualification);
+                                (@ClinicId, @DepartmentId, @FirstName, @LastName, @RegNo, @Qualification, @UserId);
                                 SELECT SCOPE_IDENTITY();";
 
                 SqlCommand cmd = new SqlCommand(query, con);
@@ -32,6 +32,7 @@ namespace DAL
                 cmd.Parameters.AddWithValue("@LastName", model.LastName ?? "");
                 cmd.Parameters.AddWithValue("@RegNo", model.RegistrationNo ?? "");
                 cmd.Parameters.AddWithValue("@Qualification", model.Qualification ?? "");
+                cmd.Parameters.AddWithValue("@UserId", model.UserId);
         
                 con.Open();
                 return Convert.ToInt32(cmd.ExecuteScalar());
@@ -74,15 +75,19 @@ namespace DAL
                                 SET FirstName = @FirstName,
                                     LastName = @LastName,
                                     Username = @Username,
-                                    PasswordHash = @PasswordHash
+                                    PasswordHash = @PasswordHash,
+                                    Email = @Email,
+                                    Phone = @Phone
                                 WHERE UserId = @UserId";
 
                 SqlCommand cmd = new SqlCommand(query, con);
                 cmd.Parameters.AddWithValue("@FirstName", model.FirstName);
                 cmd.Parameters.AddWithValue("@LastName", model.LastName ?? "");
                 cmd.Parameters.AddWithValue("@Username", model.Username);
-                cmd.Parameters.AddWithValue("@PasswordHash", model.Password); // In real app, hash the password
+                cmd.Parameters.AddWithValue("@PasswordHash", model.Password); 
                 cmd.Parameters.AddWithValue("@UserId", model.UserId);
+                cmd.Parameters.AddWithValue("@Email", model.Email ?? "");
+                cmd.Parameters.AddWithValue("@Phone", model.Phone ?? "");
 
                 con.Open();
                 rowsAffected_user = cmd.ExecuteNonQuery();
@@ -130,10 +135,11 @@ namespace DAL
 
             using (SqlConnection con = _db.GetConnection())
             {
-                string query = @"SELECT d.*, dept.Name AS DepartmentName, c.Name AS ClinicName
+                string query = @"SELECT d.*, u.*, dept.Name AS DepartmentName, c.Name AS ClinicName
                                 FROM Doctors d
                                 INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
-                                INNER JOIN Clinics c ON d.ClinicId = c.ClinicId";
+                                INNER JOIN Clinics c ON d.ClinicId = c.ClinicId
+                                INNER JOIN Users u ON d.UserId = u.UserId";
 
                 SqlCommand cmd = new SqlCommand(query, con);
 
@@ -153,7 +159,11 @@ namespace DAL
                         RegistrationNo = dr["RegistrationNo"].ToString(),
                         Qualification = dr["Qualification"].ToString(),
                         DepartmentName = dr["DepartmentName"].ToString(),
-                        ClinicName = dr["ClinicName"].ToString()
+                        ClinicName = dr["ClinicName"].ToString(),
+                        Username = dr["Username"].ToString(),
+                        Password = dr["PasswordHash"].ToString(),
+                        Email = dr["Email"].ToString(),
+                        Phone = dr["Phone"].ToString()
                     });
                 }
             }
@@ -165,10 +175,11 @@ namespace DAL
         {
             using (SqlConnection con = _db.GetConnection())
             {
-                string query = @"SELECT d.*, dept.Name AS DepartmentName, c.Name AS ClinicName
+                string query = @"SELECT d.*, u.*, dept.Name AS DepartmentName, c.Name AS ClinicName
                                 FROM Doctors d
                                 INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
                                 INNER JOIN Clinics c ON d.ClinicId = c.ClinicId
+                                INNER JOIN Users u ON d.UserId = u.UserId
                                 WHERE d.DoctorId = @DoctorId";
 
                 SqlCommand cmd = new SqlCommand(query, con);
@@ -190,7 +201,11 @@ namespace DAL
                         RegistrationNo = dr["RegistrationNo"].ToString(),
                         Qualification = dr["Qualification"].ToString(),
                         DepartmentName = dr["DepartmentName"].ToString(),
-                        ClinicName = dr["ClinicName"].ToString()
+                        ClinicName = dr["ClinicName"].ToString(),
+                        Username = dr["Username"].ToString(),
+                        Password = dr["PasswordHash"].ToString(),
+                        Email = dr["Email"].ToString(),
+                        Phone = dr["Phone"].ToString()
                     };
                 }
             }
@@ -204,10 +219,11 @@ namespace DAL
 
             using (SqlConnection con = _db.GetConnection())
             {
-                string query = @"SELECT d.*, dept.Name AS DepartmentName, c.Name AS ClinicName
+                string query = @"SELECT d.*, u.*, dept.Name AS DepartmentName, c.Name AS ClinicName
                                 FROM Doctors d
                                 INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
                                 INNER JOIN Clinics c ON d.ClinicId = c.ClinicId
+                                INNER JOIN Users u ON d.UserId = u.UserId
                                 WHERE d.ClinicId = @ClinicId";
 
                 SqlCommand cmd = new SqlCommand(query, con);
@@ -222,11 +238,16 @@ namespace DAL
                     {
                         DoctorId = Convert.ToInt32(dr["DoctorId"]),
                         ClinicId = Convert.ToInt32(dr["ClinicId"]),
+                        UserId = Convert.ToInt32(dr["UserId"]),
                         FirstName = dr["FirstName"].ToString(),
                         LastName = dr["LastName"].ToString(),
                         DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
                         DepartmentName = dr["DepartmentName"].ToString(),
-                        ClinicName = dr["ClinicName"].ToString()
+                        ClinicName = dr["ClinicName"].ToString(),
+                        Username = dr["Username"].ToString(),
+                        Password = dr["PasswordHash"].ToString(),
+                        Email = dr["Email"].ToString(),
+                        Phone = dr["Phone"].ToString()
                     });
                 }
             }
@@ -240,10 +261,11 @@ namespace DAL
 
             using (SqlConnection con = _db.GetConnection())
             {
-                string query = @"SELECT d.*, dept.Name AS DepartmentName, c.Name AS ClinicName
+                string query = @"SELECT d.*, u.*, dept.Name AS DepartmentName, c.Name AS ClinicName
                                 FROM Doctors d
                                 INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
                                 INNER JOIN Clinics c ON d.ClinicId = c.ClinicId
+                                INNER JOIN Users u ON d.UserId = u.UserId
                                 WHERE d.ClinicId = @ClinicId AND d.DepartmentId = @DepartmentId";
 
                 SqlCommand cmd = new SqlCommand(query, con);
@@ -258,11 +280,16 @@ namespace DAL
                     list.Add(new Doctor
                     {
                         DoctorId = Convert.ToInt32(dr["DoctorId"]),
+                        ClinicId = Convert.ToInt32(dr["ClinicId"]),
                         FirstName = dr["FirstName"].ToString(),
                         LastName = dr["LastName"].ToString(),
                         DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
                         DepartmentName = dr["DepartmentName"].ToString(),
-                        ClinicName = dr["ClinicName"].ToString()
+                        ClinicName = dr["ClinicName"].ToString(),
+                        Username = dr["Username"].ToString(),
+                        Password = dr["PasswordHash"].ToString(),
+                        Email = dr["Email"].ToString(),
+                        Phone = dr["Phone"].ToString()
                     });
                 }
             }
@@ -279,6 +306,24 @@ namespace DAL
                 SqlCommand cmd = new SqlCommand(query, con);
 
                 cmd.Parameters.AddWithValue("@UserId", userId);
+
+                con.Open();
+
+                object result = cmd.ExecuteScalar();
+
+                return result != null ? Convert.ToInt32(result) : 0;
+            }
+        }
+
+        public int GetUserId(int doctorId)
+        {
+            using (SqlConnection con = _db.GetConnection())
+            {
+                string query = "SELECT UserId FROM Doctors WHERE DoctorId=@DoctorId";
+
+                SqlCommand cmd = new SqlCommand(query, con);
+
+                cmd.Parameters.AddWithValue("@DoctorId", doctorId);
 
                 con.Open();
 

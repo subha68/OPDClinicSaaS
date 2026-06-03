@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Data.SqlClient;
 using Models;
+using ViewModels;
 
 namespace DAL
 {
@@ -171,5 +172,43 @@ namespace DAL
             }
             return null; // Not found
         }
+
+        public List<Visit> ListByPatient(int patientId)
+        {
+            using(SqlConnection con = _db.GetConnection())
+            {
+                string sql = @"
+                    SELECT
+                        v.VisitId,
+                        v.VisitDate,
+                        v.VisitType
+                    FROM Visits v
+                    WHERE v.PatientId = @PatientId
+                    ORDER BY v.VisitDate DESC";
+
+                SqlCommand cmd = new SqlCommand(sql, con);
+
+                cmd.Parameters.AddWithValue("@PatientId", patientId);
+
+                con.Open();
+
+                SqlDataReader dr = cmd.ExecuteReader();
+
+                List<Visit> visits = new();
+
+                while(dr.Read())
+                {
+                    visits.Add(new Visit
+                    {
+                        VisitId = Convert.ToInt32(dr["VisitId"]),
+                        VisitDate = Convert.ToDateTime(dr["VisitDate"]),
+                        VisitType = dr["VisitType"].ToString()
+                    });
+                }
+
+                return visits;
+            }
+        }
+
     }
 }

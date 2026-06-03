@@ -1,0 +1,36 @@
+@model IEnumerable<Models.Patient>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    ViewBag.PageTitle = "Patients";
+
+    ViewBag.CustomHeaderActions = new []
+    {
+        new { Label="Search Patient", Controller = "Patient", Action = "Search" },
+        new { Label="+ Register New Patient", Controller = "Patient", Action = "Create" }
+    };    
+
+    ViewBag.KeyField = "PatientId";
+
+    ViewBag.Fields = new []
+    {
+        new { Name="PatientId", Label="Patient ID", Type="text", Color="" },
+        new { Name="FirstName", Label="First Name", Type="text", Color="" },
+        new { Name="LastName", Label="Last Name", Type="text", Color="" },
+        new { Name="Gender", Label="Gender", Type="text", Color="" },
+        new { Name="DOB", Label="Date of Birth", Type="date", Color="" },
+        new { Name="Address", Label="Address", Type="text", Color="" },
+        new { Name="Phone", Label="Phone", Type="text", Color="" }
+    };
+
+    ViewBag.CustomLineActions = new []
+    {
+        new { Label = "Detail", Controller = "Patient", Action = "Edit", Type = "success", Condition="" },
+        new { Label = "History", Controller = "Patient", Action = "History", Type = "info", Condition="" },
+        new { Label = "Delete", Controller = "Patient", Action = "Delete", Type = "danger", Condition="" }
+    };
+
+}
+
+@await Html.PartialAsync("_CrudList", Model)

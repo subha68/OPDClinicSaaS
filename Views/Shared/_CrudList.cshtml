@@ -8,12 +8,18 @@
             <h2 class="page-title">@ViewBag.PageTitle</h2>
 
             <div>
-                @if (ViewBag.CreateButtonText != null)
+                @if (ViewBag.CustomHeaderActions != null)
                 {
-                    <a href="@ViewBag.CreateUrl"
-                       class="btn btn-future">
-                        @ViewBag.CreateButtonText
-                    </a>
+                    <div class="mb-3">
+                        @foreach (var action in ViewBag.CustomHeaderActions)
+                        {
+                            <a asp-controller="@action.Controller"
+                                asp-action="@action.Action"
+                                class="btn btn-sm btn-primary mt-2">
+                                @action.Label
+                            </a>
+                        }
+                    </div>
                 }
                 else
                 {
@@ -25,30 +31,17 @@
             </div>
         </div>
 
-
-        <!-- Optional Search Panel -->
-        @if (ViewBag.ShowPatientSearch == true)
+        @if (ViewBag.HeaderFields != null)
         {
-            <form asp-action="Search" method="get" class="row g-2 mb-4">
-
-                <div class="col-md-4">
-                    <input type="text"
-                           name="searchText"
-                           value="@Context.Request.Query["searchText"]"
-                           class="form-control"
-                           placeholder="Search by Patient Name / Mobile" />
-                </div>
-
-                <div class="col-md-2">
-                    <button type="submit"
-                            class="btn btn-primary w-100">
-                        Search
-                    </button>
-                </div>
-
-            </form>
+            <div class="row mb-3">
+                @foreach (var field in ViewBag.HeaderFields)
+                {
+                    <div class="col-md-@field.Col">
+                        <strong>@field.Label:</strong> @field.Value 
+                    </div>
+                }
+            </div>
         }
-
 
         <!-- Grid -->
         <table class="table table-hover table-future">
@@ -79,10 +72,10 @@
                                     string colorFn = field.Color ?? "";
                                     string color = "";
 
-                                    if (ViewBag.Functions != null)
+                                    if (ViewBag.ColorFunctions != null)
                                     {
                                         var funcs = 
-                                                                ViewBag.Functions as Dictionary<string, Func<dynamic, string>>;
+                                                                ViewBag.ColorFunctions as Dictionary<string, Func<dynamic, string>>;
 
                                         if (funcs != null && funcs.ContainsKey(colorFn))
                                         {
@@ -91,7 +84,7 @@
                                     }
 
                                     <span style="color:@color">
-                                        @if (field.Type == "date")
+                                        @if (field.Type == "date" && value != null)
                                         {
                                             DateTime dt = (DateTime)value;
                                             @dt.ToString("dd/MM/yyyy")
@@ -107,10 +100,25 @@
 
                         <td class="text-center">
 
-                            @if (ViewBag.CustomActions != null)
+                            @if (ViewBag.CustomLineActions != null)
                             {
-                                foreach (var action in ViewBag.CustomActions)
+                                foreach (var action in ViewBag.CustomLineActions)
                                 {
+                                    if (ViewBag.CheckFunctions != null && !string.IsNullOrWhiteSpace(action.condition))
+                                    {
+                                        var checkFuncs = 
+                                                                ViewBag.CheckFunctions as Dictionary<string, Func<dynamic, bool>>;
+
+                                        if (checkFuncs != null && checkFuncs.ContainsKey(action.condition))
+                                        {
+                                            bool canShow = checkFuncs[action.condition](row);
+
+                                            if (!canShow)
+                                            {
+                                                continue;
+                                            }
+                                        }
+                                    }
                                     <a asp-controller="@action.Controller"
                                        asp-action="@action.Action"
                                        asp-route-id="@keyValue"

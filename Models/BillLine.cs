@@ -5,8 +5,11 @@ namespace Models
         public int LineId { get; set; }
 
         public int BillId { get; set; }
+        public int PatientId { get; set; }
 
-        public int BillingChargeId { get; set; }
+        public int ChargeId { get; set; }
+        public string ChargeCode { get; set; }
+        public string ChargeDescription { get; set; }
         public BillingCharge? BillingCharge { get; set; }
 
         public decimal Rate { get; set; }

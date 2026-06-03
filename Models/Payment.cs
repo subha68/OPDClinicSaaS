@@ -7,6 +7,7 @@ namespace Models
         public int PaymentId { get; set; }
 
         public int BillId { get; set; }
+        public int PatientId { get; set; }
 
         public decimal Amount { get; set; }
 

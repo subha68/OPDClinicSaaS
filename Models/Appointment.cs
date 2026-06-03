@@ -7,6 +7,7 @@ namespace Models
         public int AppointmentId { get; set; }
 
         public int DoctorId { get; set; }
+        public int DepartmentId { get; set; }
 
         public int ClinicId { get; set; }
 
@@ -22,6 +23,6 @@ namespace Models
         public string? ClinicName { get; set; }
         public string? PatientName { get; set; }
         public string? DoctorName { get; set; }
-        
+        public string? DepartmentName { get; set; }        
     }
 }

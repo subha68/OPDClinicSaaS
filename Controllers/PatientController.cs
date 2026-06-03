@@ -7,54 +7,68 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
+using Helpers;
 
 namespace Controllers
 {
     public class PatientController : Controller
     {
-        private readonly SessionHelper _session;
         private readonly PatientService _patient;
         private readonly AppointmentService _appointment;
         private readonly ConsultationService _consultation;
 
-        public PatientController(IConfiguration config, SessionHelper session)
+        public PatientController(PatientService patient, 
+                                    AppointmentService appointment, 
+                                    ConsultationService consultation)
         {
-            _patient = new PatientService(config);
-            _session = session;
+            _patient = patient;
+            _appointment = appointment;
+            _consultation = consultation;
+        }
+
+        public ActionResult Index()
+        {
+            var list = _patient.List();
+
+            return View(list);
         }
 
         [HttpGet]
-        public JsonResult SearchByMobile(string mobile)
+        public IActionResult Search(string? returnTo, int? doctorId, DateTime? appointmentDate, int? slotId, string? slotTime)
         {
-            var patient = _patient.GetByMobile(mobile);
-
-            if (patient == null)
-                return Json(null);
-
-            return Json(new
+            var vm = new PatientSearchVM
             {
-                patientId = patient.PatientId,
-                name = patient.FirstName + " " + patient.LastName,
-                mobile = patient.Phone
-            });
-        }
+                ClinicId = _patient.ClinicId,
+                ReturnTo = returnTo,
+                DoctorId = doctorId,
+                AppointmentDate = appointmentDate,
+                SlotId = slotId,
+                SlotTime = slotTime
+            };
 
-        [HttpGet]
-        public IActionResult Search()
-        {
-            return View(new PatientSearchVM());
+            return View(vm);
         }
 
         [HttpPost]
         public IActionResult Search(PatientSearchVM vm)
         {
-            int clinicId = _session.ClinicId;
+            vm.ClinicId = _patient.ClinicId;
+            vm.Results = _patient.Search(vm);
 
-            vm.Results = _patient.Search(
-                                vm.PatientId,
-                                vm.Phone,
-                                vm.Name,
-                                clinicId);
+            if(vm.Results.Count == 1)
+            {
+                return RedirectToAction(
+                    "SelectPatient",
+                    new
+                    {
+                        patientId = vm.Results[0].PatientId,
+                        returnTo = vm.ReturnTo,
+                        doctorId = vm.DoctorId,
+                        appointmentDate = vm.AppointmentDate,
+                        slotId = vm.SlotId,
+                        slotTime = vm.SlotTime
+                    });
+            }
 
             return View(vm);
         }
@@ -75,6 +89,8 @@ namespace Controllers
                 return Content("Model is NULL");
             }
 
+            model.ClinicId = _patient.ClinicId;
+
             if (!ModelState.IsValid)
             {
                 foreach (var key in ModelState.Keys)
@@ -91,7 +107,7 @@ namespace Controllers
 
             _patient.Add(model);
 
-            return RedirectToAction("Search");
+            return RedirectToAction("Index");
         }
 
         [HttpGet]
@@ -113,6 +129,8 @@ namespace Controllers
                 return Content("Model is NULL");
             }
 
+            patient.ClinicId = _patient.ClinicId;
+
             if (!ModelState.IsValid)
             {
                 foreach (var key in ModelState.Keys)
@@ -124,40 +142,86 @@ namespace Controllers
                     }
                 }
 
-                return View(patient);
+                return View("Create", patient);
             }
 
             _patient.Update(patient);
 
-            return RedirectToAction("Search");
+            return RedirectToAction("Index");
         }
 
         [HttpPost]
         public IActionResult Delete(int id)
         {
             _patient.Delete(id);
-            return RedirectToAction("Search");
+            return RedirectToAction("Index");
         }
 
-        public IActionResult History(int patientId)
+        public IActionResult History(int id, int page = 1)
         {
-            var patient = _patient.Get(patientId);
-
-            if (patient == null)
-                return NotFound();
-
-            var vm = new PatientHistoryVM
-            {
-                Patient = patient,
-                Appointments = _appointment.GetByPatientId(patientId),
-                Consultations = _consultation.GetConsultationsByPatientId(patientId),
-                Prescriptions = _consultation.GetPrescriptionsByPatientId(patientId)
-            };
-
+            var vm = _patient.GetHistory(id, page);
+            
             return View(vm);
         }
       
+        public IActionResult SelectPatient(
+            string patientId,
+            string returnTo,
+            int? doctorId,
+            DateTime? appointmentDate,
+            int? slotId,
+            string? slotTime)
+        {
+            switch (returnTo)
+            {
+                case "AppointmentBooking":
 
+                    return RedirectToAction(
+                        "Book",
+                        "AppointmentBooking",
+                        new
+                        {
+                            doctorId,
+                            appointmentDate,
+                            slotId,
+                            slotTime,
+                            patientId
+                        });
+
+            /*    case "Consultation":
+
+                    return RedirectToAction(
+                        "PatientVisits",
+                        "Consultation",
+                        new
+                        {
+                            patientId
+                        }); */
+
+                case "Billing":
+
+                    return RedirectToAction(
+                        "SearchByPatient",
+                        "Billing",
+                        new
+                        {
+                            patientId
+                        });
+
+                case "PatientHistory":
+
+                    return RedirectToAction(
+                        "History",
+                        "Patient",
+                        new
+                        {
+                            patientId
+                        });
+
+                default:
+                    return RedirectToAction("Index", "Patient");
+            }
+        }
     }
 
 }

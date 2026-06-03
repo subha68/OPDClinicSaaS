@@ -113,9 +113,10 @@ namespace DAL
             using (var conn = _db.GetConnection())
             {
                 string query = @"
-                    SELECT MedicineName, Dosage, Frequency, Duration, Instructions
-                    FROM PharmacologyAdvices
-                    WHERE ConsultationId = @ConsultationId AND AppointmentId = @AppointmentId;";
+                    SELECT ph.*, a.PatientId
+                    FROM PharmacologyAdvices ph
+                    INNER JOIN Appointments a ON ph.AppointmentId = a.AppointmentId
+                    WHERE ph.ConsultationId = @ConsultationId AND ph.AppointmentId = @AppointmentId;";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@ConsultationId", consultationId);
@@ -128,6 +129,10 @@ namespace DAL
                     {
                         var advice = new PharmacologyAdvice
                         {
+                            PrescriptionId = Convert.ToInt32(reader["PrescriptionId"]),
+                            ConsultationId = Convert.ToInt32(reader["ConsultationId"]),
+                            AppointmentId = Convert.ToInt32(reader["AppointmentId"]),
+                            PatientId = Convert.ToInt32(reader["PatientId"]),
                             MedicineName = reader["MedicineName"].ToString(),
                             Dosage = reader["Dosage"].ToString(),
                             Frequency = reader["Frequency"].ToString(),
@@ -147,9 +152,10 @@ namespace DAL
             using (var conn = _db.GetConnection())
             {
                 string query = @"
-                    SELECT MedicineName, Dosage, Frequency, Duration, Instructions
-                    FROM PharmacologyAdvices
-                    WHERE ConsultationId = @ConsultationId AND AppointmentId = @AppointmentId;";
+                    SELECT ph.*, a.PatientId
+                    FROM PharmacologyAdvices ph
+                    INNER JOIN Appointments a ON ph.AppointmentId = a.AppointmentId
+                    WHERE ph.ConsultationId = @ConsultationId AND ph.AppointmentId = @AppointmentId;";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@ConsultationId", consultationId);
@@ -165,6 +171,7 @@ namespace DAL
                             MedicineName = reader["MedicineName"].ToString(),
                             Dosage = reader["Dosage"].ToString(),
                             Frequency = reader["Frequency"].ToString(),
+                            PatientId = Convert.ToInt32(reader["PatientId"]),
                             Duration = reader["Duration"].ToString(),
                             Instructions = reader["Instructions"].ToString()
                         };
@@ -173,6 +180,46 @@ namespace DAL
             }
 
             return null; // Not found
+        }
+
+        public List<PharmacologyAdvice> ListByPatient(int patientId)
+        {
+            var list = new List<PharmacologyAdvice>();
+
+            using (var conn = _db.GetConnection())
+            {
+                string query = @"
+                    SELECT ph.*, a.PatientId
+                    FROM PharmacologyAdvices ph
+                    INNER JOIN Appointments a ON ph.AppointmentId = a.AppointmentId
+                    WHERE a.PatientId = @PatientId;";
+
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@PatientId", patientId);
+
+                conn.Open();
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var advice = new PharmacologyAdvice
+                        {
+                            PrescriptionId = Convert.ToInt32(reader["PrescriptionId"]),
+                            ConsultationId = Convert.ToInt32(reader["ConsultationId"]),
+                            AppointmentId = Convert.ToInt32(reader["AppointmentId"]),
+                            PatientId = Convert.ToInt32(reader["PatientId"]),
+                            MedicineName = reader["MedicineName"].ToString(),
+                            Dosage = reader["Dosage"].ToString(),
+                            Frequency = reader["Frequency"].ToString(),
+                            Duration = reader["Duration"].ToString(),
+                            Instructions = reader["Instructions"].ToString()
+                        };
+                        list.Add(advice);
+                    }
+                }
+            }
+
+            return list;
         }
     }
 }

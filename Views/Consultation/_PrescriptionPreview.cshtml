@@ -1,0 +1,147 @@
+@model ViewModels.PrescriptionVM
+
+<div class="prescription-sheet">
+
+    <!-- HEADER -->
+    <table class="rx-header-table">
+        <tr>
+            <td class="left-panel">
+
+                <div class="doctor-line">
+                    <span class="doctor-name">@Model.DoctorName</span>
+                    <span class="doctor-reg">
+                        Reg No: @Model.RegistrationNumber
+                    </span>
+                </div>
+
+                <div class="doctor-qualification">
+                    @Model.Qualification
+                </div>
+
+                <div class="patient-block">
+                    <div class="patient-name">
+                        Patient ID: @Model.PatientId | Name: @Model.PatientName 
+                    </div>
+
+                    <div class="patient-meta">
+                        Age: @Model.Age |
+                        Gender: @Model.Gender |
+                        Ph: @Model.PatientPhoneNo
+                    </div>
+                </div>
+            </td>
+
+            <td class="right-panel">
+
+                <div class="clinic-name">
+                    @Model.ClinicName
+                </div>
+
+                <div class="clinic-address">
+                    @Model.ClinicAddress
+                </div>
+
+                <div class="visit-datetime">
+                    Date:
+                    @Model.VisitDateTime.ToString("dd/MM/yyyy")
+                    <br />
+                    Time:
+                    @Model.VisitDateTime.ToString("HH:mm")
+                </div>
+
+            </td>
+        </tr>
+    </table>
+
+    <hr class="soft-divider" />
+
+    <!-- BODY -->
+    <section>
+        <h5>Symptoms</h5>
+        <p>@Model.Symptoms</p>
+    </section>
+
+    <section>
+        <h5>Diagnosis</h5>
+        <p>@Model.Diagnosis</p>
+    </section>
+
+    <section>
+        <h5>Medicines</h5>
+
+        <table class="table table-bordered prescription-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Medicine</th>
+                    <th>Dosage</th>
+                    <th>Frequency</th>
+                    <th>Duration</th>
+                    <th>Instructions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int i = 1;
+                }
+
+                @foreach (var m in Model.Medicines)
+                {
+                    <tr>
+                        <td>@i</td>
+                        <td>@m.MedicineName</td>
+                        <td>@m.Dosage</td>
+                        <td>@m.Frequency</td>
+                        <td>@m.Duration</td>
+                        <td>@m.Instructions</td>
+                    </tr>
+
+                    i++;
+                }
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h5>Notes</h5>
+        <p>@Model.Notes</p>
+    </section>
+
+    <!-- SIGNATURE -->
+    <div class="signature-block">
+        ___________________________
+        <div class="signature-name">
+            @Model.DoctorName
+        </div>
+        <div class="signature-qualification">
+            @Model.Qualification
+        </div>
+    </div>
+
+    <hr class="soft-divider" />
+
+    <!-- FOOTER -->
+    <footer class="rx-footer">
+        This prescription is valid only with physician signature.
+        Follow dosage instructions carefully.
+        Contact your doctor immediately in case of any adverse reaction.
+    </footer>
+
+    <div class="print-buttons">
+
+        <a asp-controller="Consultation"
+        asp-action="Download"
+        asp-route-appointmentId="@Model.AppointmentId"
+        class="btn btn-success">
+            <i class="fa fa-download"></i>
+            Download PDF
+        </a>
+
+        <button onclick="window.print()"
+                class="btn btn-primary">
+            <i class="fa fa-print"></i>
+            Print
+        </button>
+
+    </div>
+</div>

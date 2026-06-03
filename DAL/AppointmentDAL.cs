@@ -124,7 +124,9 @@ namespace DAL
                         a.Status,
                         p.FirstName + ' ' + p.LastName as PatientName,
                         d.FirstName + ' ' + d.LastName as DoctorName,
-                        c.ClinicName
+                        c.Name as ClinicName,
+                        d.DepartmentId,
+                        t.Name as DepartmentName
                     FROM Appointments a
                     INNER JOIN Patients p
                         ON a.PatientId = p.PatientId
@@ -132,6 +134,8 @@ namespace DAL
                         ON a.DoctorId = d.DoctorId
                     INNER JOIN Clinics c
                         ON a.ClinicId = c.ClinicId
+                    INNER JOIN Departments t
+                        ON d.DepartmentId = t.DepartmentId
                     INNER JOIN Visits v
                         ON a.VisitId = v.VisitId";
 
@@ -152,7 +156,9 @@ namespace DAL
                                 PatientName = dr["PatientName"].ToString(),
                                 DoctorName = dr["DoctorName"].ToString(),
                                 ClinicName = dr["ClinicName"].ToString(),
-                                VisitId = Convert.ToInt32(dr["VisitId"])
+                                VisitId = Convert.ToInt32(dr["VisitId"]),
+                                DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
+                                DepartmentName = dr["DepartmentName"].ToString()
                             });
                         }
                     }
@@ -177,7 +183,9 @@ namespace DAL
                         a.Status,
                         p.FirstName + ' ' + p.LastName as PatientName,
                         d.FirstName + ' ' + d.LastName as DoctorName,
-                        c.ClinicName
+                        c.Name as ClinicName,
+                        d.DepartmentId,
+                        t.Name as DepartmentName
                     FROM Appointments a
                     INNER JOIN Patients p
                         ON a.PatientId = p.PatientId
@@ -187,6 +195,8 @@ namespace DAL
                         ON a.ClinicId = c.ClinicId
                     INNER JOIN Visits v
                         ON a.VisitId = v.VisitId
+                    INNER JOIN Departments t
+                        ON d.DepartmentId = t.DepartmentId
                     WHERE a.AppointmentId = @AppointmentId";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
@@ -208,7 +218,9 @@ namespace DAL
                                 PatientName = dr["PatientName"].ToString(),
                                 DoctorName = dr["DoctorName"].ToString(),
                                 ClinicName = dr["ClinicName"].ToString(),
-                                VisitId = Convert.ToInt32(dr["VisitId"])
+                                VisitId = Convert.ToInt32(dr["VisitId"]),
+                                DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
+                                DepartmentName = dr["DepartmentName"].ToString()                                
                             };
                         }
                     }
@@ -233,7 +245,9 @@ namespace DAL
                     a.Status,
                     p.FirstName + ' ' + p.LastName as PatientName,
                     d.FirstName + ' ' + d.LastName as DoctorName,
-                    c.Name as ClinicName
+                    c.Name as ClinicName,
+                    d.DepartmentId,
+                    t.Name as DepartmentName
                 FROM Appointments a
                 INNER JOIN Patients p
                     ON a.PatientId = p.PatientId
@@ -243,6 +257,8 @@ namespace DAL
                     ON a.ClinicId = c.ClinicId
                 INNER JOIN Visits v
                     ON a.VisitId = v.VisitId
+                INNER JOIN Departments t
+                    ON d.DepartmentId = t.DepartmentId
                 WHERE a.DoctorId = @DoctorId
                     AND CAST(a.AppointmentDate as date)=CAST(GETDATE() as date)
                 ORDER BY a.SlotTime";
@@ -266,14 +282,16 @@ namespace DAL
                     PatientName = dr["PatientName"].ToString(),
                     DoctorName = dr["DoctorName"].ToString(),
                     ClinicName = dr["ClinicName"].ToString(),
-                    VisitId = Convert.ToInt32(dr["VisitId"])
+                    VisitId = Convert.ToInt32(dr["VisitId"]),
+                    DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
+                    DepartmentName = dr["DepartmentName"].ToString()
                 });
             }
 
             return list;
         }
 
-        public List<Appointment> GetByPatientId(int patientId)
+        public List<Appointment> ListByPatient(int patientId)
         {
             var list = new List<Appointment>();
 
@@ -287,8 +305,10 @@ namespace DAL
                     a.Status,
                     p.FirstName + ' ' + p.LastName as PatientName,
                     d.FirstName + ' ' + d.LastName as DoctorName,
-                    c.ClinicName,
-                    v.VisitId
+                    c.Name as ClinicName,
+                    v.VisitId,
+                    d.DepartmentId,
+                    t.Name as DepartmentName
                 FROM Appointments a
                 INNER JOIN Patients p
                     ON a.PatientId = p.PatientId
@@ -298,6 +318,8 @@ namespace DAL
                     ON a.ClinicId = c.ClinicId
                 INNER JOIN Visits v
                     ON a.VisitId = v.VisitId
+                INNER JOIN Departments t
+                    ON d.DepartmentId = t.DepartmentId
                 WHERE a.PatientId = @PatientId
                 ORDER BY a.AppointmentDate DESC, a.SlotTime DESC";
 
@@ -320,7 +342,9 @@ namespace DAL
                     PatientName = dr["PatientName"].ToString(),
                     DoctorName = dr["DoctorName"].ToString(),
                     ClinicName = dr["ClinicName"].ToString(),
-                    VisitId = Convert.ToInt32(dr["VisitId"])
+                    VisitId = Convert.ToInt32(dr["VisitId"]),
+                    DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
+                    DepartmentName = dr["DepartmentName"].ToString()
                 });
             }
 

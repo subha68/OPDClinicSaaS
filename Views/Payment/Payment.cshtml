@@ -59,7 +59,7 @@
 @await Html.PartialAsync("_BackButton", new ViewModels.BackButtonVM
     {
         Controller = "Billing",
-        Action = "SearchByPatientId",
+        Action = "SearchByPatient",
         PatientId = @Model.Bill.PatientId,
         Text = "Back to Bills"
     })

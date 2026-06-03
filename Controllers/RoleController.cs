@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using BLL;
 using Models;
 using Filters;
+using Helpers;
 
 namespace Controllers
 {
@@ -9,18 +10,14 @@ namespace Controllers
     public class RoleController : Controller
     {
         private readonly RoleService _role;
-        private readonly SessionHelper _session;
 
-        public RoleController(IConfiguration config, SessionHelper session)
+        public RoleController(RoleService role)
         {
-            _role = new RoleService(config);
-            _session = session;
+            _role = role;
         }
 
         public IActionResult Index()
         {
-            int? roleId = _session.RoleId;
-            string roleName = _session.RoleName;
             var roles = _role.List();
             return View(roles);
         }

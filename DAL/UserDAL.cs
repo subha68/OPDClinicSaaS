@@ -12,7 +12,8 @@ namespace DAL
         {
             _db = new DbHelper(configuration);
         }
-        public User ValidateUser(string username, string password, int? clinicId)
+
+        public User GetUserByName(string username, int? clinicId)
         {           
             using (SqlConnection conn = _db.GetConnection())
             {
@@ -23,7 +24,6 @@ namespace DAL
                                 INNER JOIN Roles r
                                 ON u.RoleId = r.RoleId
                                 WHERE u.Username = @Username
-                                AND u.PasswordHash = @Password
                                 AND
                                 (
                                     r.RoleName = 'SuperAdmin'
@@ -37,7 +37,6 @@ namespace DAL
 
                 SqlCommand cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@Username", username);
-                cmd.Parameters.AddWithValue("@Password", password);
                 cmd.Parameters.AddWithValue("@ClinicId", clinicId.HasValue ? clinicId : 0);
 
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -50,6 +49,7 @@ namespace DAL
                         RoleId = (int)reader["RoleId"],
                         ClinicId = reader["ClinicId"] != DBNull.Value ? (int?)reader["ClinicId"] : null,
                         Username = reader["Username"] != DBNull.Value ? reader["Username"].ToString() : null,
+                        PasswordHash = reader["PasswordHash"] != DBNull.Value ? reader["PasswordHash"].ToString() : null,
                         FirstName = reader["FirstName"] != DBNull.Value ? reader["FirstName"].ToString() : null,
                         LastName = reader["LastName"] != DBNull.Value ? reader["LastName"].ToString() : null,
                         Email = reader["Email"] != DBNull.Value ? reader["Email"].ToString() : null,
@@ -171,11 +171,35 @@ namespace DAL
             }
             return null;
         }
+
+        public int GetUserIdByName(string username)
+        {
+            using (SqlConnection conn = _db.GetConnection())
+            {
+                string query = @"SELECT UserId 
+                                  FROM Users
+                                  WHERE Username = @username";
+
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@username", username);
+
+                conn.Open();
+                var reader = cmd.ExecuteReader();
+
+                if (reader.Read())
+                {
+                    return (int)reader["UserId"];
+                }
+            }
+
+            return 0;
+        }
+
         public int GetUserCountByName(string username)
         {
             using (SqlConnection con = _db.GetConnection())
             {
-                string query = "SELECT COUNT(*) FROM [User] WHERE Username=@Username";
+                string query = "SELECT COUNT(*) AS UserCount FROM Users WHERE Username=@Username";
 
                 SqlCommand cmd = new SqlCommand(query, con);
 
@@ -223,7 +247,7 @@ namespace DAL
             return list;
         }
 
-        public List<User> GetAllByClinic(int clinicId)
+        public List<User> ListByClinic(int clinicId)
         {
             var list = new List<User>();
 

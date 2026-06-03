@@ -1,0 +1,30 @@
+@model Models.Patient
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    bool isEdit =
+        Model != null &&
+        Model.PatientId > 0;
+
+    ViewBag.PageTitle = isEdit ? "Edit Patient" : "Create Patient";
+
+    ViewBag.Fields = new[]
+    {
+        new { Name="PatientId", Label="Patient ID", Type="text", Col="6"},
+        new { Name="FirstName", Label="First Name", Type="text", Col="6"},
+        new { Name="LastName", Label="Last Name", Type="text", Col="6"},
+        new { Name="Gender", Label="Gender", Type="text", Col="6"},
+        new { Name="DOB", Label="Date of Birth", Type="date", Col="6"},
+        new { Name="Address", Label="Address", Type="text", Col="6"},
+        new { Name="Phone", Label="Phone", Type="text", Col="6"}
+    };
+
+    ViewBag.Dropdowns = new Dictionary<string, object>()
+    {
+    };
+
+    ViewBag.KeyField = "PatientId";
+}
+
+@await Html.PartialAsync("_CrudForm", Model)

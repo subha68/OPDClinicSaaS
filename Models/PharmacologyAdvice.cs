@@ -8,6 +8,7 @@ namespace Models
         public int PrescriptionId { get; set; }
         public int ConsultationId { get; set; }
         public int AppointmentId { get; set; }
+        public int PatientId { get; set; }
 
         public string? MedicineName { get; set; }
         public string? Dosage { get; set; }

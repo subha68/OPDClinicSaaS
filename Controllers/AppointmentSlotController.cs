@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using DAL;
 using BLL;
+using Helpers;
 
 namespace Controllers   
 {
@@ -9,8 +10,7 @@ namespace Controllers
     {
         private readonly AppointmentSlotService _slot;
 
-        public AppointmentSlotController(
-            AppointmentSlotService slot)
+        public AppointmentSlotController(AppointmentSlotService slot)
         {
             _slot = slot;
         }

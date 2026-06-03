@@ -7,33 +7,36 @@ using Models;
 using ViewModels;
 using Filters;
 using Documents;
+using Helpers;
 
 namespace Controllers
 {
-    [AuthorizeRole(4)] // Doctor
+    //[AuthorizeRole(4)] // Doctor
 
     public class ConsultationController : Controller
     {
-        private readonly SessionHelper _session;
         private AppointmentService _appointment;
         private ConsultationService _consultation;
         private DoctorService _doctor;
         private PharmacologyService _pharmacology;
 
-        public ConsultationController(IConfiguration config, SessionHelper session)
+        public ConsultationController(AppointmentService appointment, 
+                                        ConsultationService consultation, 
+                                        DoctorService doctor, 
+                                        PharmacologyService pharmacology)
         {
-            _appointment = new AppointmentService(config);
-            _session = session;
-            _doctor = new DoctorService(config);
-            _pharmacology = new PharmacologyService(config);
-            _consultation = new ConsultationService(config);
+            _appointment = appointment;
+            _doctor = doctor;
+            _pharmacology = pharmacology;
+            _consultation = consultation;
         }
 
         public IActionResult Index()
         {
-            int doctorId = _doctor.GetDoctorIdByUserId(_session.UserId);
+            List<Appointment> appointments;
 
-            var appointments = _appointment.GetTodaysAppointments(doctorId);
+            int doctorId = _doctor.GetDoctorIdByUserId(_doctor.UserId);
+            appointments = _appointment.GetTodaysAppointments(doctorId);
 
             return View(appointments);
         }

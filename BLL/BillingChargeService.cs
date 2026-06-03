@@ -7,15 +7,16 @@ namespace BLL
     {
         private readonly BillingChargeDAL _billingChargeDAL;
 
-        public BillingChargeService(IConfiguration config)
+        public BillingChargeService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
+                                : base(config, httpContextAccessor)
         {
             _billingChargeDAL = new BillingChargeDAL(config);
             _dal = _billingChargeDAL;
         }
 
-        public List<BillingCharge> ListByClinic(int clinicId)
+        public override List<BillingCharge> List()
         {
-            return _billingChargeDAL.GetAllByClinic(clinicId);
+            return _billingChargeDAL.GetAllByClinic(ClinicId);
         }
 
     }

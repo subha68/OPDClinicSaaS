@@ -2,24 +2,22 @@ using Microsoft.AspNetCore.Mvc;
 using BLL;
 using Models;
 using Filters;
+using Helpers;
 
 namespace Controllers
 {
     public class BillingChargeController : Controller
     {
         private readonly BillingChargeService _billingCharge;
-        private readonly SessionHelper _session;
 
-        public BillingChargeController(IConfiguration config, SessionHelper session)
+        public BillingChargeController(BillingChargeService billingCharge)
         {
-            _billingCharge = new BillingChargeService(config);
-            _session = session;
+            _billingCharge = billingCharge;
         }
 
         public IActionResult Index()
         {
-            int? clinicId = _session.ClinicId;
-            var charges = _billingCharge.ListByClinic(clinicId.Value);
+            var charges = _billingCharge.List();
             return View(charges);
         }
 
@@ -35,7 +33,7 @@ namespace Controllers
         [HttpPost]
         public IActionResult Create(BillingCharge billingCharge)
         {
-            billingCharge.ClinicId = _session.ClinicId;
+            billingCharge.ClinicId = _billingCharge.ClinicId;
             
             if (billingCharge == null)
             {

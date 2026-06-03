@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using QuestPDF.Infrastructure;
 using BLL;
 using DAL;
+using Helpers;
 
 QuestPDF.Settings.License = LicenseType.Community;
 
@@ -35,20 +36,28 @@ builder.Services.Configure<CookiePolicyOptions>(options =>
     options.MinimumSameSitePolicy = SameSiteMode.Lax;
 });
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<SessionHelper>();
 builder.Services.AddScoped<UserDAL>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ClinicDAL>();
 builder.Services.AddScoped<ClinicService>();
 builder.Services.AddScoped<RoleDAL>();
 builder.Services.AddScoped<RoleService>();
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<SessionHelper>();
 builder.Services.AddScoped<DepartmentDAL>();
 builder.Services.AddScoped<DepartmentService>();
 builder.Services.AddScoped<DoctorDAL>();
 builder.Services.AddScoped<DoctorService>();
+builder.Services.AddScoped<DoctorScheduleDAL>();
+builder.Services.AddScoped<DoctorScheduleService>();
+builder.Services.AddScoped<FeatureDAL>();
+builder.Services.AddScoped<FeatureService>();
 builder.Services.AddScoped<MenuDAL>();
 builder.Services.AddScoped<MenuService>();
+builder.Services.AddScoped<PatientDAL>();
+builder.Services.AddScoped<PatientService>();
+builder.Services.AddScoped<PharmacologyDAL>();
+builder.Services.AddScoped<PharmacologyService>();
 builder.Services.AddScoped<AppointmentSlotDAL>();
 builder.Services.AddScoped<AppointmentSlotService>();
 builder.Services.AddScoped<DoctorScheduleDAL>();
@@ -56,6 +65,16 @@ builder.Services.AddScoped<DoctorScheduleService>();
 builder.Services.AddScoped<AppointmentDAL>();
 builder.Services.AddScoped<AppointmentService>();
 builder.Services.AddScoped<ConsultationDAL>();
+builder.Services.AddScoped<ConsultationService>();
+builder.Services.AddScoped<BillDAL>();
+builder.Services.AddScoped<BillLineDAL>();
+builder.Services.AddScoped<BillService>();
+builder.Services.AddScoped<PaymentDAL>();
+builder.Services.AddScoped<PaymentService>();
+builder.Services.AddScoped<BillingChargeDAL>();
+builder.Services.AddScoped<BillingChargeService>();
+builder.Services.AddScoped<VisitDAL>();
+builder.Services.AddScoped<VisitService>();
 
 var app = builder.Build();
 

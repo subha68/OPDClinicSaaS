@@ -11,7 +11,8 @@ namespace BLL
         private readonly DoctorScheduleDAL _scheduleDAL;
         private readonly AppointmentSlotDAL _slotDAL;
 
-        public DoctorScheduleService(IConfiguration config)
+        public DoctorScheduleService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
+                                : base(config, httpContextAccessor)
         {
             _scheduleDAL = new DoctorScheduleDAL(config);
             _slotDAL = new AppointmentSlotDAL(config);
@@ -20,7 +21,7 @@ namespace BLL
 
         public override List<DoctorScheduleVM> List()
         {
-            return _scheduleDAL.GetAllDoctorSchedulesByClinic(clinicId);
+            return _scheduleDAL.GetAllDoctorSchedulesByClinic(ClinicId);
         }
 
         public List<DoctorScheduleVM> GetByDoctor(int doctorId)

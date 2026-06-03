@@ -7,7 +7,8 @@ namespace BLL
     {
         private readonly FeatureDAL _featureDAL;
 
-        public FeatureService(IConfiguration config)
+        public FeatureService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
+                                : base(config, httpContextAccessor)
         {
             _featureDAL = new FeatureDAL(config);
             _dal = _featureDAL;

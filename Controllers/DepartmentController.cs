@@ -5,6 +5,7 @@ using BLL;
 using Models;
 using ViewModels;
 using Filters;
+using Helpers;
 
 namespace Controllers
 {
@@ -12,21 +13,18 @@ namespace Controllers
 
     public class DepartmentController : Controller
     {
-        private readonly SessionHelper _session;
         private readonly DepartmentService _department;
         private readonly ClinicService _clinic;
 
-
-        public DepartmentController(IConfiguration config, SessionHelper session)
+        public DepartmentController(DepartmentService department, 
+                                    ClinicService clinic)
         {
-            _department = new DepartmentService(config);
-            _clinic = new ClinicService(config);
-            _session = session;
+            _department = department;
+            _clinic = clinic;
         }
 
         public ActionResult Index()
         {
-            _department.clinicId = _session.ClinicId;
             var list = _department.List();
             return View(list);
         }
@@ -34,7 +32,7 @@ namespace Controllers
         public ActionResult Create()
         {
             var model = new Department();
-            model.ClinicId = _session.ClinicId;
+            model.ClinicId = _clinic.ClinicId;
             model.ClinicName = _clinic.Get(model.ClinicId).Name;
             return View(model);
         }

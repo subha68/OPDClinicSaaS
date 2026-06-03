@@ -8,7 +8,8 @@ namespace BLL
     {
         private readonly PharmacologyDAL _pharmacologyDAL;
 
-        public PharmacologyService(IConfiguration config)
+        public PharmacologyService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
+                                : base(config, httpContextAccessor)
         {
             _pharmacologyDAL = new PharmacologyDAL(config);
             _dal = _pharmacologyDAL;

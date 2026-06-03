@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using BLL;
 using Models;
 using ViewModels;
+using Helpers;
 
 namespace Controllers
 {
@@ -11,22 +12,17 @@ namespace Controllers
         private readonly UserService _user;
         private readonly ClinicService _clinic;
         private readonly RoleService _role;
-        private readonly SessionHelper _session;
 
-        public UserController(UserService userService, ClinicService clinicService, RoleService roleService, SessionHelper session)
+        public UserController(UserService user, ClinicService clinic, RoleService role)
         {
-            _user = userService;
-            _clinic = clinicService;
-            _role = roleService;
-            _session = session;
-
+            _user = user;
+            _clinic = clinic;
+            _role = role;
         }
 
         public IActionResult Index()
         {
-            int? clinicId = _session.ClinicId;
-            string roleName = _session.RoleName;
-            var users = roleName == "SuperAdmin" ? _user.List() : _user.ListByClinic(clinicId.Value);
+            var users = _user.RoleName == "SuperAdmin" ? _user.List() : _user.ListByClinic();
 
             return View(users);
         }
@@ -135,9 +131,7 @@ namespace Controllers
 
         private List<SelectListItem> GetClinics()
         {
-            int? clinicId = _session.ClinicId;
-            string roleName = _session.RoleName;
-            var clinics = roleName == "SuperAdmin" ? _clinic.List() : new List<Clinic> { _clinic.Get(clinicId.Value) };
+            var clinics = _user.RoleName == "SuperAdmin" ? _clinic.List() : new List<Clinic> { _clinic.Get(_user.ClinicId) };
             
             return clinics.Select(c => new SelectListItem
                 {
