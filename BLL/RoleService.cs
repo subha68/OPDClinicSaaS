@@ -8,7 +8,7 @@ namespace BLL
         private readonly RoleDAL _roleDAL;
 
         public RoleService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(config, httpContextAccessor)
+                                : base(httpContextAccessor)
         {
             _roleDAL = new RoleDAL(config);
             _dal = _roleDAL;

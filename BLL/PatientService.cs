@@ -17,7 +17,7 @@ namespace BLL
         private readonly PharmacologyDAL _pharmacologyDAL;
 
         public PatientService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(config, httpContextAccessor)
+                                : base(httpContextAccessor)
         {
             _patientDAL = new PatientDAL(config);
             _visitDAL = new VisitDAL(config);

@@ -13,7 +13,7 @@ namespace BLL
         private readonly AppointmentSlotDAL _slotDAL;
 
         public AppointmentService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(config, httpContextAccessor)
+                                : base(httpContextAccessor)
         {
             _appointmentDAL = new AppointmentDAL(config);
             _visitDAL = new VisitDAL(config);

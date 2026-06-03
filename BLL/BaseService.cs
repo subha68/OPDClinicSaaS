@@ -15,7 +15,7 @@ namespace BLL
         {
         }
 
-        protected BaseService(IConfiguration config, IHttpContextAccessor httpContextAccessor)
+        protected BaseService(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
             _session = new SessionHelper(_httpContextAccessor);

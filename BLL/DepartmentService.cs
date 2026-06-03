@@ -7,7 +7,7 @@ namespace BLL
     {
         private readonly DepartmentDAL _departmentDAL;
         public DepartmentService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(config, httpContextAccessor)
+                                : base(httpContextAccessor)
         {
             _departmentDAL = new DepartmentDAL(config);
             _dal = _departmentDAL;

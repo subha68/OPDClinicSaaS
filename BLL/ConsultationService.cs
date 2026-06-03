@@ -11,7 +11,7 @@ namespace BLL
         private readonly ConsultationDAL _consultationDAL;
 
         public ConsultationService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(config, httpContextAccessor)
+                                : base(httpContextAccessor)
         {
             _consultationDAL = new ConsultationDAL(config);
             _dal = _consultationDAL;

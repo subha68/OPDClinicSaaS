@@ -8,7 +8,7 @@ namespace BLL
         private readonly VisitDAL _visitDAL;
 
         public VisitService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(config, httpContextAccessor)
+                                : base(httpContextAccessor)
         {
             _visitDAL = new VisitDAL(config);
             _dal = _visitDAL;

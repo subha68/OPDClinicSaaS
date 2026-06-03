@@ -11,7 +11,7 @@ namespace BLL
         private readonly UserService _user;
 
         public DoctorService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(config, httpContextAccessor)
+                                : base(httpContextAccessor)
         {
             _doctorDAL = new DoctorDAL(config);
             _roleDAL = new RoleDAL(config);

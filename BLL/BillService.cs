@@ -15,7 +15,7 @@ namespace BLL
         private readonly ClinicDAL _clinicDAL;
 
         public BillService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(config, httpContextAccessor)
+                                : base(httpContextAccessor)
         {
             _billDAL = new BillDAL(config);
             _billLineDAL = new BillLineDAL(config);

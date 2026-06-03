@@ -16,7 +16,7 @@ namespace BLL
         private readonly FeatureDAL _featureDAL;
 
         public UserService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                            : base(config, httpContextAccessor)
+                            : base(httpContextAccessor)
         {
             _userDAL = new UserDAL(config);
             _roleDAL = new RoleDAL(config);

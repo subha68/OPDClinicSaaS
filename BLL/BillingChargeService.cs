@@ -8,7 +8,7 @@ namespace BLL
         private readonly BillingChargeDAL _billingChargeDAL;
 
         public BillingChargeService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(config, httpContextAccessor)
+                                : base(httpContextAccessor)
         {
             _billingChargeDAL = new BillingChargeDAL(config);
             _dal = _billingChargeDAL;

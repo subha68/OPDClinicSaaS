@@ -11,7 +11,7 @@ namespace BLL
         private readonly VisitDAL _visitDAL;
 
         public PaymentService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(config, httpContextAccessor)
+                                : base(httpContextAccessor)
         {
             _paymentDAL = new PaymentDAL(config);
             _billDAL = new BillDAL(config);

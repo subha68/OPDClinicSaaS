@@ -8,7 +8,7 @@ namespace BLL
         private readonly ClinicDAL _clinicDAL;
 
         public ClinicService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(config, httpContextAccessor)
+                                : base(httpContextAccessor)
         {
             _clinicDAL = new ClinicDAL(config);
             _dal = _clinicDAL;
