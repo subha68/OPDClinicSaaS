@@ -14,38 +14,29 @@ namespace DAL
             _db = new DbHelper(config);
         }
 
-        public int Add(Patient patient)
+        public int Add(Patient patient, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
+            string query = @"INSERT INTO Patients (FirstName, LastName, Phone, DOB, Gender, Address, ClinicId)
+                                VALUES (@first, @last, @phone, @dob, @gender, @address, @clinicId);
+                            SELECT SCOPE_IDENTITY();";
 
-                string query = @"INSERT INTO Patients (FirstName, LastName, Phone, DOB, Gender, Address, ClinicId)
-                                 VALUES (@first, @last, @phone, @dob, @gender, @address, @clinicId);
-                                SELECT SCOPE_IDENTITY();";
+            SqlCommand cmd = new SqlCommand(query, conn);
 
-                SqlCommand cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@first", string.IsNullOrWhiteSpace(patient.FirstName) ? DBNull.Value : (object)patient.FirstName);
+            cmd.Parameters.AddWithValue("@last", string.IsNullOrWhiteSpace(patient.LastName) ? DBNull.Value : (object)patient.LastName);
+            cmd.Parameters.AddWithValue("@phone", string.IsNullOrWhiteSpace(patient.Phone) ? DBNull.Value : (object)patient.Phone);
+            cmd.Parameters.AddWithValue("@dob", patient.DOB == DateTime.MinValue ? DBNull.Value : patient.DOB);
+            cmd.Parameters.AddWithValue("@gender", string.IsNullOrWhiteSpace(patient.Gender) ? DBNull.Value : (object)patient.Gender);
+            cmd.Parameters.AddWithValue("@address", string.IsNullOrWhiteSpace(patient.Address) ? DBNull.Value : (object)patient.Address);
 
-                cmd.Parameters.AddWithValue("@first", string.IsNullOrWhiteSpace(patient.FirstName) ? DBNull.Value : (object)patient.FirstName);
-                cmd.Parameters.AddWithValue("@last", string.IsNullOrWhiteSpace(patient.LastName) ? DBNull.Value : (object)patient.LastName);
-                cmd.Parameters.AddWithValue("@phone", string.IsNullOrWhiteSpace(patient.Phone) ? DBNull.Value : (object)patient.Phone);
-                cmd.Parameters.AddWithValue("@dob", patient.DOB == DateTime.MinValue ? DBNull.Value : patient.DOB);
-                cmd.Parameters.AddWithValue("@gender", string.IsNullOrWhiteSpace(patient.Gender) ? DBNull.Value : (object)patient.Gender);
-                cmd.Parameters.AddWithValue("@address", string.IsNullOrWhiteSpace(patient.Address) ? DBNull.Value : (object)patient.Address);
+            cmd.Parameters.AddWithValue("@clinicId", patient.ClinicId);
 
-                cmd.Parameters.AddWithValue("@clinicId", patient.ClinicId);
-
-                return Convert.ToInt32(cmd.ExecuteScalar());
-            }
+            return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
-        public bool Update(Patient patient)
+        public bool Update(Patient patient, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
-
-                string query = @"UPDATE Patients
+            string query = @"UPDATE Patients
                                 SET FirstName = @first,
                                     LastName = @last,
                                     Phone = @phone,
@@ -54,34 +45,28 @@ namespace DAL
                                     Address = @address
                                 WHERE PatientId = @id";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@first", string.IsNullOrWhiteSpace(patient.FirstName) ? DBNull.Value : (object)patient.FirstName);
-                cmd.Parameters.AddWithValue("@last", string.IsNullOrWhiteSpace(patient.LastName) ? DBNull.Value : (object)patient.LastName);
-                cmd.Parameters.AddWithValue("@phone", string.IsNullOrWhiteSpace(patient.Phone) ? DBNull.Value : (object)patient.Phone);
-                cmd.Parameters.AddWithValue("@dob", patient.DOB == DateTime.MinValue ? DBNull.Value : patient.DOB);
-                cmd.Parameters.AddWithValue("@gender", string.IsNullOrWhiteSpace(patient.Gender) ? DBNull.Value : (object)patient.Gender);
-                cmd.Parameters.AddWithValue("@address", string.IsNullOrWhiteSpace(patient.Address) ? DBNull.Value : (object)patient.Address);
-                cmd.Parameters.AddWithValue("@id", patient.PatientId);
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@first", string.IsNullOrWhiteSpace(patient.FirstName) ? DBNull.Value : (object)patient.FirstName);
+            cmd.Parameters.AddWithValue("@last", string.IsNullOrWhiteSpace(patient.LastName) ? DBNull.Value : (object)patient.LastName);
+            cmd.Parameters.AddWithValue("@phone", string.IsNullOrWhiteSpace(patient.Phone) ? DBNull.Value : (object)patient.Phone);
+            cmd.Parameters.AddWithValue("@dob", patient.DOB == DateTime.MinValue ? DBNull.Value : patient.DOB);
+            cmd.Parameters.AddWithValue("@gender", string.IsNullOrWhiteSpace(patient.Gender) ? DBNull.Value : (object)patient.Gender);
+            cmd.Parameters.AddWithValue("@address", string.IsNullOrWhiteSpace(patient.Address) ? DBNull.Value : (object)patient.Address);
+            cmd.Parameters.AddWithValue("@id", patient.PatientId);
 
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
-        public bool Delete(int id)
+        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
+            string query = @"DELETE FROM Patients WHERE PatientId = @id";
 
-                string query = @"DELETE FROM Patients WHERE PatientId = @id";
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@id", id);
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", id);
-
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
         public List<Patient> GetAll()

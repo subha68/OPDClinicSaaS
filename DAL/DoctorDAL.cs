@@ -14,117 +14,96 @@ namespace DAL
             _db = new DbHelper(config);
         }
 
-        public int Add(Doctor model)
+        public int Add(Doctor model, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection con = _db.GetConnection())
-            {
-                string query = @"INSERT INTO Doctors 
-                                (ClinicId, DepartmentId, FirstName, LastName, RegistrationNo, Qualification, UserId)
-                                VALUES
-                                (@ClinicId, @DepartmentId, @FirstName, @LastName, @RegNo, @Qualification, @UserId);
-                                SELECT SCOPE_IDENTITY();";
+            string query = @"INSERT INTO Doctors 
+                            (ClinicId, DepartmentId, FirstName, LastName, RegistrationNo, Qualification, UserId)
+                            VALUES
+                            (@ClinicId, @DepartmentId, @FirstName, @LastName, @RegNo, @Qualification, @UserId);
+                            SELECT SCOPE_IDENTITY();";
 
-                SqlCommand cmd = new SqlCommand(query, con);
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
 
-                cmd.Parameters.AddWithValue("@ClinicId", model.ClinicId);
-                cmd.Parameters.AddWithValue("@DepartmentId", model.DepartmentId);
-                cmd.Parameters.AddWithValue("@FirstName", model.FirstName);
-                cmd.Parameters.AddWithValue("@LastName", model.LastName ?? "");
-                cmd.Parameters.AddWithValue("@RegNo", model.RegistrationNo ?? "");
-                cmd.Parameters.AddWithValue("@Qualification", model.Qualification ?? "");
-                cmd.Parameters.AddWithValue("@UserId", model.UserId);
-        
-                con.Open();
-                return Convert.ToInt32(cmd.ExecuteScalar());
-            }
+            cmd.Parameters.AddWithValue("@ClinicId", model.ClinicId);
+            cmd.Parameters.AddWithValue("@DepartmentId", model.DepartmentId);
+            cmd.Parameters.AddWithValue("@FirstName", model.FirstName);
+            cmd.Parameters.AddWithValue("@LastName", model.LastName ?? "");
+            cmd.Parameters.AddWithValue("@RegNo", model.RegistrationNo ?? "");
+            cmd.Parameters.AddWithValue("@Qualification", model.Qualification ?? "");
+            cmd.Parameters.AddWithValue("@UserId", model.UserId);
+    
+            return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
-        public bool Update(Doctor model)
+        public bool Update(Doctor model, SqlConnection conn, SqlTransaction tran)
         {
             int rowsAffected_doctor = 0;
 
-            using (SqlConnection con = _db.GetConnection())
-            {
-                string query = @"UPDATE Doctors
-                                SET DepartmentId = @DepartmentId,
-                                    FirstName = @FirstName,
-                                    LastName = @LastName,
-                                    RegistrationNo = @RegNo,
-                                    Qualification = @Qualification
-                                WHERE DoctorId = @DoctorId";
+            string query = @"UPDATE Doctors
+                            SET DepartmentId = @DepartmentId,
+                                FirstName = @FirstName,
+                                LastName = @LastName,
+                                RegistrationNo = @RegNo,
+                                Qualification = @Qualification
+                            WHERE DoctorId = @DoctorId";
 
-                SqlCommand cmd = new SqlCommand(query, con);
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
 
-                cmd.Parameters.AddWithValue("@DepartmentId", model.DepartmentId);
-                cmd.Parameters.AddWithValue("@FirstName", model.FirstName);
-                cmd.Parameters.AddWithValue("@LastName", model.LastName ?? "");
-                cmd.Parameters.AddWithValue("@RegNo", model.RegistrationNo ?? "");
-                cmd.Parameters.AddWithValue("@Qualification", model.Qualification ?? "");
-                cmd.Parameters.AddWithValue("@DoctorId", model.DoctorId);
+            cmd.Parameters.AddWithValue("@DepartmentId", model.DepartmentId);
+            cmd.Parameters.AddWithValue("@FirstName", model.FirstName);
+            cmd.Parameters.AddWithValue("@LastName", model.LastName ?? "");
+            cmd.Parameters.AddWithValue("@RegNo", model.RegistrationNo ?? "");
+            cmd.Parameters.AddWithValue("@Qualification", model.Qualification ?? "");
+            cmd.Parameters.AddWithValue("@DoctorId", model.DoctorId);
 
-                con.Open();
-                rowsAffected_doctor = cmd.ExecuteNonQuery();
-            }
+            rowsAffected_doctor = cmd.ExecuteNonQuery();
 
             // Also update the associated User record's name fields
             int rowsAffected_user   = 0;
 
-            using (SqlConnection con = _db.GetConnection())
-            {   
-                string query = @"UPDATE Users
-                                SET FirstName = @FirstName,
-                                    LastName = @LastName,
-                                    Username = @Username,
-                                    PasswordHash = @PasswordHash,
-                                    Email = @Email,
-                                    Phone = @Phone
-                                WHERE UserId = @UserId";
+            string query2 = @"UPDATE Users
+                            SET FirstName = @FirstName,
+                                LastName = @LastName,
+                                Username = @Username,
+                                PasswordHash = @PasswordHash,
+                                Email = @Email,
+                                Phone = @Phone
+                            WHERE UserId = @UserId";
 
-                SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@FirstName", model.FirstName);
-                cmd.Parameters.AddWithValue("@LastName", model.LastName ?? "");
-                cmd.Parameters.AddWithValue("@Username", model.Username);
-                cmd.Parameters.AddWithValue("@PasswordHash", model.Password); 
-                cmd.Parameters.AddWithValue("@UserId", model.UserId);
-                cmd.Parameters.AddWithValue("@Email", model.Email ?? "");
-                cmd.Parameters.AddWithValue("@Phone", model.Phone ?? "");
+            SqlCommand cmd2 = new SqlCommand(query2, conn, tran);
+            cmd2.Parameters.AddWithValue("@FirstName", model.FirstName);
+            cmd2.Parameters.AddWithValue("@LastName", model.LastName ?? "");
+            cmd2.Parameters.AddWithValue("@Username", model.Username);
+            cmd2.Parameters.AddWithValue("@PasswordHash", model.Password);
+            cmd2.Parameters.AddWithValue("@UserId", model.UserId);
+            cmd2.Parameters.AddWithValue("@Email", model.Email ?? "");
+            cmd2.Parameters.AddWithValue("@Phone", model.Phone ?? "");
 
-                con.Open();
-                rowsAffected_user = cmd.ExecuteNonQuery();
-            }
+            rowsAffected_user = cmd2.ExecuteNonQuery();
 
-            return rowsAffected_user > 0 && rowsAffected_doctor > 0;
+            return rowsAffected_doctor > 0 && rowsAffected_user > 0;
         }
 
-        public bool Delete(int id)
+        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
         {
             int rowsAffected_doctor = 0;
             int userId = Get(id).UserId;
 
-            using (SqlConnection con = _db.GetConnection())
-            {
-                string query = @"DELETE FROM Doctors WHERE DoctorId = @DoctorId";
+            string query = @"DELETE FROM Doctors WHERE DoctorId = @DoctorId";
 
-                SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@DoctorId", id);
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@DoctorId", id);
 
-                con.Open();
-                rowsAffected_doctor = cmd.ExecuteNonQuery();
-            }
+            rowsAffected_doctor = cmd.ExecuteNonQuery();
 
             int rowsAffected_user = 0;
 
-            using (SqlConnection con = _db.GetConnection())
-            {
-                string query = @"DELETE FROM Users WHERE UserId = @UserId";
+            string query2 = @"DELETE FROM Users WHERE UserId = @UserId";
 
-                SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@UserId", id);
+            SqlCommand cmd2 = new SqlCommand(query2, conn, tran);
+            cmd2.Parameters.AddWithValue("@UserId", userId);
 
-                con.Open();
-                rowsAffected_user = cmd.ExecuteNonQuery();
-            }
-            
+            rowsAffected_user = cmd2.ExecuteNonQuery();
 
             return rowsAffected_doctor > 0 && rowsAffected_user > 0;
         }

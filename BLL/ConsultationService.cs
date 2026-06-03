@@ -11,7 +11,7 @@ namespace BLL
         private readonly ConsultationDAL _consultationDAL;
 
         public ConsultationService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(httpContextAccessor)
+                                : base(config, httpContextAccessor)
         {
             _consultationDAL = new ConsultationDAL(config);
             _dal = _consultationDAL;
@@ -24,7 +24,21 @@ namespace BLL
 
         public int SaveConsultation(Consultation model)
         {
-            return _dal.Add(model);
+            using var conn = _db.GetConnection();
+            conn.Open();
+            using var tran = conn.BeginTransaction();
+
+            try
+            {
+                int id = _dal.Add(model, conn, tran);
+                tran.Commit();
+                return id;
+            }
+            catch
+            {
+                tran.Rollback();
+                throw;
+            }
         }
 
         public PrescriptionVM GetPrescription(int appointmentId)

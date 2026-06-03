@@ -12,7 +12,7 @@ namespace BLL
         private readonly AppointmentSlotDAL _slotDAL;
 
         public DoctorScheduleService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(httpContextAccessor)
+                                : base(config, httpContextAccessor)
         {
             _scheduleDAL = new DoctorScheduleDAL(config);
             _slotDAL = new AppointmentSlotDAL(config);
@@ -32,7 +32,7 @@ namespace BLL
         /// Validates and saves doctor schedule.
         /// Handles both Insert and Update.
 
-        public override int Add(DoctorScheduleVM model)
+        public override int Create(DoctorScheduleVM model)
         {
             ValidateSchedule(model);
 
@@ -49,28 +49,40 @@ namespace BLL
                     "Schedule overlap detected for this doctor.");
             }
 
-            if (model.ScheduleId > 0)
+            using var conn = _db.GetConnection();
+            conn.Open();
+            using var tran = conn.BeginTransaction();
+            try
             {
-                bool updated = _dal.Update(model);
-
-                if (!updated)
+                if (model.ScheduleId > 0)
                 {
-                    throw new Exception("Unable to update schedule.");
+                    bool updated = _dal.Update(model, conn, tran);
+
+                    if (!updated)
+                    {
+                        throw new Exception("Unable to update schedule.");
+                    }
                 }
+                else
+                {
+                    int scheduleId = _dal.Add(model, conn, tran);
+
+                    if (scheduleId <= 0)
+                    {
+                        throw new Exception("Unable to save schedule.");
+                    }
+
+                    model.ScheduleId = scheduleId;
+                }
+
+                tran.Commit();
+                return model.ScheduleId;
             }
-            else
+            catch
             {
-                int scheduleId = _dal.Add(model);
-
-                if (scheduleId <= 0)
-                {
-                    throw new Exception("Unable to save schedule.");
-                }
-
-                model.ScheduleId = scheduleId;
+                tran.Rollback();
+                throw;
             }
-
-            return model.ScheduleId;
         }
 
         public void ValidateSchedule(DoctorScheduleVM model)
@@ -120,41 +132,48 @@ namespace BLL
             }
 
             // Optional advanced validation
-            TimeSpan totalDuration =
-                model.EndTime - model.StartTime;
+            TimeSpan totalDuration = model.EndTime - model.StartTime;
 
-            if (totalDuration.TotalMinutes <
-                model.SlotDurationMinutes)
+            if (totalDuration.TotalMinutes < model.SlotDurationMinutes)
             {
                 throw new Exception(
                     "Slot duration cannot exceed schedule duration.");
             }
         }
 
-        public override bool Delete(int scheduleId)
+        public override bool Remove(int scheduleId)
         {
             if (scheduleId <= 0)
             {
                 throw new Exception("Invalid schedule id.");
             }
 
-            bool deleted = _scheduleDAL.Delete(scheduleId);
-
-            if (!deleted)
+            using var conn = _db.GetConnection();
+            conn.Open();
+            using var tran = conn.BeginTransaction();
+            try
             {
-                throw new Exception("Unable to delete schedule.");
-            }
+                bool deleted = _dal.Delete(scheduleId, conn, tran);
 
-            return deleted;
+                if (!deleted)
+                {
+                    throw new Exception("Unable to delete schedule.");
+                }
+
+                tran.Commit();
+                return deleted;
+            }
+            catch
+            {
+                tran.Rollback();
+                throw;
+            }
         }
 
         /// Generates appointment slots
         /// between given date range.
 
-        public void GenerateSlots(
-            int doctorId,
-            DateTime fromDate,
-            DateTime toDate)
+        public void GenerateSlots(int doctorId, DateTime fromDate, DateTime toDate)
         {
             if (doctorId <= 0)
             {
@@ -167,8 +186,7 @@ namespace BLL
                     "From date cannot be greater than To date.");
             }
 
-            List<DoctorScheduleVM> schedules =
-                _scheduleDAL.GetByDoctor(doctorId);
+            List<DoctorScheduleVM> schedules = _scheduleDAL.GetByDoctor(doctorId);
 
             if (schedules == null || schedules.Count == 0)
             {
@@ -197,58 +215,60 @@ namespace BLL
             }
         }
 
-        private void GenerateSlotsForDay(
-            DoctorScheduleVM schedule,
-            DateTime slotDate)
+        private void GenerateSlotsForDay(DoctorScheduleVM schedule, DateTime slotDate)
         {
-            DateTime startDateTime =
-                slotDate.Date + schedule.StartTime;
+            DateTime startDateTime = slotDate.Date + schedule.StartTime;
 
-            DateTime endDateTime =
-                slotDate.Date + schedule.EndTime;
+            DateTime endDateTime = slotDate.Date + schedule.EndTime;
 
             DateTime currentSlotStart = startDateTime;
 
             while (currentSlotStart < endDateTime)
             {
-                DateTime currentSlotEnd =
-                    currentSlotStart.AddMinutes(
-                        schedule.SlotDurationMinutes);
+                DateTime currentSlotEnd = currentSlotStart.AddMinutes(schedule.SlotDurationMinutes);
 
                 // Prevent overflow beyond schedule end
                 if (currentSlotEnd > endDateTime)
                     break;
 
-                bool slotExists =
-                    _slotDAL.ExistsSlot(
-                        schedule.DoctorId,
-                        currentSlotStart,
-                        currentSlotEnd);
-
-                if (!slotExists)
+                using var conn = _db.GetConnection();
+                conn.Open();
+                using var tran = conn.BeginTransaction();
+                try
                 {
-                    AppointmentSlot slot =
-                        new AppointmentSlot
-                        {
-                            DoctorId = schedule.DoctorId,
-                            ClinicId = schedule.ClinicId,
+                    bool slotExists = _slotDAL.ExistsSlot(schedule.DoctorId, currentSlotStart, currentSlotEnd, conn, tran);
 
-                            SlotDate = slotDate.Date,
+                    if (!slotExists)
+                    {
+                        AppointmentSlot slot =
+                            new AppointmentSlot
+                            {
+                                DoctorId = schedule.DoctorId,
+                                ClinicId = schedule.ClinicId,
 
-                            StartDateTime = currentSlotStart,
-                            EndDateTime = currentSlotEnd,
+                                SlotDate = slotDate.Date,
 
-                            Capacity =
-                                schedule.MaxPatientsPerSlot,
+                                StartDateTime = currentSlotStart,
+                                EndDateTime = currentSlotEnd,
 
-                            BookedCount = 0,
+                                Capacity =
+                                    schedule.MaxPatientsPerSlot,
 
-                            IsBlocked = false,
+                                BookedCount = 0,
 
-                            CreatedOn = DateTime.Now
-                        };
+                                IsBlocked = false,
 
-                    _slotDAL.Add(slot);
+                                CreatedOn = DateTime.Now
+                            };
+
+                        int id = _slotDAL.Add(slot, conn, tran);
+                        tran.Commit();
+                    }
+                }
+                catch
+                {
+                    tran.Rollback();
+                    throw;
                 }
 
                 currentSlotStart = currentSlotEnd;

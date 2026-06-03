@@ -54,7 +54,7 @@ namespace Controllers
                 return View(billingCharge);
             }
 
-            _billingCharge.Add(billingCharge);
+            _billingCharge.Create(billingCharge);
 
             return RedirectToAction("Index");
         }
@@ -92,7 +92,7 @@ namespace Controllers
                 return View(billingCharge);
             }
 
-            _billingCharge.Update(billingCharge);
+            _billingCharge.Modify(billingCharge);
 
             return RedirectToAction("Index");
         }
@@ -100,7 +100,7 @@ namespace Controllers
         [HttpPost]
         public IActionResult Delete(int id)
         {
-            _billingCharge.Delete(id);
+            _billingCharge.Remove(id);
             return RedirectToAction("Index");
         }
     }

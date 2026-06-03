@@ -189,12 +189,10 @@ namespace DAL
             return slots;
         }
 
-        public int Add(AppointmentSlot model)
+        public int Add(AppointmentSlot model, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                string query = @"
-                    INSERT INTO AppointmentSlot
+            string query = @"
+                INSERT INTO AppointmentSlot
                     (
                         DoctorId,
                         ClinicId,
@@ -222,152 +220,94 @@ namespace DAL
                     SELECT SCOPE_IDENTITY();
                 ";
 
-                using (SqlCommand cmd =
-                    new SqlCommand(query, conn))
-                {
-                    cmd.Parameters.AddWithValue(
-                        "@DoctorId",
-                        model.DoctorId);
+            using (SqlCommand cmd = new SqlCommand(query, conn, tran))
+            {
+                cmd.Parameters.AddWithValue("@DoctorId", model.DoctorId);
+                cmd.Parameters.AddWithValue("@ClinicId", model.ClinicId);
+                cmd.Parameters.AddWithValue("@SlotDate", model.SlotDate.Date);
+                cmd.Parameters.AddWithValue("@StartDateTime", model.StartDateTime);
+                cmd.Parameters.AddWithValue("@EndDateTime", model.EndDateTime);
+                cmd.Parameters.AddWithValue("@Capacity", model.Capacity);
+                cmd.Parameters.AddWithValue("@BookedCount", model.BookedCount);
+                cmd.Parameters.AddWithValue("@IsBlocked", model.IsBlocked);
 
-                    cmd.Parameters.AddWithValue(
-                        "@ClinicId",
-                        model.ClinicId);
-
-                    cmd.Parameters.AddWithValue(
-                        "@SlotDate",
-                        model.SlotDate.Date);
-
-                    cmd.Parameters.AddWithValue(
-                        "@StartDateTime",
-                        model.StartDateTime);
-
-                    cmd.Parameters.AddWithValue(
-                        "@EndDateTime",
-                        model.EndDateTime);
-
-                    cmd.Parameters.AddWithValue(
-                        "@Capacity",
-                        model.Capacity);
-
-                    cmd.Parameters.AddWithValue(
-                        "@BookedCount",
-                        model.BookedCount);
-
-                    cmd.Parameters.AddWithValue(
-                        "@IsBlocked",
-                        model.IsBlocked);
-
-                    conn.Open();
-
-                    return Convert.ToInt32(
-                        cmd.ExecuteScalar());
-                }
+                return Convert.ToInt32(cmd.ExecuteScalar());
             }
         }
 
-        public bool Update(AppointmentSlot model)
+        public bool Update(AppointmentSlot model, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
+            string query = @"
+                UPDATE AppointmentSlot
+                SET
+                    Capacity = @Capacity,
+                    BookedCount = @BookedCount,
+                    IsBlocked = @IsBlocked
+                WHERE SlotId = @SlotId";
+
+            using (SqlCommand cmd = new SqlCommand(query, conn, tran))
             {
-                string query = @"
-                    UPDATE AppointmentSlot
-                    SET
-                        Capacity = @Capacity,
-                        BookedCount = @BookedCount,
-                        IsBlocked = @IsBlocked
-                    WHERE SlotId = @SlotId";
+                cmd.Parameters.AddWithValue(
+                    "@SlotId",
+                    model.SlotId);
 
-                using (SqlCommand cmd =
-                    new SqlCommand(query, conn))
-                {
-                    cmd.Parameters.AddWithValue(
-                        "@SlotId",
-                        model.SlotId);
+                cmd.Parameters.AddWithValue(
+                    "@Capacity",
+                    model.Capacity);
 
-                    cmd.Parameters.AddWithValue(
-                        "@Capacity",
-                        model.Capacity);
+                cmd.Parameters.AddWithValue(
+                    "@BookedCount",
+                    model.BookedCount);
 
-                    cmd.Parameters.AddWithValue(
-                        "@BookedCount",
-                        model.BookedCount);
+                cmd.Parameters.AddWithValue(
+                    "@IsBlocked",
+                    model.IsBlocked);
 
-                    cmd.Parameters.AddWithValue(
-                        "@IsBlocked",
-                        model.IsBlocked);
+                int rowsAffected = cmd.ExecuteNonQuery();
 
-                    conn.Open();
-
-                    int rowsAffected = cmd.ExecuteNonQuery();
-
-                    return rowsAffected > 0;
-                }
+                return rowsAffected > 0;
             }
         }
 
-        public bool Delete(int slotId)
+        public bool Delete(int slotId, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                string query = @"
-                    DELETE FROM AppointmentSlot
+            string query = @"
+                DELETE FROM AppointmentSlot
                     WHERE SlotId = @SlotId";
 
-                using (SqlCommand cmd =
-                    new SqlCommand(query, conn))
-                {
-                    cmd.Parameters.AddWithValue(
-                        "@SlotId",
-                        slotId);
+            using (SqlCommand cmd = new SqlCommand(query, conn, tran))
+            {
+                cmd.Parameters.AddWithValue(
+                    "@SlotId",
+                    slotId);
 
-                    conn.Open();
+                int rowsAffected = cmd.ExecuteNonQuery();
 
-                    int rowsAffected =
-                        cmd.ExecuteNonQuery();
-
-                    return rowsAffected > 0;
-                }
+                return rowsAffected > 0;
             }
         }
 
         /// Prevent duplicate slot generation.
 
-        public bool ExistsSlot(
-            int doctorId,
-            DateTime startDateTime,
-            DateTime endDateTime)
+        public bool ExistsSlot(int doctorId, DateTime startDateTime, DateTime endDateTime,
+                                SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
+            string query = @"
+                SELECT COUNT(*)
+                FROM AppointmentSlot
+                WHERE DoctorId = @DoctorId
+                AND StartDateTime = @StartDateTime
+                AND EndDateTime = @EndDateTime";
+
+            using (SqlCommand cmd = new SqlCommand(query, conn, tran))
             {
-                string query = @"
-                    SELECT COUNT(*)
-                    FROM AppointmentSlot
-                    WHERE DoctorId = @DoctorId
-                    AND StartDateTime = @StartDateTime
-                    AND EndDateTime = @EndDateTime";
+                cmd.Parameters.AddWithValue("@DoctorId", doctorId);
+                cmd.Parameters.AddWithValue("@StartDateTime", startDateTime);
+                cmd.Parameters.AddWithValue("@EndDateTime", endDateTime);
 
-                using (SqlCommand cmd =
-                    new SqlCommand(query, conn))
-                {
-                    cmd.Parameters.AddWithValue(
-                        "@DoctorId",
-                        doctorId);
+                int count = Convert.ToInt32(cmd.ExecuteScalar());
 
-                    cmd.Parameters.AddWithValue(
-                        "@StartDateTime",
-                        startDateTime);
-
-                    cmd.Parameters.AddWithValue(
-                        "@EndDateTime",
-                        endDateTime);
-
-                    conn.Open();
-
-                    int count = Convert.ToInt32(
-                        cmd.ExecuteScalar());
-
-                    return count > 0;
-                }
+                return count > 0;
             }
         }
 
@@ -382,8 +322,7 @@ namespace DAL
                     AND IsBlocked = 0
                     AND BookedCount < Capacity";
 
-                using (SqlCommand cmd =
-                    new SqlCommand(query, conn))
+                using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue(
                         "@SlotId",
@@ -399,35 +338,27 @@ namespace DAL
             }
         }
 
-        public bool IncrementBookedCount(int slotId)
+        public bool IncrementBookedCount(int slotId, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
+            string query = @"
+                UPDATE AppointmentSlot
+                SET BookedCount = BookedCount + 1
+                WHERE SlotId = @SlotId
+                AND BookedCount < Capacity";
+
+            using (SqlCommand cmd = new SqlCommand(query, conn, tran))
             {
-                string query = @"
-                    UPDATE AppointmentSlot
-                    SET BookedCount = BookedCount + 1
-                    WHERE SlotId = @SlotId
-                    AND BookedCount < Capacity";
+                cmd.Parameters.AddWithValue(
+                    "@SlotId",
+                    slotId);
 
-                using (SqlCommand cmd =
-                    new SqlCommand(query, conn))
-                {
-                    cmd.Parameters.AddWithValue(
-                        "@SlotId",
-                        slotId);
+                int rowsAffected = cmd.ExecuteNonQuery();
 
-                    conn.Open();
-
-                    int rowsAffected =
-                        cmd.ExecuteNonQuery();
-
-                    return rowsAffected > 0;
-                }
+                return rowsAffected > 0;
             }
         }
 
-        private AppointmentSlot MapReader(
-            SqlDataReader reader)
+        private AppointmentSlot MapReader(SqlDataReader reader)
         {
             return new AppointmentSlot
             {

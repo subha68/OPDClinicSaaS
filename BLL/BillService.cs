@@ -1,6 +1,8 @@
 using DAL;
 using Models;
 using ViewModels;
+using System.Collections.Generic;
+using Microsoft.Data.SqlClient;
 
 namespace BLL
 {
@@ -15,7 +17,7 @@ namespace BLL
         private readonly ClinicDAL _clinicDAL;
 
         public BillService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(httpContextAccessor)
+                                : base(config, httpContextAccessor)
         {
             _billDAL = new BillDAL(config);
             _billLineDAL = new BillLineDAL(config);
@@ -27,29 +29,42 @@ namespace BLL
             _dal = _billDAL;
         }
 
-        public override int Add(Bill bill)
+        public override int Create(Bill bill)
         {
-            bill.Visit = _visitDAL.Get(bill.VisitId);
-            bill.PatientId = bill.Visit.PatientId;
-            bill.Patient = _patientDAL.Get(bill.PatientId);
-            bill.ClinicId = ClinicId;
-            bill.Clinic = _clinicDAL.Get(bill.ClinicId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+            using var tran = conn.BeginTransaction();
 
-            bill.GrossAmount = bill.BillLines.Sum(x => x.Rate * x.Quantity);
-            bill.DiscountAmount = bill.BillLines.Sum(x => (x.Rate * x.Quantity * x.DiscountPercent / 100));
-
-            int billId = base.Add(bill);
-
-            foreach (var line in bill.BillLines)
+            try
             {
-                line.BillId = billId;
-                line.BillingCharge = _billingChargeDAL.Get(line.ChargeId);
-                line.ChargeCode = line.BillingCharge.ChargeCode;
-                line.ChargeDescription = line.BillingCharge.Description;
-                _billLineDAL.Add(line);
-            }
+                bill.Visit = _visitDAL.Get(bill.VisitId);
+                bill.PatientId = bill.Visit.PatientId;
+                bill.Patient = _patientDAL.Get(bill.PatientId);
+                bill.ClinicId = ClinicId;
+                bill.Clinic = _clinicDAL.Get(bill.ClinicId);
 
-            return billId;
+                bill.GrossAmount = bill.BillLines.Sum(x => x.Rate * x.Quantity);
+                bill.DiscountAmount = bill.BillLines.Sum(x => (x.Rate * x.Quantity * x.DiscountPercent / 100));
+
+                int billId = base.Add(bill, conn, tran);
+
+                foreach (var line in bill.BillLines)
+                {
+                    line.BillId = billId;
+                    line.BillingCharge = _billingChargeDAL.Get(line.ChargeId);
+                    line.ChargeCode = line.BillingCharge.ChargeCode;
+                    line.ChargeDescription = line.BillingCharge.Description;
+                    _billLineDAL.Add(line, conn, tran);
+                }
+
+                tran.Commit();
+                return billId;
+            }
+            catch
+            {
+                tran.Rollback();
+                throw;
+            }
         }
 
         public override Bill Get(int id)

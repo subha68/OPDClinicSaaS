@@ -52,7 +52,7 @@ namespace Controllers
                 return View(role);
             }
 
-            _role.Add(role);
+            _role.Create(role);
 
             return RedirectToAction("Index");
         }
@@ -90,7 +90,7 @@ namespace Controllers
                 return View(role);
             }
 
-            _role.Update(role);
+            _role.Modify(role);
 
             return RedirectToAction("Index");
         }
@@ -98,7 +98,7 @@ namespace Controllers
         [HttpPost]
         public IActionResult Delete(int id)
         {
-            _role.Delete(id);
+            _role.Remove(id);
             return RedirectToAction("Index");
         }
     }

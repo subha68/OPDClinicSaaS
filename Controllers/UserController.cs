@@ -61,7 +61,7 @@ namespace Controllers
                 return View(model);
             }
 
-            _user.Add(model);
+            _user.Create(model);
             return RedirectToAction("Index");
         }
 
@@ -103,7 +103,7 @@ namespace Controllers
                 return View("Create", model);
             }
 
-            _user.Update(model);
+            _user.Modify(model);
 
             TempData["Success"] = "User updated successfully.";
             return RedirectToAction("Index");
@@ -111,7 +111,7 @@ namespace Controllers
 
         public IActionResult Delete(int id)
         {
-            _user.Delete(id);
+            _user.Remove(id);
 
             TempData["Success"] = "User deleted successfully.";
             return RedirectToAction("Index");

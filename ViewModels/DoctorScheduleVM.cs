@@ -21,6 +21,13 @@ namespace ViewModels
         /// 6 = Saturday
         /// </summary>
         public int DayOfWeek { get; set; }
+
+        public string DayName
+                    { get
+                        {
+                           return ((DayOfWeek)DayOfWeek).ToString();  
+                        }                       
+                    }
         public TimeSpan StartTime { get; set; }
         public TimeSpan EndTime { get; set; }
         /// <summary>

@@ -97,7 +97,7 @@ public class BillingController : Controller
             return View(model);
         } */
 
-        int billId = _bill.Add(model);
+        int billId = _bill.Create(model);
 
         return RedirectToAction("Print", new { id = billId });
     }

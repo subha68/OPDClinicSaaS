@@ -43,7 +43,7 @@ namespace Controllers
         [HttpPost]
         public IActionResult Pay(PaymentCreateVM vm)
         {
-            _payment.Add(vm.Payment);
+            _payment.Create(vm.Payment);
 
             return RedirectToAction("Pay", new { billId = vm.Payment.BillId });
         }

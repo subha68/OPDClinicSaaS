@@ -105,7 +105,7 @@ namespace Controllers
                 return View(model);
             }
 
-            _patient.Add(model);
+            _patient.Create(model);
 
             return RedirectToAction("Index");
         }
@@ -145,7 +145,7 @@ namespace Controllers
                 return View("Create", patient);
             }
 
-            _patient.Update(patient);
+            _patient.Modify(patient);
 
             return RedirectToAction("Index");
         }
@@ -153,7 +153,7 @@ namespace Controllers
         [HttpPost]
         public IActionResult Delete(int id)
         {
-            _patient.Delete(id);
+            _patient.Remove(id);
             return RedirectToAction("Index");
         }
 

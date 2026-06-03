@@ -16,7 +16,7 @@ namespace BLL
         private readonly FeatureDAL _featureDAL;
 
         public UserService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                            : base(httpContextAccessor)
+                            : base(config, httpContextAccessor)
         {
             _userDAL = new UserDAL(config);
             _roleDAL = new RoleDAL(config);
@@ -25,14 +25,28 @@ namespace BLL
             _dal = _userDAL;
         }
 
-        public override int Add(User user)
+        public override int Create(User user)
         {
             user.PasswordHash = PasswordHelper.HashPassword(user.PasswordHash);
 
-            return base.Add(user);
+            using var conn = _db.GetConnection();
+            conn.Open();
+            using var tran = conn.BeginTransaction();
+
+            try
+            {
+                int id = Add(user, conn, tran);
+                tran.Commit();
+                return id;
+            }
+            catch
+            {
+                tran.Rollback();
+                throw;
+            }
         }
 
-        public override bool Update(User user)
+        public override bool Modify(User user)
         {
             if (string.IsNullOrWhiteSpace(user.PasswordHash))
             {
@@ -43,7 +57,20 @@ namespace BLL
                 user.PasswordHash = PasswordHelper.HashPassword(user.PasswordHash);
             }
             
-            return base.Update(user);
+            using var conn = _db.GetConnection();
+            conn.Open();
+            using var tran = conn.BeginTransaction();
+            try
+            {
+                bool result = Update(user, conn, tran);
+                tran.Commit();
+                return result;
+            }
+            catch
+            {
+                tran.Rollback();
+                throw;
+            }
         }
 
         public User ValidateUser(string username, string password)
@@ -96,19 +123,30 @@ namespace BLL
 
             int userId = _userDAL.GetUserIdByName(superAdmin.Username);
 
-            if (userId == 0)
+            using var conn = _db.GetConnection();
+            conn.Open();
+            using var tran = conn.BeginTransaction();
+            try
             {
-                userId = Add(superAdmin);
-            }
-            else
-            {
-                superAdmin.UserId = userId;
-                Update(superAdmin);
-            }
+                if (userId == 0)
+                {
+                    userId = Add(superAdmin, conn, tran);
+                }
+                else
+                {
+                    superAdmin.UserId = userId;
+                    Update(superAdmin, conn, tran);
+                }
 
-            return true;
+                tran.Commit();
+                return true;
+            }
+            catch
+            {
+                tran.Rollback();
+                throw;
+            }
         }
-
 
         public List<User> ListByClinic() => _userDAL.ListByClinic(ClinicId);
         public bool UsernameExists(string username) => _userDAL.GetUserCountByName(username) > 0;

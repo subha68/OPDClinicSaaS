@@ -13,57 +13,45 @@ namespace DAL
             _db = new DbHelper(config);
         }
 
-        public int Add(Department model)
+        public int Add(Department model, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection con = _db.GetConnection())
-            {
-                string query = @"INSERT INTO Departments (ClinicId, Name, Description)
+            string query = @"INSERT INTO Departments (ClinicId, Name, Description)
                                 VALUES (@ClinicId, @Name, @Description);
                                 SELECT SCOPE_IDENTITY();";
 
-                SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@ClinicId", model.ClinicId);
-                cmd.Parameters.AddWithValue("@Name", model.Name);
-                cmd.Parameters.AddWithValue("@Description", model.Description ?? "");
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@ClinicId", model.ClinicId);
+            cmd.Parameters.AddWithValue("@Name", model.Name);
+            cmd.Parameters.AddWithValue("@Description", model.Description ?? "");
 
-                con.Open();
-                return Convert.ToInt32(cmd.ExecuteScalar());
-            }
+            return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
-        public bool Update(Department model)
+        public bool Update(Department model, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection con = _db.GetConnection())
-            {
-                string query = @"UPDATE Departments
-                                 SET Name = @Name,
-                                     Description = @Description
-                                 WHERE DepartmentId = @DepartmentId";
+            string query = @"UPDATE Departments
+                             SET Name = @Name,
+                                 Description = @Description
+                             WHERE DepartmentId = @DepartmentId";
 
-                SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@Name", model.Name);
-                cmd.Parameters.AddWithValue("@Description", model.Description ?? "");
-                cmd.Parameters.AddWithValue("@DepartmentId", model.DepartmentId);
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@Name", model.Name);
+            cmd.Parameters.AddWithValue("@Description", model.Description ?? "");
+            cmd.Parameters.AddWithValue("@DepartmentId", model.DepartmentId);
 
-                con.Open();
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
-        public bool Delete(int id)
+        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection con = _db.GetConnection())
-            {
-                string query = "DELETE FROM Departments WHERE DepartmentId = @DepartmentId";
+            string query = "DELETE FROM Departments WHERE DepartmentId = @DepartmentId";
 
-                SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@DepartmentId", id);
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@DepartmentId", id);
 
-                con.Open();
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
         public List<Department> GetAll()

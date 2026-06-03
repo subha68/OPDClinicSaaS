@@ -13,61 +13,46 @@ namespace DAL
             _db = new DbHelper(config);
         }
 
-        public int Add(Feature model)
+        public int Add(Feature model, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
+            string query = @"INSERT INTO Features (Name, Code)
+                                VALUES (@name, @code);
+                            SELECT SCOPE_IDENTITY();";
 
-                string query = @"INSERT INTO Features (Name, Code)
-                                 VALUES (@name, @code);
-                                SELECT SCOPE_IDENTITY();";
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@code", model.Code);
+            cmd.Parameters.AddWithValue("@name", model.Name);
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@code", model.Code);
-                cmd.Parameters.AddWithValue("@name", model.Name);
-
-                model.FeatureId = Convert.ToInt32(cmd.ExecuteScalar());
-            }
+            model.FeatureId = Convert.ToInt32(cmd.ExecuteScalar());
 
             return model.FeatureId;
         }
 
-        public bool Update(Feature model)
+        public bool Update(Feature model, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
+            string query = @"UPDATE Features
+                            SET Name = @name,
+                                Code = @code
+                            WHERE FeatureId = @id";
 
-                string query = @"UPDATE Features
-                                SET Name = @name,
-                                    Code = @code
-                                WHERE FeatureId = @id";
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@code", model.Code);
+            cmd.Parameters.AddWithValue("@name", model.Name);
+            cmd.Parameters.AddWithValue("@id", model.FeatureId);
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@code", model.Code);
-                cmd.Parameters.AddWithValue("@name", model.Name);
-                cmd.Parameters.AddWithValue("@id", model.FeatureId);
-
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
-        public bool Delete(int id)
+        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
+            string query = @"DELETE FROM Features WHERE FeatureId = @id";
 
-                string query = @"DELETE FROM Features WHERE FeatureId = @id";
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@id", id);
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", id);
-
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
         public List<Feature> GetAll()

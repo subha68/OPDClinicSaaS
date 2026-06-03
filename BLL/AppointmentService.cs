@@ -3,6 +3,7 @@ using ViewModels;
 using DAL;
 using System;
 using System.Collections.Generic;
+using Microsoft.Data.SqlClient;
 
 namespace BLL
 {
@@ -13,7 +14,7 @@ namespace BLL
         private readonly AppointmentSlotDAL _slotDAL;
 
         public AppointmentService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(httpContextAccessor)
+                                : base(config, httpContextAccessor)
         {
             _appointmentDAL = new AppointmentDAL(config);
             _visitDAL = new VisitDAL(config);
@@ -33,48 +34,74 @@ namespace BLL
         
         public void UpdateStatus(int appointmentId, string status)
         {
-            _appointmentDAL.UpdateStatus(appointmentId, status);
+            using var conn = _db.GetConnection();
+            conn.Open();
+            using var tran = conn.BeginTransaction();
+
+            try
+            {
+                _appointmentDAL.UpdateStatus(appointmentId, status, conn, tran);
+                tran.Commit();
+            }
+            catch
+            {
+                tran.Rollback();
+                throw;
+            }
         }
 
         public int BookAppointment(AppointmentCreateVM vm)
         {
-            Visit visit = _visitDAL.GetByPatientAndDate(vm.PatientId, vm.AppointmentDate);
+            using var conn = _db.GetConnection();
+            conn.Open();
+            using var tran = conn.BeginTransaction();
 
-            if (visit == null)
+            try
             {
-                visit = new Visit
+                Visit visit = _visitDAL.GetByPatientAndDate(vm.PatientId, vm.AppointmentDate);
+
+                if (visit == null)
                 {
-                    VisitDate = vm.AppointmentDate,
-                    VisitType = vm.VisitType,
+                    visit = new Visit
+                    {
+                        VisitDate = vm.AppointmentDate,
+                        VisitType = vm.VisitType,
+                        ClinicId = ClinicId,
+                        PatientId = vm.PatientId
+                    };
+
+                    vm.VisitId = _visitDAL.Add(visit, conn, tran);
+                }
+                else
+                {
+                    vm.VisitId = visit.VisitId;
+                }
+
+                var appointment = new Appointment
+                {
+                    DoctorId = vm.DoctorId,
                     ClinicId = ClinicId,
-                    PatientId = vm.PatientId
+                    PatientId = vm.PatientId,
+                    VisitId = vm.VisitId,
+                    AppointmentDate = vm.AppointmentDate,
+                    SlotTime = TimeSpan.Parse(vm.SlotTime),
+                    Status = "Booked"
                 };
 
-                vm.VisitId = _visitDAL.Add(visit);
+                int appointmentId = _appointmentDAL.Add(appointment, conn, tran);
+
+                _slotDAL.IncrementBookedCount(vm.SlotId, conn, tran);
+
+                tran.Commit();
+
+                return appointmentId;
             }
-            else
+            catch
             {
-                vm.VisitId = visit.VisitId;
-            }
-
-            var appointment = new Appointment
-            {
-                DoctorId = vm.DoctorId,
-                ClinicId = ClinicId,
-                PatientId = vm.PatientId,
-                VisitId = vm.VisitId,
-                AppointmentDate = vm.AppointmentDate,
-                SlotTime = TimeSpan.Parse(vm.SlotTime),
-                Status = "Booked"
-            };
-
-            int appointmentId = _appointmentDAL.Add(appointment);
-
-            _slotDAL.IncrementBookedCount(vm.SlotId);
-
-            return appointmentId;            
+                tran.Rollback();
+                throw;
+            }            
         }
-
 
     }
 }

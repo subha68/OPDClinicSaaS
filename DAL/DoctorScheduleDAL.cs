@@ -102,113 +102,98 @@ namespace DAL
             return schedules;
         }
 
-        public int Add(DoctorScheduleVM model)
+        public int Add(DoctorScheduleVM model, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection con = _db.GetConnection())
+            string query = @"
+                INSERT INTO DoctorSchedules
+                (
+                    DoctorId,
+                    ClinicId,
+                    DayOfWeek,
+                    StartTime,
+                    EndTime,
+                    SlotDurationMinutes,
+                    MaxPatientsPerSlot,
+                    IsActive,
+                    CreatedOn
+                )
+                VALUES
+                (
+                    @DoctorId,
+                    @ClinicId,
+                    @DayOfWeek,
+                    @StartTime,
+                    @EndTime,
+                    @SlotDurationMinutes,
+                    @MaxPatientsPerSlot,
+                    @IsActive,
+                    GETDATE()
+                );
+
+                SELECT SCOPE_IDENTITY();
+            ";
+
+            using (SqlCommand cmd = new SqlCommand(query, conn, tran))
             {
-                string query = @"
-                    INSERT INTO DoctorSchedules
-                    (
-                        DoctorId,
-                        ClinicId,
-                        DayOfWeek,
-                        StartTime,
-                        EndTime,
-                        SlotDurationMinutes,
-                        MaxPatientsPerSlot,
-                        IsActive,
-                        CreatedOn
-                    )
-                    VALUES
-                    (
-                        @DoctorId,
-                        @ClinicId,
-                        @DayOfWeek,
-                        @StartTime,
-                        @EndTime,
-                        @SlotDurationMinutes,
-                        @MaxPatientsPerSlot,
-                        @IsActive,
-                        GETDATE()
-                    );
+                cmd.Parameters.AddWithValue("@DoctorId", model.DoctorId);
+                cmd.Parameters.AddWithValue("@ClinicId", model.ClinicId);
+                cmd.Parameters.AddWithValue("@DayOfWeek", model.DayOfWeek);
+                cmd.Parameters.AddWithValue("@StartTime", model.StartTime);
+                cmd.Parameters.AddWithValue("@EndTime", model.EndTime);
+                cmd.Parameters.AddWithValue("@SlotDurationMinutes", model.SlotDurationMinutes);
+                cmd.Parameters.AddWithValue("@MaxPatientsPerSlot", model.MaxPatientsPerSlot);
+                cmd.Parameters.AddWithValue("@IsActive", model.IsActive);
 
-                    SELECT SCOPE_IDENTITY();
-                ";
-
-                using (SqlCommand cmd = new SqlCommand(query, con))
-                {
-                    cmd.Parameters.AddWithValue("@DoctorId", model.DoctorId);
-                    cmd.Parameters.AddWithValue("@ClinicId", model.ClinicId);
-                    cmd.Parameters.AddWithValue("@DayOfWeek", model.DayOfWeek);
-                    cmd.Parameters.AddWithValue("@StartTime", model.StartTime);
-                    cmd.Parameters.AddWithValue("@EndTime", model.EndTime);
-                    cmd.Parameters.AddWithValue("@SlotDurationMinutes", model.SlotDurationMinutes);
-                    cmd.Parameters.AddWithValue("@MaxPatientsPerSlot", model.MaxPatientsPerSlot);
-                    cmd.Parameters.AddWithValue("@IsActive", model.IsActive);
-
-                    con.Open();
-
-                    return Convert.ToInt32(cmd.ExecuteScalar());
-                }
+                return Convert.ToInt32(cmd.ExecuteScalar());
             }
         }
 
-        public bool Update(DoctorScheduleVM model)
+        public bool Update(DoctorScheduleVM model, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection con = _db.GetConnection())
+            string query = @"
+                UPDATE DoctorSchedules
+                SET
+                    DoctorId = @DoctorId,
+                    ClinicId = @ClinicId,
+                    DayOfWeek = @DayOfWeek,
+                    StartTime = @StartTime,
+                    EndTime = @EndTime,
+                    SlotDurationMinutes = @SlotDurationMinutes,
+                    MaxPatientsPerSlot = @MaxPatientsPerSlot,
+                    IsActive = @IsActive
+                WHERE ScheduleId = @ScheduleId";
+
+            using (SqlCommand cmd = new SqlCommand(query, conn, tran))
             {
-                string query = @"
-                    UPDATE DoctorSchedules
-                    SET
-                        DoctorId = @DoctorId,
-                        ClinicId = @ClinicId,
-                        DayOfWeek = @DayOfWeek,
-                        StartTime = @StartTime,
-                        EndTime = @EndTime,
-                        SlotDurationMinutes = @SlotDurationMinutes,
-                        MaxPatientsPerSlot = @MaxPatientsPerSlot,
-                        IsActive = @IsActive
-                    WHERE ScheduleId = @ScheduleId";
+                cmd.Parameters.AddWithValue("@ScheduleId", model.ScheduleId);
+                cmd.Parameters.AddWithValue("@DoctorId", model.DoctorId);
+                cmd.Parameters.AddWithValue("@ClinicId", model.ClinicId);
+                cmd.Parameters.AddWithValue("@DayOfWeek", model.DayOfWeek);
+                cmd.Parameters.AddWithValue("@StartTime", model.StartTime);
+                cmd.Parameters.AddWithValue("@EndTime", model.EndTime);
+                cmd.Parameters.AddWithValue("@SlotDurationMinutes", model.SlotDurationMinutes);
+                cmd.Parameters.AddWithValue("@MaxPatientsPerSlot", model.MaxPatientsPerSlot);
+                cmd.Parameters.AddWithValue("@IsActive", model.IsActive);
 
-                using (SqlCommand cmd = new SqlCommand(query, con))
-                {
-                    cmd.Parameters.AddWithValue("@ScheduleId", model.ScheduleId);
-                    cmd.Parameters.AddWithValue("@DoctorId", model.DoctorId);
-                    cmd.Parameters.AddWithValue("@ClinicId", model.ClinicId);
-                    cmd.Parameters.AddWithValue("@DayOfWeek", model.DayOfWeek);
-                    cmd.Parameters.AddWithValue("@StartTime", model.StartTime);
-                    cmd.Parameters.AddWithValue("@EndTime", model.EndTime);
-                    cmd.Parameters.AddWithValue("@SlotDurationMinutes", model.SlotDurationMinutes);
-                    cmd.Parameters.AddWithValue("@MaxPatientsPerSlot", model.MaxPatientsPerSlot);
-                    cmd.Parameters.AddWithValue("@IsActive", model.IsActive);
+                int rowsAffected = cmd.ExecuteNonQuery();
 
-                    con.Open();
-
-                    int rowsAffected = cmd.ExecuteNonQuery();
-
-                    return rowsAffected > 0;
-                }
+                return rowsAffected > 0;
             }
         }
 
-        public bool Delete(int scheduleId)
+        public bool Delete(int scheduleId, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection con = _db.GetConnection())
-            {
-                string query = @"
-                    DELETE FROM DoctorSchedules
+            string query = @"
+                DELETE FROM DoctorSchedules
                     WHERE ScheduleId = @ScheduleId";
 
-                using (SqlCommand cmd = new SqlCommand(query, con))
-                {
-                    cmd.Parameters.AddWithValue("@ScheduleId", scheduleId);
+            using (SqlCommand cmd = new SqlCommand(query, conn, tran))
+            {
+                cmd.Parameters.AddWithValue("@ScheduleId", scheduleId);
 
-                    con.Open();
+                int rowsAffected = cmd.ExecuteNonQuery();
 
-                    int rowsAffected = cmd.ExecuteNonQuery();
-
-                    return rowsAffected > 0;
-                }
+                return rowsAffected > 0;
             }
         }
 

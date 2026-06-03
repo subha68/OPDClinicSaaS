@@ -42,7 +42,7 @@ namespace Controllers
         {
             if (ModelState.IsValid)
             {
-                _department.Add(model);
+                _department.Create(model);
 
                 return RedirectToAction("Index");
             }
@@ -79,7 +79,7 @@ namespace Controllers
                 return View("Create", model);
             }
 
-            _department.Update(model);
+            _department.Modify(model);
 
             TempData["Success"] = "Department updated successfully.";
             return RedirectToAction("Index");
@@ -87,7 +87,7 @@ namespace Controllers
 
         public IActionResult Delete(int id)
         {
-            _department.Delete(id);
+            _department.Remove(id);
 
             TempData["Success"] = "Department deleted successfully.";
             return RedirectToAction("Index");

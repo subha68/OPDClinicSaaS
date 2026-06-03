@@ -66,7 +66,7 @@ namespace Controllers
                 return View(model);
             }
 
-            _doctor.Add(model);
+            _doctor.Create(model);
 
             return RedirectToAction("Index");
         }
@@ -106,7 +106,7 @@ namespace Controllers
                 return View("Create", model);
             }
 
-            _doctor.Update(model);
+            _doctor.Modify(model);
 
             TempData["Success"] = "Doctor updated successfully.";
             return RedirectToAction("Index");
@@ -114,7 +114,7 @@ namespace Controllers
 
         public IActionResult Delete(int id)
         {
-            _doctor.Delete(id);
+            _doctor.Remove(id);
 
             TempData["Success"] = "Doctor deleted successfully.";
             return RedirectToAction("Index");

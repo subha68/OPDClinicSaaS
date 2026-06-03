@@ -17,7 +17,7 @@ namespace BLL
         private readonly PharmacologyDAL _pharmacologyDAL;
 
         public PatientService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(httpContextAccessor)
+                                : base(config, httpContextAccessor)
         {
             _patientDAL = new PatientDAL(config);
             _visitDAL = new VisitDAL(config);
@@ -86,8 +86,6 @@ namespace BLL
             var billLines = _billLineDAL.ListByPatient(patientId);
 
             var payments = _paymentDAL.ListByPatient(patientId);
-
-           // var pharmAdvices = _pharmacologyDAL.ListByPatient(patientId);
 
             foreach (var visit in visits)
             {

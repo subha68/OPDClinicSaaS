@@ -9,17 +9,30 @@ namespace BLL
         private readonly PharmacologyDAL _pharmacologyDAL;
 
         public PharmacologyService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(httpContextAccessor)
+                                : base(config, httpContextAccessor)
         {
             _pharmacologyDAL = new PharmacologyDAL(config);
             _dal = _pharmacologyDAL;
         }
 
-        public void Add(int consultationId, int appointmentId, PharmacologyAdvice advice)
+        public void Create(int consultationId, int appointmentId, PharmacologyAdvice advice)
         {
             _pharmacologyDAL.consultationId = consultationId;
             _pharmacologyDAL.appointmentId = appointmentId;
-            _pharmacologyDAL.Add(advice);
+
+            using var conn = _db.GetConnection();
+            conn.Open();
+            using var tran = conn.BeginTransaction();
+            try
+            {
+                _pharmacologyDAL.Add(advice, conn, tran);
+                tran.Commit();
+            }
+            catch
+            {
+                tran.Rollback();
+                throw;
+            }
         }
 
     }

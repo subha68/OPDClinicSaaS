@@ -3,6 +3,7 @@ using ViewModels;
 using DAL;
 using System;
 using System.Collections.Generic;
+using Microsoft.Data.SqlClient;
 
 namespace BLL
 {
@@ -10,48 +11,66 @@ namespace BLL
     {
         private readonly DoctorScheduleDAL _scheduleDAL;
         private readonly AppointmentSlotDAL _slotDAL;
+        private readonly DbHelper _db;
+
 
         public AppointmentSlotService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                        : base(httpContextAccessor)
+                                        : base(config, httpContextAccessor)
         {
             _scheduleDAL = new DoctorScheduleDAL(config);
             _slotDAL = new AppointmentSlotDAL(config);
             _dal = _slotDAL;
+            _db = new DbHelper(config);
         }
 
         public void GenerateSlots(int doctorId, DateTime fromDate, DateTime toDate)
         {
-            ValidateGenerationRequest(doctorId, fromDate, toDate);
+            using var conn = _db.GetConnection();
+            conn.Open();
+            using var tran = conn.BeginTransaction();
 
-            List<DoctorScheduleVM> schedules = _scheduleDAL.GetByDoctor(doctorId);
-
-            if (schedules == null || schedules.Count == 0)
+            try
             {
-                throw new Exception("No schedules found for doctor.");
-            }
+                ValidateGenerationRequest(doctorId, fromDate, toDate);
 
-            DateTime currentDate = fromDate.Date;
+                List<DoctorScheduleVM> schedules = _scheduleDAL.GetByDoctor(doctorId);
 
-            while (currentDate <= toDate.Date)
-            {
-                int currentDay = (int)currentDate.DayOfWeek;
-
-                foreach (DoctorScheduleVM schedule in schedules)
+                if (schedules == null || schedules.Count == 0)
                 {
-                    if (!schedule.IsActive)
-                        continue;
-
-                    if (schedule.DayOfWeek != currentDay)
-                        continue;
-
-                    GenerateSlotsForSchedule(schedule, currentDate);
+                    throw new Exception("No schedules found for doctor.");
                 }
 
-                currentDate = currentDate.AddDays(1);
+                DateTime currentDate = fromDate.Date;
+
+                while (currentDate <= toDate.Date)
+                {
+                    int currentDay = (int)currentDate.DayOfWeek;
+
+                    foreach (DoctorScheduleVM schedule in schedules)
+                    {
+                        if (!schedule.IsActive)
+                            continue;
+
+                        if (schedule.DayOfWeek != currentDay)
+                            continue;
+
+                        GenerateSlotsForSchedule(schedule, currentDate, conn, tran);
+                    }
+
+                    currentDate = currentDate.AddDays(1);
+                }
+
+                tran.Commit();
+            }
+            catch
+            {
+                tran.Rollback();
+                throw;
             }
         }
 
-        private void GenerateSlotsForSchedule(DoctorScheduleVM schedule, DateTime slotDate)
+        private void GenerateSlotsForSchedule(DoctorScheduleVM schedule, DateTime slotDate, 
+                                                SqlConnection conn, SqlTransaction tran)
         {
             DateTime scheduleStart = slotDate.Date + schedule.StartTime;
             DateTime scheduleEnd = slotDate.Date + schedule.EndTime;
@@ -59,21 +78,19 @@ namespace BLL
 
             while (currentSlotStart < scheduleEnd)
             {
-                DateTime currentSlotEnd =
-                    currentSlotStart.AddMinutes(schedule.SlotDurationMinutes);
+                DateTime currentSlotEnd = currentSlotStart.AddMinutes(schedule.SlotDurationMinutes);
 
                 // Prevent slot overflow
                 if (currentSlotEnd > scheduleEnd)
                     break;
 
-                bool alreadyExists =
-                    _slotDAL.ExistsSlot(schedule.DoctorId, currentSlotStart, currentSlotEnd);
+                bool alreadyExists = _slotDAL.ExistsSlot(schedule.DoctorId, currentSlotStart, currentSlotEnd, conn, tran);
 
                 // Prevent duplicate slot creation
                 if (!alreadyExists)
                 {
                     AppointmentSlot slot = BuildSlot(schedule, slotDate, currentSlotStart, currentSlotEnd);
-                    _dal.Add(slot);
+                    _dal.Add(slot, conn, tran);
                 }
 
                 currentSlotStart = currentSlotEnd;
@@ -114,8 +131,7 @@ namespace BLL
 
             if (totalDays > 365)
             {
-                throw new Exception(
-                    "Cannot generate slots for more than 365 days.");
+                throw new Exception("Cannot generate slots for more than 365 days.");
             }
         }
 
@@ -145,7 +161,21 @@ namespace BLL
 
         public bool IncrementBookedCount(int slotId)
         {
-            return _slotDAL.IncrementBookedCount(slotId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+            using var tran = conn.BeginTransaction();
+
+            try
+            {
+                bool result = _slotDAL.IncrementBookedCount(slotId, conn, tran);
+                tran.Commit();
+                return result;
+            }
+            catch
+            {
+                tran.Rollback();
+                throw;
+            }
         }
 
     }

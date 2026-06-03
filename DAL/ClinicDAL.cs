@@ -13,65 +13,50 @@ namespace DAL
             _db = new DbHelper(config);
         }
 
-        public int Add(Clinic clinic)
+        public int Add(Clinic clinic, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
+            string query = @"INSERT INTO Clinics (ClinicCode, Name, Address, Phone)
+                                VALUES (@code, @name, @addr, @phone);
+                            SELECT SCOPE_IDENTITY();";
 
-                string query = @"INSERT INTO Clinics (ClinicCode, Name, Address, Phone)
-                                 VALUES (@code, @name, @addr, @phone);
-                                SELECT SCOPE_IDENTITY();";
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@code", clinic.ClinicCode);
+            cmd.Parameters.AddWithValue("@name", clinic.Name);
+            cmd.Parameters.AddWithValue("@addr", clinic.Address);
+            cmd.Parameters.AddWithValue("@phone", clinic.Phone);
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@code", clinic.ClinicCode);
-                cmd.Parameters.AddWithValue("@name", clinic.Name);
-                cmd.Parameters.AddWithValue("@addr", clinic.Address);
-                cmd.Parameters.AddWithValue("@phone", clinic.Phone);
-
-                return Convert.ToInt32(cmd.ExecuteScalar());
-            }
+            return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
-        public bool Update(Clinic clinic)
+        public bool Update(Clinic clinic, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
+            string query = @"UPDATE Clinics
+                             SET ClinicCode = @code,
+                                 Name = @name,
+                                 Address = @addr,
+                                 Phone = @phone
+                             WHERE ClinicId = @id";
 
-                string query = @"UPDATE Clinics
-                                 SET ClinicCode = @code,
-                                     Name = @name,
-                                     Address = @addr,
-                                     Phone = @phone
-                                 WHERE ClinicId = @id";
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@code", clinic.ClinicCode);
+            cmd.Parameters.AddWithValue("@name", clinic.Name);
+            cmd.Parameters.AddWithValue("@addr", clinic.Address);
+            cmd.Parameters.AddWithValue("@phone", clinic.Phone);
+            cmd.Parameters.AddWithValue("@id", clinic.ClinicId);
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@code", clinic.ClinicCode);
-                cmd.Parameters.AddWithValue("@name", clinic.Name);
-                cmd.Parameters.AddWithValue("@addr", clinic.Address);
-                cmd.Parameters.AddWithValue("@phone", clinic.Phone);
-                cmd.Parameters.AddWithValue("@id", clinic.ClinicId);
-
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
-        public bool Delete(int clinicId)
+        public bool Delete(int clinicId, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
+            string query = @"DELETE FROM Clinics WHERE ClinicId = @id";
 
-                string query = @"DELETE FROM Clinics WHERE ClinicId = @id";
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@id", clinicId);
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", clinicId);
-
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
         public List<Clinic> GetAll()

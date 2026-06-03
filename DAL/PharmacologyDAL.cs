@@ -16,94 +16,83 @@ namespace DAL
             _db = new DbHelper(config);
         }
     
-        public int Add(PharmacologyAdvice advice)
-        {    
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                string query = @"
-                    INSERT INTO PharmacologyAdvices
-                    (
-                        ConsultationId,
-                        AppointmentId,
-                        MedicineName,
-                        Dosage,
-                        Frequency,
-                        Duration,
-                        Instructions
-                    )
-                    VALUES
-                    (
-                        @ConsultationId,
-                        @AppointmentId,
-                        @MedicineName,
-                        @Dosage,
-                        @Frequency,
-                        @Duration,
-                        @Instructions
-                    );
-                    SELECT SCOPE_IDENTITY();";
+        public int Add(PharmacologyAdvice advice, SqlConnection conn, SqlTransaction tran)
+        {
+            string query = @"
+                INSERT INTO PharmacologyAdvices
+                (
+                    ConsultationId,
+                    AppointmentId,
+                    MedicineName,
+                    Dosage,
+                    Frequency,
+                    Duration,
+                    Instructions
+                )
+                VALUES
+                (
+                    @ConsultationId,
+                    @AppointmentId,
+                    @MedicineName,
+                    @Dosage,
+                    @Frequency,
+                    @Duration,
+                    @Instructions
+                );
+                SELECT SCOPE_IDENTITY();";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
 
-                cmd.Parameters.AddWithValue("@ConsultationId", consultationId);
-                cmd.Parameters.AddWithValue("@AppointmentId", appointmentId);
-                cmd.Parameters.AddWithValue("@MedicineName", advice.MedicineName);
-                cmd.Parameters.AddWithValue("@Dosage", advice.Dosage);
-                cmd.Parameters.AddWithValue("@Frequency", advice.Frequency);
-                cmd.Parameters.AddWithValue("@Duration", advice.Duration);
-                cmd.Parameters.AddWithValue("@Instructions", advice.Instructions);
+            cmd.Parameters.AddWithValue("@ConsultationId", consultationId);
+            cmd.Parameters.AddWithValue("@AppointmentId", appointmentId);
+            cmd.Parameters.AddWithValue("@MedicineName", advice.MedicineName);
+            cmd.Parameters.AddWithValue("@Dosage", advice.Dosage);
+            cmd.Parameters.AddWithValue("@Frequency", advice.Frequency);
+            cmd.Parameters.AddWithValue("@Duration", advice.Duration);
+            cmd.Parameters.AddWithValue("@Instructions", advice.Instructions);
 
-                conn.Open();
-                return Convert.ToInt32(cmd.ExecuteScalar());
-            }
+            conn.Open();
+            return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
-        public bool Update(PharmacologyAdvice model)
+        public bool Update(PharmacologyAdvice model, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                string query = @"
-                    UPDATE PharmacologyAdvices
-                    SET 
-                        MedicineName = @MedicineName,
-                        Dosage = @Dosage,
-                        Frequency = @Frequency,
-                        Duration = @Duration,
-                        Instructions = @Instructions
-                    WHERE ConsultationId = @ConsultationId AND AppointmentId = @AppointmentId;";
+            string query = @"
+                UPDATE PharmacologyAdvices
+                SET 
+                    MedicineName = @MedicineName,
+                    Dosage = @Dosage,
+                    Frequency = @Frequency,
+                    Duration = @Duration,
+                    Instructions = @Instructions
+                WHERE ConsultationId = @ConsultationId AND AppointmentId = @AppointmentId;";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
 
-                cmd.Parameters.AddWithValue("@ConsultationId", consultationId);
-                cmd.Parameters.AddWithValue("@AppointmentId", appointmentId);
-                cmd.Parameters.AddWithValue("@MedicineName", model.MedicineName);
-                cmd.Parameters.AddWithValue("@Dosage", model.Dosage);
-                cmd.Parameters.AddWithValue("@Frequency", model.Frequency);
-                cmd.Parameters.AddWithValue("@Duration", model.Duration);
-                cmd.Parameters.AddWithValue("@Instructions", model.Instructions);
+            cmd.Parameters.AddWithValue("@ConsultationId", consultationId);
+            cmd.Parameters.AddWithValue("@AppointmentId", appointmentId);
+            cmd.Parameters.AddWithValue("@MedicineName", model.MedicineName);
+            cmd.Parameters.AddWithValue("@Dosage", model.Dosage);
+            cmd.Parameters.AddWithValue("@Frequency", model.Frequency);
+            cmd.Parameters.AddWithValue("@Duration", model.Duration);
+            cmd.Parameters.AddWithValue("@Instructions", model.Instructions);
 
-                conn.Open();
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
-        public bool Delete(int id)
+        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                string query = @"
-                    DELETE FROM PharmacologyAdvices
+            string query = @"
+                DELETE FROM PharmacologyAdvices
                     WHERE ConsultationId = @ConsultationId AND AppointmentId = @AppointmentId;";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@ConsultationId", consultationId);
-                cmd.Parameters.AddWithValue("@AppointmentId", appointmentId);
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@ConsultationId", consultationId);
+            cmd.Parameters.AddWithValue("@AppointmentId", appointmentId);
 
-                conn.Open();
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
         public List<PharmacologyAdvice> GetAll()

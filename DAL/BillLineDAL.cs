@@ -14,28 +14,24 @@ namespace DAL
             _db = new DbHelper(config);
         }
 
-        public int Add(BillLine line)
+        public int Add(BillLine line, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
-                var query = @"INSERT INTO BillLines (BillId, ChargeId, Rate, Quantity, GrossAmount, DiscountPercent, DiscountAmount, NetAmount)
+            var query = @"INSERT INTO BillLines (BillId, ChargeId, Rate, Quantity, GrossAmount, DiscountPercent, DiscountAmount, NetAmount)
                             VALUES (@BillId, @ChargeId, @Rate, @Quantity, @GrossAmount, @DiscountPercent, @DiscountAmount, @NetAmount);
                             SELECT SCOPE_IDENTITY();";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
 
-                cmd.Parameters.AddWithValue("@BillId", line.BillId);
-                cmd.Parameters.AddWithValue("@ChargeId", line.ChargeId);
-                cmd.Parameters.AddWithValue("@Rate", line.Rate);
-                cmd.Parameters.AddWithValue("@Quantity", line.Quantity);
-                cmd.Parameters.AddWithValue("@GrossAmount", line.GrossAmount);
-                cmd.Parameters.AddWithValue("@DiscountPercent", line.DiscountPercent);
-                cmd.Parameters.AddWithValue("@DiscountAmount", line.DiscountAmount);
-                cmd.Parameters.AddWithValue("@NetAmount", line.NetAmount);
+            cmd.Parameters.AddWithValue("@BillId", line.BillId);
+            cmd.Parameters.AddWithValue("@ChargeId", line.ChargeId);
+            cmd.Parameters.AddWithValue("@Rate", line.Rate);
+            cmd.Parameters.AddWithValue("@Quantity", line.Quantity);
+            cmd.Parameters.AddWithValue("@GrossAmount", line.GrossAmount);
+            cmd.Parameters.AddWithValue("@DiscountPercent", line.DiscountPercent);
+            cmd.Parameters.AddWithValue("@DiscountAmount", line.DiscountAmount);
+            cmd.Parameters.AddWithValue("@NetAmount", line.NetAmount);
 
-                return Convert.ToInt32(Convert.ToInt32(cmd.ExecuteScalar()));
-            }
+            return Convert.ToInt32(Convert.ToInt32(cmd.ExecuteScalar()));
         }
 
         public BillLine Get(int id)
@@ -78,28 +74,21 @@ namespace DAL
             return null;
         }
 
-        public bool Delete(int id)
+        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
-                var query = "DELETE FROM BillLines WHERE LineId = @LineId";
-                SqlCommand cmd = new SqlCommand(query, conn);
+            var query = "DELETE FROM BillLines WHERE LineId = @LineId";
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
 
-                cmd.Parameters.AddWithValue("@LineId", id);
+            cmd.Parameters.AddWithValue("@LineId", id);
 
-                int rowsAffected = cmd.ExecuteNonQuery();
+            int rowsAffected = cmd.ExecuteNonQuery();
 
-                return rowsAffected > 0;
-            }
+            return rowsAffected > 0;
         }
 
-        public bool Update(BillLine model)
+        public bool Update(BillLine model, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
-                var query = @"UPDATE BillLines SET 
+            var query = @"UPDATE BillLines SET 
                             BillId = @BillId, 
                             ChargeId = @ChargeId, 
                             Rate = @Rate, 
@@ -107,19 +96,18 @@ namespace DAL
                             DiscountPercent = @DiscountPercent
                             WHERE LineId = @LineId";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
 
-                cmd.Parameters.AddWithValue("@BillId", model.BillId);
-                cmd.Parameters.AddWithValue("@ChargeId", model.ChargeId);
-                cmd.Parameters.AddWithValue("@Rate", model.Rate);
-                cmd.Parameters.AddWithValue("@Quantity", model.Quantity);
-                cmd.Parameters.AddWithValue("@DiscountPercent", model.DiscountPercent);
-                cmd.Parameters.AddWithValue("@LineId", model.LineId);
+            cmd.Parameters.AddWithValue("@BillId", model.BillId);
+            cmd.Parameters.AddWithValue("@ChargeId", model.ChargeId);
+            cmd.Parameters.AddWithValue("@Rate", model.Rate);
+            cmd.Parameters.AddWithValue("@Quantity", model.Quantity);
+            cmd.Parameters.AddWithValue("@DiscountPercent", model.DiscountPercent);
+            cmd.Parameters.AddWithValue("@LineId", model.LineId);
 
-                int rowsAffected = cmd.ExecuteNonQuery();
+            int rowsAffected = cmd.ExecuteNonQuery();
 
-                return rowsAffected > 0;
-            }
+            return rowsAffected > 0;
         }
 
         public List<BillLine> GetAll()

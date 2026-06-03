@@ -52,7 +52,7 @@ namespace Controllers
                 return View(clinic);
             }
 
-            _clinic.Add(clinic);
+            _clinic.Create(clinic);
 
             return RedirectToAction("Index");
         }
@@ -90,7 +90,7 @@ namespace Controllers
                 return View(clinic);
             }
 
-            _clinic.Update(clinic);
+            _clinic.Modify(clinic);
 
             return RedirectToAction("Index");
         }
@@ -98,7 +98,7 @@ namespace Controllers
         [HttpPost]
         public IActionResult Delete(int id)
         {
-            _clinic.Delete(id);
+            _clinic.Remove(id);
             return RedirectToAction("Index");
         }
     }

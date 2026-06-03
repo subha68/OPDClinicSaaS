@@ -13,44 +13,32 @@ namespace DAL
             _db = new DbHelper(configuration);
         }
 
-        public int Add(Role role)
+        public int Add(Role role, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                string query = @"INSERT INTO Roles (RoleName) VALUES (@RoleName);
-                                    SELECT SCOPE_IDENTITY();";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@RoleName", role.RoleName);
-                conn.Open();
-                return Convert.ToInt32(cmd.ExecuteScalar());
-            }
+            string query = @"INSERT INTO Roles (RoleName) VALUES (@RoleName);
+                                SELECT SCOPE_IDENTITY();";
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@RoleName", role.RoleName);
+            return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
-        public bool Update(Role role)
+        public bool Update(Role role, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                string query = @"UPDATE Roles SET RoleName = @RoleName WHERE RoleId = @RoleId";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@RoleName", role.RoleName);
-                cmd.Parameters.AddWithValue("@RoleId", role.RoleId);
-                conn.Open();
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            string query = @"UPDATE Roles SET RoleName = @RoleName WHERE RoleId = @RoleId";
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@RoleName", role.RoleName);
+            cmd.Parameters.AddWithValue("@RoleId", role.RoleId);
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
-        public bool Delete(int id)
+        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                string query = @"DELETE FROM Roles WHERE RoleId = @RoleId";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@RoleId", id);
-                conn.Open();
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            string query = @"DELETE FROM Roles WHERE RoleId = @RoleId";
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@RoleId", id);
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
         public List<Role> GetAll()

@@ -14,24 +14,21 @@ namespace DAL
             _db = new DbHelper(config);
         }
 
-        public int Add(Payment payment)
+        public int Add(Payment payment, SqlConnection conn, SqlTransaction tran)
         {
-            using SqlConnection con = _db.GetConnection();
-
             string query = @"INSERT INTO Payments
                 (BillId, Amount, Mode, ReferenceNo)
                 VALUES
                 (@BillId, @Amount, @Mode, @ReferenceNo);
                 SELECT SCOPE_IDENTITY();";
 
-            SqlCommand cmd = new SqlCommand(query, con);
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
 
             cmd.Parameters.AddWithValue("@BillId", payment.BillId);
             cmd.Parameters.AddWithValue("@Amount", payment.Amount);
             cmd.Parameters.AddWithValue("@Mode", payment.Mode ?? "");
             cmd.Parameters.AddWithValue("@ReferenceNo", payment.ReferenceNo ?? "");
 
-            con.Open();
             return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
@@ -72,12 +69,12 @@ namespace DAL
             return null;
         }
 
-        public bool Update(Payment entity)
+        public bool Update(Payment entity, SqlConnection conn, SqlTransaction tran)
         {
             throw new NotImplementedException();
         }
 
-        public bool Delete(int id)
+        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
         {
             throw new NotImplementedException();
         }

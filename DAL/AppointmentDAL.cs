@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
+using System.Transactions;
 
 namespace DAL
 {
@@ -16,96 +17,81 @@ namespace DAL
             _db = new DbHelper(config);
         }
 
-        public int Add(Appointment model)
+        public int Add(Appointment model, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
+            string query = @"
+                INSERT INTO Appointments
+                (
+                    DoctorId,
+                    ClinicId,
+                    PatientId,
+                    VisitId,
+                    AppointmentDate,
+                    SlotTime,
+                    Status
+                )
+                VALUES
+                (
+                    @DoctorId,
+                    @ClinicId,
+                    @PatientId,
+                    @VisitId,
+                    @AppointmentDate,
+                    @SlotTime,
+                    @Status
+                );
+
+                SELECT SCOPE_IDENTITY();";
+
+            using (SqlCommand cmd = new SqlCommand(query, conn, tran))
             {
-                string query = @"
-                    INSERT INTO Appointments
-                    (
-                        DoctorId,
-                        ClinicId,
-                        PatientId,
-                        VisitId,
-                        AppointmentDate,
-                        SlotTime,
-                        Status
-                    )
-                    VALUES
-                    (
-                        @DoctorId,
-                        @ClinicId,
-                        @PatientId,
-                        @VisitId,
-                        @AppointmentDate,
-                        @SlotTime,
-                        @Status
-                    );
+                cmd.Parameters.AddWithValue("@DoctorId", model.DoctorId);
+                cmd.Parameters.AddWithValue("@ClinicId", model.ClinicId);
+                cmd.Parameters.AddWithValue("@PatientId", model.PatientId);
+                cmd.Parameters.AddWithValue("@VisitId", model.VisitId);
+                cmd.Parameters.AddWithValue("@AppointmentDate", model.AppointmentDate);
+                cmd.Parameters.AddWithValue("@SlotTime", model.SlotTime);
+                cmd.Parameters.AddWithValue("@Status", model.Status);
 
-                    SELECT SCOPE_IDENTITY();";
-
-                using (SqlCommand cmd = new SqlCommand(query, conn))
-                {
-                    cmd.Parameters.AddWithValue("@DoctorId", model.DoctorId);
-                    cmd.Parameters.AddWithValue("@ClinicId", model.ClinicId);
-                    cmd.Parameters.AddWithValue("@PatientId", model.PatientId);
-                    cmd.Parameters.AddWithValue("@VisitId", model.VisitId);
-                    cmd.Parameters.AddWithValue("@AppointmentDate", model.AppointmentDate);
-                    cmd.Parameters.AddWithValue("@SlotTime", model.SlotTime);
-                    cmd.Parameters.AddWithValue("@Status", model.Status);
-
-                    conn.Open();
-
-                    return Convert.ToInt32(cmd.ExecuteScalar());
-                }
+                return Convert.ToInt32(cmd.ExecuteScalar());
             }
         }
 
-        public bool Update(Appointment model)
+        public bool Update(Appointment model, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
+            string query = @"
+                UPDATE Appointments
+                SET DoctorId = @DoctorId,
+                    PatientId = @PatientId,
+                    AppointmentDate = @AppointmentDate,
+                    SlotTime = @SlotTime,
+                    Status = @Status
+                WHERE AppointmentId = @AppointmentId";
+
+            using (SqlCommand cmd = new SqlCommand(query, conn, tran))
             {
-                string query = @"
-                    UPDATE Appointments
-                    SET DoctorId = @DoctorId,
-                        PatientId = @PatientId,
-                        AppointmentDate = @AppointmentDate,
-                        SlotTime = @SlotTime,
-                        Status = @Status
-                    WHERE AppointmentId = @AppointmentId";
+                cmd.Parameters.AddWithValue("@DoctorId", model.DoctorId);
+                cmd.Parameters.AddWithValue("@PatientId", model.PatientId);
+                cmd.Parameters.AddWithValue("@AppointmentDate", model.AppointmentDate);
+                cmd.Parameters.AddWithValue("@SlotTime", model.SlotTime);
+                cmd.Parameters.AddWithValue("@Status", model.Status);
+                cmd.Parameters.AddWithValue("@AppointmentId", model.AppointmentId);
 
-                using (SqlCommand cmd = new SqlCommand(query, conn))
-                {
-                    cmd.Parameters.AddWithValue("@DoctorId", model.DoctorId);
-                    cmd.Parameters.AddWithValue("@PatientId", model.PatientId);
-                    cmd.Parameters.AddWithValue("@AppointmentDate", model.AppointmentDate);
-                    cmd.Parameters.AddWithValue("@SlotTime", model.SlotTime);
-                    cmd.Parameters.AddWithValue("@Status", model.Status);
-                    cmd.Parameters.AddWithValue("@AppointmentId", model.AppointmentId);
-
-                    conn.Open();
-
-                    int rowsAffected = cmd.ExecuteNonQuery();
-                    return rowsAffected > 0;
-                }
+                int rowsAffected = cmd.ExecuteNonQuery();
+                return rowsAffected > 0;
             }
         }
 
-        public bool Delete(int id)
+        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
+            string query = "DELETE FROM Appointments WHERE AppointmentId = @AppointmentId";
+
+            using (SqlCommand cmd = new SqlCommand(query, conn, tran))
             {
-                string query = "DELETE FROM Appointments WHERE AppointmentId = @AppointmentId";
+                cmd.Parameters.AddWithValue("@AppointmentId", id);
 
-                using (SqlCommand cmd = new SqlCommand(query, conn))
-                {
-                    cmd.Parameters.AddWithValue("@AppointmentId", id);
-
-                    conn.Open();
-
-                    int rowsAffected = cmd.ExecuteNonQuery();
-                    return rowsAffected > 0;
-                }
+                int rowsAffected = cmd.ExecuteNonQuery();
+                return rowsAffected > 0;
             }
         }
 
@@ -351,18 +337,14 @@ namespace DAL
             return list;
         }
 
-        public void UpdateStatus(int appointmentId, string status)
+        public void UpdateStatus(int appointmentId, string status, SqlConnection conn, SqlTransaction tran)
         {
-            using var con = _db.GetConnection();
-
             string sql = "UPDATE Appointments SET Status=@Status WHERE AppointmentId=@AppointmentId";
 
-            using var cmd = new SqlCommand(sql, con);
+            using var cmd = new SqlCommand(sql, conn, tran);
 
             cmd.Parameters.AddWithValue("@Status", status);
             cmd.Parameters.AddWithValue("@AppointmentId", appointmentId);
-
-            con.Open();
 
             cmd.ExecuteNonQuery();
         }

@@ -63,7 +63,7 @@ namespace Controllers
 
             foreach(var med in model.pharmacologyAdvices)
             {
-                _pharmacology.Add(consultationId, model.AppointmentId, med);
+                _pharmacology.Create(consultationId, model.AppointmentId, med);
             }
 
             _appointment.UpdateStatus(model.AppointmentId, "Completed");

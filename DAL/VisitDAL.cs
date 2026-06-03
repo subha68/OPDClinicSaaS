@@ -14,52 +14,41 @@ namespace DAL
             _db = new DbHelper(configuration);
         }
 
-        public int Add(Visit visit)
+        public int Add(Visit visit, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                string query = @"INSERT INTO Visits (VisitDate, VisitType, ClinicId, PatientId) VALUES (@VisitDate, @VisitType, @ClinicId, @PatientId);
+            string query = @"INSERT INTO Visits (VisitDate, VisitType, ClinicId, PatientId) VALUES (@VisitDate, @VisitType, @ClinicId, @PatientId);
                                     SELECT SCOPE_IDENTITY();";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@VisitDate", visit.VisitDate);
-                cmd.Parameters.AddWithValue("@VisitType", visit.VisitType);
-                cmd.Parameters.AddWithValue("@ClinicId", visit.ClinicId);
-                cmd.Parameters.AddWithValue("@PatientId", visit.PatientId);
-                conn.Open();
-                return Convert.ToInt32(cmd.ExecuteScalar());
-            }
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@VisitDate", visit.VisitDate);
+            cmd.Parameters.AddWithValue("@VisitType", visit.VisitType);
+            cmd.Parameters.AddWithValue("@ClinicId", visit.ClinicId);
+            cmd.Parameters.AddWithValue("@PatientId", visit.PatientId);
+            return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
-        public bool Update(Visit visit)
+        public bool Update(Visit visit, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                string query = @"UPDATE Visits 
-                                SET VisitDate = @VisitDate, VisitType = @VisitType, ClinicId = @ClinicId, PatientId = @PatientId 
-                                WHERE VisitId = @VisitId";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@VisitDate", visit.VisitDate);
-                cmd.Parameters.AddWithValue("@VisitType", visit.VisitType);
-                cmd.Parameters.AddWithValue("@ClinicId", visit.ClinicId);
-                cmd.Parameters.AddWithValue("@PatientId", visit.PatientId);
-                cmd.Parameters.AddWithValue("@VisitId", visit.VisitId);
-                conn.Open();
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            string query = @"UPDATE Visits 
+                            SET VisitDate = @VisitDate, VisitType = @VisitType, ClinicId = @ClinicId, PatientId = @PatientId 
+                            WHERE VisitId = @VisitId";
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@VisitDate", visit.VisitDate);
+            cmd.Parameters.AddWithValue("@VisitType", visit.VisitType);
+            cmd.Parameters.AddWithValue("@ClinicId", visit.ClinicId);
+            cmd.Parameters.AddWithValue("@PatientId", visit.PatientId);
+            cmd.Parameters.AddWithValue("@VisitId", visit.VisitId);
+
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
-        public bool Delete(int id)
+        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                string query = @"DELETE FROM Visits WHERE VisitId = @VisitId";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@VisitId", id);
-                conn.Open();
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            string query = @"DELETE FROM Visits WHERE VisitId = @VisitId";
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@VisitId", id);
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
         public List<Visit> GetAll()

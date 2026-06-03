@@ -8,7 +8,7 @@ namespace BLL
         private readonly MenuDAL _menuDAL;
 
         public MenuService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(httpContextAccessor)
+                                : base(config, httpContextAccessor)
         {
             _menuDAL = new MenuDAL(config);
             _dal = _menuDAL;

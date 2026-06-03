@@ -61,79 +61,69 @@ namespace DAL
             return null;
         }
 
-        public int Add(User user)
+        public int Add(User user, SqlConnection conn, SqlTransaction tran)
         {
             int userId = 0;
 
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                string query = @"INSERT INTO Users 
-                                (Username, PasswordHash, RoleId, ClinicId, FirstName, LastName, Email, Phone)
-                                VALUES (@Username, @PasswordHash, @RoleId, @ClinicId, @FirstName, @LastName, @Email, @Phone);
-                                SELECT SCOPE_IDENTITY();";
+            string query = @"INSERT INTO Users 
+                            (Username, PasswordHash, RoleId, ClinicId, FirstName, LastName, Email, Phone)
+                            VALUES (@Username, @PasswordHash, @RoleId, @ClinicId, @FirstName, @LastName, @Email, @Phone);
+                            SELECT SCOPE_IDENTITY();";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@Username", user.Username);
-                cmd.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
-                cmd.Parameters.AddWithValue("@RoleId", user.RoleId);
-                cmd.Parameters.AddWithValue("@ClinicId", user.ClinicId);
-                cmd.Parameters.AddWithValue("@FirstName", user.FirstName);
-                cmd.Parameters.AddWithValue("@LastName", user.LastName);
-                cmd.Parameters.AddWithValue("@Email", user.Email);
-                cmd.Parameters.AddWithValue("@Phone", user.Phone);
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@Username", user.Username);
+            cmd.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
+            cmd.Parameters.AddWithValue("@RoleId", user.RoleId);
+            cmd.Parameters.AddWithValue("@ClinicId", user.ClinicId);
+            cmd.Parameters.AddWithValue("@FirstName", user.FirstName);
+            cmd.Parameters.AddWithValue("@LastName", user.LastName);
+            cmd.Parameters.AddWithValue("@Email", user.Email);
+            cmd.Parameters.AddWithValue("@Phone", user.Phone);
 
-                conn.Open();
-                //cmd.ExecuteNonQuery();
-                userId = Convert.ToInt32(cmd.ExecuteScalar());
-            }
+            conn.Open();
+
+            userId = Convert.ToInt32(cmd.ExecuteScalar());
+
             return userId;
         }
 
-        public bool Update(User user)
+        public bool Update(User user, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                string query = @"UPDATE Users
-                                SET Username = @Username,
-                                    PasswordHash = @PasswordHash,
-                                    RoleId = @RoleId,
-                                    ClinicId = @ClinicId,
-                                    FirstName = @FirstName,
-                                    LastName = @LastName,
-                                    Email = @Email,
-                                    Phone = @Phone
-                                WHERE UserId = @UserId";
+            string query = @"UPDATE Users
+                            SET Username = @Username,
+                                PasswordHash = @PasswordHash,
+                                RoleId = @RoleId,
+                                ClinicId = @ClinicId,
+                                FirstName = @FirstName,
+                                LastName = @LastName,
+                                Email = @Email,
+                                Phone = @Phone
+                            WHERE UserId = @UserId";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@Username", user.Username);
-                cmd.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
-                cmd.Parameters.AddWithValue("@RoleId", user.RoleId);
-                cmd.Parameters.AddWithValue("@ClinicId", user.ClinicId.HasValue ? (object)user.ClinicId.Value : DBNull.Value);
-                cmd.Parameters.AddWithValue("@FirstName", user.FirstName ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@LastName", user.LastName ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@Email", user.Email ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@Phone", user.Phone ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@UserId", user.UserId);
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@Username", user.Username);
+            cmd.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
+            cmd.Parameters.AddWithValue("@RoleId", user.RoleId);
+            cmd.Parameters.AddWithValue("@ClinicId", user.ClinicId.HasValue ? (object)user.ClinicId.Value : DBNull.Value);
+            cmd.Parameters.AddWithValue("@FirstName", user.FirstName ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@LastName", user.LastName ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@Email", user.Email ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@Phone", user.Phone ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@UserId", user.UserId);
 
-                conn.Open();
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
-        public bool Delete(int userId)
+        public bool Delete(int userId, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                string query = @"DELETE FROM Users WHERE UserId = @UserId";
+            string query = @"DELETE FROM Users WHERE UserId = @UserId";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@UserId", userId);
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@UserId", userId);
 
-                conn.Open();
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
         public User Get(int userId)

@@ -16,85 +16,69 @@ namespace DAL
             _db = new DbHelper(config);
         }
 
-        public int Add(Consultation model)
+        public int Add(Consultation model, SqlConnection conn, SqlTransaction tran)
         {
             int consultationId = 0;
 
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                string query = @"
-                    INSERT INTO Consultations
-                    (
-                        AppointmentId,
-                        Symptoms,
-                        Diagnosis,
-                        Notes
-                    )
-                    VALUES
-                    (
-                        @AppointmentId,
-                        @Symptoms,
-                        @Diagnosis,
-                        @Notes
-                    );
-                                       
-                    SELECT SCOPE_IDENTITY();";
+            string query = @"
+                INSERT INTO Consultations
+                (
+                    AppointmentId,
+                    Symptoms,
+                    Diagnosis,
+                    Notes
+                )
+                VALUES
+                (
+                    @AppointmentId,
+                    @Symptoms,
+                    @Diagnosis,
+                    @Notes
+                );
+                                    
+                SELECT SCOPE_IDENTITY();";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@AppointmentId", model.AppointmentId);
-                cmd.Parameters.AddWithValue("@Symptoms", model.Symptoms ?? "");
-                cmd.Parameters.AddWithValue("@Diagnosis", model.Diagnosis ?? "");
-                cmd.Parameters.AddWithValue("@Notes", model.Notes ?? "");
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@AppointmentId", model.AppointmentId);
+            cmd.Parameters.AddWithValue("@Symptoms", model.Symptoms ?? "");
+            cmd.Parameters.AddWithValue("@Diagnosis", model.Diagnosis ?? "");
+            cmd.Parameters.AddWithValue("@Notes", model.Notes ?? "");
 
-                conn.Open();
-
-                //cmd.ExecuteNonQuery();
-                consultationId = Convert.ToInt32(cmd.ExecuteScalar());
-            }
+            consultationId = Convert.ToInt32(cmd.ExecuteScalar());
 
             return consultationId;
         }
 
-        public bool Update(Consultation model)
+        public bool Update(Consultation model, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                string query = @"
-                    UPDATE Consultations
-                    SET AppointmentId = @AppointmentId,
-                        Symptoms = @Symptoms,
-                        Diagnosis = @Diagnosis,
-                        Notes = @Notes
-                    WHERE ConsultationId = @ConsultationId";
+            string query = @"
+                UPDATE Consultations
+                SET AppointmentId = @AppointmentId,
+                    Symptoms = @Symptoms,
+                    Diagnosis = @Diagnosis,
+                    Notes = @Notes
+                WHERE ConsultationId = @ConsultationId";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@Symptoms", model.Symptoms ?? "");
-                cmd.Parameters.AddWithValue("@Diagnosis", model.Diagnosis ?? "");
-                cmd.Parameters.AddWithValue("@Notes", model.Notes ?? "");
-                cmd.Parameters.AddWithValue("@ConsultationId", model.ConsultationId);
-                cmd.Parameters.AddWithValue("@AppointmentId", model.AppointmentId);
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@Symptoms", model.Symptoms ?? "");
+            cmd.Parameters.AddWithValue("@Diagnosis", model.Diagnosis ?? "");
+            cmd.Parameters.AddWithValue("@Notes", model.Notes ?? "");
+            cmd.Parameters.AddWithValue("@ConsultationId", model.ConsultationId);
+            cmd.Parameters.AddWithValue("@AppointmentId", model.AppointmentId);
 
-                conn.Open();
-
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
-        public bool Delete(int id)
+        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                string query = @"DELETE FROM Consultations WHERE ConsultationId = @id";
+            string query = @"DELETE FROM Consultations WHERE ConsultationId = @id";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", id);
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@id", id);
 
-                conn.Open();
-
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
         public List<Consultation> GetAll()

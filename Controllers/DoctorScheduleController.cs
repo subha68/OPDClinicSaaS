@@ -73,7 +73,7 @@ namespace Controllers
                     return View("Create", model);
                 }
 
-                _schedule.Add(model);
+                _schedule.Create(model);
 
                 TempData["SuccessMessage"] = "Doctor schedule saved successfully.";
 

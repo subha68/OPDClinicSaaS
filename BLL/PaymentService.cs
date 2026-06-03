@@ -1,6 +1,7 @@
 using DAL;
 using Models;
 using ViewModels;
+using Microsoft.Data.SqlClient;
 
 namespace BLL
 {
@@ -11,7 +12,7 @@ namespace BLL
         private readonly VisitDAL _visitDAL;
 
         public PaymentService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(httpContextAccessor)
+                                : base(config, httpContextAccessor)
         {
             _paymentDAL = new PaymentDAL(config);
             _billDAL = new BillDAL(config);
@@ -19,22 +20,13 @@ namespace BLL
             _dal = _paymentDAL;
         }
 
-        public override int Add(Payment payment)
-        {
-            int paymentId = base.Add(payment);
-
-            UpdateBillStatus(payment.BillId);
-
-            return paymentId;
-        }
-
-        public void UpdateBillStatus(int billId)
+        public void UpdateBillStatus(int billId, SqlConnection conn, SqlTransaction tran)
         {
             Bill bill = _billDAL.Get(billId);
 
             decimal totalPaid = _paymentDAL.GetTotalPaid(billId);
 
-            _billDAL.UpdatePayment(billId, totalPaid);
+            _billDAL.UpdatePayment(billId, totalPaid, conn, tran);
         }
 
         public List<Payment> GetPaymentsByBill(int billId)

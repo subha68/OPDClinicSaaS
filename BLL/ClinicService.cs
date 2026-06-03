@@ -8,16 +8,30 @@ namespace BLL
         private readonly ClinicDAL _clinicDAL;
 
         public ClinicService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
-                                : base(httpContextAccessor)
+                                : base(config, httpContextAccessor)
         {
             _clinicDAL = new ClinicDAL(config);
             _dal = _clinicDAL;
         }
 
-        public override int Add(Clinic clinic)
+        public override int Create(Clinic clinic)
         {
-            clinic.ClinicCode = "CLN" + DateTime.Now.Ticks.ToString().Substring(10);
-            return base.Add(clinic);
+            using var conn = _db.GetConnection();
+            conn.Open();
+            using var tran = conn.BeginTransaction();
+
+            try
+            {
+                clinic.ClinicCode = "CLN" + DateTime.Now.Ticks.ToString().Substring(10);
+                int id = base.Add(clinic, conn, tran);
+                tran.Commit();
+                return id;
+            }
+            catch
+            {
+                tran.Rollback();
+                throw;
+            }
         }
 
         public Clinic ValidateClinicCode(string clinicCode)

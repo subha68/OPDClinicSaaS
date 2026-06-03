@@ -13,35 +13,26 @@ namespace DAL
             _db = new DbHelper(config);
         }
 
-        public int Add(BillingCharge charge)
+        public int Add(BillingCharge charge, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
+            string query = @"INSERT INTO BillingCharges (ClinicId, ChargeCode, ChargeName, Description, Rate, IsActive)
+                                VALUES (@clinicId, @code, @name, @desc, @rate, @active);
+                            SELECT SCOPE_IDENTITY();";
 
-                string query = @"INSERT INTO BillingCharges (ClinicId, ChargeCode, ChargeName, Description, Rate, IsActive)
-                                 VALUES (@clinicId, @code, @name, @desc, @rate, @active);
-                                SELECT SCOPE_IDENTITY();";
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@clinicId", charge.ClinicId);
+            cmd.Parameters.AddWithValue("@code", charge.ChargeCode ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@name", charge.ChargeName);
+            cmd.Parameters.AddWithValue("@desc", charge.Description ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@rate", charge.Rate);
+            cmd.Parameters.AddWithValue("@active", charge.IsActive);
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@clinicId", charge.ClinicId);
-                cmd.Parameters.AddWithValue("@code", charge.ChargeCode ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@name", charge.ChargeName);
-                cmd.Parameters.AddWithValue("@desc", charge.Description ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@rate", charge.Rate);
-                cmd.Parameters.AddWithValue("@active", charge.IsActive);
-
-                return Convert.ToInt32(cmd.ExecuteScalar());
-            }
+            return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
-        public bool Update(BillingCharge charge)
+        public bool Update(BillingCharge charge, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
-
-                string query = @"UPDATE BillingCharges
+            string query = @"UPDATE BillingCharges
                                  SET ChargeCode = @code,
                                      ChargeName = @name,
                                      Description = @desc,
@@ -49,34 +40,28 @@ namespace DAL
                                      IsActive = @active
                                  WHERE ChargeId = @id AND ClinicId = @clinicId";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@code", charge.ChargeCode ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@name", charge.ChargeName);
-                cmd.Parameters.AddWithValue("@desc", charge.Description ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@rate", charge.Rate);
-                cmd.Parameters.AddWithValue("@active", charge.IsActive);
-                cmd.Parameters.AddWithValue("@id", charge.ChargeId);
-                cmd.Parameters.AddWithValue("@clinicId", charge.ClinicId);
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@code", charge.ChargeCode ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@name", charge.ChargeName);
+            cmd.Parameters.AddWithValue("@desc", charge.Description ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@rate", charge.Rate);
+            cmd.Parameters.AddWithValue("@active", charge.IsActive);
+            cmd.Parameters.AddWithValue("@id", charge.ChargeId);
+            cmd.Parameters.AddWithValue("@clinicId", charge.ClinicId);
 
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
-        public bool Delete(int chargeId)
+        public bool Delete(int chargeId, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
+            string query = @"DELETE FROM BillingCharges WHERE ChargeId = @id";
 
-                string query = @"DELETE FROM BillingCharges WHERE ChargeId = @id";
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@id", chargeId);
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", chargeId);
-
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
         public BillingCharge Get(int chargeId)

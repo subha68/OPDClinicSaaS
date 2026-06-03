@@ -1,12 +1,13 @@
 using System.Diagnostics;
+using Microsoft.Data.SqlClient;
 
 namespace DAL
 {
     public interface IDAL<T>
     {
-        int Add(T model);
-        bool Update(T model);
-        bool Delete(int id);
+        int Add(T model, SqlConnection conn, SqlTransaction tran);
+        bool Update(T model, SqlConnection conn, SqlTransaction tran);
+        bool Delete(int id, SqlConnection conn, SqlTransaction tran);
         T Get(int id);
         List<T> GetAll();
     }

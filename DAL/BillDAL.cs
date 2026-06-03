@@ -14,119 +14,93 @@ namespace DAL
             _db = new DbHelper(config);
         }
 
-        public int Add(Bill bill)
+        public int Add(Bill bill, SqlConnection conn, SqlTransaction tran)
         {
             int billId = 0;
 
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
+            string query = @"INSERT INTO Bills (VisitId, BillDate, GrossAmount, DiscountAmount, NetAmount, PaidAmount) 
+                                VALUES (@visitId, @billDate, @grossAmount, @discountAmount, @netAmount, @paidAmount);
+                            SELECT SCOPE_IDENTITY();";
 
-                string query = @"INSERT INTO Bills (VisitId, BillDate, GrossAmount, DiscountAmount, NetAmount, PaidAmount) 
-                                 VALUES (@visitId, @billDate, @grossAmount, @discountAmount, @netAmount, @paidAmount);
-                                SELECT SCOPE_IDENTITY();";
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@visitId", bill.VisitId);
+            cmd.Parameters.AddWithValue("@billDate", bill.BillDate);
+            cmd.Parameters.AddWithValue("@grossAmount", bill.GrossAmount);
+            cmd.Parameters.AddWithValue("@discountAmount", bill.DiscountAmount);
+            cmd.Parameters.AddWithValue("@netAmount", bill.NetAmount);
+            cmd.Parameters.AddWithValue("@paidAmount", 0); // Assuming new bills are unpaid
+            //cmd.Parameters.AddWithValue("@clinicId", bill.ClinicId);
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@visitId", bill.VisitId);
-                cmd.Parameters.AddWithValue("@billDate", bill.BillDate);
-                cmd.Parameters.AddWithValue("@grossAmount", bill.GrossAmount);
-                cmd.Parameters.AddWithValue("@discountAmount", bill.DiscountAmount);
-                cmd.Parameters.AddWithValue("@netAmount", bill.NetAmount);
-                cmd.Parameters.AddWithValue("@paidAmount", 0); // Assuming new bills are unpaid
-                //cmd.Parameters.AddWithValue("@clinicId", bill.ClinicId);
+            billId = Convert.ToInt32(cmd.ExecuteScalar());
 
-                billId = Convert.ToInt32(cmd.ExecuteScalar());
-            }
+            string query2 = @"INSERT INTO Bills (VisitId, BillDate, GrossAmount, DiscountAmount, NetAmount, PaidAmount) 
+                                VALUES (@visitId, @billDate, @grossAmount, @discountAmount, @netAmount, @paidAmount);
+                            SELECT SCOPE_IDENTITY();";
 
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
+            SqlCommand cmd2 = new SqlCommand(query2, conn, tran);
+            cmd2.Parameters.AddWithValue("@visitId", bill.VisitId);
+            cmd2.Parameters.AddWithValue("@billDate", bill.BillDate);
+            cmd2.Parameters.AddWithValue("@grossAmount", bill.GrossAmount);
+            cmd2.Parameters.AddWithValue("@discountAmount", bill.DiscountAmount);
+            cmd2.Parameters.AddWithValue("@netAmount", bill.NetAmount);
+            cmd2.Parameters.AddWithValue("@paidAmount", 0); // Assuming new bills are unpaid
+            //cmd2.Parameters.AddWithValue("@clinicId", bill.ClinicId);
 
-                string query = @"INSERT INTO Bills (VisitId, BillDate, GrossAmount, DiscountAmount, NetAmount, PaidAmount) 
-                                 VALUES (@visitId, @billDate, @grossAmount, @discountAmount, @netAmount, @paidAmount);
-                                SELECT SCOPE_IDENTITY();";
-
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@visitId", bill.VisitId);
-                cmd.Parameters.AddWithValue("@billDate", bill.BillDate);
-                cmd.Parameters.AddWithValue("@grossAmount", bill.GrossAmount);
-                cmd.Parameters.AddWithValue("@discountAmount", bill.DiscountAmount);
-                cmd.Parameters.AddWithValue("@netAmount", bill.NetAmount);
-                cmd.Parameters.AddWithValue("@paidAmount", 0); // Assuming new bills are unpaid
-                //cmd.Parameters.AddWithValue("@clinicId", bill.ClinicId);
-
-                billId = Convert.ToInt32(cmd.ExecuteScalar());
-            }
-
+            billId = Convert.ToInt32(cmd2.ExecuteScalar());
 
             return billId;
         }
 
-        public bool Update(Bill bill)
+        public bool Update(Bill bill, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
+            string query = @"UPDATE Bills
+                                SET PatientId = @patientId,
+                                    VisitId = @visitId,
+                                    BillDate = @billDate,
+                                    GrossAmount = @grossAmount,
+                                    DiscountAmount = @discountAmount,
+                                    NetAmount = @netAmount,
+                                    PaidAmount = @paidAmount
+                                WHERE BillId = @id";
 
-                string query = @"UPDATE Bills
-                                 SET PatientId = @patientId,
-                                     VisitId = @visitId,
-                                     BillDate = @billDate,
-                                     GrossAmount = @grossAmount,
-                                     DiscountAmount = @discountAmount,
-                                     NetAmount = @netAmount,
-                                     PaidAmount = @paidAmount
-                                 WHERE BillId = @id";
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@patientId", bill.PatientId);
+            cmd.Parameters.AddWithValue("@visitId", bill.VisitId);
+            cmd.Parameters.AddWithValue("@billDate", bill.BillDate);
+            cmd.Parameters.AddWithValue("@grossAmount", bill.GrossAmount);
+            cmd.Parameters.AddWithValue("@discountAmount", bill.DiscountAmount);
+            cmd.Parameters.AddWithValue("@netAmount", bill.NetAmount);
+            cmd.Parameters.AddWithValue("@paidAmount", bill.TotalPaidAmount);
+            cmd.Parameters.AddWithValue("@id", bill.BillId);
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@patientId", bill.PatientId);
-                cmd.Parameters.AddWithValue("@visitId", bill.VisitId);
-                cmd.Parameters.AddWithValue("@billDate", bill.BillDate);
-                cmd.Parameters.AddWithValue("@grossAmount", bill.GrossAmount);
-                cmd.Parameters.AddWithValue("@discountAmount", bill.DiscountAmount);
-                cmd.Parameters.AddWithValue("@netAmount", bill.NetAmount);
-                cmd.Parameters.AddWithValue("@paidAmount", bill.TotalPaidAmount);
-                cmd.Parameters.AddWithValue("@id", bill.BillId);
-
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
-        public bool UpdatePayment(int billId, decimal totalPaid)
+        public bool UpdatePayment(int billId, decimal totalPaid, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
+            string query = @"UPDATE Bills
+                                SET PaidAmount = @paidAmount
+                                WHERE BillId = @billId";
 
-                string query = @"UPDATE Bills
-                                 SET PaidAmount = @paidAmount
-                                 WHERE BillId = @billId";
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@paidAmount", totalPaid);
+            cmd.Parameters.AddWithValue("@billId", billId);
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@paidAmount", totalPaid);
-                cmd.Parameters.AddWithValue("@billId", billId);
-
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
 
-        public bool Delete(int id)
+        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
         {
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
+            string query = @"DELETE FROM Bills WHERE Id = @id";
 
-                string query = @"DELETE FROM Bills WHERE Id = @id";
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+            cmd.Parameters.AddWithValue("@id", id);
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", id);
-
-                int rowsAffected = cmd.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
+            int rowsAffected = cmd.ExecuteNonQuery();
+            return rowsAffected > 0;
         }
 
         public Bill Get(int id)
