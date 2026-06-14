@@ -7,14 +7,15 @@
 <h3>Book Appointment</h3>
 
 <form asp-action="Book" method="post">
-
+    <input type="hidden" asp-for="DepartmentId" />
     <input type="hidden" asp-for="DoctorId" />
     <input type="hidden"
        id="AppointmentDate"
        name="AppointmentDate"
        value="@Model.AppointmentDate.ToString("yyyy-MM-dd")" />
+    <input type="hidden" asp-for="AppointmentDateTime"
+                        value="@Model.AppointmentDateTime.ToString("yyyy-MM-ddTHH:mm")" />
     <input type="hidden" asp-for="SlotTime" />
-    <input type="hidden" asp-for="SlotId" />
     <input type="hidden" asp-for="PatientId" />
     <input type="hidden" asp-for="VisitId" />
     <input type="hidden" asp-for="IsVisitLocked" />
@@ -79,18 +80,16 @@
 
 <script>
 function searchPatient() {
-
+    var appointmentDateTime = $("#AppointmentDateTime").val();
+    var departmentId = $("#DepartmentId").val();
     var doctorId = $("#DoctorId").val();
-    var appointmentDate = $("#AppointmentDate").val();
-    var slotId = $("#SlotId").val();
-    var slotTime = $("#SlotTime").val();
+    console.log(appointmentDateTime);
 
     window.location =
         '/AppointmentBooking/SearchPatient?' +
-        'doctorId=' + doctorId +
-        '&appointmentDate=' + encodeURIComponent(appointmentDate) +
-        '&slotId=' + slotId +
-        '&slotTime=' + encodeURIComponent(slotTime);
+        'departmentId=' + departmentId +
+        '&doctorId=' + doctorId +
+        '&appointmentDateTime=' + encodeURIComponent(appointmentDateTime);
 }
 
 function checkVisit() {

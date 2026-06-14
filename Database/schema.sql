@@ -78,7 +78,16 @@ CREATE TABLE Patients (
     Phone NVARCHAR(20),
     DOB DATE,
     Gender NVARCHAR(10),
-    Address NVARCHAR(300),
+    Address1 NVARCHAR(300),
+    Address2 NVARCHAR(300),
+    City NVARCHAR(50),
+    State NVARCHAR(50),
+    PinCode NVARCHAR(10),
+    IdType NVARCHAR(15),
+    IdNumber NVARCHAR(15),
+    EmergencyContactName NVARCHAR(50),
+    EmergencyRelationship NVARCHAR(50),
+    EmergencyPhone NVARCHAR(50),    
 
     UNIQUE (FirstName, LastName, Phone, DOB),
 
@@ -103,7 +112,8 @@ CREATE TABLE Appointments (
     PatientId INT NOT NULL,
     VisitId INT NOT NULL,
     AppointmentDate DATE,
-    SlotTime TIME,
+    SlotStartTime TIME,
+    SlotEndTime TIME,
     Status NVARCHAR(20),
 
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
@@ -131,11 +141,6 @@ CREATE TABLE MedicalHistories (
     Details NVARCHAR(MAX),
 
     FOREIGN KEY (PatientId) REFERENCES Patients(PatientId)
-);
-
-CREATE TABLE Medicines (
-    MedicineId INT IDENTITY PRIMARY KEY,
-    Name NVARCHAR(200)
 );
 
 CREATE TABLE Consultations (
@@ -178,7 +183,7 @@ CREATE TABLE BillLines (
     Quantity INT,
     Rate DECIMAL(18,2),
     GrossAmount DECIMAL(18,2),
-    DiscountPercent DECIMAL(3,2),
+    DiscountPercent DECIMAL(5,2),
     DiscountAmount DECIMAL(18,2),
     NetAmount DECIMAL(18,2),
 
@@ -302,6 +307,7 @@ CREATE TABLE PharmacologyAdvices
 (
     PharmacologyId INT IDENTITY PRIMARY KEY,
     ConsultationId INT NOT NULL,
+    MedicineId INT,
     MedicineName NVARCHAR(200),
     Dosage NVARCHAR(100),
     Frequency NVARCHAR(100),
@@ -309,5 +315,152 @@ CREATE TABLE PharmacologyAdvices
     Instructions NVARCHAR(500),
 
     FOREIGN KEY (ConsultationId) REFERENCES Consultations(ConsultationId)
+    FOREIGN KEY (MedicineId) REFERENCES Medicines(MedicineId)
 );
 
+CREATE TABLE Medicines
+(
+    MedicineId INT IDENTITY(1,1) PRIMARY KEY,
+    MedicineCode NVARCHAR(20) NOT NULL,
+    MedicineName NVARCHAR(200) NOT NULL,
+    GenericName NVARCHAR(200) NULL,
+    HSNCode NVARCHAR(20),
+    Strength NVARCHAR(50) NULL,
+    DosageForm NVARCHAR(50) NULL,      -- Tablet, Capsule, Syrup, Injection
+    UnitOfMeasure NVARCHAR(20) NULL,   -- Tab, Cap, Bottle, Vial
+    ReorderLevel INT NOT NULL DEFAULT 0,
+    GSTPercent DECIMAL(5,2) NULL,
+    Manufacturer NVARCHAR(200) NULL,
+    ScheduleType NVARCHAR(20) NULL,    -- OTC (Over-the-counter), H (Prescription Drug), H1 (Restricted Antibiotics), X (Controlled Drugs)
+    CreatedFromPrescription BIT,
+    IsActive BIT NOT NULL DEFAULT 1,
+    CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+    UpdatedAt DATETIME NULL
+);
+
+CREATE TABLE MedicineBatches
+(
+    BatchId INT IDENTITY PRIMARY KEY,
+    MedicineId INT,
+    BatchNo NVARCHAR(50),
+    ExpiryDate DATE,
+    PurchaseRate DECIMAL(18,2),
+    SaleRate DECIMAL(18,2),
+    CurrentQty INT
+
+    FOREIGN KEY (MedicineId) REFERENCES Medicines(MedicineId)
+);
+
+CREATE TABLE Suppliers
+(
+    SupplierId INT IDENTITY PRIMARY KEY,
+    Name NVARCHAR(50),
+    GSTNo NVARCHAR(25)
+);
+
+CREATE TABLE PurchaseOrders
+(
+    PurchaseOrderId INT IDENTITY PRIMARY KEY,
+    SupplierId INT,
+    PODate DATE,
+    Status NVARCHAR(25)
+
+    FOREIGN KEY (SupplierId) REFERENCES Suppliers(SupplierId)
+);
+
+CREATE TABLE POLines
+(
+    POLineId INT IDENTITY PRIMARY KEY,
+    POLineNo INT,
+    PurchaseOrderId INT,
+    MedicineId INT,
+    Quantity INT,
+    Rate DECIMAL(10,2)
+
+    FOREIGN KEY (PurchaseOrderId) REFERENCES PurchaseOrders(PurchaseOrderId),
+    FOREIGN KEY (MedicineId) REFERENCES Medicines(MedicineId)    
+);
+
+CREATE TABLE GoodsReceipts
+(
+    GRNId INT IDENTITY PRIMARY KEY,
+    SupplierId INT,
+    PurchaseOrderId INT,
+    GRNDate DATE,
+    InvoiceNo NVARCHAR(20)
+
+    FOREIGN KEY (SupplierId) REFERENCES Suppliers(SupplierId),
+    FOREIGN KEY (PurchaseOrderId) REFERENCES PurchaseOrders(PurchaseOrderId)    
+);
+
+CREATE TABLE GoodsReceiptLines
+(
+    GRNLineId INT IDENTITY PRIMARY KEY,
+    GRNLineNo INT,
+    MedicineId INT,
+    BatchNo NVARCHAR(50),
+    ExpiryDate DATE,
+    Quantity INT,
+    PurchaseRate DECIMAL(10,2),
+    SaleRate DECIMAL(10,2)
+
+    FOREIGN KEY (MedicineId) REFERENCES Medicines(MedicineId)    
+);
+
+CREATE TABLE PharmacyBills
+(
+    PharmacyBillId INT IDENTITY PRIMARY KEY,
+    PharmacyBillNo NVARCHAR(30) NOT NULL,
+    PatientId INT,
+    PharmacologyId INT,
+    BillDate DATE,
+    GrossAmount DECIMAL(10,2) NOT NULL DEFAULT 0,
+    Discount DECIMAL(10,2) NOT NULL DEFAULT 0,
+    Tax DECIMAL(10,2) NOT NULL DEFAULT 0,
+    CGST DECIMAL(10,2) NOT NULL DEFAULT 0,
+    SGST DECIMAL(10,2) NOT NULL DEFAULT 0,
+    IGST DECIMAL(10,2) NOT NULL DEFAULT 0,
+    NetAmount DECIMAL(10,2)  NOT NULL DEFAULT 0,
+    Remarks NVARCHAR(100)
+
+    FOREIGN KEY (PatientId) REFERENCES Patients(PatientId),
+    FOREIGN KEY (PharmacologyId) REFERENCES PharmacologyAdvices(PharmacologyId)
+);
+
+CREATE TABLE PharmacyBillLines
+(
+    PBLineId INT IDENTITY PRIMARY KEY,
+    PharmacyBillId INT NOT NULL,
+    PBLineNo INT,
+    MedicineId INT,
+    BatchId INT,
+    Quantity INT,
+    Rate DECIMAL(10,2),
+    GrossAmount DECIMAL(10,2),
+    DiscountPercent DECIMAL(10,2),
+    DiscountAmount DECIMAL(10,2),
+    TaxPercent DECIMAL(10,2),
+    TaxAmount DECIMAL(10,2),
+    NetAmount DECIMAL(10,2)
+
+    FOREIGN KEY (MedicineId) REFERENCES Medicines(MedicineId),   
+    FOREIGN KEY (BatchId) REFERENCES MedicineBatches(BatchId),
+    FOREIGN KEY (PharmacyBillId) REFERENCES PharmacyBills(PharmacyBillId)
+);
+
+CREATE TABLE StockLedgers
+(
+    StockLedgerId INT IDENTITY PRIMARY KEY,
+    MedicineId INT,
+    BatchId INT,
+    TransactionDate DATE,
+    TransactionType NVARCHAR(20), -- GRN, SALE, ADJUSTMENT, RETURN
+    ReferenceType NVARCHAR(20),
+    ReferenceId NVARCHAR(20),
+    QuantityIn INT,
+    QuantityOut INT,
+    BalanceQty INT
+
+    FOREIGN KEY (MedicineId) REFERENCES Medicines(MedicineId),
+    FOREIGN KEY (BatchId) REFERENCES MedicineBatches(BatchId)
+);

@@ -1,21 +1,30 @@
 @model IEnumerable<dynamic>
 
-<div class="page-shell">
+<div class="page-shell crudListContainer">
     <div class="glass-card">
 
         <!-- Header -->
         <div class="d-flex justify-content-between mb-3">
             <h2 class="page-title">@ViewBag.PageTitle</h2>
 
-            <div>
+            <div class="d-flex align-items-center gap-2">
+                @if (ViewBag.SearchFields != null)
+                {
+                    <input type="text"
+                        id="txtSearch"
+                        class="form-control"
+                        style="width:250px"
+                        placeholder="Search..." />
+                }
+
                 @if (ViewBag.CustomHeaderActions != null)
                 {
-                    <div class="mb-3">
+                    <div>
                         @foreach (var action in ViewBag.CustomHeaderActions)
                         {
                             <a asp-controller="@action.Controller"
-                                asp-action="@action.Action"
-                                class="btn btn-sm btn-primary mt-2">
+                            asp-action="@action.Action"
+                            class="btn btn-sm btn-primary">
                                 @action.Label
                             </a>
                         }
@@ -24,10 +33,11 @@
                 else
                 {
                     <a asp-action="Create"
-                       class="btn btn-future">
+                    class="btn btn-future">
                         + Add New
                     </a>
                 }
+
             </div>
         </div>
 
@@ -44,7 +54,9 @@
         }
 
         <!-- Grid -->
-        <table class="table table-hover table-future">
+        <table id="crudTable"
+                data-pagesize="@(ViewBag.PageSize ?? 10)"
+                class="table table-hover table-future">
             <thead>
                 <tr>
                     @foreach (var field in ViewBag.Fields)
@@ -56,12 +68,27 @@
                 </tr>
             </thead>
 
-            <tbody>
+            <tbody id="crudBody">
                 @foreach (var row in Model)
                 {
                     var keyValue = row.GetType().GetProperty(ViewBag.KeyField)?.GetValue(row);
 
-                    <tr>
+                    string searchText = "";
+
+                    if (ViewBag.SearchFields != null)
+                    {
+                        foreach (string searchField in ViewBag.SearchFields)
+                        {
+                            var prop = row.GetType().GetProperty(searchField);
+
+                            if (prop != null)
+                            {
+                                searchText += " " + Convert.ToString(prop.GetValue(row));
+                            }
+                        }
+                    }
+
+                    <tr data-search="@searchText.ToLower()">
                         @foreach (var field in ViewBag.Fields)
                         {
                             <td>
@@ -149,5 +176,17 @@
             </tbody>
         </table>
 
+        <div class="d-flex justify-content-between mt-3">
+
+            <div id="recordInfo"></div>
+
+            <nav>
+                <ul class="pagination pagination-sm mb-0"
+                    id="pager">
+                </ul>
+            </nav>
+        </div>
+
     </div>
 </div>
+

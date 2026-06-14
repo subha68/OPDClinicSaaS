@@ -17,6 +17,18 @@ namespace Models
         public DateTime AppointmentDate { get; set; }
 
         public TimeSpan SlotTime { get; set; }
+        public TimeSpan SlotStartTime {
+            get
+            {
+               return SlotTime; 
+            }
+        }
+        public TimeSpan SlotEndTime { 
+            get
+            {
+                return SlotTime.Add(TimeSpan.FromMinutes(15));
+            }
+        }
 
         public string Status { get; set; }  // Booked, In Consultation, Completed, Cancelled, No Show 
 

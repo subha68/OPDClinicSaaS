@@ -24,59 +24,25 @@ namespace BLL
             return _scheduleDAL.GetAllDoctorSchedulesByClinic(ClinicId);
         }
 
-        public List<DoctorScheduleVM> GetByDoctor(int doctorId)
+        public DoctorScheduleVM GetDoctorSchedule(int doctorId)
         {
-            return _scheduleDAL.GetByDoctor(doctorId);
+            return _scheduleDAL.GetDoctorSchedule(doctorId);
         }
 
         /// Validates and saves doctor schedule.
         /// Handles both Insert and Update.
 
-        public override int Create(DoctorScheduleVM model)
+        public bool SaveDoctorSchedule(DoctorScheduleVM model)
         {
-            ValidateSchedule(model);
-
-            bool overlapExists = _scheduleDAL.ExistsOverlap(
-                model.DoctorId,
-                model.DayOfWeek,
-                model.StartTime,
-                model.EndTime,
-                model.ScheduleId > 0 ? model.ScheduleId : null);
-
-            if (overlapExists)
-            {
-                throw new Exception(
-                    "Schedule overlap detected for this doctor.");
-            }
-
             using var conn = _db.GetConnection();
             conn.Open();
             using var tran = conn.BeginTransaction();
             try
             {
-                if (model.ScheduleId > 0)
-                {
-                    bool updated = _dal.Update(model, conn, tran);
-
-                    if (!updated)
-                    {
-                        throw new Exception("Unable to update schedule.");
-                    }
-                }
-                else
-                {
-                    int scheduleId = _dal.Add(model, conn, tran);
-
-                    if (scheduleId <= 0)
-                    {
-                        throw new Exception("Unable to save schedule.");
-                    }
-
-                    model.ScheduleId = scheduleId;
-                }
+                bool result = _scheduleDAL.SaveDoctorSchedule(model.DoctorId, model, conn, tran);
 
                 tran.Commit();
-                return model.ScheduleId;
+                return result;
             }
             catch
             {
@@ -85,7 +51,7 @@ namespace BLL
             }
         }
 
-        public void ValidateSchedule(DoctorScheduleVM model)
+    /*    public void ValidateSchedule(DoctorScheduleVM model)
         {
             if (model == null)
             {
@@ -139,7 +105,7 @@ namespace BLL
                 throw new Exception(
                     "Slot duration cannot exceed schedule duration.");
             }
-        }
+        } */
 
         public override bool Remove(int scheduleId)
         {
@@ -173,7 +139,7 @@ namespace BLL
         /// Generates appointment slots
         /// between given date range.
 
-        public void GenerateSlots(int doctorId, DateTime fromDate, DateTime toDate)
+    /*    public void GenerateSlots(int doctorId, DateTime fromDate, DateTime toDate)
         {
             if (doctorId <= 0)
             {
@@ -186,7 +152,7 @@ namespace BLL
                     "From date cannot be greater than To date.");
             }
 
-            List<DoctorScheduleVM> schedules = _scheduleDAL.GetByDoctor(doctorId);
+            List<DoctorScheduleVM> schedules = _scheduleDAL.GetDoctorSchedule(doctorId);
 
             if (schedules == null || schedules.Count == 0)
             {
@@ -273,6 +239,6 @@ namespace BLL
 
                 currentSlotStart = currentSlotEnd;
             }
-        }
+        } */
     }
 }

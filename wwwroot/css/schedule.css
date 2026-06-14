@@ -1,0 +1,348 @@
+.schedule-day
+{
+    margin-bottom:20px;
+}
+
+.day-name
+{
+    font-weight:600;
+    margin-bottom:6px;
+}
+
+
+.slot
+{
+    background:#f5f5f5;
+    cursor:pointer;
+}
+
+.slot.active
+{
+    background:#0d6efd;
+}
+
+.slot:hover
+{
+    opacity:0.8;
+}
+
+/* New styles */
+
+.schedule-header
+{
+    display:flex;
+    margin-bottom:10px;
+    border-bottom:1px solid #dee2e6;
+    padding-bottom:10px;
+}
+
+.day-header
+{
+    width:120px;
+    flex-shrink:0;
+}
+
+.hour-header
+{
+    flex:1;
+    display:flex;
+}
+
+.hour-cell
+{
+    flex:1;
+    text-align:center;
+    font-size:12px;
+    font-weight:600;
+    color:#6c757d;
+    border-left:1px solid #e9ecef;
+}
+
+.schedule-row
+{
+    display:flex;
+    align-items:center;
+    margin-bottom:12px;
+}
+
+.day-label
+{
+    width:120px;
+    flex-shrink:0;
+    font-weight:600;
+    color:#495057;
+}
+
+.timeline
+{
+    position:relative;
+    flex:1;
+    height:52px;
+
+    border:1px solid #dee2e6;
+    border-radius:6px;
+
+    background:#fff;
+
+    overflow:hidden;
+}
+
+
+.timeline-grid
+{
+    position:absolute;
+
+    top:0;
+    bottom:0;
+
+    width:1px;
+
+    background:#e9ecef;
+}
+
+.shift-bar
+{
+    position:absolute;
+
+    top:8px;
+    height:34px;
+
+    border-radius:6px;
+
+    background:#0d6efd;
+    color:#fff;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    cursor:move;
+
+    overflow:visible;
+}
+
+.shift-delete
+{
+    position:absolute;
+
+    top:2px;
+    right:2px;
+
+    width:16px;
+    height:16px;
+
+    border-radius:50%;
+
+    background:#dc3545;
+    color:#fff;
+
+    z-index:1000;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:11px;
+}
+
+.shift-bar:hover .shift-delete
+{
+    display:flex;
+}
+
+/* New */
+
+.shift-text
+{
+    pointer-events:none;
+    white-space:nowrap;
+}
+
+.timeline:hover
+{
+    background:#fafbfc;
+}
+
+.shift-bar
+{
+    transition:
+        background-color .15s,
+        box-shadow .15s;
+}
+
+.shift-bar:hover
+{
+    background:#0b5ed7;
+
+    box-shadow:
+        0 2px 8px rgba(0,0,0,.20);
+}
+
+.ui-resizable-e,
+.ui-resizable-w
+{
+    width:20px !important;
+    z-index:9999;
+}
+
+.ui-resizable-e
+{
+    right:0 !important;
+}
+
+.ui-resizable-w
+{
+    left:0 !important;
+}
+
+.ui-resizable-e
+{
+    background:rgba(255,255,255,.6);
+    border-right:4px solid #fff;
+    cursor:ew-resize;
+}
+
+.ui-resizable-w
+{
+    background:rgba(255,255,255,.6);
+    border-left:4px solid #fff;
+    cursor:ew-resize;
+}
+
+.shift-bar:hover .ui-resizable-e,
+.shift-bar:hover .ui-resizable-w
+{
+    background:rgba(255,255,255,.75);
+}
+
+.shift-block {
+    position: absolute;
+    overflow: visible !important;
+    z-index: 100;
+}
+
+.resize-handle-left,
+.resize-handle-right {
+    position: absolute;
+    top: 0;
+    width: 10px;
+    height: 100%;
+    cursor: ew-resize;
+    z-index: 999;
+    background: rgba(0,0,0,0.1);
+}
+
+.resize-handle-left {
+    left: 0;
+}
+
+.resize-handle-right {
+    right: 0;
+}
+
+.resize-handle-left::after,
+.resize-handle-right::after {
+    content: "";
+    position: absolute;
+    top: 25%;
+    height: 50%;
+    width: 2px;
+    background: #fff;
+}
+
+.resize-handle-left::after {
+    right: 2px;
+}
+
+.resize-handle-right::after {
+    left: 2px;
+}
+
+.ui-resizable-e::before,
+.ui-resizable-w::before
+{
+    content:'';
+
+    position:absolute;
+
+    top:20%;
+    height:60%;
+    width:2px;
+
+    background:white;
+}
+
+.ui-resizable-e::before
+{
+    left:4px;
+}
+
+.ui-resizable-w::before
+{
+    right:4px;
+}
+
+
+/* For Slots */
+
+.slot-container
+{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-top:20px;
+}
+
+.slot-card
+{
+    width:140px;
+    height:90px;
+
+    border-radius:10px;
+
+    display:flex;
+    flex-direction:column;
+
+    justify-content:center;
+    align-items:center;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.slot-card:hover
+{
+    transform:translateY(-2px);
+}
+
+.slot-available
+{
+    background:#198754;
+    color:white;
+}
+
+.slot-booked
+{
+    background:#dc3545;
+    color:white;
+}
+
+.slot-time
+{
+    font-size:18px;
+    font-weight:700;
+}
+
+.slot-patient
+{
+    text-align:center;
+    font-size:12px;
+}
+
+.slot-free
+{
+    font-size:12px;
+}
+
+

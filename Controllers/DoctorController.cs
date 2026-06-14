@@ -120,6 +120,11 @@ namespace Controllers
             return RedirectToAction("Index");
         }
 
+        public List<Doctor> GetDoctorsByDepartment(int DepartmentId)
+        {
+            return _doctor.GetDoctorsByDepartment(DepartmentId);
+        }
+
         private List<SelectListItem> GetDepartments()
         {
             return _department.List()

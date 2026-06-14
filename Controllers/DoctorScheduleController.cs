@@ -16,32 +16,62 @@ namespace Controllers
     {
         private readonly DoctorScheduleService _schedule;
         private readonly AppointmentSlotService _slot;
+        private readonly DepartmentService _department;
         private readonly DoctorService _doctor;
 
         public DoctorScheduleController(DoctorScheduleService schedule, 
                                         AppointmentSlotService slot, 
-                                        DoctorService doctor)
+                                        DoctorService doctor,
+                                        DepartmentService department)
         {
             _schedule = schedule;
             _slot = slot;
             _doctor = doctor;
+            _department = department;
         }
 
         public IActionResult Index(int? doctorId)
         {
-            List<DoctorScheduleVM> schedules;
+            DoctorScheduleVM vm = null;
+            ViewBag.Departments = _department.List();
+            //ViewBag.Doctors = _doctor.List();
 
             if (doctorId.HasValue && doctorId.Value > 0)
             {
-                schedules = _schedule.GetByDoctor(doctorId.Value);
+                vm = _schedule.GetDoctorSchedule(doctorId.Value);
             }
             else
             {
-                schedules = _schedule.List();
+                vm = new DoctorScheduleVM();
             }
 
-            return View(schedules);
+            return View(vm);
         }
+
+        [HttpGet]
+        public JsonResult GetSchedule(int doctorId)
+        {
+            var vm = _schedule.GetDoctorSchedule(doctorId);
+
+            return Json(vm);
+        }
+
+        [HttpPost]
+        public JsonResult SaveSchedule([FromBody] DoctorScheduleVM scheduleVm)
+        {
+            if (scheduleVm == null)
+                return Json(new
+                {
+                    success = false
+                });
+
+            var result = _schedule.SaveDoctorSchedule(scheduleVm);
+
+            return Json(new
+            {
+                success = result
+            });
+        }        
 
         [HttpGet]
         public IActionResult Create()
@@ -52,8 +82,8 @@ namespace Controllers
                 new DoctorScheduleVM
                 {
                     IsActive = true,
-                    SlotDurationMinutes = 15,
-                    MaxPatientsPerSlot = 1
+                    //SlotDurationMinutes = 15,
+                    //MaxPatientsPerSlot = 1
                 };
 
             return View(model);

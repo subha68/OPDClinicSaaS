@@ -154,7 +154,7 @@ namespace DAL
                 SELECT
                     a.AppointmentId,
                     a.AppointmentDate,
-                    a.SlotTime,
+                    a.SlotStartTime,
                     p.PatientId,
                     p.FirstName + ' ' + p.LastName as PatientName,
                     DATEDIFF(YEAR, p.DOB, GETDATE())
@@ -189,7 +189,7 @@ namespace DAL
                 {
                     AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
                     //AppointmentDate = Convert.ToDateTime(dr["AppointmentDate"]),
-                    //SlotTime = Convert.ToDateTime(dr["SlotTime"]),
+                    //SlotTime = Convert.ToDateTime(dr["SlotStartTime"]),
                     //PatientId = Convert.ToInt32(dr["PatientId"]),
                     PatientName = dr["PatientName"].ToString(),
                     //Age = Convert.ToInt32(dr["Age"]),
@@ -208,7 +208,7 @@ namespace DAL
             using var con = _db.GetConnection();
 
             string sql = @"SELECT c.ConsultationId, c.AppointmentId, c.Symptoms, c.Diagnosis, c.Notes,
-                                a.AppointmentDate, a.SlotTime,
+                                a.AppointmentDate, a.SlotStartTime,
                                 p.PatientId,
                                 p.FirstName + ' ' + p.LastName as PatientName,
                                 d.DoctorId,
@@ -233,7 +233,7 @@ namespace DAL
                 {
                     AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
                     //AppointmentDate = Convert.ToDateTime(dr["AppointmentDate"]),
-                    //SlotTime = Convert.ToDateTime(dr["SlotTime"]),
+                    //SlotTime = Convert.ToDateTime(dr["SlotStartTime"]),
                     PatientId = Convert.ToInt32(dr["PatientId"]),
                     PatientName = dr["PatientName"].ToString(),
                     //Age = Convert.ToInt32(dr["Age"]),
@@ -277,7 +277,7 @@ namespace DAL
                         END AS Age,
                 p.Gender,
                 a.AppointmentDate,
-                a.SlotTime,
+                a.SlotStartTime,
                 con.Symptoms,
                 con.Diagnosis,
                 con.Notes
@@ -308,7 +308,7 @@ namespace DAL
                 vm.Gender = rdr["Gender"].ToString();
                 vm.PatientPhoneNo = rdr["PatientPhoneNo"].ToString();
 
-                vm.VisitDateTime = Convert.ToDateTime(rdr["AppointmentDate"]).Add((TimeSpan)rdr["SlotTime"]);
+                vm.VisitDateTime = Convert.ToDateTime(rdr["AppointmentDate"]).Add((TimeSpan)rdr["SlotStartTime"]);
 
                 vm.Symptoms = rdr["Symptoms"].ToString();
                 vm.Diagnosis = rdr["Diagnosis"].ToString();
@@ -379,7 +379,7 @@ namespace DAL
                         END AS Age,
                 p.Gender,
                 a.AppointmentDate,
-                a.SlotTime,
+                a.SlotStartTime,
                 con.Symptoms,
                 con.Diagnosis,
                 con.Notes,
@@ -414,7 +414,7 @@ namespace DAL
                     vm.Age = Convert.ToInt32(rdr["Age"]);
                     vm.Gender = rdr["Gender"].ToString();
                     vm.PatientPhoneNo = rdr["PatientPhoneNo"].ToString();
-                    vm.VisitDateTime = Convert.ToDateTime(rdr["AppointmentDate"]).Add((TimeSpan)rdr["SlotTime"]);
+                    vm.VisitDateTime = Convert.ToDateTime(rdr["AppointmentDate"]).Add((TimeSpan)rdr["SlotStartTime"]);
                     vm.Symptoms = rdr["Symptoms"].ToString();
                     vm.Diagnosis = rdr["Diagnosis"].ToString();
                     vm.Notes = rdr["Notes"].ToString();

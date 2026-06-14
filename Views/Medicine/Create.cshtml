@@ -1,0 +1,58 @@
+@model Models.Medicine
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    bool isEdit =
+        Model != null &&
+        Model.MedicineId > 0;
+
+    ViewBag.PageTitle = isEdit ? "Edit Medicine" : "Add Medicine";
+
+    ViewBag.Fields = new[]
+    {
+        new { Name="MedicineCode", Label="Code", Type="text", Col="6"},
+        new { Name="MedicineName", Label="Name", Type="text", Col="6"},
+        new { Name="GenericName", Label="Generic Name", Type="text", Col="6"},
+        new { Name="Strength", Label="Strength", Type="text", Col="12"},
+        new { Name="HSNCode", Label="HSN", Type="text", Col="6"},
+        new { Name="DosageForm", Label="Dosage", Type="dropdown", Col="6"},
+        new { Name="UnitOfMeasure", Label="Unit", Type="dropdown", Col="6"},
+        new { Name="ReorderLevel", Label="Reorder Level", Type="text", Col="6"},
+        new { Name="GSTPercent", Label="GST %", Type="text", Col="6"},
+        new { Name="Manufacturer", Label="Manufacturer", Type="text", Col="6"},
+        new { Name="ScheduleType", Label="Schedule Type", Type="dropdown", Col="4"},
+        new { Name="CreatedFromPrescription", Label="From Prescription", Type="checkbox", Col="4"},
+        new { Name="IsActive", Label="Active", Type="checkbox", Col="4"}
+    };
+
+    ViewBag.DosageForms = new SelectList(
+        new List<string>
+        {                                                                                                                                                                                                                                                                                                                                                                                                                                           
+            "Tablet", "Capsule", "Syrup", "Injection"
+        });
+
+    ViewBag.UnitOfMeasures = new SelectList(
+        new List<string>
+        {
+            "Tab", "Cap", "Bottle", "Vial"
+        });
+
+    ViewBag.ScheduleTypes = new SelectList(
+        new List<string>
+        {
+            "OTC", "H", "H1", "X"
+        });
+
+
+    ViewBag.Dropdowns = new Dictionary<string, object>()
+    {
+        { "DosageForm", ViewBag.DosageForms },
+        { "UnitOfMeasure", ViewBag.UnitOfMeasures },
+        { "ScheduleType", ViewBag.ScheduleTypes }
+    };
+
+    ViewBag.KeyField = "MedicineId";
+}
+
+@await Html.PartialAsync("_CrudForm", Model)

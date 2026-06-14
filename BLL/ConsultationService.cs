@@ -9,17 +9,31 @@ namespace BLL
     public class ConsultationService : BaseService<Consultation>
     {
         private readonly ConsultationDAL _consultationDAL;
+        private readonly PharmacologyDAL _pharmacologyDAL;
+        private readonly AppointmentDAL _appointmentDAL;
+        private readonly MedicineDAL _medicineDAL;
 
         public ConsultationService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
                                 : base(config, httpContextAccessor)
         {
             _consultationDAL = new ConsultationDAL(config);
+            _pharmacologyDAL = new PharmacologyDAL(config);
+            _appointmentDAL = new AppointmentDAL(config);
+            _medicineDAL = new MedicineDAL(config);
             _dal = _consultationDAL;
         }
 
         public Consultation GetConsultation(int appointmentId)
         {
-            return _consultationDAL.GetConsultation(appointmentId);
+            Appointment app = _appointmentDAL.Get(appointmentId);
+            Consultation cons = _consultationDAL.Get(appointmentId);
+            if (cons == null)
+            {
+                cons = new Consultation();
+            }
+            cons.AppointmentId = app.AppointmentId;
+            cons.PatientId = app.PatientId;
+            return cons;
         }
 
         public int SaveConsultation(Consultation model)
@@ -30,9 +44,45 @@ namespace BLL
 
             try
             {
-                int id = _dal.Add(model, conn, tran);
+                int consultationId = _dal.Add(model, conn, tran);
+
+                foreach(var med in model.pharmacologyAdvices)
+                {
+                    med.ConsultationId = consultationId;
+                    med.AppointmentId = model.AppointmentId;
+
+                    // add prescribed medicine if not in Medicine Master
+                    if(med.MedicineId == null)
+                    {
+                        var medicine = _medicineDAL.GetByName(med.MedicineName);
+
+                        if(medicine == null)
+                        {
+                            medicine = new Medicine
+                            {
+                                MedicineName = med.MedicineName,
+                                GenericName = med.MedicineName,
+                                UnitOfMeasure = "Tab",   
+                                DosageForm = "Tablet",
+                                ScheduleType = "OTC",
+                                ReorderLevel = 0,
+                                CreatedFromPrescription = true,
+                                IsActive = true
+                            };
+
+                            medicine.MedicineId = _medicineDAL.Add(medicine, conn, tran);
+                        }
+
+                        med.MedicineId = medicine.MedicineId;
+                    }
+
+                    _pharmacologyDAL.Add(med, conn, tran);
+                }
+
+                _appointmentDAL.UpdateStatus(model.AppointmentId, "Completed", conn, tran);
+
                 tran.Commit();
-                return id;
+                return consultationId;
             }
             catch
             {

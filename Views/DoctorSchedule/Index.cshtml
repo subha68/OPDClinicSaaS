@@ -1,122 +1,763 @@
+@model ViewModels.DoctorScheduleVM
+
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Doctor Schedule";
 }
 
-@model List<ViewModels.DoctorScheduleVM>
+@using System.Text.Json
 
-<h2>Doctor Schedules for Clinic</h2>
+@{
+    var departmentsJson = JsonSerializer.Serialize(ViewBag.Departments);
+}
 
-<a href="/DoctorSchedule/Create" class="btn btn-primary">Add Schedule</a>
+<div class="card page-card mb-3">
 
-<div class="modal fade"
-     id="slotModal"
-     tabindex="-1"
-     data-bs-focus="false"
-     aria-labelledby="slotModalLabel"
-     aria-hidden="true">
+    <div class="card-header">
+        <h5 class="mb-0">
+            Doctor Schedule Management
+        </h5>
+    </div>
 
-    <div class="modal-dialog">
-        <div class="modal-content">
+    <div class="card-body">
 
-            <form asp-action="GenerateSlots" method="post">
+        <div class="row">
 
-                @Html.AntiForgeryToken()
+            <div class="col-md-4">
 
-                <div class="modal-header">
-                    <h5 class="modal-title" id="slotModalLabel">
-                        Generate Appointment Slots
-                    </h5>
-                    <button type="button"
-                            class="btn-close"
-                            data-bs-dismiss="modal">
-                    </button>
-                </div>
+                <label class="form-label">
+                    Department
+                </label>
 
-                <div class="modal-body">
+                <select id="DepartmentId"
+                        class="form-select">
 
-                    <input type="hidden"
-                           id="doctorId"
-                           name="doctorId" />
+                    <option value="">
+                        Select Department
+                    </option>
 
-                    <div class="mb-3">
-                        <label for="fromDate">From Date</label>
-                        <input type="date"
-                               id="fromDate"
-                               name="fromDate"
-                               class="form-control"
-                               required />
-                    </div>
+                </select>
 
-                    <div class="mb-3">
-                        <label for="toDate">To Date</label>
-                        <input type="date"
-                               id="toDate"
-                               name="toDate"
-                               class="form-control"
-                               required />
-                    </div>
+            </div>
 
-                </div>
+            <div class="col-md-4">
 
-                <div class="modal-footer">
-                    <button type="submit"
-                            class="btn btn-success">
-                        Generate
-                    </button>
-                </div>
+                <label class="form-label">
+                    Doctor
+                </label>
 
-            </form>
+                <select id="DoctorId"
+                        class="form-select">
+
+                    <option value="">
+                        Select Doctor
+                    </option>
+
+                </select>
+
+            </div>
 
         </div>
+
     </div>
+
 </div>
 
-<table class="table">
-    <tr>
-        <th>Doctor</th>
-        <th>Day</th>
-        <th>Start Time</th>
-        <th>End Time</th>
-    </tr>
+<div id="scheduleContainer"
+     class="card page-card"
+     style="display:none;">
 
-    @foreach (var item in Model)
-    {
-        <tr>
-            <td>@item.DoctorFirstName @item.DoctorLastName</td>
-            <td>@item.DayName</td>
-            <td>@item.StartTime</td>
-            <td>@item.EndTime</td>
-            <td>
-                <button type="button"
-                        class="btn btn-success btn-sm slot-btn"
-                        data-doctorid="@item.DoctorId">
-                    Generate Slots
-                </button>
-            </td>
-            <td>
-                <a asp-controller="AppointmentSlot" asp-action="Index" asp-route-doctorId="@item.DoctorId" class="btn btn-primary btn-sm">
-                        View Slots
-                </a>
-            </td>
-        </tr>
-    }
-</table>
+    <div class="card-body">
 
-@section Scripts {
+        <!-- Hour Header -->
+
+        <div class="schedule-header">
+
+            <div class="day-header">
+            </div>
+
+            <div id="hourHeader"
+                 class="hour-header">
+            </div>
+
+        </div>
+
+        <!-- Schedule Rows -->
+
+        <div id="scheduleBody">
+        </div>
+
+        <div class="text-end mt-3">
+
+            <button id="btnSave"
+                    class="btn btn-success">
+
+                <i class="fa fa-save"></i>
+                Save Schedule
+
+            </button>
+
+        </div>        
+
+    </div>
+
+</div>
+
+@section Scripts
+{
 <script>
-document.addEventListener("DOMContentLoaded", function () {
 
-    const modalEl = document.getElementById('slotModal');
-    const modal = new bootstrap.Modal(modalEl);
+    const SLOT_MINUTES = 15;
+    const SLOT_WIDTH = 20;
+    const START_HOUR = 6;
+    const END_HOUR = 22;
 
-    document.querySelectorAll('.slot-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const doctorId = this.dataset.doctorid;
-            document.getElementById('doctorId').value = doctorId;
-            modal.show();
+    let shiftCounter = 1;
+
+    const departments = @Html.Raw(departmentsJson);
+
+    const days =
+    [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+    ];
+
+    let scheduleVm =
+    {
+        doctorId:0,
+        departmentId:0,
+        clinicId:0,
+
+        slotDurationMinutes:15,
+        maxPatientsPerSlot:1,
+
+        shifts:[]
+    };
+
+    function timeToSlot(time)
+    {
+        let parts = time.split(':');
+
+        let h = parseInt(parts[0]);
+        let m = parseInt(parts[1]);
+
+        return ((h - START_HOUR) * 4) + (m / 15);
+    }
+
+    function slotToTime(slot)
+    {
+        let totalMinutes =
+            (START_HOUR * 60) +
+            (slot * 15);
+
+        let hour =
+            Math.floor(totalMinutes / 60);
+
+        let minute =
+            totalMinutes % 60;
+
+        return (
+            String(hour).padStart(2,'0')
+            + ':'
+            + String(minute).padStart(2,'0')
+            + ':00'
+        );
+    }
+
+    function formatTime(slot)
+    {
+        let totalMinutes = (START_HOUR * 60) + (slot * 15);
+        let hour = Math.floor(totalMinutes / 60);
+        let minute = totalMinutes % 60;
+
+        return (String(hour).padStart(2,'0') + ':' + String(minute).padStart(2,'0'));
+    }
+
+    $(document).ready(function ()
+    {
+        loadDepartments();
+
+        buildHourHeader();
+
+        buildScheduleRows();
+    });
+
+    function loadDepartments()
+    {
+        $("#DepartmentId").empty();
+
+        $("#DepartmentId").append(
+            '<option value="">Select Department</option>'
+        );
+
+        departments.forEach(function(dept)
+        {
+            $("#DepartmentId").append(
+                `<option value="${dept.DepartmentId}">
+                    ${dept.Name}
+                </option>`
+            );
+        });
+    }
+
+    function loadDoctors(departmentId)
+    {
+        $.get(
+            '/Doctor/GetDoctorsByDepartment',
+            {
+                DepartmentId: departmentId
+            },
+            function(doctors)
+            {
+                $("#DoctorId").empty();
+
+                $("#DoctorId").append(
+                    '<option value="">Select Doctor</option>'
+                );
+
+                doctors.forEach(function(doctor)
+                {
+                    $("#DoctorId").append(
+                        `<option value="${doctor.doctorId}">
+                            ${doctor.firstName}
+                            ${doctor.lastName}
+                        </option>`
+                    );
+                });
+            });
+    }
+
+    $("#DepartmentId").change(function ()
+    {
+        let departmentId = $(this).val();
+
+        scheduleVm.departmentId = departmentId;
+
+        loadDoctors(departmentId);
+    });
+
+    $("#DoctorId").change(function ()
+    {
+        let doctorId = $(this).val();
+
+        if(!doctorId)
+            return;
+
+        $.get(
+            '/DoctorSchedule/GetSchedule',
+            {
+                doctorId: doctorId
+            },
+            function(vm)
+            {
+                scheduleVm = vm;
+
+                $("#scheduleContainer").show();
+
+                renderSchedule();
+
+                console.log(vm);
+            });
+    });
+
+    function buildHourHeader()
+    {
+        $("#hourHeader").empty();
+
+        for(let h = START_HOUR;
+                h <= END_HOUR;
+                h++)
+        {
+            $("#hourHeader").append(
+                `<div class="hour-cell">
+                    ${String(h).padStart(2,'0')}:00
+                 </div>`
+            );
+        }
+    }
+
+    function buildScheduleRows()
+    {
+        $("#scheduleBody").empty();
+
+        for(let d = 0; d < 7; d++)
+        {
+            let row = `
+                <div class="schedule-row">
+
+                    <div class="day-label">
+                        ${days[d]}
+                    </div>
+
+                    <div class="timeline"
+                         data-day="${d}">
+                    </div>
+
+                </div>
+            `;
+
+            $("#scheduleBody").append(row);
+
+            let timeline = $(`.timeline[data-day='${d}']`);
+
+            timeline.css("min-width", ((END_HOUR - START_HOUR) * 4 * SLOT_WIDTH) + "px");
+
+            for(let s=0;s<64;s++)
+            {
+                timeline.append(
+                    `<div class="timeline-grid"
+                        style="left:${s*SLOT_WIDTH}px">
+                    </div>`
+                );
+            }
+        }
+    }
+
+    function renderSchedule()
+    {
+        $(".shift-bar").remove();
+
+        if(!scheduleVm.shifts)
+            return;
+
+        scheduleVm.shifts.forEach(function(shift)
+        {
+            renderShift(shift);
+        });
+
+        rebuildShiftCollection();
+    }
+
+    function renderShift(shift)
+    {
+        let start = timeToSlot(shift.startTime);
+
+        let end = timeToSlot(shift.endTime);
+
+        let width = (end - start) * SLOT_WIDTH;
+
+        let left = start * SLOT_WIDTH;
+
+        let shiftId = "shift_" + (shiftCounter++);
+
+        let html =
+        `
+        <div class="shift-bar"
+            id="${shiftId}"
+
+            data-day="${shift.dayOfWeek}"
+            data-start="${start}"
+            data-end="${end}">
+
+            <span class="shift-text">
+                ${formatTime(start)}
+                -
+                ${formatTime(end)}
+            </span>
+
+            <div class="shift-delete">
+                ×
+            </div>
+
+        </div>
+        `;
+
+        let timeline = $(`.timeline[data-day='${shift.dayOfWeek}']`);
+
+        timeline.append(html);
+
+        $("#" + shiftId).css({
+            left:left + "px",
+            width:width + "px"
+        });
+
+        enableShiftBehaviour(
+            $("#" + shiftId)
+        );
+    }
+
+    $(document).on('click', '.timeline', function(e)
+    {
+        if($(e.target).hasClass('shift-bar') ||
+        $(e.target).closest('.shift-bar').length)
+        return;
+
+        let timeline =
+            $(this);
+
+        let day =
+            parseInt(
+                timeline.data('day')
+            );
+
+        let offset =
+            e.pageX -
+            timeline.offset().left;
+
+        let startSlot =
+            Math.floor(
+                offset / SLOT_WIDTH
+            );
+
+        let endSlot = Math.min(64, startSlot + 4);
+
+        let shift =
+        {
+            doctorId:
+                scheduleVm.doctorId,
+
+            clinicId:
+                scheduleVm.clinicId,
+
+            dayOfWeek:
+                day,
+
+            startTime:
+                slotToTime(startSlot),
+
+            endTime:
+                slotToTime(endSlot)
+        };
+
+        let overlap =
+            scheduleVm.shifts.some(
+                x =>
+                    x.dayOfWeek === day &&
+                    timeToSlot(x.startTime) < endSlot &&
+                    timeToSlot(x.endTime) > startSlot
+            );
+
+        if(overlap)
+        {
+            alert(
+                "Overlapping shifts are not allowed."
+            );
+
+            return;
+        }
+
+        scheduleVm.shifts.push(shift);
+
+        renderSchedule();
+
+        rebuildShiftCollection();
+
+        renderSchedule();
+    });
+
+    function enableShiftBehaviour(bar)
+    {
+        let originalLeft;
+        let originalWidth;
+
+        bar.draggable({
+
+            axis:'x',
+
+            containment:'parent',
+
+            grid:
+            [
+                SLOT_WIDTH,
+                0
+            ],
+
+            start:function()
+            {
+                originalLeft =
+                    $(this).position().left;
+
+                originalWidth =
+                    $(this).width();
+            },
+
+            drag:function(event,ui)
+            {
+                let start =
+                    Math.round(
+                        ui.position.left /
+                        SLOT_WIDTH
+                    );
+
+                let end =
+                    start +
+                    Math.round(
+                        $(this).outerWidth() /
+                        SLOT_WIDTH
+                    );
+
+                $(this)
+                    .find(".shift-text")
+                    .text(getShiftText(start,end));
+            },
+
+            stop:function()
+            {
+                updateShiftData($(this));
+
+                if(hasOverlap($(this)))
+                {
+                    $(this).css(
+                    {
+                        left:
+                        originalLeft
+                    });
+
+                    updateShiftData($(this));
+
+                    alert("Overlapping shifts are not allowed.");
+                }
+
+                rebuildShiftCollection();
+            }
+        });
+
+        bar.resizable({
+
+            handles:'e,w',
+
+            grid:
+            [
+                SLOT_WIDTH,
+                0
+            ],
+
+            minWidth:
+                SLOT_WIDTH,
+
+            start:function()
+            {
+                originalLeft =
+                    $(this).position().left;
+
+                originalWidth =
+                    $(this).width();
+            },
+
+            resize:function(event,ui)
+            {
+                let maxWidth = ui.element.parent().width();
+
+                if(ui.position.left < 0)
+                {
+                    ui.position.left = 0;
+                }
+
+                if(ui.position.left + ui.size.width > maxWidth)
+                {
+                    ui.size.width = maxWidth - ui.position.left;
+                }
+
+                let start = Math.max(0, Math.round(ui.position.left / SLOT_WIDTH));
+
+                let end = Math.min(64, start + Math.round(ui.size.width / SLOT_WIDTH));
+
+                $(this)
+                    .find(".shift-text")
+                    .text(
+                        getShiftText(start,end)
+                    );
+            },
+
+            stop:function()
+            {
+                updateShiftData(
+                    $(this)
+                );
+
+                if(hasOverlap($(this)))
+                {
+                    $(this).css({
+                        left:
+                            originalLeft,
+
+                        width:
+                            originalWidth
+                    });
+
+                    updateShiftData(
+                        $(this)
+                    );
+
+                    alert(
+                        "Overlapping shifts are not allowed."
+                    );
+                }
+
+                rebuildShiftCollection();
+            }
+        });
+    }
+
+    function updateShiftData(bar)
+    {
+        let day = parseInt(bar.data("day"));
+
+        let startSlot = Math.max(0, Math.round(parseFloat(bar.css("left")) / SLOT_WIDTH));
+        let endSlot = Math.min(64, startSlot + Math.round(bar.outerWidth() / SLOT_WIDTH));
+
+        startSlot = Math.max(0, startSlot);
+        endSlot = Math.min(64, endSlot);
+
+        if(endSlot <= startSlot)
+        {
+            endSlot = startSlot + 1;
+        }
+
+        bar.attr("data-start", startSlot);
+
+        bar.attr("data-end", endSlot);
+
+        bar.find(".shift-text")
+        .text(
+            formatTime(startSlot)
+            + " - " +
+            formatTime(endSlot)
+        );
+
+        rebuildShiftCollection();
+    }
+
+    $(document).on('click', '.shift-delete', function(e)
+    {
+        e.stopPropagation();
+
+        $(this)
+            .closest('.shift-bar')
+            .remove();
+
+        rebuildShiftCollection();
+    });
+
+    function rebuildShiftCollection()
+    {
+        let shifts=[];
+
+        $(".shift-bar").each(function()
+        {
+            let day = parseInt($(this).data("day"));
+
+            let start = parseInt($(this).attr("data-start"));
+
+            let end = parseInt($(this).attr("data-end"));
+
+            shifts.push({
+                doctorId: scheduleVm.doctorId,
+
+                clinicId: scheduleVm.clinicId,
+
+                dayOfWeek: day,
+
+                startTime: slotToTime(start),
+
+                endTime: slotToTime(end)
+            });
+        });
+
+        scheduleVm.shifts = shifts;
+    }
+
+    $("#btnSave").click(function ()
+    {
+        rebuildShiftCollection();
+
+        scheduleVm.doctorId = parseInt($("#DoctorId").val());
+
+        scheduleVm.departmentId = parseInt($("#DepartmentId").val());
+
+        if(!scheduleVm.doctorId)
+        {
+            alert(
+                "Please select doctor."
+            );
+
+            return;
+        }
+
+        $.ajax({
+
+            url:
+                '/DoctorSchedule/SaveSchedule',
+
+            type:
+                'POST',
+
+            contentType:
+                'application/json',
+
+            data:
+                JSON.stringify(
+                    scheduleVm
+                ),
+
+            success:function(result)
+            {
+                if(result.success)
+                {
+                    alert(
+                        "Schedule saved successfully."
+                    );
+                }
+                else
+                {
+                    alert(
+                        "Unable to save schedule."
+                    );
+                }
+            },
+
+            error:function(xhr)
+            {
+                console.log(xhr);
+
+                alert(
+                    "Error while saving schedule."
+                );
+            }
         });
     });
 
-});
+    function getShiftText(startSlot,endSlot)
+    {
+        return (
+            formatTime(startSlot)
+            + " - "
+            + formatTime(endSlot)
+        );
+    }
+
+    function hasOverlap(bar)
+    {
+        let day = parseInt(bar.data("day"));
+        let start = parseInt(bar.attr("data-start"));
+        let end = parseInt(bar.attr("data-end"));
+
+        let overlap = false;
+
+        $(`.shift-bar[data-day='${day}']`)
+            .not(bar)
+            .each(function ()
+            {
+                let otherStart = parseInt($(this).attr("data-start"));
+                let otherEnd = parseInt($(this).attr("data-end")
+                    );
+
+                if(
+                    start < otherEnd &&
+                    end > otherStart
+                )
+                {
+                    overlap = true;
+                    return false;
+                }
+            });
+
+        return overlap;
+    }
 </script>
 }

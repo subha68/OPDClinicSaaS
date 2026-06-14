@@ -11,11 +11,13 @@
 <form method="post">
 
     <input type="hidden" asp-for="ReturnTo" />
+    <input type="hidden" asp-for="DepartmentId" />
     <input type="hidden" asp-for="DoctorId" />
     <input type="hidden" asp-for="AppointmentDate"
                         value="@Model.AppointmentDate?.ToString("yyyy-MM-dd")" />
-    <input type="hidden" asp-for="SlotId" />
     <input type="hidden" asp-for="SlotTime" />
+    <input type="hidden" asp-for="AppointmentDateTime"
+                        value="@Model.AppointmentDateTime?.ToString("yyyy-MM-ddTHH:mm")" />
 
     <div class="row mb-3">
 
@@ -62,10 +64,9 @@
                     <a asp-action="SelectPatient"
                     asp-route-patientId="@p.PatientId"
                     asp-route-returnTo="@Model.ReturnTo"
+                    asp-route-departmentId="@Model.DepartmentId"
                     asp-route-doctorId="@Model.DoctorId"
-                    asp-route-appointmentDate="@Model.AppointmentDate?.ToString("yyyy-MM-dd")"
-                    asp-route-slotId="@Model.SlotId"
-                    asp-route-slotTime="@Model.SlotTime"
+                    asp-route-appointmentDateTime="@Model.AppointmentDateTime?.ToString("yyyy-MM-ddTHH:mm")"
                     class="btn btn-primary btn-sm">
                         Select
                     </a>

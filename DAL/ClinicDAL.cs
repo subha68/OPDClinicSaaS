@@ -15,8 +15,8 @@ namespace DAL
 
         public int Add(Clinic clinic, SqlConnection conn, SqlTransaction tran)
         {
-            string query = @"INSERT INTO Clinics (ClinicCode, Name, Address, Phone)
-                                VALUES (@code, @name, @addr, @phone);
+            string query = @"INSERT INTO Clinics (ClinicCode, Name, Address, Phone, LogoPath)
+                                VALUES (@code, @name, @addr, @phone, @logoPath);
                             SELECT SCOPE_IDENTITY();";
 
             SqlCommand cmd = new SqlCommand(query, conn, tran);
@@ -24,6 +24,7 @@ namespace DAL
             cmd.Parameters.AddWithValue("@name", clinic.Name);
             cmd.Parameters.AddWithValue("@addr", clinic.Address);
             cmd.Parameters.AddWithValue("@phone", clinic.Phone);
+            cmd.Parameters.AddWithValue("@logoPath", clinic.LogoPath);
 
             return Convert.ToInt32(cmd.ExecuteScalar());
         }
@@ -34,7 +35,8 @@ namespace DAL
                              SET ClinicCode = @code,
                                  Name = @name,
                                  Address = @addr,
-                                 Phone = @phone
+                                 Phone = @phone,
+                                 LogoPath = @logoPath
                              WHERE ClinicId = @id";
 
             SqlCommand cmd = new SqlCommand(query, conn, tran);
@@ -42,6 +44,7 @@ namespace DAL
             cmd.Parameters.AddWithValue("@name", clinic.Name);
             cmd.Parameters.AddWithValue("@addr", clinic.Address);
             cmd.Parameters.AddWithValue("@phone", clinic.Phone);
+            cmd.Parameters.AddWithValue("@logoPath", clinic.LogoPath);
             cmd.Parameters.AddWithValue("@id", clinic.ClinicId);
 
             int rowsAffected = cmd.ExecuteNonQuery();
@@ -78,7 +81,8 @@ namespace DAL
                         ClinicCode = reader["ClinicCode"].ToString(),
                         Name = reader["Name"].ToString(),
                         Address = reader["Address"].ToString(),
-                        Phone = reader["Phone"].ToString()
+                        Phone = reader["Phone"].ToString(),
+                        LogoPath = reader["LogoPath"].ToString()
                     });
                 }
             }
@@ -106,7 +110,8 @@ namespace DAL
                         ClinicCode = reader["ClinicCode"].ToString(),
                         Name = reader["Name"].ToString(),
                         Address = reader["Address"].ToString(),
-                        Phone = reader["Phone"].ToString()
+                        Phone = reader["Phone"].ToString(),
+                        LogoPath = reader["LogoPath"].ToString()
                     };
                 }
             }
@@ -135,7 +140,8 @@ namespace DAL
                         ClinicCode = reader["ClinicCode"].ToString(),
                         Name = reader["Name"].ToString(),
                         Address = reader["Address"].ToString(),
-                        Phone = reader["Phone"].ToString()
+                        Phone = reader["Phone"].ToString(),
+                        LogoPath = reader["LogoPath"].ToString()
                     };
                 }
             }

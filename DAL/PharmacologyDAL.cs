@@ -43,15 +43,14 @@ namespace DAL
 
             SqlCommand cmd = new SqlCommand(query, conn, tran);
 
-            cmd.Parameters.AddWithValue("@ConsultationId", consultationId);
-            cmd.Parameters.AddWithValue("@AppointmentId", appointmentId);
+            cmd.Parameters.AddWithValue("@ConsultationId", advice.ConsultationId);
+            cmd.Parameters.AddWithValue("@AppointmentId", advice.AppointmentId);
             cmd.Parameters.AddWithValue("@MedicineName", advice.MedicineName);
             cmd.Parameters.AddWithValue("@Dosage", advice.Dosage);
             cmd.Parameters.AddWithValue("@Frequency", advice.Frequency);
             cmd.Parameters.AddWithValue("@Duration", advice.Duration);
             cmd.Parameters.AddWithValue("@Instructions", advice.Instructions);
 
-            conn.Open();
             return Convert.ToInt32(cmd.ExecuteScalar());
         }
 

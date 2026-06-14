@@ -17,6 +17,15 @@
         new { Name="ClinicName", Label="Clinic", Type="text", Color="" }
     };
 
+    ViewBag.SearchFields = new[]
+    {
+        "FirstName",
+        "LastName",
+        "Email",
+        "Phone",
+        "ClinicName"
+    };
+
     ViewBag.KeyField = "UserId";
 }
 

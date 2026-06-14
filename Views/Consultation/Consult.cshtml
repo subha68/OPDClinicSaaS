@@ -9,6 +9,7 @@
 <form asp-action="Consult" method="post">
 
     <input type="hidden" asp-for="AppointmentId" />
+    <input type="hidden" asp-for="PatientId" />
 
     <div class="mb-3">
         <label class="form-label">Patient Name</label>
@@ -75,54 +76,3 @@
     </a>
 
 </form>
-
-<script>
-let rowIndex = 0;
-
-function addRow() {
-
-    let row = `
-    <tr>
-        <td>
-            <input name="PharmacologyAdvices[${rowIndex}].MedicineName"
-                   class="form-control"/>
-        </td>
-
-        <td>
-            <input name="PharmacologyAdvices[${rowIndex}].Dosage"
-                   class="form-control"/>
-        </td>
-
-        <td>
-            <input name="PharmacologyAdvices[${rowIndex}].Frequency"
-                   class="form-control"/>
-        </td>
-
-        <td>
-            <input name="PharmacologyAdvices[${rowIndex}].Duration"
-                   class="form-control"/>
-        </td>
-
-        <td>
-            <input name="PharmacologyAdvices[${rowIndex}].Instructions"
-                   class="form-control"/>
-        </td>
-
-        <td>
-            <button type="button"
-                    class="btn btn-danger"
-                    onclick="removeRow(this)">
-                X
-            </button>
-        </td>
-    </tr>`;
-
-    $("#medicineTable tbody").append(row);
-
-    rowIndex++;
-}
-
-function removeRow(btn) {
-    $(btn).closest("tr").remove();
-}
-</script>

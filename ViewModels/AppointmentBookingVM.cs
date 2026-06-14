@@ -8,6 +8,7 @@ namespace ViewModels
     {
         public int DepartmentId { get; set; }
         public int DoctorId { get; set; }
+        public DateTime AppointmentDate { get; set; }
 
         public List<SelectListItem> Departments = new();
 

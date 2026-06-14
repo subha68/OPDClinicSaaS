@@ -124,21 +124,36 @@ namespace DAL
             return list;
         }
 
-        public decimal GetTotalPaid(int billId)
+        public decimal GetTotalPaid(int billId, SqlConnection conn, SqlTransaction tran)
         {
-            using SqlConnection con = _db.GetConnection();
-
             string query = @"
                 SELECT ISNULL(SUM(Amount),0)
                 FROM Payments
                 WHERE BillId=@BillId
             ";
 
-            SqlCommand cmd = new SqlCommand(query, con);
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
 
             cmd.Parameters.AddWithValue("@BillId", billId);
 
-            con.Open();
+            return Convert.ToDecimal(cmd.ExecuteScalar());
+        }
+
+        public decimal GetTotalPaid(int billId)
+        {
+            using SqlConnection conn = _db.GetConnection();
+ 
+            string query = @"
+                SELECT ISNULL(SUM(Amount),0)
+                FROM Payments
+                WHERE BillId=@BillId
+            ";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+
+            cmd.Parameters.AddWithValue("@BillId", billId);
+
+            conn.Open();
 
             return Convert.ToDecimal(cmd.ExecuteScalar());
         }

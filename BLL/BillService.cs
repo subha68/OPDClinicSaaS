@@ -43,10 +43,10 @@ namespace BLL
                 bill.ClinicId = ClinicId;
                 bill.Clinic = _clinicDAL.Get(bill.ClinicId);
 
-                bill.GrossAmount = bill.BillLines.Sum(x => x.Rate * x.Quantity);
-                bill.DiscountAmount = bill.BillLines.Sum(x => (x.Rate * x.Quantity * x.DiscountPercent / 100));
+                bill.GrossAmount = bill.BillLines.Sum(x => x.GrossAmount);
+                bill.DiscountAmount = bill.BillLines.Sum(x => x.DiscountAmount);
 
-                int billId = base.Add(bill, conn, tran);
+                int billId = Add(bill, conn, tran);
 
                 foreach (var line in bill.BillLines)
                 {

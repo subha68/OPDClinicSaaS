@@ -9,10 +9,25 @@ namespace ViewModels
         public int SlotId { get; set; }
         public int DoctorId { get; set; }
         public int PatientId { get; set; }
+        public int DepartmentId { get; set; }
 
-        public DateTime AppointmentDate { get; set; }
+        public DateTime AppointmentDateTime { get; set; }
 
-        public string SlotTime { get; set; }
+        public DateTime AppointmentDate
+        {
+            get
+            {
+                return AppointmentDateTime.Date;
+            }
+        }
+
+        public string SlotTime 
+        { 
+            get
+            {
+                return AppointmentDateTime.ToString("HH:mm");
+            }
+        }
 
         public string? PatientName { get; set; }
         public string? PatientPhone { get; set; }

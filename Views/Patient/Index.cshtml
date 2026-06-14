@@ -1,36 +1,123 @@
-@model IEnumerable<Models.Patient>
+@model ViewModels.PatientSearchVM
+
+@{
+    ViewData["Title"] = "Patient Search";
+}
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-
-    ViewBag.PageTitle = "Patients";
-
-    ViewBag.CustomHeaderActions = new []
-    {
-        new { Label="Search Patient", Controller = "Patient", Action = "Search" },
-        new { Label="+ Register New Patient", Controller = "Patient", Action = "Create" }
-    };    
-
-    ViewBag.KeyField = "PatientId";
-
-    ViewBag.Fields = new []
-    {
-        new { Name="PatientId", Label="Patient ID", Type="text", Color="" },
-        new { Name="FirstName", Label="First Name", Type="text", Color="" },
-        new { Name="LastName", Label="Last Name", Type="text", Color="" },
-        new { Name="Gender", Label="Gender", Type="text", Color="" },
-        new { Name="DOB", Label="Date of Birth", Type="date", Color="" },
-        new { Name="Address", Label="Address", Type="text", Color="" },
-        new { Name="Phone", Label="Phone", Type="text", Color="" }
-    };
-
-    ViewBag.CustomLineActions = new []
-    {
-        new { Label = "Detail", Controller = "Patient", Action = "Edit", Type = "success", Condition="" },
-        new { Label = "History", Controller = "Patient", Action = "History", Type = "info", Condition="" },
-        new { Label = "Delete", Controller = "Patient", Action = "Delete", Type = "danger", Condition="" }
-    };
-
 }
 
-@await Html.PartialAsync("_CrudList", Model)
+<div class="page-card">
+
+    <div class="page-card-header">
+        <h4 class="page-card-title">
+            Patient Search
+        </h4>
+    </div>
+
+    <div class="page-card-body">
+
+        <form asp-action="Index" method="get">
+
+            <div class="row mb-4">
+
+                <div class="col-md-6">
+                    <label class="form-label">
+                        Search by Mobile / Name
+                    </label>
+
+                    <input asp-for="SearchString"
+                           class="form-control"
+                           placeholder="Enter mobile number or patient name" />
+                </div>
+
+                <div class="col-md-2 align-self-end">
+                    <button type="submit"
+                            class="btn btn-primary w-100">
+                        Search
+                    </button>
+                </div>
+
+                <div class="col-md-4 align-self-end text-end">
+
+                    <a asp-action="Create"
+                       class="btn btn-outline-primary">
+
+                        <i class="fa fa-plus"></i>
+                        New Patient Registration
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </form>
+
+        <table class="table table-hover align-middle">
+
+            <thead>
+
+                <tr>
+                    <th>Name</th>
+                    <th>Mobile</th>
+                    <th>Age / Gender</th>
+                    <th>Last Visit</th>
+                    <th width="120"></th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @foreach (var p in Model.Results)
+                {
+                    <tr>
+
+                        <td>
+                            @p.FirstName @p.LastName
+                        </td>
+
+                        <td>
+                            @p.Phone
+                        </td>
+
+                        <td>
+                            @p.Age / @p.Gender
+                        </td>
+
+                        <td>
+                            @(p.LastVisitDate?.ToString("dd MMM yyyy"))
+                        </td>
+
+                        <td>
+                            <a asp-action="Edit"
+                               asp-route-id="@p.PatientId"
+                               class="btn btn-sm btn-outline-primary">
+
+                                Select
+
+                            </a>
+                        </td>
+
+                        <td>
+                            <a asp-action="History"
+                               asp-route-id="@p.PatientId"
+                               class="btn btn-sm btn-outline-info">
+
+                                History
+
+                            </a>
+                        </td>
+
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>

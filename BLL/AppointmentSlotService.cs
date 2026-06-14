@@ -11,6 +11,7 @@ namespace BLL
     {
         private readonly DoctorScheduleDAL _scheduleDAL;
         private readonly AppointmentSlotDAL _slotDAL;
+        private readonly AppointmentDAL _appointmentDAL;
         private readonly DbHelper _db;
 
 
@@ -19,6 +20,7 @@ namespace BLL
         {
             _scheduleDAL = new DoctorScheduleDAL(config);
             _slotDAL = new AppointmentSlotDAL(config);
+            _appointmentDAL = new AppointmentDAL(config);
             _dal = _slotDAL;
             _db = new DbHelper(config);
         }
@@ -33,9 +35,13 @@ namespace BLL
             {
                 ValidateGenerationRequest(doctorId, fromDate, toDate);
 
-                List<DoctorScheduleVM> schedules = _scheduleDAL.GetByDoctor(doctorId);
+                DoctorScheduleVM schedule = _scheduleDAL.GetDoctorSchedule(doctorId);
 
-                if (schedules == null || schedules.Count == 0)
+                List<DoctorShiftVM> shifts = null;
+                
+                shifts = schedule.Shifts;
+
+                if (shifts == null || shifts.Count == 0)
                 {
                     throw new Exception("No schedules found for doctor.");
                 }
@@ -46,12 +52,12 @@ namespace BLL
                 {
                     int currentDay = (int)currentDate.DayOfWeek;
 
-                    foreach (DoctorScheduleVM schedule in schedules)
+                    foreach (DoctorShiftVM shift in shifts)
                     {
                         if (!schedule.IsActive)
                             continue;
 
-                        if (schedule.DayOfWeek != currentDay)
+                        if (shift.DayOfWeek != (DayOfWeek)currentDay)
                             continue;
 
                         GenerateSlotsForSchedule(schedule, currentDate, conn, tran);
@@ -72,8 +78,8 @@ namespace BLL
         private void GenerateSlotsForSchedule(DoctorScheduleVM schedule, DateTime slotDate, 
                                                 SqlConnection conn, SqlTransaction tran)
         {
-            DateTime scheduleStart = slotDate.Date + schedule.StartTime;
-            DateTime scheduleEnd = slotDate.Date + schedule.EndTime;
+            DateTime scheduleStart = slotDate.Date + schedule.Shifts[0].StartTime;
+            DateTime scheduleEnd = slotDate.Date + schedule.Shifts[0].EndTime;
             DateTime currentSlotStart = scheduleStart;
 
             while (currentSlotStart < scheduleEnd)
@@ -157,6 +163,50 @@ namespace BLL
         public List<AppointmentSlot> GetAvailableSlots(int doctorId)
         {
             return _slotDAL.GetByDoctor(doctorId);
+        }
+
+        public List<AppointmentSlotVM> GetSlots(int doctorId, DateTime appointmentDate)
+        {
+            int dayOfWeek = (int)appointmentDate.DayOfWeek;
+            int clinicId = ClinicId;
+
+            DoctorScheduleVM schedule = _scheduleDAL.GetSchedulesByDay(clinicId, doctorId, dayOfWeek);
+            List<Appointment> appointments = _appointmentDAL.GetAppointmentsByDate(clinicId, doctorId, appointmentDate);
+
+            List<AppointmentSlotVM> slots = new();
+
+            foreach(var slot in schedule.Shifts)
+            {
+                TimeSpan start = slot.StartTime;
+                TimeSpan end = slot.EndTime;
+
+                while(start < end)
+                {
+                    string slotTime = start.ToString(@"hh\:mm");
+
+                    var booked =
+                        appointments
+                            .FirstOrDefault(x =>
+                                x.SlotStartTime
+                                .ToString(@"hh\:mm")
+                                == slotTime);
+
+                    slots.Add(
+                        new AppointmentSlotVM
+                        {
+                            SlotTime = slotTime,
+                            IsBooked = booked != null,
+                            AppointmentId = booked?.AppointmentId,
+                            PatientId = booked?.PatientId,
+                            PatientName = booked?.PatientName
+                        });
+
+                    start = start.Add(TimeSpan.FromMinutes(15));
+                }
+
+            }
+
+            return slots;            
         }
 
         public bool IncrementBookedCount(int slotId)

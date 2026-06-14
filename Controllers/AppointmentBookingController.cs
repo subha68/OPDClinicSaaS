@@ -33,9 +33,12 @@ namespace Controllers
             _visit = visit;
         }
 
-        public IActionResult Index()
+        public IActionResult Index(int? departmentId, int? doctorId)
         {
             var vm = new AppointmentBookingVM();
+
+            vm.DepartmentId = departmentId ?? 0;
+            vm.DoctorId = doctorId ?? 0;
 
             vm.Departments = _department.List()
                 .Select(x => new SelectListItem
@@ -75,7 +78,16 @@ namespace Controllers
         }
 
         [HttpGet]
-        public IActionResult Book(int doctorId, DateTime appointmentDate, int slotId, string slotTime, int patientId)
+        public JsonResult GetDailySlots(int doctorId, DateTime appointmentDate)
+        {
+            var slots = _slot.GetSlots(doctorId, appointmentDate);
+
+            return Json(slots);
+        }
+
+        [HttpGet]
+        public IActionResult Book(int departmentId, int doctorId, DateTime appointmentDateTime, 
+                                    int patientId = 0)
         {
             string patientName = "";
             string patientPhone = "";
@@ -89,11 +101,10 @@ namespace Controllers
 
             var vm = new AppointmentCreateVM
             {
-                SlotId = slotId,
                 VisitId = 0,
+                DepartmentId = departmentId,
                 DoctorId = doctorId,
-                AppointmentDate = appointmentDate,
-                SlotTime = slotTime,
+                AppointmentDateTime = appointmentDateTime,
                 PatientId = patientId,
                 PatientName = patientName,
                 PatientPhone = patientPhone
@@ -110,11 +121,17 @@ namespace Controllers
 
             int appointmentId = _appointment.BookAppointment(vm);
 
-            return RedirectToAction("Index");
+            return RedirectToAction(
+                                "Index",
+                                new
+                                {
+                                    departmentId = vm.DepartmentId,
+                                    doctorId = vm.DoctorId
+                                });
         }
 
         [HttpGet]
-        public IActionResult SearchPatient(int doctorId, DateTime appointmentDate, int slotId, string slotTime)
+        public IActionResult SearchPatient(int departmentId, int doctorId, DateTime appointmentDateTime)
         {
             return RedirectToAction(
                 "Search",
@@ -122,10 +139,9 @@ namespace Controllers
                 new
                 {
                     returnTo = "AppointmentBooking",
+                    departmentId = departmentId,
                     doctorId = doctorId,
-                    appointmentDate = appointmentDate,
-                    slotId = slotId,
-                    slotTime = slotTime
+                    appointmentDateTime = appointmentDateTime
                 });
         }
 

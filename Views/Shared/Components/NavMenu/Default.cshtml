@@ -1,22 +1,48 @@
 @model List<Models.MenuItem>
 
 @{
-    var currentController = ViewContext.RouteData.Values["controller"].ToString();
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
 }
 
-<ul class="navbar-nav me-auto">
+<ul class="sidebar-menu">
 
 @foreach (var item in Model)
 {
-    var isActive = item.Controller == currentController ? "active" : "";
+    var isActive =
+        item.Controller == currentController
+            ? "active"
+            : "";
 
-    <li class="nav-item">
-        <a class="nav-link @isActive"
+    <li>
+        <a class="@isActive"
            asp-controller="@item.Controller"
            asp-action="@item.Action">
 
-            <i class="fa @item.Icon"></i> @item.Title
+            <i class="fa @item.Icon"></i>
+
+            <span>@item.Title</span>
+
         </a>
+    </li>
+}
+
+@if (User.Identity?.IsAuthenticated ?? true)
+{
+    <li class="mt-4">
+        <form asp-controller="Account"
+              asp-action="Logout"
+              method="post">
+
+            <button type="submit"
+                    class="sidebar-logout">
+
+                <i class="fa-solid fa-right-from-bracket"></i>
+
+                <span>Logout</span>
+
+            </button>
+
+        </form>
     </li>
 }
 

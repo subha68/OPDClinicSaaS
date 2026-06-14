@@ -20,11 +20,30 @@ namespace BLL
             _dal = _paymentDAL;
         }
 
+        public override int Create(Payment model)
+        {
+            using var conn = _db.GetConnection();
+            conn.Open();
+            using var tran = conn.BeginTransaction();
+            try
+            {
+                int id = Add(model, conn, tran);
+                UpdateBillStatus(model.BillId, conn, tran);
+                tran.Commit();
+                return id;
+            }
+            catch
+            {
+                tran.Rollback();
+                throw;
+            }
+        }
+
         public void UpdateBillStatus(int billId, SqlConnection conn, SqlTransaction tran)
         {
             Bill bill = _billDAL.Get(billId);
 
-            decimal totalPaid = _paymentDAL.GetTotalPaid(billId);
+            decimal totalPaid = _paymentDAL.GetTotalPaid(billId, conn, tran);
 
             _billDAL.UpdatePayment(billId, totalPaid, conn, tran);
         }

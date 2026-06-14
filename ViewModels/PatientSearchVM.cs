@@ -15,10 +15,25 @@ namespace ViewModels
         public string? ReturnTo { get; set; }
 
         // Optional values required only by some flows
+        public int? DepartmentId { get; set; }
         public int? DoctorId { get; set; }
-        public DateTime? AppointmentDate { get; set; }
-        public int? SlotId { get; set; }
-        public string? SlotTime { get; set; }
+        public DateTime? AppointmentDateTime { get; set; }
+        public DateTime? AppointmentDate
+        {
+            get
+            {
+                return AppointmentDateTime?.Date;
+            }
+        }
+
+        public string? SlotTime 
+        { 
+            get
+            {
+                return AppointmentDateTime?.ToString("HH:mm");
+            }
+        }
+        public DateTime? LastVisitDate { get; set; }
 
         public List<Patient> Results { get; set; } = new();
     }

@@ -5,6 +5,7 @@ namespace Models
     public class Patient
     {
         public int PatientId { get; set; }
+        public string Title { get; set; }
 
         [Required]
         public string? FirstName { get; set; }
@@ -16,13 +17,23 @@ namespace Models
         public DateTime? DOB { get; set; }
         [Required]
         public string? Gender { get; set; }
-
-        public string? Address { get; set; }
-
         [Required]
-        public string? Phone { get; set; }
-    
+        public string? Phone { get; set; }    
         public int? ClinicId { get; set; }
+
+        public string? Address1 { get; set; }
+        public string? Address2 { get; set; }
+        public string? City { get; set; }
+        public string? State { get; set; }
+        public string? PinCode { get; set; }
+
+        public string? IdType { get; set; }
+        public string? IdNumber { get; set; }
+
+        public string? EmergencyContactName { get; set; }
+        public string? EmergencyRelationship { get; set; }
+        public string? EmergencyPhone { get; set; }
+
 
         public int Age
         {
@@ -41,6 +52,8 @@ namespace Models
                 return age;
             }
         }
+
+        public DateTime? LastVisitDate { get; set; }
 
     }
 

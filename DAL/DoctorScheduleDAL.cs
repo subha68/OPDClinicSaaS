@@ -51,42 +51,47 @@ namespace DAL
 
                 while (sched.Read())
                 {
-                    schedules.Add(MapReader(sched));
+                    schedules.Add(MapScheduleReader(sched));
                 }
             }
 
             return schedules;
         }
 
-        public List<DoctorScheduleVM> GetByDoctor(int doctorId)
+        public DoctorScheduleVM GetDoctorSchedule(int doctorId)
         {
-            List<DoctorScheduleVM> schedules = new List<DoctorScheduleVM>();
+            DoctorScheduleVM vm = null;
 
             using (SqlConnection con = _db.GetConnection())
             {
                 string query = @"
                     SELECT
-                        ScheduleId,
-                        Doctors.DoctorId,
-                        Doctors.FirstName AS DoctorFirstName,
-                        Doctors.LastName AS DoctorLastName,
-                        Clinics.ClinicId,
-                        Clinics.Name AS ClinicName,
-                        DayOfWeek,
-                        StartTime,
-                        EndTime,
-                        SlotDurationMinutes,
-                        MaxPatientsPerSlot,
-                        IsActive,
-                        CreatedOn
-                    FROM DoctorSchedules
-                    INNER JOIN Doctors ON DoctorSchedules.DoctorId = Doctors.DoctorId
-                    INNER JOIN Clinics ON DoctorSchedules.ClinicId = Clinics.ClinicId
-                    WHERE DoctorSchedules.DoctorId = @DoctorId
-                    ORDER BY DayOfWeek";
+                        ds.ScheduleId,
+                        ds.DoctorId,
+                        d.FirstName AS DoctorFirstName,
+                        d.LastName AS DoctorLastName,
+                        ds.ClinicId,
+                        c.Name AS ClinicName,
+                        ds.IsActive,
+                        ds.CreatedOn,
+                        ds.DayOfWeek,
+                        ds.StartTime,
+                        ds.EndTime,
+                        ds.SlotDurationMinutes,
+                        ds.MaxPatientsPerSlot
+                    FROM DoctorSchedules ds
+                    INNER JOIN Doctors d
+                        ON ds.DoctorId = d.DoctorId
+                    INNER JOIN Clinics c
+                        ON ds.ClinicId = c.ClinicId
+                    WHERE ds.DoctorId = @DoctorId
+                    ORDER BY
+                        ds.DayOfWeek,
+                        ds.StartTime";
 
                 SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@DoctorId", doctorId);
+
+                cmd.Parameters.Add("@DoctorId", SqlDbType.Int).Value = doctorId;
 
                 con.Open();
 
@@ -94,12 +99,18 @@ namespace DAL
                 {
                     while (reader.Read())
                     {
-                        schedules.Add(MapReader(reader));
+                        // Create header once
+                        if (vm == null)
+                        {
+                            vm = MapScheduleReader(reader);
+                        }
+
+                        vm.Shifts.Add(MapShiftReader(reader));
                     }
                 }
             }
 
-            return schedules;
+            return vm;
         }
 
         public int Add(DoctorScheduleVM model, SqlConnection conn, SqlTransaction tran)
@@ -137,9 +148,9 @@ namespace DAL
             {
                 cmd.Parameters.AddWithValue("@DoctorId", model.DoctorId);
                 cmd.Parameters.AddWithValue("@ClinicId", model.ClinicId);
-                cmd.Parameters.AddWithValue("@DayOfWeek", model.DayOfWeek);
-                cmd.Parameters.AddWithValue("@StartTime", model.StartTime);
-                cmd.Parameters.AddWithValue("@EndTime", model.EndTime);
+                cmd.Parameters.AddWithValue("@DayOfWeek", model.Shifts[0].DayOfWeek);
+                cmd.Parameters.AddWithValue("@StartTime", model.Shifts[0].StartTime);
+                cmd.Parameters.AddWithValue("@EndTime", model.Shifts[0].EndTime);
                 cmd.Parameters.AddWithValue("@SlotDurationMinutes", model.SlotDurationMinutes);
                 cmd.Parameters.AddWithValue("@MaxPatientsPerSlot", model.MaxPatientsPerSlot);
                 cmd.Parameters.AddWithValue("@IsActive", model.IsActive);
@@ -168,9 +179,9 @@ namespace DAL
                 cmd.Parameters.AddWithValue("@ScheduleId", model.ScheduleId);
                 cmd.Parameters.AddWithValue("@DoctorId", model.DoctorId);
                 cmd.Parameters.AddWithValue("@ClinicId", model.ClinicId);
-                cmd.Parameters.AddWithValue("@DayOfWeek", model.DayOfWeek);
-                cmd.Parameters.AddWithValue("@StartTime", model.StartTime);
-                cmd.Parameters.AddWithValue("@EndTime", model.EndTime);
+                cmd.Parameters.AddWithValue("@DayOfWeek", model.Shifts[0].DayOfWeek);
+                cmd.Parameters.AddWithValue("@StartTime", model.Shifts[0].StartTime);
+                cmd.Parameters.AddWithValue("@EndTime", model.Shifts[0].EndTime);
                 cmd.Parameters.AddWithValue("@SlotDurationMinutes", model.SlotDurationMinutes);
                 cmd.Parameters.AddWithValue("@MaxPatientsPerSlot", model.MaxPatientsPerSlot);
                 cmd.Parameters.AddWithValue("@IsActive", model.IsActive);
@@ -179,6 +190,70 @@ namespace DAL
 
                 return rowsAffected > 0;
             }
+        }
+
+        public bool SaveDoctorSchedule(int doctorId, DoctorScheduleVM schedule, SqlConnection conn, SqlTransaction tran)
+        {
+            int deleteRowsAffected = 0;
+            int insertRowsAffected = 0;
+
+            // Delete existing schedule
+            string deleteQuery = @"
+                DELETE FROM DoctorSchedules
+                WHERE DoctorId = @DoctorId";
+
+            using (SqlCommand cmd = new SqlCommand(deleteQuery, conn, tran))
+            {
+                cmd.Parameters.Add("@DoctorId", SqlDbType.Int).Value = doctorId;
+                deleteRowsAffected = cmd.ExecuteNonQuery();
+            }
+
+            // Insert new shifts
+            string insertQuery = @"
+                INSERT INTO DoctorSchedules
+                (
+                    DoctorId,
+                    ClinicId,
+                    DayOfWeek,
+                    StartTime,
+                    EndTime,
+                    SlotDurationMinutes,
+                    MaxPatientsPerSlot,
+                    IsActive,
+                    CreatedOn
+                )
+                VALUES
+                (
+                    @DoctorId,
+                    @ClinicId,
+                    @DayOfWeek,
+                    @StartTime,
+                    @EndTime,
+                    @SlotDurationMinutes,
+                    @MaxPatientsPerSlot,
+                    @IsActive,
+                    @CreatedOn
+                )";
+
+            foreach (var shift in schedule.Shifts)
+            {
+                using (SqlCommand cmd = new SqlCommand(insertQuery, conn, tran))
+                {
+                    cmd.Parameters.Add("@DoctorId", SqlDbType.Int).Value = schedule.DoctorId;
+                    cmd.Parameters.Add("@ClinicId", SqlDbType.Int).Value = schedule.ClinicId;
+                    cmd.Parameters.Add("@DayOfWeek", SqlDbType.Int).Value = shift.DayOfWeek;
+                    cmd.Parameters.Add("@StartTime", SqlDbType.Time).Value = shift.StartTime;
+                    cmd.Parameters.Add("@EndTime", SqlDbType.Time).Value = shift.EndTime;
+                    cmd.Parameters.Add("@SlotDurationMinutes", SqlDbType.Int).Value = schedule.SlotDurationMinutes;
+                    cmd.Parameters.Add("@MaxPatientsPerSlot", SqlDbType.Int).Value = schedule.MaxPatientsPerSlot;
+                    cmd.Parameters.Add("@IsActive", SqlDbType.Bit).Value = schedule.IsActive;
+                    cmd.Parameters.Add("@CreatedOn", SqlDbType.DateTime).Value = schedule.CreatedOn;
+
+                    insertRowsAffected += cmd.ExecuteNonQuery();
+                }
+            }
+
+            return deleteRowsAffected > 0 && insertRowsAffected > 0;
         }
 
         public bool Delete(int scheduleId, SqlConnection conn, SqlTransaction tran)
@@ -190,6 +265,22 @@ namespace DAL
             using (SqlCommand cmd = new SqlCommand(query, conn, tran))
             {
                 cmd.Parameters.AddWithValue("@ScheduleId", scheduleId);
+
+                int rowsAffected = cmd.ExecuteNonQuery();
+
+                return rowsAffected > 0;
+            }
+        }
+
+        public bool DeleteDoctorSchedule(int doctorId, SqlConnection conn, SqlTransaction tran)
+        {
+            string query = @"
+                DELETE FROM DoctorSchedules
+                    WHERE DoctorId = @DoctorId";
+
+            using (SqlCommand cmd = new SqlCommand(query, conn, tran))
+            {
+                cmd.Parameters.AddWithValue("@DoctorId", doctorId);
 
                 int rowsAffected = cmd.ExecuteNonQuery();
 
@@ -258,68 +349,148 @@ namespace DAL
 
         public DoctorScheduleVM Get(int scheduleId)
         {
+            DoctorScheduleVM vm = null;
+
             using (SqlConnection con = _db.GetConnection())
             {
                 string query = @"
                     SELECT
-                        ScheduleId,
-                        Doctors.DoctorId,
-                        Doctors.FirstName AS DoctorFirstName,
-                        Doctors.LastName AS DoctorLastName,
-                        Clinics.ClinicId,
-                        Clinics.Name AS ClinicName,
-                        DayOfWeek,
-                        StartTime,
-                        EndTime,
-                        SlotDurationMinutes,
-                        MaxPatientsPerSlot,
-                        IsActive,
-                        CreatedOn
-                    FROM DoctorSchedules
-                    INNER JOIN Doctors ON DoctorSchedules.DoctorId = Doctors.DoctorId
-                    INNER JOIN Clinics ON DoctorSchedules.ClinicId = Clinics.ClinicId
-                    WHERE ScheduleId = @ScheduleId";
+                        ds.ScheduleId,
+                        ds.DoctorId,
+                        d.FirstName AS DoctorFirstName,
+                        d.LastName AS DoctorLastName,
+                        ds.ClinicId,
+                        c.Name AS ClinicName,
+                        ds.IsActive,
+                        ds.CreatedOn,
+                        ds.DayOfWeek,
+                        ds.StartTime,
+                        ds.EndTime,
+                        ds.SlotDurationMinutes,
+                        ds.MaxPatientsPerSlot
+
+                    FROM DoctorSchedules ds
+                    INNER JOIN Doctors d
+                        ON ds.DoctorId = d.DoctorId
+                    INNER JOIN Clinics c
+                        ON ds.ClinicId = c.ClinicId
+
+                    WHERE ds.ScheduleId = @ScheduleId
+
+                    ORDER BY
+                        ds.DayOfWeek,
+                        ds.StartTime";
 
                 SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@ScheduleId", scheduleId);
+
+                cmd.Parameters.Add("@ScheduleId", SqlDbType.Int).Value = scheduleId;
 
                 con.Open();
 
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
-                    if (reader.Read())
+                    while (reader.Read())
                     {
-                        return MapReader(reader);
+                        // Create header once
+                        if (vm == null)
+                        {
+                            vm = MapScheduleReader(reader);
+                        }
+
+                        vm.Shifts.Add(MapShiftReader(reader));
                     }
                 }
             }
 
-            return null; // Not found
+            return vm;
+        }
+
+        public DoctorScheduleVM GetSchedulesByDay(int clinicId, int doctorId, int dayOfWeek)
+        {
+            DoctorScheduleVM vm = new DoctorScheduleVM();
+
+            using (SqlConnection con = _db.GetConnection())
+            {
+                string query = @"
+                    SELECT
+                        ds.ScheduleId,
+                        ds.DoctorId,
+                        d.FirstName AS DoctorFirstName,
+                        d.LastName AS DoctorLastName,
+                        ds.ClinicId,
+                        c.Name AS ClinicName,
+                        ds.IsActive,
+                        ds.CreatedOn,
+                        ds.DayOfWeek,
+                        ds.StartTime,
+                        ds.EndTime,
+                        ds.SlotDurationMinutes,
+                        ds.MaxPatientsPerSlot
+
+                    FROM DoctorSchedules ds
+                    INNER JOIN Doctors d
+                        ON ds.DoctorId = d.DoctorId
+                    INNER JOIN Clinics c
+                        ON ds.ClinicId = c.ClinicId
+
+                    WHERE ds.ClinicId = @ClinicId
+                    AND ds.DoctorId = @DoctorId
+                    AND ds.DayOfWeek = @DayOfWeek
+
+                    ORDER BY
+                        ds.DayOfWeek,
+                        ds.StartTime";
+
+                SqlCommand cmd = new SqlCommand(query, con);
+
+                cmd.Parameters.Add("@ClinicId", SqlDbType.Int).Value = clinicId;
+                cmd.Parameters.Add("@DoctorId", SqlDbType.Int).Value = doctorId;
+                cmd.Parameters.Add("@DayOfWeek", SqlDbType.Int).Value = dayOfWeek;
+
+                con.Open();
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        // Create header once
+                        vm = MapScheduleReader(reader);
+                        
+                        vm.Shifts.Add(MapShiftReader(reader));
+                    }
+                }
+            }
+
+            return vm;
         }
         
-        private DoctorScheduleVM MapReader(SqlDataReader reader)
+        private DoctorScheduleVM MapScheduleReader(SqlDataReader reader)
         {
             return new DoctorScheduleVM
             {
                 ScheduleId = Convert.ToInt32(reader["ScheduleId"]),
                 DoctorId = Convert.ToInt32(reader["DoctorId"]),
                 ClinicId = Convert.ToInt32(reader["ClinicId"]),
-                DayOfWeek = Convert.ToInt32(reader["DayOfWeek"]),
                 DoctorFirstName = reader["DoctorFirstName"].ToString(),
                 DoctorLastName = reader["DoctorLastName"].ToString(),
                 ClinicName = reader["ClinicName"].ToString(),
-
-                StartTime = (TimeSpan)reader["StartTime"],
-                EndTime = (TimeSpan)reader["EndTime"],
-
                 SlotDurationMinutes = Convert.ToInt32(reader["SlotDurationMinutes"]),
                 MaxPatientsPerSlot = Convert.ToInt32(reader["MaxPatientsPerSlot"]),
-
                 IsActive = Convert.ToBoolean(reader["IsActive"]),
-
                 CreatedOn = Convert.ToDateTime(reader["CreatedOn"])
             };
         }
 
+        private DoctorShiftVM MapShiftReader(SqlDataReader reader)
+        {
+            return new DoctorShiftVM
+            {
+                DoctorId = Convert.ToInt32(reader["DoctorId"]),
+                ClinicId = Convert.ToInt32(reader["ClinicId"]),
+                DayOfWeek = (DayOfWeek)reader["DayOfWeek"],
+                StartTime = (TimeSpan)reader["StartTime"],
+                EndTime = (TimeSpan)reader["EndTime"]
+            };
+        }
     }
 }

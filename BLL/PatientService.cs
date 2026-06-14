@@ -33,6 +33,7 @@ namespace BLL
 
         public List<Patient> Search(PatientSearchVM searchVM)
         {
+            searchVM.ClinicId = ClinicId;
             return _patientDAL.Search(searchVM);
         }
 

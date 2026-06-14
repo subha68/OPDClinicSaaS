@@ -33,21 +33,6 @@ namespace DAL
 
             billId = Convert.ToInt32(cmd.ExecuteScalar());
 
-            string query2 = @"INSERT INTO Bills (VisitId, BillDate, GrossAmount, DiscountAmount, NetAmount, PaidAmount) 
-                                VALUES (@visitId, @billDate, @grossAmount, @discountAmount, @netAmount, @paidAmount);
-                            SELECT SCOPE_IDENTITY();";
-
-            SqlCommand cmd2 = new SqlCommand(query2, conn, tran);
-            cmd2.Parameters.AddWithValue("@visitId", bill.VisitId);
-            cmd2.Parameters.AddWithValue("@billDate", bill.BillDate);
-            cmd2.Parameters.AddWithValue("@grossAmount", bill.GrossAmount);
-            cmd2.Parameters.AddWithValue("@discountAmount", bill.DiscountAmount);
-            cmd2.Parameters.AddWithValue("@netAmount", bill.NetAmount);
-            cmd2.Parameters.AddWithValue("@paidAmount", 0); // Assuming new bills are unpaid
-            //cmd2.Parameters.AddWithValue("@clinicId", bill.ClinicId);
-
-            billId = Convert.ToInt32(cmd2.ExecuteScalar());
-
             return billId;
         }
 

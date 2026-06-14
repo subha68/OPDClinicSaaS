@@ -27,7 +27,8 @@ namespace DAL
                     PatientId,
                     VisitId,
                     AppointmentDate,
-                    SlotTime,
+                    SlotStartTime,
+                    SlotEndTime,
                     Status
                 )
                 VALUES
@@ -37,7 +38,8 @@ namespace DAL
                     @PatientId,
                     @VisitId,
                     @AppointmentDate,
-                    @SlotTime,
+                    @SlotStartTime,
+                    @SlotEndTime,
                     @Status
                 );
 
@@ -50,7 +52,8 @@ namespace DAL
                 cmd.Parameters.AddWithValue("@PatientId", model.PatientId);
                 cmd.Parameters.AddWithValue("@VisitId", model.VisitId);
                 cmd.Parameters.AddWithValue("@AppointmentDate", model.AppointmentDate);
-                cmd.Parameters.AddWithValue("@SlotTime", model.SlotTime);
+                cmd.Parameters.AddWithValue("@SlotStartTime", model.SlotStartTime);
+                cmd.Parameters.AddWithValue("@SlotEndTime", model.SlotEndTime);
                 cmd.Parameters.AddWithValue("@Status", model.Status);
 
                 return Convert.ToInt32(cmd.ExecuteScalar());
@@ -64,7 +67,8 @@ namespace DAL
                 SET DoctorId = @DoctorId,
                     PatientId = @PatientId,
                     AppointmentDate = @AppointmentDate,
-                    SlotTime = @SlotTime,
+                    SlotStartTime = @SlotStartTime,
+                    SlotEndTime = @SlotEndTime,
                     Status = @Status
                 WHERE AppointmentId = @AppointmentId";
 
@@ -73,7 +77,8 @@ namespace DAL
                 cmd.Parameters.AddWithValue("@DoctorId", model.DoctorId);
                 cmd.Parameters.AddWithValue("@PatientId", model.PatientId);
                 cmd.Parameters.AddWithValue("@AppointmentDate", model.AppointmentDate);
-                cmd.Parameters.AddWithValue("@SlotTime", model.SlotTime);
+                cmd.Parameters.AddWithValue("@SlotStartTime", model.SlotStartTime);
+                cmd.Parameters.AddWithValue("@SlotEndTime", model.SlotEndTime);
                 cmd.Parameters.AddWithValue("@Status", model.Status);
                 cmd.Parameters.AddWithValue("@AppointmentId", model.AppointmentId);
 
@@ -106,7 +111,8 @@ namespace DAL
                         a.AppointmentId,
                         a.AppointmentDate,
                         v.VisitId,
-                        a.SlotTime,
+                        a.SlotStartTime,
+                        a.SlotEndTime,
                         a.Status,
                         p.FirstName + ' ' + p.LastName as PatientName,
                         d.FirstName + ' ' + d.LastName as DoctorName,
@@ -137,7 +143,8 @@ namespace DAL
                             {
                                 AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
                                 AppointmentDate = Convert.ToDateTime(dr["AppointmentDate"]),
-                                SlotTime = (TimeSpan)dr["SlotTime"],
+                                SlotTime = (TimeSpan)dr["SlotStartTime"],
+                                //SlotEndTime = (TimeSpan)dr["SlotEndTime"],
                                 Status = dr["Status"].ToString(),
                                 PatientName = dr["PatientName"].ToString(),
                                 DoctorName = dr["DoctorName"].ToString(),
@@ -164,7 +171,9 @@ namespace DAL
                     SELECT
                         a.AppointmentId,
                         a.AppointmentDate,
-                        a.SlotTime,
+                        a.PatientId,
+                        a.SlotStartTime,
+                        a.SlotEndTime,
                         v.VisitId,
                         a.Status,
                         p.FirstName + ' ' + p.LastName as PatientName,
@@ -199,7 +208,9 @@ namespace DAL
                             {
                                 AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
                                 AppointmentDate = Convert.ToDateTime(dr["AppointmentDate"]),
-                                SlotTime = (TimeSpan)dr["SlotTime"],
+                                PatientId = Convert.ToInt32(dr["PatientId"]),
+                                SlotTime = (TimeSpan)dr["SlotStartTime"],
+                                //SlotEndTime = (TimeSpan)dr["SlotEndTime"],
                                 Status = dr["Status"].ToString(),
                                 PatientName = dr["PatientName"].ToString(),
                                 DoctorName = dr["DoctorName"].ToString(),
@@ -226,7 +237,9 @@ namespace DAL
                 SELECT
                     a.AppointmentId,
                     a.AppointmentDate,
-                    a.SlotTime,
+                    a.PatientId,
+                    a.SlotStartTime,
+                    a.SlotEndTime,
                     v.VisitId,
                     a.Status,
                     p.FirstName + ' ' + p.LastName as PatientName,
@@ -247,7 +260,7 @@ namespace DAL
                     ON d.DepartmentId = t.DepartmentId
                 WHERE a.DoctorId = @DoctorId
                     AND CAST(a.AppointmentDate as date)=CAST(GETDATE() as date)
-                ORDER BY a.SlotTime";
+                ORDER BY a.SlotStartTime";
 
             using var cmd = new SqlCommand(sql, con);
 
@@ -263,7 +276,9 @@ namespace DAL
                 {
                     AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
                     AppointmentDate = Convert.ToDateTime(dr["AppointmentDate"]),
-                    SlotTime = (TimeSpan)dr["SlotTime"],
+                    PatientId = Convert.ToInt32(dr["PatientId"]),
+                    SlotTime = (TimeSpan)dr["SlotStartTime"],
+                    //SlotEndTime = (TimeSpan)dr["SlotEndTime"],
                     Status = dr["Status"].ToString(),
                     PatientName = dr["PatientName"].ToString(),
                     DoctorName = dr["DoctorName"].ToString(),
@@ -271,6 +286,58 @@ namespace DAL
                     VisitId = Convert.ToInt32(dr["VisitId"]),
                     DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
                     DepartmentName = dr["DepartmentName"].ToString()
+                });
+            }
+
+            return list;
+        }
+
+        public List<Appointment> GetAppointmentsByDate(int clinicId, int doctorId, DateTime appointmentDate)
+        {
+            var list = new List<Appointment>();
+
+            using var con = _db.GetConnection();
+
+            string sql = @"
+                SELECT
+                    a.AppointmentId,
+                    a.SlotStartTime,
+                    a.SlotEndTime,
+                    a.Status,
+                    p.PatientId,
+                    p.FirstName + ' ' + p.LastName as PatientName
+                FROM Appointments a
+                INNER JOIN Patients p
+                    ON a.PatientId = p.PatientId
+                INNER JOIN Doctors d
+                    ON a.DoctorId = d.DoctorId
+                INNER JOIN Clinics c
+                    ON a.ClinicId = c.ClinicId
+                WHERE a.DoctorId = @DoctorId
+                AND a.ClinicId = @ClinicId
+                AND a.AppointmentDate = @AppointmentDate
+                ORDER BY a.SlotStartTime";
+
+            using var cmd = new SqlCommand(sql, con);
+
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+            cmd.Parameters.AddWithValue("@DoctorId", doctorId);
+            cmd.Parameters.AddWithValue("@AppointmentDate", appointmentDate);
+
+            con.Open();
+
+            using var dr = cmd.ExecuteReader();
+
+            while (dr.Read())
+            {
+                list.Add(new Appointment
+                {
+                    AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
+                    AppointmentDate = appointmentDate,
+                    SlotTime = (TimeSpan)dr["SlotStartTime"],
+                    //SlotEndTime = (TimeSpan)dr["SlotEndTime"],
+                    Status = dr["Status"].ToString(),
+                    PatientName = dr["PatientName"].ToString()
                 });
             }
 
@@ -287,7 +354,8 @@ namespace DAL
                 SELECT
                     a.AppointmentId,
                     a.AppointmentDate,
-                    a.SlotTime,
+                    a.SlotStartTime,
+                    a.SlotEndTime,
                     a.Status,
                     p.FirstName + ' ' + p.LastName as PatientName,
                     d.FirstName + ' ' + d.LastName as DoctorName,
@@ -307,7 +375,7 @@ namespace DAL
                 INNER JOIN Departments t
                     ON d.DepartmentId = t.DepartmentId
                 WHERE a.PatientId = @PatientId
-                ORDER BY a.AppointmentDate DESC, a.SlotTime DESC";
+                ORDER BY a.AppointmentDate DESC, a.SlotStartTime DESC";
 
             using var cmd = new SqlCommand(sql, con);
 
@@ -323,7 +391,8 @@ namespace DAL
                 {
                     AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
                     AppointmentDate = Convert.ToDateTime(dr["AppointmentDate"]),
-                    SlotTime = (TimeSpan)dr["SlotTime"],
+                    SlotTime = (TimeSpan)dr["SlotStartTime"],
+                    //SlotEndTime = (TimeSpan)dr["SlotEndTime"],
                     Status = dr["Status"].ToString(),
                     PatientName = dr["PatientName"].ToString(),
                     DoctorName = dr["DoctorName"].ToString(),

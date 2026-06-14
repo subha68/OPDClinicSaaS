@@ -85,12 +85,13 @@ namespace BLL
                     VisitId = vm.VisitId,
                     AppointmentDate = vm.AppointmentDate,
                     SlotTime = TimeSpan.Parse(vm.SlotTime),
+                    //SlotEndTime = vm.Slot.Add(TimeSpan.FromMinutes(15)), 
                     Status = "Booked"
                 };
 
                 int appointmentId = _appointmentDAL.Add(appointment, conn, tran);
 
-                _slotDAL.IncrementBookedCount(vm.SlotId, conn, tran);
+                //_slotDAL.IncrementBookedCount(vm.SlotId, conn, tran);
 
                 tran.Commit();
 

@@ -61,13 +61,6 @@ namespace Controllers
         {
             int consultationId = _consultation.SaveConsultation(model);
 
-            foreach(var med in model.pharmacologyAdvices)
-            {
-                _pharmacology.Create(consultationId, model.AppointmentId, med);
-            }
-
-            _appointment.UpdateStatus(model.AppointmentId, "Completed");
-
             TempData["Success"] = "Consultation completed";
 
             return RedirectToAction("Index");

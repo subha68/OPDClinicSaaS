@@ -28,8 +28,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+
     <link href="~/css/app-layout.css" rel="stylesheet" asp-append-version="true"/>
     <link href="~/css/crud.css" rel="stylesheet" />
+    <link href="~/css/schedule.css" rel="stylesheet" />
 
     @RenderSection("Styles", required:false)
 </head>
@@ -38,86 +41,64 @@
 
 @if (!isLoginPage)
 {
+    <!-- TOP HEADER -->
     <div class="app-shell">
 
-        <!-- TOP HEADER -->
-        <header class="top-header">
-            <div class="brand">
-                <div class="brand-logo">
-                    <i class="fa-solid fa-staff-snake"></i>
+        @{
+            var role = HttpContextAccessor.HttpContext.Session.GetString("RoleName");
+            var firstName = HttpContextAccessor.HttpContext.Session.GetString("FirstName");
+            var lastName = HttpContextAccessor.HttpContext.Session.GetString("LastName");
+            var clinicCode = Context.Session.GetString("ClinicCode");
+            var clinicName = Context.Session.GetString("ClinicName");
+            var clinicLogo = Context.Session.GetString("ClinicLogo");
+        }
+
+        <aside class="sidebar">
+
+            <div class="sidebar-user">
+
+                <div class="sidebar-avatar">
+                    <i class="fa-solid fa-user-doctor"></i>
                 </div>
 
-                <div>
-                    <div class="brand-name">
-                        Clinics<span>RUs</span>
-                    </div>
-                    <div class="brand-tagline">
-                        Smart Clinics. Better Care.
-                    </div>
+                <div class="sidebar-user-name">
+                    Welcome @firstName @lastName
+                </div>
+
+                <div class="sidebar-user-role">
+                    @role
+                </div>
+
+                <div class="sidebar-user-clinic">
+                    @clinicCode - @clinicName
+                </div>
+
+            </div>
+
+            <div class="sidebar-menu-container">
+              @await Component.InvokeAsync("NavMenu")
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="copyright-text">
+                    © @DateTime.Now.Year
+                </div>
+                <div class="company-text">
+                    Developed and Supported by
+                    <strong>BEC Technologies Pvt Ltd</strong>
                 </div>
             </div>
 
-            <div>
-                <nav class="navbar navbar-expand-lg navbar-custom px-4">
-                    <a class="navbar-brand text-white" href="/">ClinicsRUs</a>
-                    @await Component.InvokeAsync("NavMenu")
-                </nav>
-            </div>
+        </aside>
 
-            <div class="header-right">
-                <div class="org-chip">
-                    <i class="fa-solid fa-hospital"></i>
-                    @Context.Session.GetString("ClinicCode")
-                </div>
+        <div class="main-area">
 
-                <div class="user-menu dropdown">
-                    <button class="btn user-btn dropdown-toggle"
-                            data-bs-toggle="dropdown">
-                        @{
-                            var username = HttpContextAccessor.HttpContext.Session.GetString("Username");
-                            var role = HttpContextAccessor.HttpContext.Session.GetString("RoleName");
-                            var displayName = HttpContextAccessor.HttpContext.Session.GetString("FirstName") + " " 
-                                                    + HttpContextAccessor.HttpContext.Session.GetString("LastName");
-                        }
+            <main class="page-body">
+                @RenderBody()
+            </main>
 
-                        Welcome, @displayName
-                    </button>
+        </div>
 
-                    <ul class="dropdown-menu dropdown-menu-end">
-
-                        <li class="dropdown-item-text">
-                            <strong>User: @username</strong>
-                        </li>
-
-                        <li class="dropdown-item-text">
-                            Name: @displayName
-                        </li>
-
-                        <li class="dropdown-item-text">
-                            Role: @role
-                        </li>
-
-                        <li><hr class="dropdown-divider"></li>
-
-                        <li>
-                            <form asp-controller="Account"
-                                asp-action="Logout"
-                                method="post"
-                                style="display:inline;">
-                                <button type="submit"
-                                        class="dropdown-item">
-                                    Logout
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </header>
-        
-        <main class="page-body">
-            @RenderBody()
-        </main>
     </div>
 }
 else
@@ -127,9 +108,10 @@ else
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 
-
-
+<script src="~/js/crudlist.js"></script>
+<script src="~/js/consult.js"></script>
 
 @await RenderSectionAsync("Scripts", required:false)
 

@@ -29,7 +29,7 @@ namespace DAL
                                     r.RoleName = 'SuperAdmin'
                                     OR
                                     (
-                                        r.RoleName IN ('ClinicAdmin','ClinicUser','Doctor','BillingUser')
+                                        r.RoleName IN ('ClinicAdmin','ClinicUser','Doctor','BillingUser','PharmacyUser')
                                         AND u.ClinicId = @ClinicId
                                     )
                                 )
@@ -79,8 +79,6 @@ namespace DAL
             cmd.Parameters.AddWithValue("@LastName", user.LastName);
             cmd.Parameters.AddWithValue("@Email", user.Email);
             cmd.Parameters.AddWithValue("@Phone", user.Phone);
-
-            conn.Open();
 
             userId = Convert.ToInt32(cmd.ExecuteScalar());
 

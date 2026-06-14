@@ -26,24 +26,26 @@ namespace Controllers
             _consultation = consultation;
         }
 
-        public ActionResult Index()
+        public ActionResult Index(string? SearchString)
         {
-            var list = _patient.List();
+            var vm = new PatientSearchVM();
+            vm.SearchString = SearchString ?? "";
 
-            return View(list);
+            vm.Results = _patient.Search(vm);
+
+            return View(vm);
         }
 
         [HttpGet]
-        public IActionResult Search(string? returnTo, int? doctorId, DateTime? appointmentDate, int? slotId, string? slotTime)
+        public IActionResult Search(string? returnTo, int? departmentId, int? doctorId, DateTime? appointmentDateTime)
         {
             var vm = new PatientSearchVM
             {
                 ClinicId = _patient.ClinicId,
                 ReturnTo = returnTo,
+                DepartmentId = departmentId,
                 DoctorId = doctorId,
-                AppointmentDate = appointmentDate,
-                SlotId = slotId,
-                SlotTime = slotTime
+                AppointmentDateTime = appointmentDateTime
             };
 
             return View(vm);
@@ -63,10 +65,10 @@ namespace Controllers
                     {
                         patientId = vm.Results[0].PatientId,
                         returnTo = vm.ReturnTo,
+                        departmentId = vm.DepartmentId,
                         doctorId = vm.DoctorId,
-                        appointmentDate = vm.AppointmentDate,
-                        slotId = vm.SlotId,
-                        slotTime = vm.SlotTime
+                        appointmentDateTime = vm.AppointmentDateTime,
+                        LastVisitDate = vm.LastVisitDate
                     });
             }
 
@@ -167,10 +169,10 @@ namespace Controllers
         public IActionResult SelectPatient(
             string patientId,
             string returnTo,
+            int? departmentId,
             int? doctorId,
-            DateTime? appointmentDate,
-            int? slotId,
-            string? slotTime)
+            DateTime? appointmentDateTime,
+            int? visitId)
         {
             switch (returnTo)
             {
@@ -181,10 +183,9 @@ namespace Controllers
                         "AppointmentBooking",
                         new
                         {
+                            departmentId,
                             doctorId,
-                            appointmentDate,
-                            slotId,
-                            slotTime,
+                            appointmentDateTime,
                             patientId
                         });
 

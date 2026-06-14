@@ -28,9 +28,13 @@ namespace Controllers
 
             var clinicId = ClinicContextHelper.GetClinicId(HttpContext);
             var clinicCode = ClinicContextHelper.GetClinicCode(HttpContext);
+            var clinicName = ClinicContextHelper.GetClinicName(HttpContext);
+            var clinicLogo = ClinicContextHelper.GetClinicLogo(HttpContext);
 
             HttpContext.Session.SetString("ClinicId", clinicId == null ? "" : clinicId.Value.ToString());
             HttpContext.Session.SetString("ClinicCode", clinicCode ?? "");
+            HttpContext.Session.SetString("ClinicName", clinicCode ?? "");
+            HttpContext.Session.SetString("ClinicLogo", clinicCode ?? "");
 
             ViewBag.ClinicId = clinicId;
             ViewBag.ClinicCode = clinicCode;
@@ -43,8 +47,14 @@ namespace Controllers
         {
             var clinicId = ClinicContextHelper.GetClinicId(HttpContext);
             var clinicCode = ClinicContextHelper.GetClinicCode(HttpContext);
+            var clinicName = ClinicContextHelper.GetClinicName(HttpContext);
+            var clinicLogo = ClinicContextHelper.GetClinicLogo(HttpContext);
+
             HttpContext.Session.SetString("ClinicId", clinicId == null ? "" : clinicId.Value.ToString());
             HttpContext.Session.SetString("ClinicCode", clinicCode ?? "");
+            HttpContext.Session.SetString("ClinicName", clinicName);
+            HttpContext.Session.SetString("ClinicLogo", clinicLogo);
+
             ViewBag.ClinicCode = clinicCode;
 
             var user = _user.ValidateUser(username, password);
@@ -133,8 +143,10 @@ namespace Controllers
 
             HttpContext.Session.SetString("ClinicCode", clinic.ClinicCode);
             HttpContext.Session.SetString("ClinicId", clinic.ClinicId.ToString());
+            HttpContext.Session.SetString("ClinicName", clinic.Name.ToString());
+            HttpContext.Session.SetString("ClinicLogo", clinic.LogoPath.ToString());
 
-            ClinicContextHelper.Save(HttpContext, clinic.ClinicId, clinic.ClinicCode);
+            ClinicContextHelper.Save(HttpContext, clinic.ClinicId, clinic.ClinicCode, clinic.Name, clinic.LogoPath);
 
             return Json(new
             {
@@ -149,6 +161,8 @@ namespace Controllers
         {
             HttpContext.Session.Remove("ClinicCode");
             HttpContext.Session.Remove("ClinicId");
+            HttpContext.Session.Remove("ClinicName");
+            HttpContext.Session.Remove("ClinicLogo");
 
             ClinicContextHelper.Clear(HttpContext);
 
