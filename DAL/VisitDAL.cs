@@ -51,43 +51,47 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public List<Visit> GetAll()
+        public List<Visit> GetAll(SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Visit>();
 
-            using (SqlConnection conn = _db.GetConnection())
+            SqlCommand cmd = new SqlCommand("SELECT * FROM Visits", conn);
+            if (tran != null)
             {
-                SqlCommand cmd = new SqlCommand("SELECT * FROM Visits", conn);
-
-                conn.Open();
-                var reader = cmd.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    list.Add(new Visit
-                    {
-                        VisitId = (int)reader["VisitId"],
-                        VisitDate = (DateTime)reader["VisitDate"],
-                        VisitType = reader["VisitType"].ToString(),
-                        ClinicId = (int)reader["ClinicId"],
-                        PatientId = (int)reader["PatientId"]
-                    });
-                }
+                cmd.Transaction = tran;
             }
+
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                list.Add(new Visit
+                {
+                    VisitId = (int)reader["VisitId"],
+                    VisitDate = (DateTime)reader["VisitDate"],
+                    VisitType = reader["VisitType"].ToString(),
+                    ClinicId = (int)reader["ClinicId"],
+                    PatientId = (int)reader["PatientId"]
+                });
+            }
+
             return list;
         }
 
-        public List<Visit> GetVisitsByPatient(int patientId)
+        public List<Visit> GetVisitsByPatient(int patientId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Visit>();
-            SqlConnection conn = _db.GetConnection();
             
-            string query = "SELECT * FROM Visits WHERE PatientId = @PatientId";
+            string query = "SELECT v.* FROM Visits v WHERE PatientId = @PatientId ORDER BY v.VisitDate DESC";
             SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
+
             cmd.Parameters.AddWithValue("@PatientId", patientId);
 
-            conn.Open();
-            var reader = cmd.ExecuteReader();
+            using var reader = cmd.ExecuteReader();
 
             while (reader.Read())
             {
@@ -104,22 +108,23 @@ namespace DAL
             return list; // Return the list of visits
         }
 
-        public Visit GetByPatientAndDate(int patientId, DateTime date)
+        public Visit GetByPatientAndDate(int patientId, DateTime date, SqlConnection conn, SqlTransaction? tran = null)
         {
-            Console.WriteLine(date);
-            SqlConnection con = _db.GetConnection();
-
             string sql = @"SELECT TOP 1 *
                         FROM Visits
                         WHERE PatientId=@PatientId
                         AND CAST(VisitDate as date)=CAST(@VisitDate as date)";
 
-            SqlCommand cmd = new SqlCommand(sql, con);
+            SqlCommand cmd = new SqlCommand(sql, conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
+
             cmd.Parameters.AddWithValue("@PatientId", patientId);
             cmd.Parameters.AddWithValue("@VisitDate", date);
 
-            con.Open();
-            var reader = cmd.ExecuteReader();
+            using var reader = cmd.ExecuteReader();
 
             if (reader.Read())
             {
@@ -136,67 +141,68 @@ namespace DAL
             return null;
         }
 
-        public Visit Get(int visitId)
+        public Visit Get(int visitId, SqlConnection conn, SqlTransaction? tran = null)
         {
-            using (SqlConnection conn = _db.GetConnection())
+            string query = "SELECT * FROM Visits WHERE VisitId = @VisitId";
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = "SELECT * FROM Visits WHERE VisitId = @VisitId";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@VisitId", visitId);
-
-                conn.Open();
-                var reader = cmd.ExecuteReader();
-
-                if (reader.Read())
-                {
-                    return new Visit
-                    {
-                        VisitId = (int)reader["VisitId"],
-                        VisitDate = (DateTime)reader["VisitDate"],
-                        VisitType = reader["VisitType"].ToString(),
-                        ClinicId = (int)reader["ClinicId"],
-                        PatientId = (int)reader["PatientId"]
-                    };
-                }
+                cmd.Transaction = tran;
             }
+
+            cmd.Parameters.AddWithValue("@VisitId", visitId);
+
+            using var reader = cmd.ExecuteReader();
+
+            if (reader.Read())
+            {
+                return new Visit
+                {
+                    VisitId = (int)reader["VisitId"],
+                    VisitDate = (DateTime)reader["VisitDate"],
+                    VisitType = reader["VisitType"].ToString(),
+                    ClinicId = (int)reader["ClinicId"],
+                    PatientId = (int)reader["PatientId"]
+                };
+            }
+
             return null; // Not found
         }
 
-        public List<Visit> ListByPatient(int patientId)
+        public List<Visit> ListByPatient(int patientId, SqlConnection conn, SqlTransaction? tran = null)
         {
-            using(SqlConnection con = _db.GetConnection())
+            string sql = @"
+                SELECT
+                    v.VisitId,
+                    v.VisitDate,
+                    v.VisitType
+                FROM Visits v
+                WHERE v.PatientId = @PatientId
+                ORDER BY v.VisitDate DESC";
+
+            SqlCommand cmd = new SqlCommand(sql, conn);
+            if (tran != null)
             {
-                string sql = @"
-                    SELECT
-                        v.VisitId,
-                        v.VisitDate,
-                        v.VisitType
-                    FROM Visits v
-                    WHERE v.PatientId = @PatientId
-                    ORDER BY v.VisitDate DESC";
-
-                SqlCommand cmd = new SqlCommand(sql, con);
-
-                cmd.Parameters.AddWithValue("@PatientId", patientId);
-
-                con.Open();
-
-                SqlDataReader dr = cmd.ExecuteReader();
-
-                List<Visit> visits = new();
-
-                while(dr.Read())
-                {
-                    visits.Add(new Visit
-                    {
-                        VisitId = Convert.ToInt32(dr["VisitId"]),
-                        VisitDate = Convert.ToDateTime(dr["VisitDate"]),
-                        VisitType = dr["VisitType"].ToString()
-                    });
-                }
-
-                return visits;
+                cmd.Transaction = tran;
             }
+
+            cmd.Parameters.AddWithValue("@PatientId", patientId);
+
+            using SqlDataReader dr = cmd.ExecuteReader();
+
+            List<Visit> visits = new();
+
+            while(dr.Read())
+            {
+                visits.Add(new Visit
+                {
+                    VisitId = Convert.ToInt32(dr["VisitId"]),
+                    VisitDate = Convert.ToDateTime(dr["VisitDate"]),
+                    VisitType = dr["VisitType"].ToString()
+                });
+            }
+
+            return visits;
         }
 
     }

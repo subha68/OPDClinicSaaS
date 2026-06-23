@@ -100,138 +100,158 @@ namespace DAL
             }
         }
 
-        public List<Appointment> GetAll()
+        public List<Appointment> GetAll(SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Appointment>();
 
-            using (SqlConnection conn = _db.GetConnection())
+            string query = @"
+                SELECT
+                    a.AppointmentId,
+                    a.AppointmentDate,
+                    v.VisitId,
+                    a.SlotStartTime,
+                    a.SlotEndTime,
+                    a.Status,
+                    p.FirstName + ' ' + p.LastName as PatientName,
+                    d.FirstName + ' ' + d.LastName as DoctorName,
+                    c.Name as ClinicName,
+                    d.DepartmentId,
+                    t.Name as DepartmentName
+                FROM Appointments a
+                INNER JOIN Patients p
+                    ON a.PatientId = p.PatientId
+                INNER JOIN Doctors d
+                    ON a.DoctorId = d.DoctorId
+                INNER JOIN Clinics c
+                    ON a.ClinicId = c.ClinicId
+                INNER JOIN Departments t
+                    ON d.DepartmentId = t.DepartmentId
+                INNER JOIN Visits v
+                    ON a.VisitId = v.VisitId";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = @"
-                    SELECT
-                        a.AppointmentId,
-                        a.AppointmentDate,
-                        v.VisitId,
-                        a.SlotStartTime,
-                        a.SlotEndTime,
-                        a.Status,
-                        p.FirstName + ' ' + p.LastName as PatientName,
-                        d.FirstName + ' ' + d.LastName as DoctorName,
-                        c.Name as ClinicName,
-                        d.DepartmentId,
-                        t.Name as DepartmentName
-                    FROM Appointments a
-                    INNER JOIN Patients p
-                        ON a.PatientId = p.PatientId
-                    INNER JOIN Doctors d
-                        ON a.DoctorId = d.DoctorId
-                    INNER JOIN Clinics c
-                        ON a.ClinicId = c.ClinicId
-                    INNER JOIN Departments t
-                        ON d.DepartmentId = t.DepartmentId
-                    INNER JOIN Visits v
-                        ON a.VisitId = v.VisitId";
+                cmd.Transaction = tran;
+            }
 
-                using (SqlCommand cmd = new SqlCommand(query, conn))
+            using (SqlDataReader dr = cmd.ExecuteReader())
+            {
+                while (dr.Read())
                 {
-                    conn.Open();
-
-                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    list.Add(new Appointment
                     {
-                        while (dr.Read())
-                        {
-                            list.Add(new Appointment
-                            {
-                                AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
-                                AppointmentDate = Convert.ToDateTime(dr["AppointmentDate"]),
-                                SlotTime = (TimeSpan)dr["SlotStartTime"],
-                                //SlotEndTime = (TimeSpan)dr["SlotEndTime"],
-                                Status = dr["Status"].ToString(),
-                                PatientName = dr["PatientName"].ToString(),
-                                DoctorName = dr["DoctorName"].ToString(),
-                                ClinicName = dr["ClinicName"].ToString(),
-                                VisitId = Convert.ToInt32(dr["VisitId"]),
-                                DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
-                                DepartmentName = dr["DepartmentName"].ToString()
-                            });
-                        }
-                    }
+                        AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
+                        AppointmentDate = Convert.ToDateTime(dr["AppointmentDate"]),
+                        SlotTime = (TimeSpan)dr["SlotStartTime"],
+                        //SlotEndTime = (TimeSpan)dr["SlotEndTime"],
+                        Status = dr["Status"].ToString(),
+                        PatientName = dr["PatientName"].ToString(),
+                        DoctorName = dr["DoctorName"].ToString(),
+                        ClinicName = dr["ClinicName"].ToString(),
+                        VisitId = Convert.ToInt32(dr["VisitId"]),
+                        DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
+                        DepartmentName = dr["DepartmentName"].ToString()
+                    });
                 }
             }
 
             return list;
         }
 
-        public Appointment Get(int appointmentId)
+        public Appointment Get(int appointmentId, SqlConnection conn, SqlTransaction? tran = null)
         {
             Appointment appointment = null;
 
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                string query = @"
+            string query = @"
+                SELECT
+                    a.AppointmentId,
+                    a.AppointmentDate,
+                    a.PatientId,
+                    a.SlotStartTime,
+                    a.SlotEndTime,
+                    v.VisitId,
+                    a.Status,
+                    p.FirstName + ' ' + p.LastName as PatientName,
+                    d.FirstName + ' ' + d.LastName as DoctorName,
+                    c.Name as ClinicName,
+                    d.DepartmentId,
+                    t.Name as DepartmentName,
+                    CASE
+                        WHEN b.BillCount > 0 THEN 'Billed'
+                        ELSE 'Unbilled'
+                    END AS BillStatus,
+
+                    CASE
+                        WHEN b.TotalNetAmount > 0 AND b.TotalPaidAmount = 0 THEN 'Due'
+                        WHEN b.TotalBalance <= 0 THEN 'Paid'
+                        WHEN b.TotalBalance < b.TotalNetAmount THEN 'Partially Paid'
+                        ELSE 'None'
+                    END AS PaymentStatus
+
+                FROM Appointments a
+                INNER JOIN Patients p
+                    ON a.PatientId = p.PatientId
+                INNER JOIN Doctors d
+                    ON a.DoctorId = d.DoctorId
+                INNER JOIN Clinics c
+                    ON a.ClinicId = c.ClinicId
+                INNER JOIN Visits v
+                    ON a.VisitId = v.VisitId
+                INNER JOIN Departments t
+                    ON d.DepartmentId = t.DepartmentId
+                LEFT JOIN
+                (
                     SELECT
-                        a.AppointmentId,
-                        a.AppointmentDate,
-                        a.PatientId,
-                        a.SlotStartTime,
-                        a.SlotEndTime,
-                        v.VisitId,
-                        a.Status,
-                        p.FirstName + ' ' + p.LastName as PatientName,
-                        d.FirstName + ' ' + d.LastName as DoctorName,
-                        c.Name as ClinicName,
-                        d.DepartmentId,
-                        t.Name as DepartmentName
-                    FROM Appointments a
-                    INNER JOIN Patients p
-                        ON a.PatientId = p.PatientId
-                    INNER JOIN Doctors d
-                        ON a.DoctorId = d.DoctorId
-                    INNER JOIN Clinics c
-                        ON a.ClinicId = c.ClinicId
-                    INNER JOIN Visits v
-                        ON a.VisitId = v.VisitId
-                    INNER JOIN Departments t
-                        ON d.DepartmentId = t.DepartmentId
-                    WHERE a.AppointmentId = @AppointmentId";
+                        VisitId,
+                        COUNT(*) AS BillCount,
+                        SUM(NetAmount) AS TotalNetAmount,
+                        SUM(NetAmount - PaidAmount) AS TotalBalance,
+                        SUM(PaidAmount) AS TotalPaidAmount
+                    FROM Bills
+                    GROUP BY VisitId
+                ) b
+                    ON a.VisitId = b.VisitId
+                WHERE a.AppointmentId = @AppointmentId";
 
-                using (SqlCommand cmd = new SqlCommand(query, conn))
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
+
+            cmd.Parameters.AddWithValue("@AppointmentId", appointmentId);
+
+            using (SqlDataReader dr = cmd.ExecuteReader())
+            {
+                if (dr.Read())
                 {
-                    cmd.Parameters.AddWithValue("@AppointmentId", appointmentId);
-
-                    conn.Open();
-
-                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    appointment = new Appointment
                     {
-                        if (dr.Read())
-                        {
-                            appointment = new Appointment
-                            {
-                                AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
-                                AppointmentDate = Convert.ToDateTime(dr["AppointmentDate"]),
-                                PatientId = Convert.ToInt32(dr["PatientId"]),
-                                SlotTime = (TimeSpan)dr["SlotStartTime"],
-                                //SlotEndTime = (TimeSpan)dr["SlotEndTime"],
-                                Status = dr["Status"].ToString(),
-                                PatientName = dr["PatientName"].ToString(),
-                                DoctorName = dr["DoctorName"].ToString(),
-                                ClinicName = dr["ClinicName"].ToString(),
-                                VisitId = Convert.ToInt32(dr["VisitId"]),
-                                DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
-                                DepartmentName = dr["DepartmentName"].ToString()                                
-                            };
-                        }
-                    }
+                        AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
+                        AppointmentDate = Convert.ToDateTime(dr["AppointmentDate"]),
+                        PatientId = Convert.ToInt32(dr["PatientId"]),
+                        SlotTime = (TimeSpan)dr["SlotStartTime"],
+                        //SlotEndTime = (TimeSpan)dr["SlotEndTime"],
+                        Status = dr["Status"].ToString(),
+                        BillingStatus = dr["BillStatus"].ToString(),
+                        PaymentStatus = dr["PaymentStatus"].ToString(),
+                        PatientName = dr["PatientName"].ToString(),
+                        DoctorName = dr["DoctorName"].ToString(),
+                        ClinicName = dr["ClinicName"].ToString(),
+                        VisitId = Convert.ToInt32(dr["VisitId"]),
+                        DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
+                        DepartmentName = dr["DepartmentName"].ToString()                                
+                    };
                 }
             }
 
             return appointment;
         }
         
-        public List<Appointment> GetTodaysAppointments(int doctorId)
+        public List<Appointment> GetTodaysAppointments(int doctorId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Appointment>();
-
-            using var con = _db.GetConnection();
 
             string sql = @"
                 SELECT
@@ -262,11 +282,13 @@ namespace DAL
                     AND CAST(a.AppointmentDate as date)=CAST(GETDATE() as date)
                 ORDER BY a.SlotStartTime";
 
-            using var cmd = new SqlCommand(sql, con);
+            var cmd = new SqlCommand(sql, conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
 
             cmd.Parameters.AddWithValue("@DoctorId", doctorId);
-
-            con.Open();
 
             using var dr = cmd.ExecuteReader();
 
@@ -292,39 +314,75 @@ namespace DAL
             return list;
         }
 
-        public List<Appointment> GetAppointmentsByDate(int clinicId, int doctorId, DateTime appointmentDate)
+        public List<Appointment> GetAppointmentsByDate(int clinicId, int doctorId, DateTime appointmentDate, SqlConnection conn,
+                                                            SqlTransaction? tran = null)
         {
             var list = new List<Appointment>();
-
-            using var con = _db.GetConnection();
 
             string sql = @"
                 SELECT
                     a.AppointmentId,
+                    a.VisitId,
                     a.SlotStartTime,
                     a.SlotEndTime,
                     a.Status,
+                    a.CancellationReason,
                     p.PatientId,
-                    p.FirstName + ' ' + p.LastName as PatientName
+                    p.FirstName + ' ' + p.LastName AS PatientName,
+
+                    CASE
+                        WHEN b.BillCount > 0 THEN 'Billed'
+                        ELSE 'Unbilled'
+                    END AS BillStatus,
+
+                    CASE
+                        WHEN b.TotalNetAmount > 0 AND b.TotalPaidAmount = 0 THEN 'Due'
+                        WHEN b.TotalBalance <= 0 THEN 'Paid'
+                        WHEN b.TotalBalance < b.TotalNetAmount THEN 'Partially Paid'
+                        ELSE 'None'
+                    END AS PaymentStatus
+
                 FROM Appointments a
+
+                INNER JOIN Visits v
+                    ON a.VisitId = v.VisitId
+
                 INNER JOIN Patients p
                     ON a.PatientId = p.PatientId
+
                 INNER JOIN Doctors d
                     ON a.DoctorId = d.DoctorId
+
                 INNER JOIN Clinics c
                     ON a.ClinicId = c.ClinicId
+
+                LEFT JOIN
+                (
+                    SELECT
+                        VisitId,
+                        COUNT(*) AS BillCount,
+                        SUM(NetAmount) AS TotalNetAmount,
+                        SUM(NetAmount - PaidAmount) AS TotalBalance,
+                        SUM(PaidAmount) AS TotalPaidAmount
+                    FROM Bills
+                    GROUP BY VisitId
+                ) b
+                    ON a.VisitId = b.VisitId
+
                 WHERE a.DoctorId = @DoctorId
                 AND a.ClinicId = @ClinicId
                 AND a.AppointmentDate = @AppointmentDate
                 ORDER BY a.SlotStartTime";
 
-            using var cmd = new SqlCommand(sql, con);
+            using var cmd = new SqlCommand(sql, conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
 
             cmd.Parameters.AddWithValue("@ClinicId", clinicId);
             cmd.Parameters.AddWithValue("@DoctorId", doctorId);
             cmd.Parameters.AddWithValue("@AppointmentDate", appointmentDate);
-
-            con.Open();
 
             using var dr = cmd.ExecuteReader();
 
@@ -337,18 +395,19 @@ namespace DAL
                     SlotTime = (TimeSpan)dr["SlotStartTime"],
                     //SlotEndTime = (TimeSpan)dr["SlotEndTime"],
                     Status = dr["Status"].ToString(),
-                    PatientName = dr["PatientName"].ToString()
+                    CancellationReason = dr["CancellationReason"].ToString(),
+                    PatientName = dr["PatientName"].ToString(),
+                    BillingStatus = dr["BillStatus"].ToString(),
+                    PaymentStatus = dr["PaymentStatus"].ToString()
                 });
             }
 
             return list;
         }
 
-        public List<Appointment> ListByPatient(int patientId)
+        public List<Appointment> ListByPatient(int patientId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Appointment>();
-
-            using var con = _db.GetConnection();
 
             string sql = @"
                 SELECT
@@ -377,11 +436,13 @@ namespace DAL
                 WHERE a.PatientId = @PatientId
                 ORDER BY a.AppointmentDate DESC, a.SlotStartTime DESC";
 
-            using var cmd = new SqlCommand(sql, con);
+            using var cmd = new SqlCommand(sql, conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
 
             cmd.Parameters.AddWithValue("@PatientId", patientId);
-
-            con.Open();
 
             using var dr = cmd.ExecuteReader();
 
@@ -406,13 +467,16 @@ namespace DAL
             return list;
         }
 
-        public void UpdateStatus(int appointmentId, string status, SqlConnection conn, SqlTransaction tran)
+        public void UpdateStatus(int appointmentId, string status, string cancellationReason, SqlConnection conn, SqlTransaction tran)
         {
-            string sql = "UPDATE Appointments SET Status=@Status WHERE AppointmentId=@AppointmentId";
+            string sql = @"UPDATE Appointments 
+                                SET Status=@Status, CancellationReason=@CancellationReason
+                                WHERE AppointmentId=@AppointmentId";
 
             using var cmd = new SqlCommand(sql, conn, tran);
 
             cmd.Parameters.AddWithValue("@Status", status);
+            cmd.Parameters.AddWithValue("@CancellationReason", cancellationReason);
             cmd.Parameters.AddWithValue("@AppointmentId", appointmentId);
 
             cmd.ExecuteNonQuery();

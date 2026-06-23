@@ -51,8 +51,6 @@ function removeRow(btn) {
 }
 
 $(document).on("focus", ".medicine-name", function () {
-    console.log("Medicine boxes:", $(".medicine-name").length);
-
     if ($(this).data("ac"))
         return;
 

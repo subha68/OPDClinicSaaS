@@ -103,5 +103,22 @@ namespace Controllers
             _billingCharge.Remove(id);
             return RedirectToAction("Index");
         }
+
+        [HttpGet]
+        public JsonResult SearchCharge(string term)
+        {
+            var charges = _billingCharge.Search(term)
+                                        .Take(10)
+                                        .Select(x => new
+                                        {
+                                            id = x.ChargeId,
+                                            text = x.ChargeName,
+                                            rate = x.Rate,
+                                            serviceType = x.ServiceType
+                                        })
+                                        .ToList();
+
+            return Json(charges);
+        }
     }
 }

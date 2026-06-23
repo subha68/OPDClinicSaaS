@@ -10,5 +10,10 @@ namespace ViewModels
         public int? PatientId { get; set; }
         public string PatientCode { get; set; }
         public string PatientName { get; set; }
+        public string AppointmentStatus { get; set; }
+        public string BillingStatus { get; set; }
+        public string PaymentStatus { get; set; }
+
+        public List<Appointment> CancelledAppointments { get; set; } = new();
     }
 }

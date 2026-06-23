@@ -54,87 +54,90 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public List<Department> GetAll()
+        public List<Department> GetAll(SqlConnection conn, SqlTransaction? tran = null)
         {
             List<Department> list = new List<Department>();
 
-            using (SqlConnection con = _db.GetConnection())
+            string query = "SELECT d.*, c.Name as ClinicName FROM Departments d, Clinics c WHERE d.ClinicId = c.ClinicId";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = "SELECT d.*, c.Name as ClinicName FROM Departments d, Clinics c WHERE d.ClinicId = c.ClinicId";
+                cmd.Transaction = tran;
+            }
 
-                SqlCommand cmd = new SqlCommand(query, con);
-                con.Open();
-                SqlDataReader dept = cmd.ExecuteReader();
+            using SqlDataReader dept = cmd.ExecuteReader();
 
-                while (dept.Read())
+            while (dept.Read())
+            {
+                list.Add(new Department
                 {
-                    list.Add(new Department
-                    {
-                        DepartmentId = Convert.ToInt32(dept["DepartmentId"]),
-                        ClinicId = Convert.ToInt32(dept["ClinicId"]),
-                        Name = dept["Name"].ToString(),
-                        Description = dept["Description"].ToString(),
-                        ClinicName = dept["ClinicName"].ToString()
-                    });
-                }
+                    DepartmentId = Convert.ToInt32(dept["DepartmentId"]),
+                    ClinicId = Convert.ToInt32(dept["ClinicId"]),
+                    Name = dept["Name"].ToString(),
+                    Description = dept["Description"].ToString(),
+                    ClinicName = dept["ClinicName"].ToString()
+                });
             }
 
             return list;
         }
 
-        public Department Get(int id)
+        public Department Get(int id, SqlConnection conn, SqlTransaction? tran = null)
         {
-            using (SqlConnection con = _db.GetConnection())
+            string query = "SELECT d.*, c.Name as ClinicName FROM Departments d, Clinics c WHERE d.ClinicId = c.ClinicId AND d.DepartmentId = @DepartmentId";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = "SELECT d.*, c.Name as ClinicName FROM Departments d, Clinics c WHERE d.ClinicId = c.ClinicId AND d.DepartmentId = @DepartmentId";
+                cmd.Transaction = tran;
+            }
 
-                SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@DepartmentId", id);
+            cmd.Parameters.AddWithValue("@DepartmentId", id);
 
-                con.Open();
-                SqlDataReader dept = cmd.ExecuteReader();
+            using SqlDataReader dept = cmd.ExecuteReader();
 
-                if (dept.Read())
+            if (dept.Read())
+            {
+                return new Department
                 {
-                    return new Department
-                    {
-                        DepartmentId = Convert.ToInt32(dept["DepartmentId"]),
-                        ClinicId = Convert.ToInt32(dept["ClinicId"]),
-                        Name = dept["Name"].ToString(),
-                        Description = dept["Description"].ToString(),
-                        ClinicName = dept["ClinicName"].ToString()
-                    };
-                }
+                    DepartmentId = Convert.ToInt32(dept["DepartmentId"]),
+                    ClinicId = Convert.ToInt32(dept["ClinicId"]),
+                    Name = dept["Name"].ToString(),
+                    Description = dept["Description"].ToString(),
+                    ClinicName = dept["ClinicName"].ToString()
+                };
             }
 
             return null; // Not found
         }
 
-        public List<Department> GetDepartmentsByClinic(int clinicId)
+        public List<Department> GetDepartmentsByClinic(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             List<Department> list = new List<Department>();
 
-            using (SqlConnection con = _db.GetConnection())
+            string query = "SELECT d.*, c.Name as ClinicName FROM Departments d, Clinics c WHERE d.ClinicId = c.ClinicId AND d.ClinicId=@ClinicId";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = "SELECT d.*, c.Name as ClinicName FROM Departments d, Clinics c WHERE d.ClinicId = c.ClinicId AND d.ClinicId=@ClinicId";
+                cmd.Transaction = tran;
+            }
 
-                SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
 
-                con.Open();
-                SqlDataReader dept = cmd.ExecuteReader();
+            using SqlDataReader dept = cmd.ExecuteReader();
 
-                while (dept.Read())
+            while (dept.Read())
+            {
+                list.Add(new Department
                 {
-                    list.Add(new Department
-                    {
-                        DepartmentId = Convert.ToInt32(dept["DepartmentId"]),
-                        ClinicId = Convert.ToInt32(dept["ClinicId"]),
-                        Name = dept["Name"].ToString(),
-                        Description = dept["Description"].ToString(),
-                        ClinicName = dept["ClinicName"].ToString()
-                    });
-                }
+                    DepartmentId = Convert.ToInt32(dept["DepartmentId"]),
+                    ClinicId = Convert.ToInt32(dept["ClinicId"]),
+                    Name = dept["Name"].ToString(),
+                    Description = dept["Description"].ToString(),
+                    ClinicName = dept["ClinicName"].ToString()
+                });
             }
 
             return list;

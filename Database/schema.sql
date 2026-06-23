@@ -115,6 +115,7 @@ CREATE TABLE Appointments (
     SlotStartTime TIME,
     SlotEndTime TIME,
     Status NVARCHAR(20),
+    CancellationReason NVARCHAR(250)
 
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
     FOREIGN KEY (DoctorId) REFERENCES Doctors(DoctorId),
@@ -159,27 +160,39 @@ CREATE TABLE BillingCharges (
     ChargeCode NVARCHAR(20),
     ChargeName NVARCHAR(100) NOT NULL,
     Description NVARCHAR(250),
+    ServiceType NVARCHAR(50) NOT NULL,
     Rate DECIMAL(18,2) NOT NULL,
     IsActive BIT DEFAULT 1
 );
 
 CREATE TABLE Bills (
     BillId INT IDENTITY PRIMARY KEY,
+    BillNo NVARCHAR(20) NOT NULL,
     BillDate DATE NOT NULL,
-    VisitId INT,
+    VisitId INT NOT NULL,
+    ClinicId INT NOT NULL,
+    BillType NVARCHAR(20),
     GrossAmount DECIMAL(10,2),
     DiscountAmount DECIMAL(10,2),
+    TaxAmount DECIMAL(10,2),
     NetAmount DECIMAL(10,2),
     PaidAmount DECIMAL(10,2),
-    Status NVARCHAR(20),
+    PaymentStatus NVARCHAR(20),
+    Remarks NVARCHAR(100)
 
-    FOREIGN KEY (VisitId) REFERENCES Visits(VisitId)
+    FOREIGN KEY (VisitId) REFERENCES Visits(VisitId),
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
 );
 
 CREATE TABLE BillLines (
     LineId INT IDENTITY PRIMARY KEY,
+    LineNo INT NOT NULL,
     BillId INT NOT NULL,
-    ChargeId INT,
+    ServiceType NVARCHAR(50),
+    ReferenceId INT,
+    ReferenceCode NVARCHAR(50),
+    ReferenceName NVARCHAR(100),
+    Description NVARCHAR(200),
     Quantity INT,
     Rate DECIMAL(18,2),
     GrossAmount DECIMAL(18,2),
@@ -193,13 +206,16 @@ CREATE TABLE BillLines (
 
 CREATE TABLE Payments (
     PaymentId INT IDENTITY PRIMARY KEY,
-    BillId INT,
+    BillId INT NOT NULL,
+    ClinicId INT NOT NULL,
+    PaymentDate DATE NOT NULL,
     Amount DECIMAL(10,2),
     Mode NVARCHAR(50),
     ReferenceNo NVARCHAR(100),
     CreatedAt DATETIME DEFAULT GETDATE(),
 
-    FOREIGN KEY (BillId) REFERENCES Bills(BillId)
+    FOREIGN KEY (BillId) REFERENCES Bills(BillId),
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
 );
 
 CREATE TABLE Refunds (
@@ -456,7 +472,7 @@ CREATE TABLE StockLedgers
     TransactionDate DATE,
     TransactionType NVARCHAR(20), -- GRN, SALE, ADJUSTMENT, RETURN
     ReferenceType NVARCHAR(20),
-    ReferenceId NVARCHAR(20),
+    ReferenceId INT,
     QuantityIn INT,
     QuantityOut INT,
     BalanceQty INT
@@ -464,3 +480,57 @@ CREATE TABLE StockLedgers
     FOREIGN KEY (MedicineId) REFERENCES Medicines(MedicineId),
     FOREIGN KEY (BatchId) REFERENCES MedicineBatches(BatchId)
 );
+
+CREATE TABLE AccountGroups
+(
+    AccountGroupId INT IDENTITY(1,1) PRIMARY KEY,
+    ClinicId INT NOT NULL,
+    GroupName VARCHAR(100) NOT NULL,
+    ParentGroupId INT NULL,
+    Nature VARCHAR(20) NOT NULL
+
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
+);
+
+CREATE TABLE LedgerAccounts
+(
+    LedgerAccountId INT IDENTITY(1,1) PRIMARY KEY,
+    ClinicId INT NOT NULL,
+    AccountGroupId INT NOT NULL,
+    AccountCode VARCHAR(20),
+    AccountName VARCHAR(200) NOT NULL,
+    IsActive BIT NOT NULL DEFAULT 1,
+
+    FOREIGN KEY(AccountGroupId) REFERENCES AccountGroups(AccountGroupId),
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
+);
+
+CREATE TABLE JournalHeaders
+(
+    JournalHeaderId INT IDENTITY(1,1) PRIMARY KEY,
+    ClinicId INT NOT NULL,
+    JournalDate DATETIME NOT NULL,
+    VoucherType VARCHAR(20) NOT NULL,
+    ReferenceType VARCHAR(50),
+    ReferenceId INT,
+    Narration VARCHAR(500),
+    CreatedOn DATETIME NOT NULL DEFAULT GETDATE()
+
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
+);
+
+CREATE TABLE JournalLines
+(
+    JournalLineId INT IDENTITY(1,1) PRIMARY KEY,
+    ClinicId INT NOT NULL,
+    JournalHeaderId INT NOT NULL,
+    LedgerAccountId INT NOT NULL,
+    DebitAmount DECIMAL(18,2) NOT NULL DEFAULT 0,
+    CreditAmount DECIMAL(18,2) NOT NULL DEFAULT 0,
+
+    FOREIGN KEY(JournalHeaderId) REFERENCES JournalHeaders(JournalHeaderId),
+    FOREIGN KEY(LedgerAccountId) REFERENCES LedgerAccounts(LedgerAccountId),
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
+);
+
+

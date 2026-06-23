@@ -21,6 +21,7 @@ namespace ViewModels
         public string PatientPhoneNo { get; set; }
 
         public DateTime VisitDateTime { get; set; }
+        public int ConsultationId { get; set; }
 
         public string? Symptoms { get; set; }
         public string? Diagnosis { get; set; }

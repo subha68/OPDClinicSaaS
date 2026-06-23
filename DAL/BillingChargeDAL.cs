@@ -15,14 +15,15 @@ namespace DAL
 
         public int Add(BillingCharge charge, SqlConnection conn, SqlTransaction tran)
         {
-            string query = @"INSERT INTO BillingCharges (ClinicId, ChargeCode, ChargeName, Description, Rate, IsActive)
-                                VALUES (@clinicId, @code, @name, @desc, @rate, @active);
+            string query = @"INSERT INTO BillingCharges (ClinicId, ChargeCode, ChargeName, Description, ServiceType, Rate, IsActive)
+                                VALUES (@clinicId, @code, @name, @desc, @serviceType, @rate, @active);
                             SELECT SCOPE_IDENTITY();";
 
             SqlCommand cmd = new SqlCommand(query, conn, tran);
             cmd.Parameters.AddWithValue("@clinicId", charge.ClinicId);
             cmd.Parameters.AddWithValue("@code", charge.ChargeCode ?? (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@name", charge.ChargeName);
+            cmd.Parameters.AddWithValue("@serviceType", charge.ServiceType);
             cmd.Parameters.AddWithValue("@desc", charge.Description ?? (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@rate", charge.Rate);
             cmd.Parameters.AddWithValue("@active", charge.IsActive);
@@ -36,6 +37,7 @@ namespace DAL
                                  SET ChargeCode = @code,
                                      ChargeName = @name,
                                      Description = @desc,
+                                     ServiceType = @serviceType,
                                      Rate = @rate,
                                      IsActive = @active
                                  WHERE ChargeId = @id AND ClinicId = @clinicId";
@@ -44,6 +46,7 @@ namespace DAL
             cmd.Parameters.AddWithValue("@code", charge.ChargeCode ?? (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@name", charge.ChargeName);
             cmd.Parameters.AddWithValue("@desc", charge.Description ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@serviceType", charge.ServiceType);
             cmd.Parameters.AddWithValue("@rate", charge.Rate);
             cmd.Parameters.AddWithValue("@active", charge.IsActive);
             cmd.Parameters.AddWithValue("@id", charge.ChargeId);
@@ -64,98 +67,147 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public BillingCharge Get(int chargeId)
+        public BillingCharge Get(int chargeId, SqlConnection conn, SqlTransaction? tran = null)
         {
-            using (SqlConnection conn = _db.GetConnection())
+            string query = @"SELECT ChargeId, ClinicId, ChargeCode, ChargeName, Description, ServiceType, Rate, IsActive
+                                FROM BillingCharges
+                                WHERE ChargeId = @id";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                conn.Open();
+                cmd.Transaction = tran;
+            }
 
-                string query = @"SELECT ChargeId, ClinicId, ChargeCode, ChargeName, Description, Rate, IsActive
-                                    FROM BillingCharges
-                                    WHERE ChargeId = @id";
+            cmd.Parameters.AddWithValue("@id", chargeId);
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", chargeId);
-
-                using (SqlDataReader reader = cmd.ExecuteReader())
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                if (reader.Read())
                 {
-                    if (reader.Read())
+                    return new BillingCharge
                     {
-                        return new BillingCharge
-                        {
-                            ChargeId = reader.GetInt32(0),
-                            ClinicId = reader.GetInt32(1),
-                            ChargeCode = reader.IsDBNull(2) ? null : reader.GetString(2),
-                            ChargeName = reader.GetString(3),
-                            Description = reader.IsDBNull(4) ? null : reader.GetString(4),
-                            Rate = reader.GetDecimal(5),
-                            IsActive = reader.GetBoolean(6)
-                        };
-                    }
+                        ChargeId = Convert.ToInt32(reader["ChargeId"]),
+                        ClinicId = Convert.ToInt32(reader["ClinicId"]),
+                        ChargeCode = reader["ChargeCode"].ToString(),
+                        ChargeName = reader["ChargeName"].ToString(),
+                        Description = reader["Description"].ToString(),
+                        ServiceType = reader["ServiceType"].ToString(),
+                        Rate = Convert.ToDecimal(reader["Rate"]),
+                        IsActive = (bool)reader["IsActive"]
+                    };
                 }
             }
 
             return null;
         }
 
-        public List<BillingCharge> GetAll()
+        public List<BillingCharge> GetAll(SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<BillingCharge>();
 
-            using (var conn = _db.GetConnection())
+            var cmd = new SqlCommand("SELECT ChargeId, ClinicId, ChargeCode, ChargeName, Description, ServiceType, Rate, IsActive FROM BillingCharges", conn);
+            if (tran != null)
             {
-                conn.Open();
+                cmd.Transaction = tran;
+            }
 
-                var cmd = new SqlCommand("SELECT ChargeId, ClinicId, ChargeCode, ChargeName, Description, Rate, IsActive FROM BillingCharges", conn);
-                var reader = cmd.ExecuteReader();
+            using var reader = cmd.ExecuteReader();
 
-                while (reader.Read())
+            while (reader.Read())
+            {
+                list.Add(new BillingCharge
                 {
-                    list.Add(new BillingCharge
-                    {
-                        ChargeId = reader.GetInt32(0),
-                        ClinicId = reader.GetInt32(1),
-                        ChargeCode = reader.IsDBNull(2) ? null : reader.GetString(2),
-                        ChargeName = reader.GetString(3),
-                        Description = reader.IsDBNull(4) ? null : reader.GetString(4),
-                        Rate = reader.GetDecimal(5),
-                        IsActive = reader.GetBoolean(6)
-                    });
-                }
+                    ChargeId = Convert.ToInt32(reader["ChargeId"]),
+                    ClinicId = Convert.ToInt32(reader["ClinicId"]),
+                    ChargeCode = reader["ChargeCode"].ToString(),
+                    ChargeName = reader["ChargeName"].ToString(),
+                    Description = reader["Description"].ToString(),
+                    ServiceType = reader["ServiceType"].ToString(),
+                    Rate = Convert.ToDecimal(reader["Rate"]),
+                    IsActive = (bool)reader["IsActive"]
+                });
             }
 
             return list;
         }
 
-        public List<BillingCharge> GetAllByClinic(int clinicId)
+        public List<BillingCharge> GetAllByClinic(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<BillingCharge>();
 
-            using (var conn = _db.GetConnection())
+            var cmd = new SqlCommand(@"SELECT ChargeId, ClinicId, ChargeCode, ChargeName, Description, ServiceType, Rate, IsActive 
+                                    FROM BillingCharges WHERE ClinicId = @clinicId", conn);
+            if (tran != null)
             {
-                conn.Open();
+                cmd.Transaction = tran;
+            }
 
-                var cmd = new SqlCommand(@"SELECT ChargeId, ClinicId, ChargeCode, ChargeName, Description, Rate, IsActive 
-                                        FROM BillingCharges WHERE ClinicId = @clinicId", conn);
-                cmd.Parameters.AddWithValue("@clinicId", clinicId);
-                var reader = cmd.ExecuteReader();
+            cmd.Parameters.AddWithValue("@clinicId", clinicId);
+            using var reader = cmd.ExecuteReader();
 
-                while (reader.Read())
+            while (reader.Read())
+            {
+                list.Add(new BillingCharge
                 {
-                    list.Add(new BillingCharge
-                    {
-                        ChargeId = reader.GetInt32(0),
-                        ClinicId = reader.GetInt32(1),
-                        ChargeCode = reader.IsDBNull(2) ? null : reader.GetString(2),
-                        ChargeName = reader.GetString(3),
-                        Description = reader.IsDBNull(4) ? null : reader.GetString(4),
-                        Rate = reader.GetDecimal(5),
-                        IsActive = reader.GetBoolean(6)
-                    });
-                }
+                    ChargeId = Convert.ToInt32(reader["ChargeId"]),
+                    ClinicId = Convert.ToInt32(reader["ClinicId"]),
+                    ChargeCode = reader["ChargeCode"].ToString(),
+                    ChargeName = reader["ChargeName"].ToString(),
+                    Description = reader["Description"].ToString(),
+                    ServiceType = reader["ServiceType"].ToString(),
+                    Rate = Convert.ToDecimal(reader["Rate"]),
+                    IsActive = (bool)reader["IsActive"]
+                });
             }
 
             return list;
         }
+
+        public List<BillingCharge> Search(int clinicId, string term, SqlConnection conn, SqlTransaction? tran = null)
+        {
+            var list = new List<BillingCharge>();
+
+            var cmd = new SqlCommand(@"SELECT ChargeId, 
+                                                ClinicId, 
+                                                ChargeCode, 
+                                                ChargeName, 
+                                                Description, 
+                                                ServiceType, 
+                                                Rate, 
+                                                IsActive 
+                                    FROM BillingCharges 
+                                    WHERE (ChargeCode LIKE '%' + @term + '%'
+                                    OR ChargeName LIKE '%' + @term + '%')
+                                    AND ClinicId = @clinicId", conn);
+
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
+
+            cmd.Parameters.AddWithValue("@clinicId", clinicId);
+            cmd.Parameters.AddWithValue("@term", term);
+            
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                list.Add(new BillingCharge
+                {
+                    ChargeId = Convert.ToInt32(reader["ChargeId"]),
+                    ClinicId = Convert.ToInt32(reader["ClinicId"]),
+                    ChargeCode = reader["ChargeCode"].ToString(),
+                    ChargeName = reader["ChargeName"].ToString(),
+                    Description = reader["Description"].ToString(),
+                    ServiceType = reader["ServiceType"].ToString(),
+                    Rate = Convert.ToDecimal(reader["Rate"]),
+                    IsActive = (bool)reader["IsActive"]
+                });
+            }
+
+            return list;
+        }
+
     }
 }

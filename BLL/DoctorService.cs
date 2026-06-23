@@ -29,7 +29,7 @@ namespace BLL
             using var tran = conn.BeginTransaction();
             try
             {
-                int doctorRoleId =_roleDAL.GetRoleByName("Doctor").RoleId;
+                int doctorRoleId =_roleDAL.GetRoleByName("Doctor", conn).RoleId;
 
                 // STEP 1: create user
                 var user = new User
@@ -80,23 +80,23 @@ namespace BLL
             if (model.DepartmentId == 0)
                 throw new Exception("Department required");
 
-            int doctorRoleId =_roleDAL.GetRoleByName("Doctor").RoleId;
-
-            var user = new User
-            {
-                Username = model.Username,
-                PasswordHash = model.Password,
-                RoleId = doctorRoleId,   // Doctor Role
-                FirstName = model.FirstName,
-                LastName = model.LastName
-            };
-
             using var conn = _db.GetConnection();
             conn.Open();
             using var tran = conn.BeginTransaction();
 
             try
             {
+                int doctorRoleId =_roleDAL.GetRoleByName("Doctor", conn).RoleId;
+
+                var user = new User
+                {
+                    Username = model.Username,
+                    PasswordHash = model.Password,
+                    RoleId = doctorRoleId,   // Doctor Role
+                    FirstName = model.FirstName,
+                    LastName = model.LastName
+                };
+
                 if (_user.Update(user, conn, tran) == false)
                     throw new Exception("Associated user not found");
 
@@ -113,17 +113,50 @@ namespace BLL
 
         public override List<Doctor> List()
         {
-            return _doctorDAL.GetDoctorsByClinic(ClinicId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _doctorDAL.GetDoctorsByClinic(ClinicId, conn);
+            }
+            catch
+            {
+                throw;
+            }
+
         }
 
         public List<Doctor> GetDoctorsByDepartment(int departmentId)
         {
-            return _doctorDAL.GetDoctorsByDepartment(ClinicId, departmentId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _doctorDAL.GetDoctorsByDepartment(ClinicId, departmentId, conn);
+            }
+            catch
+            {
+                throw;
+            }
+
         }
 
         public int GetDoctorIdByUserId(int userId)
         {
-            return _doctorDAL.GetDoctorIdByUserId(userId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _doctorDAL.GetDoctorIdByUserId(userId, conn);
+            }
+            catch
+            {
+                throw;
+            }
+
         }
     }
 }

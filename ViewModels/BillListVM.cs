@@ -12,6 +12,10 @@ namespace ViewModels
 
         public string DoctorName { get; set; }
 
+        public int PatientId { get; set; }
+
+        public string PatientName { get; set; }
+
         public DateTime BillDate { get; set; }
 
         public decimal BillAmount { get; set; }

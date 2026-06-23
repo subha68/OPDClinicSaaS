@@ -40,6 +40,102 @@
      class="slot-container">
 </div>
 
+<div class="modal fade" id="appointmentModal" tabindex="-1">
+
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Appointment Details
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden"
+                       id="modalAppointmentId" />
+
+                <div id="appointmentDetailsSection">
+
+                    <div class="mb-2">
+                        <strong>Patient:</strong>
+                        <span id="modalPatientName"></span>
+                    </div>
+
+                    <div class="mb-2">
+                        <strong>Date:</strong>
+                        <span id="modalAppointmentDate"></span>
+                    </div>
+
+                    <div class="mb-2">
+                        <strong>Time:</strong>
+                        <span id="modalSlotTime"></span>
+                    </div>
+
+                    <div class="mb-2">
+                        <strong>Status:</strong>
+                        <span id="modalStatus"></span>
+                    </div>
+
+                    <div class="mb-2"
+                         id="financialStatusRow">
+                        <strong>Financial Status:</strong>
+                        <span id="modalFinancialStatus"></span>
+                    </div>
+
+                </div>
+
+                <div id="cancelReasonSection" class="mb-2" style="display:none;">
+
+                    <strong>Reason:</strong>
+
+                    <textarea id="cancelReason"
+                            class="form-control mt-1"
+                            rows="2"
+                            style="max-width:280px;">
+                    </textarea>
+
+                </div>
+
+                <div id="cancelledAppointmentsContainer"
+                     style="display:none;">
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-primary"
+                        id="btnReschedule">
+                    Reschedule
+                </button>
+
+                <button type="button"
+                        class="btn btn-danger"
+                        id="btnCancel">
+                    Cancel Appointment
+                </button>
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Close
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
 @section Scripts{
 
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
@@ -104,58 +200,181 @@ function loadSlots()
         });
 }
 
-function renderSlots(data)
-{
-    let html = "";
+function renderSlots(slots) {
 
-    $.each(data,function(i,s)
-    {
-        let cssClass =
-            s.isBooked
-            ? "slot-booked"
-            : "slot-available";
+    let html = '';
 
-        html +=
-        `
-        <div class="slot-card ${cssClass}"
-             onclick="selectSlot('${s.slotTime}')">
+    slots.forEach(slot => {
 
-            <div class="slot-time">
-                ${s.slotTime}
+        let billingClass =
+            slot.billingStatus === 'Billed'
+                ? 'billing-billed'
+                : 'billing-unbilled';
+
+        let paymentClass =
+            slot.paymentStatus === 'Paid'
+                ? 'payment-paid'
+                : slot.paymentStatus === 'Partially Paid'
+                    ? 'payment-partial'
+                    : 'payment-due';
+
+        let financialStatus =
+            slot.billingStatus === 'Unbilled'
+                ? 'Unbilled'
+                : slot.paymentStatus;
+
+        let financialClass =
+            financialStatus === 'Paid'
+                ? 'financial-paid'
+                : financialStatus === 'Partially Paid'
+                    ? 'financial-partial'
+                    : financialStatus === 'Due'
+                        ? 'financial-due'
+                        : 'financial-unbilled';
+
+        html += `
+            <div class="slot-stack">
+
+                ${renderCancelledCards(slot.cancelledAppointments)}
+
+                <div class="slot-card ${slot.isBooked ? 'slot-booked' : 'slot-available'}"
+                                        onclick='selectSlot(
+                                            ${slot.appointmentId || 0},
+                                            "${slot.slotTime}",
+                                            "${slot.patientName || ''}",
+                                            "${slot.appointmentStatus}",
+                                            "${financialStatus}"
+                                        )'>
+
+                    <div class="slot-time">
+                        ${slot.slotTime}
+                    </div>
+
+                    <div class="status-row">
+
+                        <span class="slot-status ${getStatusClass(slot.appointmentStatus)}">
+                            ${slot.appointmentStatus}
+                        </span>
+
+                        ${slot.isBooked ? `
+                            <span class="financial-status ${financialClass}">
+                                ${financialStatus}
+                            </span>
+                        ` : ''}
+
+                    </div>
+
+                    <div class="slot-patient">
+                        ${slot.patientName || ''}
+                    </div>
+
+                </div>
             </div>
-
-            ${
-                s.isBooked
-                ?
-                `<div class="slot-patient">
-                    ${s.patientName}
-                </div>`
-                :
-                `<div class="slot-free">
-                    Available
-                </div>`
-            }
-
-        </div>
         `;
     });
 
-    $("#slotContainer")
-        .html(html);
+    $('#slotContainer').html(html);
+}
+
+function getStatusClass(status) {
+
+    switch (status?.toUpperCase()) {
+
+        case 'AVAILABLE':
+            return 'status-available';
+
+        case 'BOOKED':
+            return 'status-booked';
+
+        case 'IN CONSULTATION':
+            return 'status-consultation';
+
+        case 'COMPLETED':
+            return 'status-complete';
+
+        case 'CANCELLED':
+            return 'status-cancelled';
+
+        case 'NOSHOW':
+            return 'status-noshow';
+
+        default:
+            return '';
+    }
 }
 
 
-function selectSlot(slotTime){
+function selectSlot(appointmentId, slotTime, patientName, appointmentStatus, financialStatus){
+
+    $('.modal-title').text('Appointment Details');
+    $('#appointmentDetailsSection').show();
+    $('#cancelledAppointmentsContainer')
+        .hide()
+        .html('');
+
+    $('#financialStatusRow').show();
 
     let appointmentDate = $("#appointmentDate").val();
     let appointmentDateTime = appointmentDate + "T" + slotTime;
     console.log(appointmentDateTime);
 
-    window.location.href =
-        '/AppointmentBooking/Book'
-        + '?departmentId=' + $("#departmentId").val()
-        + '&doctorId=' + $("#doctorId").val()
-        + '&appointmentDateTime=' + encodeURIComponent(appointmentDateTime);
+    if (!appointmentId) {
+        window.location.href =
+                '/AppointmentBooking/Book'
+                + '?departmentId=' + $("#departmentId").val()
+                + '&doctorId=' + $("#doctorId").val()
+                + '&appointmentDateTime=' + encodeURIComponent(appointmentDateTime);
+
+        return;
+    }
+
+    switch (appointmentStatus?.toUpperCase())
+    {
+        case 'BOOKED':
+            $('#modalAppointmentId').val(appointmentId);
+            $('#modalPatientName').text(patientName);
+            $('#modalAppointmentDate').text(appointmentDate);
+            $('#modalSlotTime').text(slotTime);
+            $('#modalStatus').text(appointmentStatus);
+            $("#financialStatusRow").show();
+            $('#modalFinancialStatus').text(financialStatus);
+
+            $('#btnReschedule').show();
+            $('#btnCancel').show();
+
+            var modal = new bootstrap.Modal(
+                document.getElementById('appointmentModal')
+            );
+
+            modal.show();
+
+            return;
+
+        case 'IN CONSULTATION':
+            window.location.href = '/Consultation/Consult/' + appointmentId;
+            return;
+
+        case 'COMPLETED':
+            $('#modalAppointmentId').val(appointmentId);
+            $('#modalPatientName').text(patientName);
+            $('#modalAppointmentDate').text(appointmentDate);
+            $('#modalSlotTime').text(slotTime);
+            $('#modalStatus').text(appointmentStatus);
+            $("#financialStatusRow").show();
+            $('#modalFinancialStatus').text(financialStatus);
+
+            $('#btnReschedule').hide();
+            $('#btnCancel').hide();
+
+            var modal = new bootstrap.Modal(
+                document.getElementById('appointmentModal')
+            );
+
+            modal.show();
+
+            return;
+    }    
+
 }
 
 $(document).ready(function () {
@@ -192,6 +411,118 @@ $(document).ready(function () {
                 loadSlots();
         });
 });
+
+let cancelling = false;
+
+$('#btnCancel').click(function () {
+
+    if (!cancelling) {
+
+        cancelling = true;
+
+        $('#cancelReasonSection').show();
+
+        $(this).text('Confirm Cancel');
+
+        return;
+    }
+
+    $.ajax({
+        url: '/AppointmentBooking/Cancel',
+        type: 'POST',
+        data: {
+            appointmentId: $('#modalAppointmentId').val(),
+            cancellationReason: $('#cancelReason').val()
+        },
+        success: function () {
+            location.reload();
+        }
+    });
+});
+
+function renderCancelledCards(cancelledAppointments)
+{
+    if (!cancelledAppointments ||
+        cancelledAppointments.length === 0)
+        return '';
+
+    let json =
+        encodeURIComponent(
+            JSON.stringify(cancelledAppointments)
+        );
+
+    return `
+        <div class="cancelled-card"></div>
+
+        <div class="cancelled-tab"
+             onclick="event.stopPropagation();
+                      showCancelledAppointments('${json}')">
+            C${cancelledAppointments.length}
+        </div>
+    `;
+}
+
+function showCancelledAppointments(encodedAppointments)
+{
+    let appointments =
+        JSON.parse(
+            decodeURIComponent(encodedAppointments)
+        );
+
+    $('#appointmentDetailsSection').hide();
+    $('.modal-title').text('Cancelled Appointments');
+    $('#financialStatusRow').hide();
+
+    $('#btnReschedule').hide();
+    $('#btnCancel').hide();
+
+    let html = `
+        <h6 class="mb-3">
+            Cancelled Appointments (${appointments.length})
+        </h6>
+    `;
+
+    appointments.forEach(a => {
+
+    html += `
+        <div class="card mb-2 border-danger">
+
+            <div class="card-body p-2">
+
+                <div>
+                    <strong>Patient:</strong>
+                    ${a.patientName || ''}
+                </div>
+
+                <div>
+                    <strong>Date:</strong>
+                    ${a.appointmentDateDisplay || ''}
+                </div>
+
+                <div>
+                    <strong>Time:</strong>
+                    ${a.slotTimeDisplay || ''}
+                </div>
+
+                <div>
+                    <strong>Reason:</strong>
+                    ${a.cancellationReason || ''}
+                </div>
+
+            </div>
+
+        </div>
+    `;
+    });
+
+    $('#cancelledAppointmentsContainer')
+        .html(html)
+        .show();
+
+    new bootstrap.Modal(
+        document.getElementById('appointmentModal')
+    ).show();
+}
 
 </script>
 }

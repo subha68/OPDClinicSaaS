@@ -36,17 +36,19 @@ namespace BLL
 
         public Clinic ValidateClinicCode(string clinicCode)
         {
-            return _clinicDAL.ValidateClinicCode(clinicCode);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _clinicDAL.ValidateClinicCode(clinicCode, conn);
+            }
+            catch
+            {
+                throw;
+            }
+
         }
 
-        public override List<Clinic> List()
-        {
-            return base.List();
-        }
-
-        public override Clinic Get(int clinicId)
-        {
-            return _dal.Get(clinicId);
-        }
     }
 }

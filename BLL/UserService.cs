@@ -75,59 +75,100 @@ namespace BLL
 
         public User ValidateUser(string username, string password)
         {
-            bool success = false;
-            var user = _userDAL.GetUserByName(username, ClinicId);
-            if (user != null)
-            {
-                success = PasswordHelper.VerifyPassword(user.PasswordHash, password);
-            }   
+            using var conn = _db.GetConnection();
+            conn.Open();
 
-            if (success)
-                return user;
-            else
-                return null;
+            try
+            {
+                bool success = false;
+                var user = _userDAL.GetUserByName(username, ClinicId, conn);
+                if (user != null)
+                {
+                    success = PasswordHelper.VerifyPassword(user.PasswordHash, password);
+                }   
+
+                if (success)
+                    return user;
+                else
+                    return null;
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         public Role GetUserRole(User user)
         {
-            return _roleDAL.Get(user.RoleId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _roleDAL.Get(user.RoleId, conn);
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         public Doctor GetUserDoctor(User user)
         {
-            int doctorId = _doctorDAL.GetDoctorIdByUserId(user.UserId);
-            if (doctorId == 0) 
-                return null;
-            else
-                return _doctorDAL.Get(doctorId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                int doctorId = _doctorDAL.GetDoctorIdByUserId(user.UserId, conn);
+                if (doctorId == 0) 
+                    return null;
+                else
+                    return _doctorDAL.Get(doctorId, conn);
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         public string GetUserFeaturesAsString(User user)
         {
-            var features = _featureDAL.GetFeaturesByRole(user.RoleId);
-            return string.Join(",", features.Select(f => f.Code));
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                var features = _featureDAL.GetFeaturesByRole(user.RoleId, conn);
+                return string.Join(",", features.Select(f => f.Code));
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         public bool SetupSuperAdmin()
         {
-            var superAdmin = new User
-            {
-                Username = "superadmin",
-                PasswordHash = "admin123",
-                RoleId = 1,
-                FirstName = "Super",
-                LastName = "Admin",
-                IsActive = true,
-                IsFirstLogin = false
-            };
-
-            int userId = _userDAL.GetUserIdByName(superAdmin.Username);
-
             using var conn = _db.GetConnection();
             conn.Open();
             using var tran = conn.BeginTransaction();
+
             try
             {
+                var superAdmin = new User
+                {
+                    Username = "superadmin",
+                    PasswordHash = "admin123",
+                    RoleId = 1,
+                    FirstName = "Super",
+                    LastName = "Admin",
+                    IsActive = true,
+                    IsFirstLogin = false
+                };
+
+                int userId = _userDAL.GetUserIdByName(superAdmin.Username, conn);
+
                 if (userId == 0)
                 {
                     userId = Add(superAdmin, conn, tran);
@@ -148,8 +189,34 @@ namespace BLL
             }
         }
 
-        public List<User> ListByClinic() => _userDAL.ListByClinic(ClinicId);
-        public bool UsernameExists(string username) => _userDAL.GetUserCountByName(username) > 0;
+        public List<User> ListByClinic()
+        {
+            using var conn = _db.GetConnection();
+            conn.Open();
 
+            try
+            {
+                return _userDAL.ListByClinic(ClinicId, conn);
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public bool UsernameExists(string username)
+        {
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _userDAL.GetUserCountByName(username, conn) > 0;
+            }
+            catch
+            {
+                throw;
+            }
+        }
     }
 }

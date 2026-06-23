@@ -17,14 +17,16 @@ namespace DAL
         public int Add(Payment payment, SqlConnection conn, SqlTransaction tran)
         {
             string query = @"INSERT INTO Payments
-                (BillId, Amount, Mode, ReferenceNo)
+                (BillId, ClinicId, PaymentDate, Amount, Mode, ReferenceNo)
                 VALUES
-                (@BillId, @Amount, @Mode, @ReferenceNo);
+                (@BillId, @ClinicId, @PaymentDate, @Amount, @Mode, @ReferenceNo);
                 SELECT SCOPE_IDENTITY();";
 
             SqlCommand cmd = new SqlCommand(query, conn, tran);
 
             cmd.Parameters.AddWithValue("@BillId", payment.BillId);
+            cmd.Parameters.AddWithValue("@ClinicId", payment.ClinicId);
+            cmd.Parameters.AddWithValue("@PaymentDate", payment.PaymentDate);
             cmd.Parameters.AddWithValue("@Amount", payment.Amount);
             cmd.Parameters.AddWithValue("@Mode", payment.Mode ?? "");
             cmd.Parameters.AddWithValue("@ReferenceNo", payment.ReferenceNo ?? "");
@@ -32,10 +34,8 @@ namespace DAL
             return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
-        public Payment Get(int id)
+        public Payment Get(int id, SqlConnection conn, SqlTransaction? tran = null)
         {
-            using SqlConnection con = _db.GetConnection();
-
             string query = @"SELECT p.*, v.PatientId 
                                 FROM Payments p 
                                 INNER JOIN Bills b 
@@ -44,11 +44,13 @@ namespace DAL
                                     ON b.VisitId = v.VisitId 
                                 WHERE p.PaymentId=@PaymentId";
 
-            SqlCommand cmd = new SqlCommand(query, con);
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
 
             cmd.Parameters.AddWithValue("@PaymentId", id);
-
-            con.Open();
 
             using SqlDataReader rdr = cmd.ExecuteReader();
 
@@ -58,6 +60,8 @@ namespace DAL
                 {
                     PaymentId = Convert.ToInt32(rdr["PaymentId"]),
                     BillId = Convert.ToInt32(rdr["BillId"]),
+                    ClinicId = Convert.ToInt32(rdr["ClinicId"]),
+                    PaymentDate = (DateTime)rdr["PaymentDate"],
                     Amount = Convert.ToDecimal(rdr["Amount"]),
                     Mode = rdr["Mode"].ToString(),
                     ReferenceNo = rdr["ReferenceNo"].ToString(),
@@ -79,16 +83,14 @@ namespace DAL
             throw new NotImplementedException();
         }
 
-        public List<Payment> GetAll()
+        public List<Payment> GetAll(SqlConnection conn, SqlTransaction? tran = null)
         {
             throw new NotImplementedException();
         }
 
-        public List<Payment> GetPaymentsByBill(int billId)
+        public List<Payment> GetPaymentsByBill(int billId, SqlConnection conn, SqlTransaction? tran = null)
         {
             List<Payment> list = new();
-
-            using SqlConnection con = _db.GetConnection();
 
             string query = @"
                 SELECT p.*, v.PatientId
@@ -99,13 +101,15 @@ namespace DAL
                 ORDER BY CreatedAt
             ";
 
-            SqlCommand cmd = new SqlCommand(query, con);
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
 
             cmd.Parameters.AddWithValue("@BillId", billId);
 
-            con.Open();
-
-            SqlDataReader rdr = cmd.ExecuteReader();
+            using SqlDataReader rdr = cmd.ExecuteReader();
 
             while (rdr.Read())
             {
@@ -113,6 +117,8 @@ namespace DAL
                 {
                     PaymentId = Convert.ToInt32(rdr["PaymentId"]),
                     BillId = Convert.ToInt32(rdr["BillId"]),
+                    ClinicId = Convert.ToInt32(rdr["ClinicId"]),
+                    PaymentDate = (DateTime)rdr["PaymentDate"],
                     Amount = Convert.ToDecimal(rdr["Amount"]),
                     Mode = rdr["Mode"].ToString(),
                     ReferenceNo = rdr["ReferenceNo"].ToString(),
@@ -124,25 +130,8 @@ namespace DAL
             return list;
         }
 
-        public decimal GetTotalPaid(int billId, SqlConnection conn, SqlTransaction tran)
+        public decimal GetTotalPaid(int billId, SqlConnection conn, SqlTransaction? tran = null)
         {
-            string query = @"
-                SELECT ISNULL(SUM(Amount),0)
-                FROM Payments
-                WHERE BillId=@BillId
-            ";
-
-            SqlCommand cmd = new SqlCommand(query, conn, tran);
-
-            cmd.Parameters.AddWithValue("@BillId", billId);
-
-            return Convert.ToDecimal(cmd.ExecuteScalar());
-        }
-
-        public decimal GetTotalPaid(int billId)
-        {
-            using SqlConnection conn = _db.GetConnection();
- 
             string query = @"
                 SELECT ISNULL(SUM(Amount),0)
                 FROM Payments
@@ -150,19 +139,19 @@ namespace DAL
             ";
 
             SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
 
             cmd.Parameters.AddWithValue("@BillId", billId);
-
-            conn.Open();
 
             return Convert.ToDecimal(cmd.ExecuteScalar());
         }
 
-        public List<Payment> ListByPatient(int patientId)
+        public List<Payment> ListByPatient(int patientId, SqlConnection conn, SqlTransaction? tran = null)
         {
             List<Payment> list = new();
-
-            using SqlConnection con = _db.GetConnection();
 
             string query = @"
                 SELECT p.*, v.PatientId
@@ -173,13 +162,15 @@ namespace DAL
                 ORDER BY CreatedAt
             ";
 
-            SqlCommand cmd = new SqlCommand(query, con);
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
 
             cmd.Parameters.AddWithValue("@PatientId", patientId);
 
-            con.Open();
-
-            SqlDataReader rdr = cmd.ExecuteReader();
+            using SqlDataReader rdr = cmd.ExecuteReader();
 
             while (rdr.Read())
             {
@@ -187,6 +178,8 @@ namespace DAL
                 {
                     PaymentId = Convert.ToInt32(rdr["PaymentId"]),
                     BillId = Convert.ToInt32(rdr["BillId"]),
+                    ClinicId = Convert.ToInt32(rdr["ClinicId"]),
+                    PaymentDate = (DateTime)rdr["PaymentDate"],
                     Amount = Convert.ToDecimal(rdr["Amount"]),
                     Mode = rdr["Mode"].ToString(),
                     ReferenceNo = rdr["ReferenceNo"].ToString(),

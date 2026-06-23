@@ -41,72 +41,77 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public List<Role> GetAll()
+        public List<Role> GetAll(SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Role>();
 
-            using (SqlConnection conn = _db.GetConnection())
+            SqlCommand cmd = new SqlCommand("SELECT * FROM Roles", conn);
+            if (tran != null)
             {
-                SqlCommand cmd = new SqlCommand("SELECT * FROM Roles", conn);
-
-                conn.Open();
-                var reader = cmd.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    list.Add(new Role
-                    {
-                        RoleId = (int)reader["RoleId"],
-                        RoleName = reader["RoleName"].ToString()
-                    });
-                }
+                cmd.Transaction = tran;
             }
+
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                list.Add(new Role
+                {
+                    RoleId = (int)reader["RoleId"],
+                    RoleName = reader["RoleName"].ToString()
+                });
+            }
+
             return list;
         }
 
-        public Role GetRoleByName(string roleName)
+        public Role GetRoleByName(string roleName, SqlConnection conn, SqlTransaction? tran = null)
         {
-            using (SqlConnection conn = _db.GetConnection())
+            string query = "SELECT * FROM Roles WHERE RoleName = @RoleName";
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = "SELECT * FROM Roles WHERE RoleName = @RoleName";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@RoleName", roleName);
-
-                conn.Open();
-                var reader = cmd.ExecuteReader();
-
-                if (reader.Read())
-                {
-                    return new Role
-                    {
-                        RoleId = (int)reader["RoleId"],
-                        RoleName = reader["RoleName"].ToString()
-                    };
-                }
+                cmd.Transaction = tran;
             }
+
+            cmd.Parameters.AddWithValue("@RoleName", roleName);
+
+            using var reader = cmd.ExecuteReader();
+
+            if (reader.Read())
+            {
+                return new Role
+                {
+                    RoleId = (int)reader["RoleId"],
+                    RoleName = reader["RoleName"].ToString()
+                };
+            }
+
             return null; // Not found
         }
 
-        public Role Get(int roleId)
+        public Role Get(int roleId, SqlConnection conn, SqlTransaction? tran = null)
         {
-            using (SqlConnection conn = _db.GetConnection())
+            string query = "SELECT * FROM Roles WHERE RoleId = @RoleId";
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = "SELECT * FROM Roles WHERE RoleId = @RoleId";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@RoleId", roleId);
-
-                conn.Open();
-                var reader = cmd.ExecuteReader();
-
-                if (reader.Read())
-                {
-                    return new Role
-                    {
-                        RoleId = (int)reader["RoleId"],
-                        RoleName = reader["RoleName"].ToString()
-                    };
-                }
+                cmd.Transaction = tran;
             }
+
+            cmd.Parameters.AddWithValue("@RoleId", roleId);
+
+            using var reader = cmd.ExecuteReader();
+
+            if (reader.Read())
+            {
+                return new Role
+                {
+                    RoleId = (int)reader["RoleId"],
+                    RoleName = reader["RoleName"].ToString()
+                };
+            }
+
             return null; // Not found
         }
     }

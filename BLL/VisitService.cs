@@ -16,16 +16,36 @@ namespace BLL
 
         public List<Visit> GetVisitByPatient(int patientId)
         {
-            var visits = _visitDAL.GetVisitsByPatient(patientId);
-            if (visits == null)
-                throw new Exception($"Visit with ID '{patientId}' not found.");
+            using var conn = _db.GetConnection();
+            conn.Open();
 
-            return visits;
+            try
+            {
+                var visits = _visitDAL.GetVisitsByPatient(patientId, conn);
+                if (visits == null)
+                    throw new Exception($"Visit with ID '{patientId}' not found.");
+
+                return visits;
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         public Visit GetByPatientAndDate(int patientId, DateTime date)
         {
-            return _visitDAL.GetByPatientAndDate(patientId, date);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _visitDAL.GetByPatientAndDate(patientId, date, conn);
+            }
+            catch
+            {
+                throw;
+            }
         }
 
     }

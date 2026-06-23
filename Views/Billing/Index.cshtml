@@ -1,4 +1,4 @@
-@model IEnumerable<dynamic>
+@model IEnumerable<Models.Bill>
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -7,35 +7,27 @@
 
     ViewBag.CustomHeaderActions = new []
     {
-        new { Label="Search Patient", Controller = "Billing", Action = "SearchPatient" },
         new { Label="+ Add New Bill", Controller = "Billing", Action = "Create" }
     };
 
     ViewBag.KeyField = "BillId";
 
-    ViewBag.HeaderFields = new[]
-    {
-        new { Name="PatientId", Label="Patient ID", Type="text", Col="2", Value = ViewBag.Patient?.PatientId },
-        new { Name="FirstName", Label="First Name", Type="text", Col="4", Value = ViewBag.Patient?.FirstName },
-        new { Name="LastName", Label="Last Name", Type="text", Col="4", Value = ViewBag.Patient?.LastName },
-        new { Name="Age", Label="Age", Type="text", Col="2", Value = ViewBag.Patient?.Age },
-        new { Name="Gender", Label="Gender", Type="text", Col="2", Value = ViewBag.Patient?.Gender }
-    };
-
     ViewBag.Fields = new []
     {
         new { Name="VisitDate", Label="Visit Date", Type="date", Color=""},
+        new { Name="PatientId", Label="Patient Id", Type="text", Color=""},
+        new { Name="PatientName", Label="Patient Name", Type="text", Color=""},
         new { Name="BillDate", Label="Bill Date", Type="date", Color="" },
         new { Name="NetAmount", Label="Bill Amount", Type="number", Color="" },
         new { Name="TotalPaidAmount", Label="Paid Amount", Type="number", Color="" },
         new { Name="BalanceAmount", Label="Due Amount", Type="number", Color="" },
-        new { Name="Status", Label="Status", Type="text", Color="StatusColor" }
+        new { Name="PaymentStatus", Label="Status", Type="text", Color="StatusColor" }
     };
 
     ViewBag.ColorFunctions = new Dictionary<string, Func<dynamic, string>>
     {
         {"StatusColor", row => {
-                                        string status = row.Status as string;
+                                        string status = row.PaymentStatus as string;
 
                                         return status switch
                                         {
@@ -51,7 +43,7 @@
     ViewBag.CheckFunctions = new Dictionary<string, Func<dynamic, bool>>
     {
         {"StatusCheck", row => {
-                                        string status = row.Status as string;
+                                        string status = row.PaymentStatus as string;
 
                                         return status != "Paid";
                                     }
@@ -64,6 +56,15 @@
         new { Label = "Pay", Controller = "Payment", Action = "Pay", Type = "success", condition = "StatusCheck" }
     };
 
+    ViewBag.SearchFields = new[]
+    {
+        "PatientId",
+        "PatientName",
+        "BillDate",
+        "PaymentStatus"
+    };
+
+    ViewBag.PageSize = 10;
 
 }
 

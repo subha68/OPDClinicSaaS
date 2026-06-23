@@ -5,12 +5,29 @@
 }
 
 <div class="container mt-4">
+    <input type="hidden" name="BillId" id="BillId" value="@Model.BillId" />
 
     <!-- Print Button -->
     <div class="mb-3 text-end no-print">
         <button onclick="window.print()" class="btn btn-primary">
             Print Bill
         </button>
+
+        @if (Model.PaymentStatus != "Paid")
+        {
+            <a asp-controller="Payment" asp-action="Pay" asp-route-id="@Model.BillId" class="btn btn-primary">
+                Pay
+            </a>
+        }
+
+        @await Html.PartialAsync("_BackButton", new ViewModels.BackButtonVM
+            {
+                Controller = "Billing",
+                Action = "SearchByPatient",
+                PatientId = @Model.PatientId,
+                Text = "Back to Bills"
+            })
+
     </div>
 
     <!-- Bill Card -->
@@ -72,7 +89,7 @@
                             <tr>
                                 <th>Status</th>
                                 <td>
-                                    @Model.Status
+                                    @Model.PaymentStatus
                                 </td>
                             </tr>
                         </table>
@@ -108,7 +125,7 @@
                                 <td>@sl</td>
 
                                 <td>
-                                    @line.BillingCharge?.ChargeName
+                                    @line.ReferenceName
                                 </td>
 
                                 <td class="text-end">
@@ -149,7 +166,7 @@
                             </th>
 
                             <th class="text-end">
-                                @Model.GrossAmount?.ToString("0.00")
+                                @Model.GrossAmount.ToString("0.00")
                             </th>
                         </tr>
 
@@ -159,7 +176,7 @@
                             </th>
 
                             <th class="text-end">
-                                @Model.DiscountAmount?.ToString("0.00")
+                                @Model.DiscountAmount.ToString("0.00")
                             </th>
                         </tr>
 
@@ -169,7 +186,7 @@
                             </th>
 
                             <th class="text-end">
-                                @Model.NetAmount?.ToString("0.00")
+                                @Model.NetAmount.ToString("0.00")
                             </th>
                         </tr>
 
@@ -205,7 +222,7 @@
                                 <tr>
 
                                     <td>
-                                        @p.CreatedAt.ToString("dd/MM/yyyy")
+                                        @p.PaymentDate.ToString("dd-MMM-yyyy")
                                     </td>
 
                                     <td>
@@ -330,3 +347,13 @@
         }
     }
 </style>
+
+<script>
+function payBill() {
+    var billId = $("#BillId").val();
+
+    window.location =
+        '/Payment/Pay?' +
+        'id=' + billId;
+}
+</script>

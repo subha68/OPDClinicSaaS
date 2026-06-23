@@ -117,7 +117,7 @@ namespace Controllers
             }
         }
 
-        [HttpPost]
+/*        [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult GenerateSlots(int doctorId, DateTime fromDate, DateTime toDate)
         {
@@ -133,7 +133,7 @@ namespace Controllers
             }
 
             return RedirectToAction("Index");
-        }
+        } */
 
         private void LoadDoctors()
         {

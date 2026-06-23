@@ -10,7 +10,6 @@ namespace BLL
     public class AppointmentSlotService : BaseService<AppointmentSlot>
     {
         private readonly DoctorScheduleDAL _scheduleDAL;
-        private readonly AppointmentSlotDAL _slotDAL;
         private readonly AppointmentDAL _appointmentDAL;
         private readonly DbHelper _db;
 
@@ -19,13 +18,12 @@ namespace BLL
                                         : base(config, httpContextAccessor)
         {
             _scheduleDAL = new DoctorScheduleDAL(config);
-            _slotDAL = new AppointmentSlotDAL(config);
             _appointmentDAL = new AppointmentDAL(config);
-            _dal = _slotDAL;
+            //_dal = _appointmentDAL;
             _db = new DbHelper(config);
         }
 
-        public void GenerateSlots(int doctorId, DateTime fromDate, DateTime toDate)
+/*        public void GenerateSlots(int doctorId, DateTime fromDate, DateTime toDate)
         {
             using var conn = _db.GetConnection();
             conn.Open();
@@ -35,7 +33,7 @@ namespace BLL
             {
                 ValidateGenerationRequest(doctorId, fromDate, toDate);
 
-                DoctorScheduleVM schedule = _scheduleDAL.GetDoctorSchedule(doctorId);
+                DoctorScheduleVM schedule = _scheduleDAL.GetDoctorSchedule(doctorId, conn);
 
                 List<DoctorShiftVM> shifts = null;
                 
@@ -73,9 +71,9 @@ namespace BLL
                 tran.Rollback();
                 throw;
             }
-        }
+        } */
 
-        private void GenerateSlotsForSchedule(DoctorScheduleVM schedule, DateTime slotDate, 
+/*        private void GenerateSlotsForSchedule(DoctorScheduleVM schedule, DateTime slotDate, 
                                                 SqlConnection conn, SqlTransaction tran)
         {
             DateTime scheduleStart = slotDate.Date + schedule.Shifts[0].StartTime;
@@ -101,9 +99,9 @@ namespace BLL
 
                 currentSlotStart = currentSlotEnd;
             }
-        }
+        } */
 
-        private AppointmentSlot BuildSlot(DoctorScheduleVM schedule, DateTime slotDate, DateTime slotStart, DateTime slotEnd)
+/*        private AppointmentSlot BuildSlot(DoctorScheduleVM schedule, DateTime slotDate, DateTime slotStart, DateTime slotEnd)
         {
             return new AppointmentSlot
             {
@@ -117,9 +115,9 @@ namespace BLL
                 IsBlocked = false,
                 CreatedOn = DateTime.Now
             };
-        }
+        } */
 
-        private void ValidateGenerationRequest(int doctorId, DateTime fromDate, DateTime toDate)
+/*        private void ValidateGenerationRequest(int doctorId, DateTime fromDate, DateTime toDate)
         {
             if (doctorId <= 0)
             {
@@ -139,77 +137,99 @@ namespace BLL
             {
                 throw new Exception("Cannot generate slots for more than 365 days.");
             }
-        }
+        } */
 
         /// Optional helper method.
         /// Clears future slots before regeneration.
         /// Useful after schedule update.
 
-        public void DeleteFutureSlots(int doctorId, DateTime fromDate)
+/*        public void DeleteFutureSlots(int doctorId, DateTime fromDate)
         {
             // This can be implemented later
             // if regeneration support is needed.
-        }
+        } */
 
-        public void RegenerateSlots(int doctorId, DateTime fromDate, DateTime toDate)
+/*        public void RegenerateSlots(int doctorId, DateTime fromDate, DateTime toDate)
         {
             // Future implementation:
             // 1. Delete future slots
             // 2. Recreate fresh slots
 
             GenerateSlots(doctorId, fromDate, toDate);
-        }
+        } */
 
-        public List<AppointmentSlot> GetAvailableSlots(int doctorId)
+/*        public List<AppointmentSlot> GetAvailableSlots(int doctorId)
         {
-            return _slotDAL.GetByDoctor(doctorId);
-        }
+            using var conn = _db.GetConnection();
+            conn.Open();
 
-        public List<AppointmentSlotVM> GetSlots(int doctorId, DateTime appointmentDate)
+            try
+            {
+                return _slotDAL.GetByDoctor(doctorId);
+            }
+            catch
+            {
+                throw;
+            }
+            
+        }  */ 
+
+/*        public List<AppointmentSlotVM> GetSlots(int doctorId, DateTime appointmentDate)
         {
             int dayOfWeek = (int)appointmentDate.DayOfWeek;
             int clinicId = ClinicId;
 
-            DoctorScheduleVM schedule = _scheduleDAL.GetSchedulesByDay(clinicId, doctorId, dayOfWeek);
-            List<Appointment> appointments = _appointmentDAL.GetAppointmentsByDate(clinicId, doctorId, appointmentDate);
+            using var conn = _db.GetConnection();
+            conn.Open();
 
-            List<AppointmentSlotVM> slots = new();
-
-            foreach(var slot in schedule.Shifts)
+            try
             {
-                TimeSpan start = slot.StartTime;
-                TimeSpan end = slot.EndTime;
+                DoctorScheduleVM schedule = _scheduleDAL.GetSchedulesByDay(clinicId, doctorId, dayOfWeek, conn);
+                List<Appointment> appointments = _appointmentDAL.GetAppointmentsByDate(clinicId, doctorId, appointmentDate, conn);
 
-                while(start < end)
+                List<AppointmentSlotVM> slots = new();
+
+                foreach(var slot in schedule.Shifts)
                 {
-                    string slotTime = start.ToString(@"hh\:mm");
+                    TimeSpan start = slot.StartTime;
+                    TimeSpan end = slot.EndTime;
 
-                    var booked =
-                        appointments
-                            .FirstOrDefault(x =>
-                                x.SlotStartTime
-                                .ToString(@"hh\:mm")
-                                == slotTime);
+                    while(start < end)
+                    {
+                        string slotTime = start.ToString(@"hh\:mm");
 
-                    slots.Add(
-                        new AppointmentSlotVM
-                        {
-                            SlotTime = slotTime,
-                            IsBooked = booked != null,
-                            AppointmentId = booked?.AppointmentId,
-                            PatientId = booked?.PatientId,
-                            PatientName = booked?.PatientName
-                        });
+                        var booked =
+                            appointments
+                                .FirstOrDefault(x =>
+                                    x.SlotStartTime
+                                    .ToString(@"hh\:mm")
+                                    == slotTime);
 
-                    start = start.Add(TimeSpan.FromMinutes(15));
+                        slots.Add(
+                            new AppointmentSlotVM
+                            {
+                                SlotTime = slotTime,
+                                IsBooked = booked != null,
+                                AppointmentId = booked?.AppointmentId,
+                                PatientId = booked?.PatientId,
+                                PatientName = booked?.PatientName
+                            });
+
+                        start = start.Add(TimeSpan.FromMinutes(15));
+                    }
+
                 }
 
+                return slots;
+            }
+            catch
+            {
+                throw;
             }
 
-            return slots;            
-        }
+        } */
 
-        public bool IncrementBookedCount(int slotId)
+    /*    public bool IncrementBookedCount(int slotId)
         {
             using var conn = _db.GetConnection();
             conn.Open();
@@ -226,7 +246,7 @@ namespace BLL
                 tran.Rollback();
                 throw;
             }
-        }
+        } */
 
     }
 }

@@ -63,9 +63,9 @@ namespace Controllers
         }
 
         [HttpGet]
-        public JsonResult GetSlots(int doctorId)
+/*        public JsonResult GetSlots(int doctorId)
         {
-            var slots = _slot.GetAvailableSlots(doctorId);
+            var slots = _appointment.GetSlots(doctorId);
 
             return Json(slots.Select(x => new
             {
@@ -75,12 +75,12 @@ namespace Controllers
                 end = x.EndDateTime.ToString("yyyy-MM-ddTHH:mm:ss"),
                 color = x.Color
             }));
-        }
+        } */
 
         [HttpGet]
         public JsonResult GetDailySlots(int doctorId, DateTime appointmentDate)
         {
-            var slots = _slot.GetSlots(doctorId, appointmentDate);
+            var slots = _appointment.GetSlots(doctorId, appointmentDate);
 
             return Json(slots);
         }
@@ -157,6 +157,17 @@ namespace Controllers
             {
                 visitId = visit.VisitId,
                 visitType = visit.VisitType
+            });
+        }
+
+        [HttpPost]
+        public IActionResult Cancel(int appointmentId, string cancellationReason)
+        {
+            _appointment.UpdateStatus(appointmentId, "Cancelled", cancellationReason);
+
+            return Json(new
+            {
+                success = true
             });
         }
     }

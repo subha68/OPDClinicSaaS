@@ -81,74 +81,71 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public List<Consultation> GetAll()
+        public List<Consultation> GetAll(SqlConnection conn, SqlTransaction? tran = null)
         {
             List<Consultation> consultations = new List<Consultation>();
 
-            using (SqlConnection conn = _db.GetConnection())
+            string query = @"SELECT ConsultationId, AppointmentId, Symptoms, Diagnosis, Notes FROM Consultations";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = @"SELECT ConsultationId, AppointmentId, Symptoms, Diagnosis, Notes FROM Consultations";
+                cmd.Transaction = tran;
+            }
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-
-                conn.Open();
-
-                using (SqlDataReader dr = cmd.ExecuteReader())
+            using (SqlDataReader dr = cmd.ExecuteReader())
+            {
+                while (dr.Read())
                 {
-                    while (dr.Read())
+                    consultations.Add(new Consultation
                     {
-                        consultations.Add(new Consultation
-                        {
-                            ConsultationId = Convert.ToInt32(dr["ConsultationId"]),
-                            AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
-                            Symptoms = dr["Symptoms"].ToString(),
-                            Diagnosis = dr["Diagnosis"].ToString(),
-                            Notes = dr["Notes"].ToString()
-                        });
-                    }
+                        ConsultationId = Convert.ToInt32(dr["ConsultationId"]),
+                        AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
+                        Symptoms = dr["Symptoms"].ToString(),
+                        Diagnosis = dr["Diagnosis"].ToString(),
+                        Notes = dr["Notes"].ToString()
+                    });
                 }
             }
 
             return consultations;
         }
 
-        public Consultation Get(int id)
+        public Consultation Get(int id, SqlConnection conn, SqlTransaction? tran = null)
         {
             Consultation consultation = null;
 
-            using (SqlConnection conn = _db.GetConnection())
+            string query = @"SELECT ConsultationId, AppointmentId, Symptoms, Diagnosis, Notes FROM Consultations WHERE ConsultationId = @id";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = @"SELECT ConsultationId, AppointmentId, Symptoms, Diagnosis, Notes FROM Consultations WHERE ConsultationId = @id";
+                cmd.Transaction = tran;
+            }
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@id", id);
 
-                conn.Open();
-
-                using (SqlDataReader dr = cmd.ExecuteReader())
+            using (SqlDataReader dr = cmd.ExecuteReader())
+            {
+                if (dr.Read())
                 {
-                    if (dr.Read())
+                    consultation = new Consultation
                     {
-                        consultation = new Consultation
-                        {
-                            ConsultationId = Convert.ToInt32(dr["ConsultationId"]),
-                            AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
-                            Symptoms = dr["Symptoms"].ToString(),
-                            Diagnosis = dr["Diagnosis"].ToString(),
-                            Notes = dr["Notes"].ToString()
-                        };
-                    }
+                        ConsultationId = Convert.ToInt32(dr["ConsultationId"]),
+                        AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
+                        Symptoms = dr["Symptoms"].ToString(),
+                        Diagnosis = dr["Diagnosis"].ToString(),
+                        Notes = dr["Notes"].ToString()
+                    };
                 }
             }
 
             return consultation;
         }
 
-        public Consultation GetConsultation(int appointmentId)
+        public Consultation GetConsultation(int appointmentId, SqlConnection conn, SqlTransaction? tran = null)
         {
             Consultation consultation = null;
-
-            using var con = _db.GetConnection();
 
             string sql = @"
                 SELECT
@@ -175,11 +172,13 @@ namespace DAL
                     ON a.DoctorId = d.DoctorId
                 WHERE a.AppointmentId = @AppointmentId";
 
-            using var cmd = new SqlCommand(sql, con);
+            using var cmd = new SqlCommand(sql, conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
 
             cmd.Parameters.AddWithValue("@AppointmentId", appointmentId);
-
-            con.Open();
 
             using var dr = cmd.ExecuteReader();
 
@@ -201,11 +200,9 @@ namespace DAL
             return consultation;
         }
 
-        public List<Consultation> GetConsultationsByPatientId(int patientId)
+        public List<Consultation> GetConsultationsByPatientId(int patientId, SqlConnection conn, SqlTransaction? tran = null)
         {
             List<Consultation> consultations = new List<Consultation>();
-
-            using var con = _db.GetConnection();
 
             string sql = @"SELECT c.ConsultationId, c.AppointmentId, c.Symptoms, c.Diagnosis, c.Notes,
                                 a.AppointmentDate, a.SlotStartTime,
@@ -219,11 +216,13 @@ namespace DAL
                             INNER JOIN Doctors d ON a.DoctorId = d.DoctorId
                             WHERE p.PatientId = @PatientId";
 
-            using var cmd = new SqlCommand(sql, con);
+            using var cmd = new SqlCommand(sql, conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
 
             cmd.Parameters.AddWithValue("@PatientId", patientId);
-
-            con.Open();
 
             using var dr = cmd.ExecuteReader();
 
@@ -248,13 +247,9 @@ namespace DAL
             return consultations;
         }
 
-        public PrescriptionVM GetPrescription(int appointmentId)
+        public PrescriptionVM GetPrescription(int appointmentId, SqlConnection conn, SqlTransaction? tran = null)
         {
             PrescriptionVM vm = new();
-
-            using SqlConnection conn = _db.GetConnection();
-
-            conn.Open();
 
             // consultation + doctor + patient + clinic
             string sql = @"
@@ -289,35 +284,38 @@ namespace DAL
             WHERE a.AppointmentId=@AppointmentId";
 
             SqlCommand cmd = new(sql, conn);
-            cmd.Parameters.AddWithValue("@AppointmentId", appointmentId);
-
-            using var rdr = cmd.ExecuteReader();
-
-            if (rdr.Read())
+            if (tran != null)
             {
-                vm.DoctorName = rdr["DoctorName"].ToString();
-                vm.Qualification = rdr["Qualification"].ToString();
-                vm.RegistrationNumber = rdr["RegistrationNo"].ToString();
-
-                vm.ClinicName = rdr["ClinicName"].ToString();
-                vm.ClinicAddress = rdr["ClinicAddress"].ToString();
-
-                vm.PatientId = Convert.ToInt32(rdr["PatientId"]);
-                vm.PatientName = rdr["PatientName"].ToString();
-                vm.Age = Convert.ToInt32(rdr["Age"]);
-                vm.Gender = rdr["Gender"].ToString();
-                vm.PatientPhoneNo = rdr["PatientPhoneNo"].ToString();
-
-                vm.VisitDateTime = Convert.ToDateTime(rdr["AppointmentDate"]).Add((TimeSpan)rdr["SlotStartTime"]);
-
-                vm.Symptoms = rdr["Symptoms"].ToString();
-                vm.Diagnosis = rdr["Diagnosis"].ToString();
-                vm.Notes = rdr["Notes"].ToString();
-                vm.AppointmentId = Convert.ToInt32(appointmentId);
+                cmd.Transaction = tran;
             }
 
-            rdr.Close();
+            cmd.Parameters.AddWithValue("@AppointmentId", appointmentId);
 
+            using (var rdr = cmd.ExecuteReader())
+            {
+                if (rdr.Read())
+                {
+                    vm.DoctorName = rdr["DoctorName"].ToString();
+                    vm.Qualification = rdr["Qualification"].ToString();
+                    vm.RegistrationNumber = rdr["RegistrationNo"].ToString();
+
+                    vm.ClinicName = rdr["ClinicName"].ToString();
+                    vm.ClinicAddress = rdr["ClinicAddress"].ToString();
+
+                    vm.PatientId = Convert.ToInt32(rdr["PatientId"]);
+                    vm.PatientName = rdr["PatientName"].ToString();
+                    vm.Age = Convert.ToInt32(rdr["Age"]);
+                    vm.Gender = rdr["Gender"].ToString();
+                    vm.PatientPhoneNo = rdr["PatientPhoneNo"].ToString();
+
+                    vm.VisitDateTime = Convert.ToDateTime(rdr["AppointmentDate"]).Add((TimeSpan)rdr["SlotStartTime"]);
+
+                    vm.Symptoms = rdr["Symptoms"].ToString();
+                    vm.Diagnosis = rdr["Diagnosis"].ToString();
+                    vm.Notes = rdr["Notes"].ToString();
+                    vm.AppointmentId = Convert.ToInt32(appointmentId);
+                }
+            }
             vm.Medicines = new List<PharmacologyAdvice>();
 
             string medSql = @"
@@ -331,32 +329,34 @@ namespace DAL
                 ORDER BY PharmacologyId";
 
             SqlCommand medCmd = new(medSql, conn);
+            if (tran != null)
+            {
+                medCmd.Transaction = tran;
+            }
+
             medCmd.Parameters.AddWithValue("@AppointmentId", appointmentId);
 
-            using var medRdr = medCmd.ExecuteReader();
-
-            while (medRdr.Read())
+            using (var medRdr = medCmd.ExecuteReader())
             {
-                vm.Medicines.Add(new PharmacologyAdvice
+                while (medRdr.Read())
                 {
-                    MedicineName = medRdr["MedicineName"].ToString(),
-                    Dosage = medRdr["Dosage"].ToString(),
-                    Frequency = medRdr["Frequency"].ToString(),
-                    Duration = medRdr["Duration"].ToString(),
-                    Instructions = medRdr["Instructions"].ToString()
-                });
+                    vm.Medicines.Add(new PharmacologyAdvice
+                    {
+                        MedicineName = medRdr["MedicineName"].ToString(),
+                        Dosage = medRdr["Dosage"].ToString(),
+                        Frequency = medRdr["Frequency"].ToString(),
+                        Duration = medRdr["Duration"].ToString(),
+                        Instructions = medRdr["Instructions"].ToString()
+                    });
+                }
             }
 
             return vm;
         }
 
-        public List<PrescriptionVM> GetPrescriptionsByPatientId(int patientId)
+        public List<PrescriptionVM> GetPrescriptionsByPatientId(int patientId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var prescriptions = new List<PrescriptionVM>();
-
-            using SqlConnection conn = _db.GetConnection();
-
-            conn.Open();
 
             // consultation + doctor + patient + clinic
             string sql = @"
@@ -392,12 +392,16 @@ namespace DAL
             JOIN Clinics c ON a.ClinicId=c.ClinicId
             WHERE a.AppointmentId=@PatientId";
 
-            using (SqlCommand cmd = new(sql, conn))
+            SqlCommand cmd = new(sql, conn);
+            if (tran != null)
             {
-                cmd.Parameters.AddWithValue("@PatientId", patientId);
+                cmd.Transaction = tran;
+            }
 
-                using var rdr = cmd.ExecuteReader();
+            cmd.Parameters.AddWithValue("@PatientId", patientId);
 
+            using (var rdr = cmd.ExecuteReader())
+            {
                 while (rdr.Read())
                 {
                     var vm = new PrescriptionVM();
@@ -418,36 +422,44 @@ namespace DAL
                     vm.Symptoms = rdr["Symptoms"].ToString();
                     vm.Diagnosis = rdr["Diagnosis"].ToString();
                     vm.Notes = rdr["Notes"].ToString();
-                    vm.AppointmentId = Convert.ToInt32(rdr["AppointmentId"]);
+                    vm.AppointmentId = Convert.ToInt32(rdr["AppointmentId"]);                    
+                    vm.ConsultationId = Convert.ToInt32(rdr["ConsultationId"]);
 
-                    int conId = Convert.ToInt32(rdr["ConsultationId"]);
+                    prescriptions.Add(vm);
+                }
+            }
 
-                    string medSql = @"
-                        SELECT MedicineName,
-                                Dosage,
-                                Frequency,
-                                Duration,
-                                Instructions
-                        FROM PharmacologyAdvices
-                        WHERE ConsultationId=@ConsultationId
-                        ORDER BY PharmacologyId";
+            foreach (PrescriptionVM prescription in prescriptions)
+            {
+                string medSql = @"
+                    SELECT MedicineName,
+                            Dosage,
+                            Frequency,
+                            Duration,
+                            Instructions
+                    FROM PharmacologyAdvices
+                    WHERE ConsultationId=@ConsultationId
+                    ORDER BY PharmacologyId";
 
-                    SqlCommand medCmd = new(medSql, conn);
-                    medCmd.Parameters.AddWithValue("@ConsultationId", conId);
+                using SqlCommand medCmd = new(medSql, conn);
+                if (tran != null)
+                {
+                    medCmd.Transaction = tran;
+                }
+                medCmd.Parameters.AddWithValue("@ConsultationId", prescription.ConsultationId);
 
-                    using var medRdr = medCmd.ExecuteReader();
+                using var medRdr = medCmd.ExecuteReader();
 
-                    while (medRdr.Read())
+                while (medRdr.Read())
+                {
+                    prescription.Medicines.Add(new PharmacologyAdvice
                     {
-                        vm.Medicines.Add(new PharmacologyAdvice
-                        {
-                            MedicineName = medRdr["MedicineName"].ToString(),
-                            Dosage = medRdr["Dosage"].ToString(),
-                            Frequency = medRdr["Frequency"].ToString(),
-                            Duration = medRdr["Duration"].ToString(),
-                            Instructions = medRdr["Instructions"].ToString()
-                        });
-                    }
+                        MedicineName = medRdr["MedicineName"].ToString(),
+                        Dosage = medRdr["Dosage"].ToString(),
+                        Frequency = medRdr["Frequency"].ToString(),
+                        Duration = medRdr["Duration"].ToString(),
+                        Instructions = medRdr["Instructions"].ToString()
+                    });
                 }
             }
 

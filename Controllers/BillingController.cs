@@ -32,7 +32,7 @@ public class BillingController : Controller
 
     public IActionResult Index()
     {
-        var bills = new List<BillListVM>();
+        var bills = _bill.List();
         return View(bills);
     }
 
@@ -45,7 +45,7 @@ public class BillingController : Controller
                     new
                     {
                         returnTo = "Billing"
-                    });
+                    }); 
     }
 
     [HttpGet]

@@ -16,11 +16,21 @@ namespace BLL
 
         public Role GetRoleByName(string roleName)
         {
-            var role = _roleDAL.GetRoleByName(roleName);
-            if (role == null)
-                throw new Exception($"Role '{roleName}' not found.");
+            using var conn = _db.GetConnection();
+            conn.Open();
 
-            return role;
+            try
+            {
+                var role = _roleDAL.GetRoleByName(roleName, conn);
+                if (role == null)
+                    throw new Exception($"Role '{roleName}' not found.");
+
+                return role;
+            }
+            catch
+            {
+                throw;
+            }
         }
 
     }

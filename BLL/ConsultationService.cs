@@ -25,15 +25,25 @@ namespace BLL
 
         public Consultation GetConsultation(int appointmentId)
         {
-            Appointment app = _appointmentDAL.Get(appointmentId);
-            Consultation cons = _consultationDAL.Get(appointmentId);
-            if (cons == null)
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
             {
-                cons = new Consultation();
+                Appointment app = _appointmentDAL.Get(appointmentId, conn);
+                Consultation cons = _consultationDAL.Get(appointmentId, conn);
+                if (cons == null)
+                {
+                    cons = new Consultation();
+                }
+                cons.AppointmentId = app.AppointmentId;
+                cons.PatientId = app.PatientId;
+                return cons;
             }
-            cons.AppointmentId = app.AppointmentId;
-            cons.PatientId = app.PatientId;
-            return cons;
+            catch
+            {
+                throw;
+            }
         }
 
         public int SaveConsultation(Consultation model)
@@ -54,7 +64,7 @@ namespace BLL
                     // add prescribed medicine if not in Medicine Master
                     if(med.MedicineId == null)
                     {
-                        var medicine = _medicineDAL.GetByName(med.MedicineName);
+                        var medicine = _medicineDAL.GetByName(med.MedicineName, conn);
 
                         if(medicine == null)
                         {
@@ -79,7 +89,7 @@ namespace BLL
                     _pharmacologyDAL.Add(med, conn, tran);
                 }
 
-                _appointmentDAL.UpdateStatus(model.AppointmentId, "Completed", conn, tran);
+                _appointmentDAL.UpdateStatus(model.AppointmentId, "Completed", null, conn, tran);
 
                 tran.Commit();
                 return consultationId;
@@ -93,17 +103,47 @@ namespace BLL
 
         public PrescriptionVM GetPrescription(int appointmentId)
         {
-            return _consultationDAL.GetPrescription(appointmentId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _consultationDAL.GetPrescription(appointmentId, conn);
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         public List<Consultation> GetConsultationsByPatientId(int patientId)
         {
-            return _consultationDAL.GetConsultationsByPatientId(patientId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _consultationDAL.GetConsultationsByPatientId(patientId, conn);
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         public List<PrescriptionVM> GetPrescriptionsByPatientId(int patientId)
         {
-            return _consultationDAL.GetPrescriptionsByPatientId(patientId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _consultationDAL.GetPrescriptionsByPatientId(patientId, conn);
+            }
+            catch
+            {
+                throw;
+            }
         }
     }
 }

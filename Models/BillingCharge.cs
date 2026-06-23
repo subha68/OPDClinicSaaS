@@ -7,6 +7,7 @@ namespace Models
         public string ChargeCode { get; set; }
         public string ChargeName { get; set; }
         public string Description { get; set; }
+        public string ServiceType { get; set; }
         public decimal Rate { get; set; }
         public bool IsActive { get; set; }
     }

@@ -10,6 +10,9 @@ namespace BLL
         private readonly PaymentDAL _paymentDAL;
         private readonly BillDAL _billDAL;
         private readonly VisitDAL _visitDAL;
+        private readonly PatientDAL _patientDAL;
+        private readonly AccountingService _accounting;
+
 
         public PaymentService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
                                 : base(config, httpContextAccessor)
@@ -17,6 +20,8 @@ namespace BLL
             _paymentDAL = new PaymentDAL(config);
             _billDAL = new BillDAL(config);
             _visitDAL = new VisitDAL(config);
+            _patientDAL = new PatientDAL(config);
+            _accounting = new AccountingService(config, httpContextAccessor);
             _dal = _paymentDAL;
         }
 
@@ -27,8 +32,15 @@ namespace BLL
             using var tran = conn.BeginTransaction();
             try
             {
+                model.ClinicId = ClinicId;
+                model.Patient = _patientDAL.Get(model.PatientId, conn, tran);
                 int id = Add(model, conn, tran);
                 UpdateBillStatus(model.BillId, conn, tran);
+                model.PaymentId = id;
+                
+                Journal journal = _accounting.BuildJournal(model, conn, tran);
+                _accounting.PostJournal(journal, conn, tran);
+
                 tran.Commit();
                 return id;
             }
@@ -41,7 +53,7 @@ namespace BLL
 
         public void UpdateBillStatus(int billId, SqlConnection conn, SqlTransaction tran)
         {
-            Bill bill = _billDAL.Get(billId);
+            Bill bill = _billDAL.Get(billId, conn, tran);
 
             decimal totalPaid = _paymentDAL.GetTotalPaid(billId, conn, tran);
 
@@ -50,12 +62,32 @@ namespace BLL
 
         public List<Payment> GetPaymentsByBill(int billId)
         {
-            return _paymentDAL.GetPaymentsByBill(billId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _paymentDAL.GetPaymentsByBill(billId, conn);
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         public decimal GetTotalPaid(int billId)
         {
-            return _paymentDAL.GetTotalPaid(billId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _paymentDAL.GetTotalPaid(billId, conn);
+            }
+            catch
+            {
+                throw;
+            }
         }
 
     }

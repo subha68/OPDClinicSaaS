@@ -13,49 +13,49 @@ namespace DAL
             _db = new DbHelper(configuration);
         }
 
-        public User GetUserByName(string username, int? clinicId)
+        public User GetUserByName(string username, int? clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {           
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
-
-                string query = @"SELECT  u.*
-                                FROM Users u
-                                INNER JOIN Roles r
-                                ON u.RoleId = r.RoleId
-                                WHERE u.Username = @Username
-                                AND
+            string query = @"SELECT  u.*
+                            FROM Users u
+                            INNER JOIN Roles r
+                            ON u.RoleId = r.RoleId
+                            WHERE u.Username = @Username
+                            AND
+                            (
+                                r.RoleName = 'SuperAdmin'
+                                OR
                                 (
-                                    r.RoleName = 'SuperAdmin'
-                                    OR
-                                    (
-                                        r.RoleName IN ('ClinicAdmin','ClinicUser','Doctor','BillingUser','PharmacyUser')
-                                        AND u.ClinicId = @ClinicId
-                                    )
+                                    r.RoleName IN ('ClinicAdmin','ClinicUser','Doctor','BillingUser','PharmacyUser')
+                                    AND u.ClinicId = @ClinicId
                                 )
-                                AND u.IsActive = 1";
+                            )
+                            AND u.IsActive = 1";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@Username", username);
-                cmd.Parameters.AddWithValue("@ClinicId", clinicId.HasValue ? clinicId : 0);
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
 
-                SqlDataReader reader = cmd.ExecuteReader();
+            cmd.Parameters.AddWithValue("@Username", username);
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId.HasValue ? clinicId : 0);
 
-                if (reader.Read())
+            using SqlDataReader reader = cmd.ExecuteReader();
+
+            if (reader.Read())
+            {
+                return new User
                 {
-                    return new User
-                    {
-                        UserId = (int)reader["UserId"],
-                        RoleId = (int)reader["RoleId"],
-                        ClinicId = reader["ClinicId"] != DBNull.Value ? (int?)reader["ClinicId"] : null,
-                        Username = reader["Username"] != DBNull.Value ? reader["Username"].ToString() : null,
-                        PasswordHash = reader["PasswordHash"] != DBNull.Value ? reader["PasswordHash"].ToString() : null,
-                        FirstName = reader["FirstName"] != DBNull.Value ? reader["FirstName"].ToString() : null,
-                        LastName = reader["LastName"] != DBNull.Value ? reader["LastName"].ToString() : null,
-                        Email = reader["Email"] != DBNull.Value ? reader["Email"].ToString() : null,
-                        Phone = reader["Phone"] != DBNull.Value ? reader["Phone"].ToString() : null
-                    };
-                }
+                    UserId = (int)reader["UserId"],
+                    RoleId = (int)reader["RoleId"],
+                    ClinicId = reader["ClinicId"] != DBNull.Value ? (int?)reader["ClinicId"] : null,
+                    Username = reader["Username"] != DBNull.Value ? reader["Username"].ToString() : null,
+                    PasswordHash = reader["PasswordHash"] != DBNull.Value ? reader["PasswordHash"].ToString() : null,
+                    FirstName = reader["FirstName"] != DBNull.Value ? reader["FirstName"].ToString() : null,
+                    LastName = reader["LastName"] != DBNull.Value ? reader["LastName"].ToString() : null,
+                    Email = reader["Email"] != DBNull.Value ? reader["Email"].ToString() : null,
+                    Phone = reader["Phone"] != DBNull.Value ? reader["Phone"].ToString() : null
+                };
             }
 
             return null;
@@ -124,173 +124,181 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public User Get(int userId)
+        public User Get(int userId, SqlConnection conn, SqlTransaction? tran = null)
         {
-            using (SqlConnection conn = _db.GetConnection())
+            string query = @"SELECT u.*, c.Name as ClinicName, r.RoleName 
+                                FROM Users u
+                                LEFT JOIN Clinics c ON u.ClinicId = c.ClinicId
+                                LEFT JOIN Roles r ON u.RoleId = r.RoleId
+                                WHERE u.UserId = @UserId";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = @"SELECT u.*, c.Name as ClinicName, r.RoleName 
-                                  FROM Users u
-                                  LEFT JOIN Clinics c ON u.ClinicId = c.ClinicId
-                                  LEFT JOIN Roles r ON u.RoleId = r.RoleId
-                                  WHERE u.UserId = @UserId";
-
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@UserId", userId);
-
-                conn.Open();
-                var reader = cmd.ExecuteReader();
-
-                if (reader.Read())
-                {
-                    return new User
-                    {
-                        UserId = (int)reader["UserId"],
-                        RoleId = (int)reader["RoleId"],
-                        ClinicId = reader["ClinicId"] != DBNull.Value ? (int?)reader["ClinicId"] : null,
-                        Username = reader["Username"] != DBNull.Value ? reader["Username"].ToString() : null,
-                        FirstName = reader["FirstName"] != DBNull.Value ? reader["FirstName"].ToString() : null,
-                        LastName = reader["LastName"] != DBNull.Value ? reader["LastName"].ToString() : null,
-                        Email = reader["Email"] != DBNull.Value ? reader["Email"].ToString() : null,
-                        Phone = reader["Phone"] != DBNull.Value ? reader["Phone"].ToString() : null,
-                        ClinicName = reader["ClinicName"] != DBNull.Value ? reader["ClinicName"].ToString() : null,
-                        RoleName = reader["RoleName"] != DBNull.Value ? reader["RoleName"].ToString() : null
-                    };
-                }
+                cmd.Transaction = tran;
             }
+
+            cmd.Parameters.AddWithValue("@UserId", userId);
+
+            using var reader = cmd.ExecuteReader();
+
+            if (reader.Read())
+            {
+                return new User
+                {
+                    UserId = (int)reader["UserId"],
+                    RoleId = (int)reader["RoleId"],
+                    ClinicId = reader["ClinicId"] != DBNull.Value ? (int?)reader["ClinicId"] : null,
+                    Username = reader["Username"] != DBNull.Value ? reader["Username"].ToString() : null,
+                    FirstName = reader["FirstName"] != DBNull.Value ? reader["FirstName"].ToString() : null,
+                    LastName = reader["LastName"] != DBNull.Value ? reader["LastName"].ToString() : null,
+                    Email = reader["Email"] != DBNull.Value ? reader["Email"].ToString() : null,
+                    Phone = reader["Phone"] != DBNull.Value ? reader["Phone"].ToString() : null,
+                    ClinicName = reader["ClinicName"] != DBNull.Value ? reader["ClinicName"].ToString() : null,
+                    RoleName = reader["RoleName"] != DBNull.Value ? reader["RoleName"].ToString() : null
+                };
+            }
+
             return null;
         }
 
-        public int GetUserIdByName(string username)
+        public int GetUserIdByName(string username, SqlConnection conn, SqlTransaction? tran = null)
         {
-            using (SqlConnection conn = _db.GetConnection())
+            string query = @"SELECT UserId 
+                                FROM Users
+                                WHERE Username = @username";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = @"SELECT UserId 
-                                  FROM Users
-                                  WHERE Username = @username";
+                cmd.Transaction = tran;
+            }
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@username", username);
+            cmd.Parameters.AddWithValue("@username", username);
 
-                conn.Open();
-                var reader = cmd.ExecuteReader();
+            using var reader = cmd.ExecuteReader();
 
-                if (reader.Read())
-                {
-                    return (int)reader["UserId"];
-                }
+            if (reader.Read())
+            {
+                return (int)reader["UserId"];
             }
 
             return 0;
         }
 
-        public int GetUserCountByName(string username)
+        public int GetUserCountByName(string username, SqlConnection conn, SqlTransaction? tran = null)
         {
-            using (SqlConnection con = _db.GetConnection())
+            string query = "SELECT COUNT(*) AS UserCount FROM Users WHERE Username=@Username";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = "SELECT COUNT(*) AS UserCount FROM Users WHERE Username=@Username";
-
-                SqlCommand cmd = new SqlCommand(query, con);
-
-                cmd.Parameters.AddWithValue("@Username", username);
-
-                con.Open();
-
-                int count = Convert.ToInt32(cmd.ExecuteScalar());
-
-                return count;
+                cmd.Transaction = tran;
             }
+
+            cmd.Parameters.AddWithValue("@Username", username);
+
+            conn.Open();
+
+            int count = Convert.ToInt32(cmd.ExecuteScalar());
+
+            return count;
         }
 
-        public List<User> GetAll()
-        {
-            var list = new List<User>();
-
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                SqlCommand cmd = new SqlCommand(@"SELECT u.*, c.Name as ClinicName, r.RoleName 
-                                                FROM Users u 
-                                                LEFT JOIN Clinics c ON u.ClinicId = c.ClinicId 
-                                                LEFT JOIN Roles r ON u.RoleId = r.RoleId", conn);
-
-                conn.Open();
-                var reader = cmd.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    list.Add(new User
-                    {
-                        UserId = (int)reader["UserId"],
-                        Username = reader["Username"].ToString(),
-                        RoleId = (int)reader["RoleId"],
-                        ClinicId = reader["ClinicId"] != DBNull.Value ? (int?)reader["ClinicId"] : null,
-                        FirstName = reader["FirstName"].ToString(),
-                        LastName = reader["LastName"].ToString(),
-                        Email = reader["Email"].ToString(),
-                        Phone = reader["Phone"].ToString(),
-                        ClinicName = reader["ClinicName"] != DBNull.Value ? reader["ClinicName"].ToString() : null,
-                        RoleName = reader["RoleName"] != DBNull.Value ? reader["RoleName"].ToString() : null
-                    });
-                }
-            }
-            return list;
-        }
-
-        public List<User> ListByClinic(int clinicId)
+        public List<User> GetAll(SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<User>();
 
-            using (SqlConnection conn = _db.GetConnection())
+            SqlCommand cmd = new SqlCommand(@"SELECT u.*, c.Name as ClinicName, r.RoleName 
+                                            FROM Users u 
+                                            LEFT JOIN Clinics c ON u.ClinicId = c.ClinicId 
+                                            LEFT JOIN Roles r ON u.RoleId = r.RoleId", conn);
+            if (tran != null)
             {
-                SqlCommand cmd = new SqlCommand(@"SELECT u.*, c.Name as ClinicName, r.RoleName 
-                                                FROM Users u 
-                                                LEFT JOIN Clinics c ON u.ClinicId = c.ClinicId 
-                                                LEFT JOIN Roles r ON u.RoleId = r.RoleId 
-                                                WHERE u.ClinicId = @ClinicId", conn);
-                cmd.Parameters.AddWithValue("@ClinicId", clinicId);
-
-                conn.Open();
-                var reader = cmd.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    list.Add(new User
-                    {
-                        UserId = (int)reader["UserId"],
-                        Username = reader["Username"].ToString(),
-                        RoleId = (int)reader["RoleId"],
-                        ClinicId = (int?)reader["ClinicId"],
-                        FirstName = reader["FirstName"].ToString(),
-                        LastName = reader["LastName"].ToString(),
-                        Email = reader["Email"].ToString(),
-                        Phone = reader["Phone"].ToString(),
-                        ClinicName = reader["ClinicName"] != DBNull.Value ? reader["ClinicName"].ToString() : null,
-                        RoleName = reader["RoleName"] != DBNull.Value ? reader["RoleName"].ToString() : null
-                    });
-                }
+                cmd.Transaction = tran;
             }
+
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                list.Add(new User
+                {
+                    UserId = (int)reader["UserId"],
+                    Username = reader["Username"].ToString(),
+                    RoleId = (int)reader["RoleId"],
+                    ClinicId = reader["ClinicId"] != DBNull.Value ? (int?)reader["ClinicId"] : null,
+                    FirstName = reader["FirstName"].ToString(),
+                    LastName = reader["LastName"].ToString(),
+                    Email = reader["Email"].ToString(),
+                    Phone = reader["Phone"].ToString(),
+                    ClinicName = reader["ClinicName"] != DBNull.Value ? reader["ClinicName"].ToString() : null,
+                    RoleName = reader["RoleName"] != DBNull.Value ? reader["RoleName"].ToString() : null
+                });
+            }
+
             return list;
         }
 
-        public List<Role> GetRoles()
+        public List<User> ListByClinic(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
+        {
+            var list = new List<User>();
+
+            SqlCommand cmd = new SqlCommand(@"SELECT u.*, c.Name as ClinicName, r.RoleName 
+                                            FROM Users u 
+                                            LEFT JOIN Clinics c ON u.ClinicId = c.ClinicId 
+                                            LEFT JOIN Roles r ON u.RoleId = r.RoleId 
+                                            WHERE u.ClinicId = @ClinicId", conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
+
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                list.Add(new User
+                {
+                    UserId = (int)reader["UserId"],
+                    Username = reader["Username"].ToString(),
+                    RoleId = (int)reader["RoleId"],
+                    ClinicId = (int?)reader["ClinicId"],
+                    FirstName = reader["FirstName"].ToString(),
+                    LastName = reader["LastName"].ToString(),
+                    Email = reader["Email"].ToString(),
+                    Phone = reader["Phone"].ToString(),
+                    ClinicName = reader["ClinicName"] != DBNull.Value ? reader["ClinicName"].ToString() : null,
+                    RoleName = reader["RoleName"] != DBNull.Value ? reader["RoleName"].ToString() : null
+                });
+            }
+
+            return list;
+        }
+
+        public List<Role> GetRoles(SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Role>();
 
-            using (SqlConnection conn = _db.GetConnection())
+            SqlCommand cmd = new SqlCommand(@"SELECT * FROM Roles", conn);
+            if (tran != null)
             {
-                SqlCommand cmd = new SqlCommand(@"SELECT * FROM Roles", conn);
-
-                conn.Open();
-                var reader = cmd.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    list.Add(new Role
-                    {
-                        RoleId = (int)reader["RoleId"],
-                        RoleName = reader["RoleName"].ToString()
-                    });
-                }
+                cmd.Transaction = tran;
             }
+
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                list.Add(new Role
+                {
+                    RoleId = (int)reader["RoleId"],
+                    RoleName = reader["RoleName"].ToString()
+                });
+            }
+
             return list;
         }
     }

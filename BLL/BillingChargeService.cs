@@ -1,5 +1,6 @@
 using DAL;
 using Models;
+using Microsoft.Data.SqlClient;
 
 namespace BLL
 {
@@ -16,7 +17,36 @@ namespace BLL
 
         public override List<BillingCharge> List()
         {
-            return _billingChargeDAL.GetAllByClinic(ClinicId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                var charges = _billingChargeDAL.GetAllByClinic(ClinicId, conn);
+                return charges;
+            }
+            catch
+            {
+                throw;
+            }
+
+        }
+
+        public List<BillingCharge> Search(string term)
+        {
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                var charges = _billingChargeDAL.Search(ClinicId, term, conn);
+                return charges;
+            }
+            catch
+            {
+                throw;
+            }
+            
         }
 
     }

@@ -16,7 +16,18 @@ namespace BLL
 
         public List<Feature> GetFeatures(int roleId)
         {
-            return _featureDAL.GetFeaturesByRole(roleId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _featureDAL.GetFeaturesByRole(roleId, conn);
+            }
+            catch
+            {
+                throw;
+            }
+
         }
     }
 }

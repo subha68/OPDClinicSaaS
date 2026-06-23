@@ -87,7 +87,7 @@ namespace DAL
         public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
         {
             int rowsAffected_doctor = 0;
-            int userId = Get(id).UserId;
+            int userId = Get(id, conn, tran).UserId;
 
             string query = @"DELETE FROM Doctors WHERE DoctorId = @DoctorId";
 
@@ -108,208 +108,209 @@ namespace DAL
             return rowsAffected_doctor > 0 && rowsAffected_user > 0;
         }
 
-        public List<Doctor> GetAll()
+        public List<Doctor> GetAll(SqlConnection conn, SqlTransaction? tran = null)
         {
             List<Doctor> list = new List<Doctor>();
 
-            using (SqlConnection con = _db.GetConnection())
+            string query = @"SELECT d.*, u.*, dept.Name AS DepartmentName, c.Name AS ClinicName
+                            FROM Doctors d
+                            INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
+                            INNER JOIN Clinics c ON d.ClinicId = c.ClinicId
+                            INNER JOIN Users u ON d.UserId = u.UserId";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = @"SELECT d.*, u.*, dept.Name AS DepartmentName, c.Name AS ClinicName
-                                FROM Doctors d
-                                INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
-                                INNER JOIN Clinics c ON d.ClinicId = c.ClinicId
-                                INNER JOIN Users u ON d.UserId = u.UserId";
+                cmd.Transaction = tran;
+            }
 
-                SqlCommand cmd = new SqlCommand(query, con);
+            using SqlDataReader dr = cmd.ExecuteReader();
 
-                con.Open();
-                SqlDataReader dr = cmd.ExecuteReader();
-
-                while (dr.Read())
+            while (dr.Read())
+            {
+                list.Add(new Doctor
                 {
-                    list.Add(new Doctor
-                    {
-                        DoctorId = Convert.ToInt32(dr["DoctorId"]),
-                        ClinicId = Convert.ToInt32(dr["ClinicId"]),
-                        UserId = Convert.ToInt32(dr["UserId"]),
-                        DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
-                        FirstName = dr["FirstName"].ToString(),
-                        LastName = dr["LastName"].ToString(),
-                        RegistrationNo = dr["RegistrationNo"].ToString(),
-                        Qualification = dr["Qualification"].ToString(),
-                        DepartmentName = dr["DepartmentName"].ToString(),
-                        ClinicName = dr["ClinicName"].ToString(),
-                        Username = dr["Username"].ToString(),
-                        Password = dr["PasswordHash"].ToString(),
-                        Email = dr["Email"].ToString(),
-                        Phone = dr["Phone"].ToString()
-                    });
-                }
+                    DoctorId = Convert.ToInt32(dr["DoctorId"]),
+                    ClinicId = Convert.ToInt32(dr["ClinicId"]),
+                    UserId = Convert.ToInt32(dr["UserId"]),
+                    DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
+                    FirstName = dr["FirstName"].ToString(),
+                    LastName = dr["LastName"].ToString(),
+                    RegistrationNo = dr["RegistrationNo"].ToString(),
+                    Qualification = dr["Qualification"].ToString(),
+                    DepartmentName = dr["DepartmentName"].ToString(),
+                    ClinicName = dr["ClinicName"].ToString(),
+                    Username = dr["Username"].ToString(),
+                    Password = dr["PasswordHash"].ToString(),
+                    Email = dr["Email"].ToString(),
+                    Phone = dr["Phone"].ToString()
+                });
             }
 
             return list;
         }
 
-        public Doctor Get(int doctorId)
+        public Doctor Get(int doctorId, SqlConnection conn, SqlTransaction? tran = null)
         {
-            using (SqlConnection con = _db.GetConnection())
+            string query = @"SELECT d.*, u.*, dept.Name AS DepartmentName, c.Name AS ClinicName
+                            FROM Doctors d
+                            INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
+                            INNER JOIN Clinics c ON d.ClinicId = c.ClinicId
+                            INNER JOIN Users u ON d.UserId = u.UserId
+                            WHERE d.DoctorId = @DoctorId";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = @"SELECT d.*, u.*, dept.Name AS DepartmentName, c.Name AS ClinicName
-                                FROM Doctors d
-                                INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
-                                INNER JOIN Clinics c ON d.ClinicId = c.ClinicId
-                                INNER JOIN Users u ON d.UserId = u.UserId
-                                WHERE d.DoctorId = @DoctorId";
+                cmd.Transaction = tran;
+            }
 
-                SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@DoctorId", doctorId);
+            cmd.Parameters.AddWithValue("@DoctorId", doctorId);
 
-                con.Open();
-                SqlDataReader dr = cmd.ExecuteReader();
+            using SqlDataReader dr = cmd.ExecuteReader();
 
-                if (dr.Read())
+            if (dr.Read())
+            {
+                return new Doctor
                 {
-                    return new Doctor
-                    {
-                        DoctorId = Convert.ToInt32(dr["DoctorId"]),
-                        ClinicId = Convert.ToInt32(dr["ClinicId"]),
-                        UserId = Convert.ToInt32(dr["UserId"]),
-                        DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
-                        FirstName = dr["FirstName"].ToString(),
-                        LastName = dr["LastName"].ToString(),
-                        RegistrationNo = dr["RegistrationNo"].ToString(),
-                        Qualification = dr["Qualification"].ToString(),
-                        DepartmentName = dr["DepartmentName"].ToString(),
-                        ClinicName = dr["ClinicName"].ToString(),
-                        Username = dr["Username"].ToString(),
-                        Password = dr["PasswordHash"].ToString(),
-                        Email = dr["Email"].ToString(),
-                        Phone = dr["Phone"].ToString()
-                    };
-                }
+                    DoctorId = Convert.ToInt32(dr["DoctorId"]),
+                    ClinicId = Convert.ToInt32(dr["ClinicId"]),
+                    UserId = Convert.ToInt32(dr["UserId"]),
+                    DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
+                    FirstName = dr["FirstName"].ToString(),
+                    LastName = dr["LastName"].ToString(),
+                    RegistrationNo = dr["RegistrationNo"].ToString(),
+                    Qualification = dr["Qualification"].ToString(),
+                    DepartmentName = dr["DepartmentName"].ToString(),
+                    ClinicName = dr["ClinicName"].ToString(),
+                    Username = dr["Username"].ToString(),
+                    Password = dr["PasswordHash"].ToString(),
+                    Email = dr["Email"].ToString(),
+                    Phone = dr["Phone"].ToString()
+                };
             }
 
             return null; // Not found
         }
 
-        public List<Doctor> GetDoctorsByClinic(int clinicId)
+        public List<Doctor> GetDoctorsByClinic(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             List<Doctor> list = new List<Doctor>();
 
-            using (SqlConnection con = _db.GetConnection())
+            string query = @"SELECT d.*, u.*, dept.Name AS DepartmentName, c.Name AS ClinicName
+                            FROM Doctors d
+                            INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
+                            INNER JOIN Clinics c ON d.ClinicId = c.ClinicId
+                            INNER JOIN Users u ON d.UserId = u.UserId
+                            WHERE d.ClinicId = @ClinicId";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = @"SELECT d.*, u.*, dept.Name AS DepartmentName, c.Name AS ClinicName
-                                FROM Doctors d
-                                INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
-                                INNER JOIN Clinics c ON d.ClinicId = c.ClinicId
-                                INNER JOIN Users u ON d.UserId = u.UserId
-                                WHERE d.ClinicId = @ClinicId";
+                cmd.Transaction = tran;
+            }
 
-                SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
 
-                con.Open();
-                SqlDataReader dr = cmd.ExecuteReader();
+            using SqlDataReader dr = cmd.ExecuteReader();
 
-                while (dr.Read())
+            while (dr.Read())
+            {
+                list.Add(new Doctor
                 {
-                    list.Add(new Doctor
-                    {
-                        DoctorId = Convert.ToInt32(dr["DoctorId"]),
-                        ClinicId = Convert.ToInt32(dr["ClinicId"]),
-                        UserId = Convert.ToInt32(dr["UserId"]),
-                        FirstName = dr["FirstName"].ToString(),
-                        LastName = dr["LastName"].ToString(),
-                        DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
-                        DepartmentName = dr["DepartmentName"].ToString(),
-                        ClinicName = dr["ClinicName"].ToString(),
-                        Username = dr["Username"].ToString(),
-                        Password = dr["PasswordHash"].ToString(),
-                        Email = dr["Email"].ToString(),
-                        Phone = dr["Phone"].ToString()
-                    });
-                }
+                    DoctorId = Convert.ToInt32(dr["DoctorId"]),
+                    ClinicId = Convert.ToInt32(dr["ClinicId"]),
+                    UserId = Convert.ToInt32(dr["UserId"]),
+                    FirstName = dr["FirstName"].ToString(),
+                    LastName = dr["LastName"].ToString(),
+                    DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
+                    DepartmentName = dr["DepartmentName"].ToString(),
+                    ClinicName = dr["ClinicName"].ToString(),
+                    Username = dr["Username"].ToString(),
+                    Password = dr["PasswordHash"].ToString(),
+                    Email = dr["Email"].ToString(),
+                    Phone = dr["Phone"].ToString()
+                });
             }
 
             return list;
         }
 
-        public List<Doctor> GetDoctorsByDepartment(int clinicId, int departmentId)
+        public List<Doctor> GetDoctorsByDepartment(int clinicId, int departmentId, SqlConnection conn, SqlTransaction? tran = null)
         {
             List<Doctor> list = new List<Doctor>();
 
-            using (SqlConnection con = _db.GetConnection())
+            string query = @"SELECT d.*, u.*, dept.Name AS DepartmentName, c.Name AS ClinicName
+                            FROM Doctors d
+                            INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
+                            INNER JOIN Clinics c ON d.ClinicId = c.ClinicId
+                            INNER JOIN Users u ON d.UserId = u.UserId
+                            WHERE d.ClinicId = @ClinicId AND d.DepartmentId = @DepartmentId";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = @"SELECT d.*, u.*, dept.Name AS DepartmentName, c.Name AS ClinicName
-                                FROM Doctors d
-                                INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
-                                INNER JOIN Clinics c ON d.ClinicId = c.ClinicId
-                                INNER JOIN Users u ON d.UserId = u.UserId
-                                WHERE d.ClinicId = @ClinicId AND d.DepartmentId = @DepartmentId";
+                cmd.Transaction = tran;
+            }
 
-                SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@ClinicId", clinicId);
-                cmd.Parameters.AddWithValue("@DepartmentId", departmentId);
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+            cmd.Parameters.AddWithValue("@DepartmentId", departmentId);
 
-                con.Open();
-                SqlDataReader dr = cmd.ExecuteReader();
+            using SqlDataReader dr = cmd.ExecuteReader();
 
-                while (dr.Read())
+            while (dr.Read())
+            {
+                list.Add(new Doctor
                 {
-                    list.Add(new Doctor
-                    {
-                        DoctorId = Convert.ToInt32(dr["DoctorId"]),
-                        ClinicId = Convert.ToInt32(dr["ClinicId"]),
-                        FirstName = dr["FirstName"].ToString(),
-                        LastName = dr["LastName"].ToString(),
-                        DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
-                        DepartmentName = dr["DepartmentName"].ToString(),
-                        ClinicName = dr["ClinicName"].ToString(),
-                        Username = dr["Username"].ToString(),
-                        Password = dr["PasswordHash"].ToString(),
-                        Email = dr["Email"].ToString(),
-                        Phone = dr["Phone"].ToString()
-                    });
-                }
+                    DoctorId = Convert.ToInt32(dr["DoctorId"]),
+                    ClinicId = Convert.ToInt32(dr["ClinicId"]),
+                    FirstName = dr["FirstName"].ToString(),
+                    LastName = dr["LastName"].ToString(),
+                    DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
+                    DepartmentName = dr["DepartmentName"].ToString(),
+                    ClinicName = dr["ClinicName"].ToString(),
+                    Username = dr["Username"].ToString(),
+                    Password = dr["PasswordHash"].ToString(),
+                    Email = dr["Email"].ToString(),
+                    Phone = dr["Phone"].ToString()
+                });
             }
 
             return list;
         }
 
-        public int GetDoctorIdByUserId(int userId)
+        public int GetDoctorIdByUserId(int userId, SqlConnection conn, SqlTransaction? tran = null)
         {
-            using (SqlConnection con = _db.GetConnection())
+            string query = "SELECT DoctorId FROM Doctors WHERE UserId=@UserId";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = "SELECT DoctorId FROM Doctors WHERE UserId=@UserId";
-
-                SqlCommand cmd = new SqlCommand(query, con);
-
-                cmd.Parameters.AddWithValue("@UserId", userId);
-
-                con.Open();
-
-                object result = cmd.ExecuteScalar();
-
-                return result != null ? Convert.ToInt32(result) : 0;
+                cmd.Transaction = tran;
             }
+
+            cmd.Parameters.AddWithValue("@UserId", userId);
+
+            object result = cmd.ExecuteScalar();
+
+            return result != null ? Convert.ToInt32(result) : 0;
         }
 
-        public int GetUserId(int doctorId)
+        public int GetUserId(int doctorId, SqlConnection conn, SqlTransaction? tran = null)
         {
-            using (SqlConnection con = _db.GetConnection())
+            string query = "SELECT UserId FROM Doctors WHERE DoctorId=@DoctorId";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = "SELECT UserId FROM Doctors WHERE DoctorId=@DoctorId";
-
-                SqlCommand cmd = new SqlCommand(query, con);
-
-                cmd.Parameters.AddWithValue("@DoctorId", doctorId);
-
-                con.Open();
-
-                object result = cmd.ExecuteScalar();
-
-                return result != null ? Convert.ToInt32(result) : 0;
+                cmd.Transaction = tran;
             }
+
+            cmd.Parameters.AddWithValue("@DoctorId", doctorId);
+
+            object result = cmd.ExecuteScalar();
+
+            return result != null ? Convert.ToInt32(result) : 0;
         }
 
     }

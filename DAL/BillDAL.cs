@@ -88,149 +88,160 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public Bill Get(int id)
+        public Bill Get(int id, SqlConnection conn, SqlTransaction? tran = null)
         {
-            using (SqlConnection conn = _db.GetConnection())
+            string query = @"SELECT b.*,
+                                    v.PatientId,
+                                    v.VisitDate 
+                            FROM Bills b 
+                            JOIN Visits v ON b.VisitId = v.VisitId
+                            WHERE b.BillId = @id";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = @"SELECT b.*,
-                                        v.PatientId,
-                                        v.VisitDate 
-                                FROM Bills b 
-                                JOIN Visits v ON b.VisitId = v.VisitId
-                                WHERE b.BillId = @id";
+                cmd.Transaction = tran;
+            }
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@id", id);
 
-                conn.Open();
-                var reader = cmd.ExecuteReader();
+            using var reader = cmd.ExecuteReader();
 
-                var bill = new Bill();
+            var bill = new Bill();
 
-                if (reader.Read())
+            if (reader.Read())
+            {
+                return new Bill
                 {
-                    return new Bill
-                    {
-                        BillId = (int)reader["BillId"],
-                        PatientId = (int)reader["PatientId"],
-                        VisitId = (int)reader["VisitId"],
-                        VisitDate = (DateTime)reader["VisitDate"],
-                        BillDate = (DateTime)reader["BillDate"],
-                        GrossAmount = (decimal)reader["GrossAmount"],
-                        DiscountAmount = (decimal)reader["DiscountAmount"],
-                        TotalPaidAmount = (decimal)reader["PaidAmount"]
-                    };
-                }
+                    BillId = (int)reader["BillId"],
+                    PatientId = (int)reader["PatientId"],
+                    VisitId = (int)reader["VisitId"],
+                    VisitDate = (DateTime)reader["VisitDate"],
+                    BillDate = (DateTime)reader["BillDate"],
+                    GrossAmount = (decimal)reader["GrossAmount"],
+                    DiscountAmount = (decimal)reader["DiscountAmount"],
+                    TotalPaidAmount = (decimal)reader["PaidAmount"]
+                };
             }
 
             return null;
         }
 
-        public List<Bill> GetAll()
+        public List<Bill> GetAll(SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Bill>();
 
-            using (SqlConnection conn = _db.GetConnection())
+            string query = @"SELECT b.*, v.VisitDate 
+                                FROM Bills b 
+                                JOIN Visits v 
+                                    ON b.VisitId = v.VisitId";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = @"SELECT b.*, v.VisitDate 
-                                    FROM Bills b 
-                                    JOIN Visits v 
-                                        ON b.VisitId = v.VisitId";
-
-                SqlCommand cmd = new SqlCommand(query, conn);
-
-                conn.Open();
-                var reader = cmd.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    list.Add(new Bill
-                    {
-                        BillId = (int)reader["BillId"],
-                        VisitId = (int)reader["VisitId"],
-                        VisitDate = (DateTime)reader["VisitDate"],
-                        BillDate = (DateTime)reader["BillDate"],
-                        GrossAmount = (decimal)reader["GrossAmount"],
-                        DiscountAmount = (decimal)reader["DiscountAmount"],
-                        TotalPaidAmount = (decimal)reader["PaidAmount"]
-                    });
-                }
+                cmd.Transaction = tran;
             }
+
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                list.Add(new Bill
+                {
+                    BillId = (int)reader["BillId"],
+                    VisitId = (int)reader["VisitId"],
+                    VisitDate = (DateTime)reader["VisitDate"],
+                    BillDate = (DateTime)reader["BillDate"],
+                    GrossAmount = (decimal)reader["GrossAmount"],
+                    DiscountAmount = (decimal)reader["DiscountAmount"],
+                    TotalPaidAmount = (decimal)reader["PaidAmount"]
+                });
+            }
+
             return list;
 
         }
 
-        public List<Bill> GetAllByClinic(int clinicId)
+        public List<Bill> GetAllByClinic(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Bill>();
 
-            using (SqlConnection conn = _db.GetConnection())
+            string query = @"SELECT b.*, v.VisitDate, p.PatientId, p.FirstName + ' ' + p.LastName as PatientName
+                                FROM Bills b 
+                                JOIN Visits v 
+                                    ON b.VisitId = v.VisitId
+                                JOIN Patients p
+                                    ON v.PatientId = p.PatientId 
+                                WHERE v.ClinicId = @clinicId
+                                ORDER BY b.BillDate DESC";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = @"SELECT b.*, v.VisitDate 
-                                    FROM Bills b 
-                                    JOIN Visits v 
-                                        ON b.VisitId = v.VisitId 
-                                    WHERE v.ClinicId = @clinicId";
-
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@clinicId", clinicId);
-
-                conn.Open();
-                var reader = cmd.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    list.Add(new Bill
-                    {
-                        BillId = (int)reader["BillId"],
-                        VisitId = (int)reader["VisitId"],
-                        VisitDate = (DateTime)reader["VisitDate"],
-                        BillDate = (DateTime)reader["BillDate"],
-                        GrossAmount = (decimal)reader["GrossAmount"],
-                        DiscountAmount = (decimal)reader["DiscountAmount"],
-                        TotalPaidAmount = (decimal)reader["PaidAmount"]
-                    });
-                }
+                cmd.Transaction = tran;
             }
+
+            cmd.Parameters.AddWithValue("@clinicId", clinicId);
+
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                list.Add(new Bill
+                {
+                    BillId = (int)reader["BillId"],
+                    VisitId = (int)reader["VisitId"],
+                    VisitDate = (DateTime)reader["VisitDate"],
+                    PatientId = (int)reader["PatientId"],
+                    PatientName = reader["PatientName"].ToString(),
+                    BillDate = (DateTime)reader["BillDate"],
+                    GrossAmount = (decimal)reader["GrossAmount"],
+                    DiscountAmount = (decimal)reader["DiscountAmount"],
+                    TotalPaidAmount = (decimal)reader["PaidAmount"]
+                });
+            }
+
             return list;
 
         }
 
-        public List<Bill> ListByPatient(int clinicId, int patientId)
+        public List<Bill> ListByPatient(int clinicId, int patientId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Bill>();
 
-            using (SqlConnection conn = _db.GetConnection())
+            string query = @"SELECT b.*, p.PatientId, p.FirstName + ' ' + p.LastName as PatientName, v.VisitDate
+                                FROM Bills b
+                                JOIN Visits v ON b.VisitId = v.VisitId
+                                JOIN Patients p ON v.PatientId = p.PatientId
+                                WHERE p.PatientId = @patientId
+                                AND v.ClinicId = @clinicId
+                                ORDER BY b.BillDate DESC";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = @"SELECT b.*, p.PatientId, v.VisitDate
-                                 FROM Bills b
-                                 JOIN Visits v ON b.VisitId = v.VisitId
-                                 JOIN Patients p ON v.PatientId = p.PatientId
-                                 WHERE p.PatientId = @patientId
-                                 AND v.ClinicId = @clinicId
-                                 ORDER BY b.BillDate DESC";
+                cmd.Transaction = tran;
+            }
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@patientId", patientId);
-                cmd.Parameters.AddWithValue("@clinicId", clinicId);
+            cmd.Parameters.AddWithValue("@patientId", patientId);
+            cmd.Parameters.AddWithValue("@clinicId", clinicId);
 
-                conn.Open();
-                var reader = cmd.ExecuteReader();
+            using var reader = cmd.ExecuteReader();
 
-                while (reader.Read())
+            while (reader.Read())
+            {
+                list.Add(new Bill
                 {
-                    list.Add(new Bill
-                    {
-                        BillId = (int)reader["BillId"],
-                        PatientId = (int)reader["PatientId"],
-                        VisitId = (int)reader["VisitId"],
-                        VisitDate = (DateTime)reader["VisitDate"],
-                        BillDate = (DateTime)reader["BillDate"],
-                        GrossAmount = (decimal)reader["GrossAmount"],
-                        DiscountAmount = (decimal)reader["DiscountAmount"],
-                        TotalPaidAmount = (decimal)reader["PaidAmount"]
-                    });
-                }
+                    BillId = (int)reader["BillId"],
+                    PatientId = (int)reader["PatientId"],
+                    VisitId = (int)reader["VisitId"],
+                    VisitDate = (DateTime)reader["VisitDate"],
+                    BillDate = (DateTime)reader["BillDate"],
+                    PatientName = reader["PatientName"].ToString(),
+                    GrossAmount = (decimal)reader["GrossAmount"],
+                    DiscountAmount = (decimal)reader["DiscountAmount"],
+                    TotalPaidAmount = (decimal)reader["PaidAmount"]
+                });
             }
 
             return list;

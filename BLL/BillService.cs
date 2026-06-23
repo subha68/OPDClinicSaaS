@@ -15,6 +15,7 @@ namespace BLL
         private readonly PaymentDAL _paymentDAL;
         private readonly VisitDAL _visitDAL;
         private readonly ClinicDAL _clinicDAL;
+        private readonly AccountingService _accounting;
 
         public BillService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
                                 : base(config, httpContextAccessor)
@@ -26,6 +27,7 @@ namespace BLL
             _paymentDAL = new PaymentDAL(config);
             _visitDAL = new VisitDAL(config);
             _clinicDAL = new ClinicDAL(config);
+            _accounting = new AccountingService(config, httpContextAccessor);
             _dal = _billDAL;
         }
 
@@ -37,25 +39,38 @@ namespace BLL
 
             try
             {
-                bill.Visit = _visitDAL.Get(bill.VisitId);
+                bill.Visit = _visitDAL.Get(bill.VisitId, conn, tran);
                 bill.PatientId = bill.Visit.PatientId;
-                bill.Patient = _patientDAL.Get(bill.PatientId);
+                bill.Patient = _patientDAL.Get(bill.PatientId, conn, tran);
                 bill.ClinicId = ClinicId;
-                bill.Clinic = _clinicDAL.Get(bill.ClinicId);
+                bill.Clinic = _clinicDAL.Get(bill.ClinicId, conn, tran);
 
                 bill.GrossAmount = bill.BillLines.Sum(x => x.GrossAmount);
                 bill.DiscountAmount = bill.BillLines.Sum(x => x.DiscountAmount);
 
                 int billId = Add(bill, conn, tran);
+                bill.BillId = billId;
 
                 foreach (var line in bill.BillLines)
                 {
                     line.BillId = billId;
-                    line.BillingCharge = _billingChargeDAL.Get(line.ChargeId);
-                    line.ChargeCode = line.BillingCharge.ChargeCode;
-                    line.ChargeDescription = line.BillingCharge.Description;
+                    line.PatientId = bill.PatientId;
+
+                    if (bill.BillType == "Service")
+                    {
+                        int chargeId = line.ReferenceId;
+                        var charge = _billingChargeDAL.Get(chargeId, conn, tran);
+                        line.ReferenceCode = charge.ChargeCode;
+                        line.Description = charge.Description;
+                        line.Rate = charge.Rate;
+                        line.ServiceType = charge.ServiceType;
+                    }
+
                     _billLineDAL.Add(line, conn, tran);
                 }
+
+                Journal journal = _accounting.BuildJournal(bill, conn, tran);
+                _accounting.PostJournal(journal, conn, tran);
 
                 tran.Commit();
                 return billId;
@@ -69,39 +84,73 @@ namespace BLL
 
         public override Bill Get(int id)
         {
-            var bill = base.Get(id);
-            if (bill != null)
-            {
-                bill.Clinic = _clinicDAL.Get(ClinicId);
-                bill.ClinicId = ClinicId;
-                bill.Patient = _patientDAL.Get(bill.PatientId);
-                bill.PatientId = bill.Patient.PatientId;
-                bill.Visit = _visitDAL.Get(bill.VisitId);
-                bill.VisitId = bill.Visit.VisitId;
-                bill.VisitDate = bill.Visit?.VisitDate;
-                bill.BillLines = _billLineDAL.GetByBillId(id);
+            using var conn = _db.GetConnection();
+            conn.Open();
 
-                foreach (var line in bill.BillLines)
+            try
+            {
+                var bill = base.Get(id);
+                if (bill != null)
                 {
-                    line.BillingCharge = _billingChargeDAL.Get(line.ChargeId);
-                    line.ChargeCode = line.BillingCharge.ChargeCode;
-                    line.ChargeDescription = line.BillingCharge.Description;
+                    bill.Clinic = _clinicDAL.Get(ClinicId, conn);
+                    bill.ClinicId = ClinicId;
+                    bill.Patient = _patientDAL.Get(bill.PatientId, conn);
+                    bill.PatientId = bill.Patient.PatientId;
+                    bill.Visit = _visitDAL.Get(bill.VisitId, conn);
+                    bill.VisitId = bill.Visit.VisitId;
+                    bill.VisitDate = bill.Visit?.VisitDate;
+                    bill.BillLines = _billLineDAL.GetByBillId(id, conn);
+
+                    /*foreach (var line in bill.BillLines)
+                    {
+                        line.BillingCharge = _billingChargeDAL.Get(line.ChargeId);
+                        line.ChargeCode = line.BillingCharge.ChargeCode;
+                        line.ChargeDescription = line.BillingCharge.Description;
+                    }*/
+
+                    bill.Payments = _paymentDAL.GetPaymentsByBill(id, conn);
+                    bill.TotalPaidAmount = _paymentDAL.GetTotalPaid(id, conn);
                 }
 
-                bill.Payments = _paymentDAL.GetPaymentsByBill(id);
-                bill.TotalPaidAmount = _paymentDAL.GetTotalPaid(id);
+                return bill;
             }
-            return bill;
+            catch
+            {
+                throw;
+            }
+            
         }
 
         public override List<Bill> List()
         {
-            return _billDAL.GetAllByClinic(ClinicId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _billDAL.GetAllByClinic(ClinicId, conn);
+            }
+            catch
+            {
+                throw;
+            }
+
         }
 
         public List<Bill> ListByPatient(int patientId)
         {
-            return _billDAL.ListByPatient(ClinicId, patientId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _billDAL.ListByPatient(ClinicId, patientId, conn);
+            }
+            catch
+            {
+                throw;
+            }
+
         }
 
     }

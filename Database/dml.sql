@@ -91,6 +91,113 @@ VALUES
 ('Billing Charges', 'BillingCharge', 'Index', 'fa fa-money-bill', 'BILLING_CHARGES', 11),
 ('Medicines', 'Medicine', 'Index', 'fa fa-pills', 'MEDICINE_MANAGEMENT', 12);
 
+-- Change ClinicId before running below script
+SET IDENTITY_INSERT AccountGroups ON;
+
+INSERT INTO AccountGroups (AccountGroupId, ClinicId, GroupName, ParentGroupId, Nature)
+VALUES
+(1, 1, 'Assets', NULL, 'Asset'),
+(2, 1, 'Current Assets', 1, 'Asset'),
+(3, 1, 'Fixed Assets', 1, 'Asset'),
+
+(4, 1, 'Liabilities', NULL, 'Liability'),
+(5, 1, 'Current Liabilities', 4, 'Liability'),
+
+(6, 1, 'Equity', NULL, 'Equity'),
+
+(7, 1, 'Income', NULL, 'Income'),
+(8, 1, 'Operating Income', 7, 'Income'),
+(9, 1, 'Other Income', 7, 'Income'),
+
+(10, 1, 'Expenses', NULL, 'Expense'),
+(11, 1, 'Operating Expenses', 10, 'Expense'),
+(12, 1, 'Administrative Expenses', 10, 'Expense'),
+
+(13, 1, 'Contra Revenue', NULL, 'Contra Revenue');
+
+SET IDENTITY_INSERT AccountGroups OFF;
+
+SET IDENTITY_INSERT LedgerAccounts ON;
+
+INSERT INTO LedgerAccounts (LedgerAccountId, ClinicId, AccountGroupId, AccountCode, AccountName, IsActive)
+VALUES
+
+-- CURRENT ASSETS
+
+(201, 1, 2, 'CA001', 'Cash In Hand', 1),
+(202, 1, 2, 'CA002', 'Bank Account', 1),
+(203, 1, 2, 'CA003', 'UPI Clearing Account', 1),
+(204, 1, 2, 'CA004', 'Patient Receivable', 1),
+(205, 1, 2, 'CA005', 'Insurance Receivable', 1),
+(206, 1, 2, 'CA006', 'Pharmacy Inventory', 1),
+(207, 1, 2, 'CA007', 'Medical Consumable Inventory', 1),
+(208, 1, 2, 'CA008', 'Advance To Suppliers', 1),
+
+-- FIXED ASSETS
+
+(301, 1, 3, 'FA001', 'Medical Equipment', 1),
+(302, 1, 3, 'FA002', 'Furniture And Fixtures', 1),
+(303, 1, 3, 'FA003', 'Computers And IT Equipment', 1),
+
+-- CURRENT LIABILITIES
+
+(501, 1, 5, 'CL001', 'Supplier Payable', 1),
+(502, 1, 5, 'CL002', 'GST Payable', 1),
+(503, 1, 5, 'CL003', 'Salary Payable', 1),
+(504, 1, 5, 'CL004', 'Professional Fees Payable', 1),
+(505, 1, 5, 'CL005', 'Output GST Payable', 1),
+
+-- EQUITY
+
+(601, 1, 6, 'EQ001', 'Capital Account', 1),
+(602, 1, 6, 'EQ002', 'Retained Earnings', 1),
+
+-- OPERATING INCOME
+
+(801, 1, 8, 'INC001', 'Consultation Revenue', 1),
+(802, 1, 8, 'INC002', 'Lab Revenue', 1),
+(803, 1, 8, 'INC003', 'Procedure Revenue', 1),
+(804, 1, 8, 'INC004', 'Pharmacy Revenue', 1),
+(805, 1, 8, 'INC005', 'Registration Revenue', 1),
+(806, 1, 8, 'INC006', 'Vaccination Revenue', 1),
+(807, 1, 8, 'INC007', 'Radiology Revenue', 1),
+
+-- OTHER INCOME
+
+(901, 1, 9, 'OIN001', 'Interest Income', 1),
+(902, 1, 9, 'OIN002', 'Miscellaneous Income', 1),
+
+-- OPERATING EXPENSES
+
+(1101, 1, 11, 'EXP001', 'Medicine Consumption', 1),
+(1102, 1, 11, 'EXP002', 'Medical Consumables Expense', 1),
+(1103, 1, 11, 'EXP003', 'Laboratory Expense', 1),
+(1104, 1, 11, 'EXP004', 'Doctor Consultation Expense', 1),
+(1105, 1, 11, 'EXP005', 'Nursing Expense', 1),
+
+-- COST OF GOODS SOLD
+(1150, 1, 11, 'COGS001', 'Cost Of Goods Sold', 1),
+
+-- ADMINISTRATIVE EXPENSES
+
+(1201, 1, 12, 'AEXP001', 'Salary Expense', 1),
+(1202, 1, 12, 'AEXP002', 'Rent Expense', 1),
+(1203, 1, 12, 'AEXP003', 'Electricity Expense', 1),
+(1204, 1, 12, 'AEXP004', 'Internet Expense', 1),
+(1205, 1, 12, 'AEXP005', 'Telephone Expense', 1),
+(1206, 1, 12, 'AEXP006', 'Software Subscription Expense', 1),
+(1207, 1, 12, 'AEXP007', 'Repairs And Maintenance', 1),
+(1208, 1, 12, 'AEXP008', 'Printing And Stationery', 1),
+(1209, 1, 12, 'AEXP009', 'Marketing Expense', 1),
+(1210, 1, 12, 'AEXP010', 'Miscellaneous Expense', 1),
+
+-- CONTRA REVENUE
+
+(1301, 1, 13, 'CNRP001', 'Discount Allowed', 1);
+
+
+SET IDENTITY_INSERT LedgerAccounts OFF;
+
 INSERT INTO Medicines
 (
     MedicineCode,

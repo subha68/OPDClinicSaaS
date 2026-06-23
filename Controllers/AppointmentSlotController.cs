@@ -15,11 +15,11 @@ namespace Controllers
             _slot = slot;
         }
 
-        public IActionResult Index(int doctorId)
+/*        public IActionResult Index(int doctorId)
         {
             var slots = _slot.GetAvailableSlots(doctorId);
 
             return View(slots);
-        }
+        } */
     }
 }

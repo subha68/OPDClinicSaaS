@@ -45,12 +45,44 @@ namespace BLL
 
         public virtual T Get(int id)
         {
-            return _dal.Get(id);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _dal.Get(id, conn);
+            }
+            catch
+            {
+                throw;
+            }
+            
         }
 
         public virtual List<T> List()
         {
-            return _dal.GetAll();
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _dal.GetAll(conn);
+            }
+            catch
+            {
+                throw;
+            }
+            
+        }
+
+        public virtual T Get(int id, SqlConnection conn)
+        {
+            return _dal.Get(id, conn);
+        }
+
+        public virtual List<T> List(SqlConnection conn)
+        {
+            return _dal.GetAll(conn);
         }
 
         public virtual int Create(T model)

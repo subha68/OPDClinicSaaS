@@ -223,6 +223,22 @@ namespace Controllers
                     return RedirectToAction("Index", "Patient");
             }
         }
+
+        [HttpGet]
+        public JsonResult SearchPatient(string term)
+        {
+            var patients = _patient.Search(term)
+                                        .Take(10)
+                                        .Select(x => new
+                                        {
+                                            id = x.PatientId,
+                                            text = "ID: " + x.PatientId + " - " + x.FirstName + " " + x.LastName + 
+                                                            " (" + x.Phone + ")"
+                                        })
+                                        .ToList();
+
+            return Json(patients);
+        }
     }
 
 }

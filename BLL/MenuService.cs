@@ -16,7 +16,17 @@ namespace BLL
 
         public List<MenuItem> GetMenu(string featureCsv)
         {
-            return _menuDAL.GetMenuItems(featureCsv);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _menuDAL.GetMenuItems(featureCsv, conn);
+            }
+            catch
+            {
+                throw;
+            }
         }
     }
 }

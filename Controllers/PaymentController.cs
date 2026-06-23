@@ -27,15 +27,7 @@ namespace Controllers
 
             bill.TotalPaidAmount = _payment.GetTotalPaid(id);
 
-            PaymentCreateVM vm = new PaymentCreateVM
-            {
-                Bill = bill,
-                Payment = new Payment
-                {
-                    BillId = id,
-                    Amount = bill.BalanceAmount ?? 0
-                }
-            };
+            PaymentCreateVM vm = new PaymentCreateVM(bill);
 
             return View("Payment", vm);
         }

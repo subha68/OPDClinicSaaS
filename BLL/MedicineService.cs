@@ -37,7 +37,18 @@ namespace BLL
 
         public List<Medicine> Search(string term)
         {
-            return _medicineDAL.GetAll(term);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _medicineDAL.GetAll(term, conn);
+            }
+            catch
+            {
+                throw;
+            }
+
         }
     }
 }

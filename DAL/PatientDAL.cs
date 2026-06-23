@@ -100,91 +100,91 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public List<Patient> GetAll()
+        public List<Patient> GetAll(SqlConnection conn, SqlTransaction? tran = null)
         {
             List<Patient> patients = new List<Patient>();
 
-            using (SqlConnection conn = _db.GetConnection())
+            string query = @"SELECT * FROM Patients";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = @"SELECT * FROM Patients";
+                cmd.Transaction = tran;
+            }
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                conn.Open();
-                SqlDataReader dr = cmd.ExecuteReader();
+            using SqlDataReader dr = cmd.ExecuteReader();
 
-                while (dr.Read())
+            while (dr.Read())
+            {
+                patients.Add(new Patient
                 {
-                    patients.Add(new Patient
-                    {
-                        PatientId = Convert.ToInt32(dr["PatientId"]),
-                        FirstName = dr["FirstName"]?.ToString() ?? "",
-                        LastName = dr["LastName"]?.ToString() ?? "",
-                        Phone = dr["Phone"]?.ToString() ?? "",
-                        DOB = dr["DOB"] == DBNull.Value ? null : Convert.ToDateTime(dr["DOB"]),
-                        Gender = dr["Gender"]?.ToString() ?? "",
-                        Address1 = dr["Address1"]?.ToString() ?? "",
-                        Address2 = dr["Address2"]?.ToString() ?? "",
-                        City = dr["City"]?.ToString() ?? "",
-                        State = dr["State"]?.ToString() ?? "",
-                        PinCode = dr["PinCode"]?.ToString() ?? "",
-                        IdType = dr["IdType"]?.ToString() ?? "",
-                        IdNumber = dr["IdNumber"]?.ToString() ?? "",
-                        EmergencyContactName = dr["EmergencyContactName"]?.ToString() ?? "",
-                        EmergencyRelationship = dr["EmergencyRelationship"]?.ToString() ?? "",
-                        EmergencyPhone = dr["EmergencyPhone"]?.ToString() ?? "",
-                        ClinicId = Convert.ToInt32(dr["ClinicId"])
-                    });
-                }
+                    PatientId = Convert.ToInt32(dr["PatientId"]),
+                    FirstName = dr["FirstName"]?.ToString() ?? "",
+                    LastName = dr["LastName"]?.ToString() ?? "",
+                    Phone = dr["Phone"]?.ToString() ?? "",
+                    DOB = dr["DOB"] == DBNull.Value ? null : Convert.ToDateTime(dr["DOB"]),
+                    Gender = dr["Gender"]?.ToString() ?? "",
+                    Address1 = dr["Address1"]?.ToString() ?? "",
+                    Address2 = dr["Address2"]?.ToString() ?? "",
+                    City = dr["City"]?.ToString() ?? "",
+                    State = dr["State"]?.ToString() ?? "",
+                    PinCode = dr["PinCode"]?.ToString() ?? "",
+                    IdType = dr["IdType"]?.ToString() ?? "",
+                    IdNumber = dr["IdNumber"]?.ToString() ?? "",
+                    EmergencyContactName = dr["EmergencyContactName"]?.ToString() ?? "",
+                    EmergencyRelationship = dr["EmergencyRelationship"]?.ToString() ?? "",
+                    EmergencyPhone = dr["EmergencyPhone"]?.ToString() ?? "",
+                    ClinicId = Convert.ToInt32(dr["ClinicId"])
+                });
             }
 
             return patients;
         }
 
-        public Patient Get(int id)
+        public Patient Get(int id, SqlConnection conn, SqlTransaction? tran = null)
         {
-            using (SqlConnection con = _db.GetConnection())
+            string query = @"SELECT * FROM Patients WHERE PatientId = @id";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = @"SELECT * FROM Patients WHERE PatientId = @id";
+                cmd.Transaction = tran;
+            }
 
-                SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@id", id);
 
-                con.Open();
-                SqlDataReader dr = cmd.ExecuteReader();
+            using SqlDataReader dr = cmd.ExecuteReader();
 
-                if (dr.Read())
+            if (dr.Read())
+            {
+                return new Patient
                 {
-                    return new Patient
-                    {
-                        PatientId = Convert.ToInt32(dr["PatientId"]),
-                        FirstName = dr["FirstName"]?.ToString() ?? "",
-                        LastName = dr["LastName"]?.ToString() ?? "",
-                        Phone = dr["Phone"]?.ToString() ?? "",
-                        DOB = dr["DOB"] == DBNull.Value ? null : Convert.ToDateTime(dr["DOB"]),
-                        Gender = dr["Gender"]?.ToString() ?? "",
-                        Address1 = dr["Address1"]?.ToString() ?? "",
-                        Address2 = dr["Address2"]?.ToString() ?? "",
-                        City = dr["City"]?.ToString() ?? "",
-                        State = dr["State"]?.ToString() ?? "",
-                        PinCode = dr["PinCode"]?.ToString() ?? "",
-                        IdType = dr["IdType"]?.ToString() ?? "",
-                        IdNumber = dr["IdNumber"]?.ToString() ?? "",
-                        EmergencyContactName = dr["EmergencyContactName"]?.ToString() ?? "",
-                        EmergencyRelationship = dr["EmergencyRelationship"]?.ToString() ?? "",
-                        EmergencyPhone = dr["EmergencyPhone"]?.ToString() ?? "",
-                        ClinicId = Convert.ToInt32(dr["ClinicId"])
-                    };
-                }
+                    PatientId = Convert.ToInt32(dr["PatientId"]),
+                    FirstName = dr["FirstName"]?.ToString() ?? "",
+                    LastName = dr["LastName"]?.ToString() ?? "",
+                    Phone = dr["Phone"]?.ToString() ?? "",
+                    DOB = dr["DOB"] == DBNull.Value ? null : Convert.ToDateTime(dr["DOB"]),
+                    Gender = dr["Gender"]?.ToString() ?? "",
+                    Address1 = dr["Address1"]?.ToString() ?? "",
+                    Address2 = dr["Address2"]?.ToString() ?? "",
+                    City = dr["City"]?.ToString() ?? "",
+                    State = dr["State"]?.ToString() ?? "",
+                    PinCode = dr["PinCode"]?.ToString() ?? "",
+                    IdType = dr["IdType"]?.ToString() ?? "",
+                    IdNumber = dr["IdNumber"]?.ToString() ?? "",
+                    EmergencyContactName = dr["EmergencyContactName"]?.ToString() ?? "",
+                    EmergencyRelationship = dr["EmergencyRelationship"]?.ToString() ?? "",
+                    EmergencyPhone = dr["EmergencyPhone"]?.ToString() ?? "",
+                    ClinicId = Convert.ToInt32(dr["ClinicId"])
+                };
             }
 
             return null;
         }
 
-        public List<Patient> Search(PatientSearchVM vm)
+        public List<Patient> Search(PatientSearchVM vm, SqlConnection conn, SqlTransaction? tran = null)
         {
             var patients = new List<Patient>();
-
-            SqlConnection con = _db.GetConnection();
 
             string sql = @"
                 SELECT p.*, v.LastVisitDate
@@ -198,12 +198,14 @@ namespace DAL
                 AND p.ClinicId = @ClinicId
                 ORDER BY p.PatientId DESC";
 
-            using var cmd = new SqlCommand(sql, con);
+            using var cmd = new SqlCommand(sql, conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
 
             cmd.Parameters.AddWithValue("@searchString", vm.SearchString);
             cmd.Parameters.AddWithValue("@ClinicId", vm.ClinicId);
-
-            con.Open();
 
             using var reader = cmd.ExecuteReader();
 
@@ -235,11 +237,9 @@ namespace DAL
             return patients;
         }
 
-        public List<Patient> ListByClinic(int clinicId)
+        public List<Patient> ListByClinic(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var patients = new List<Patient>();
-
-            SqlConnection con = _db.GetConnection();
 
             string sql = @"
                 SELECT p.*, v.LastVisitDate
@@ -249,11 +249,13 @@ namespace DAL
                 WHERE ClinicId = @ClinicId
                 ORDER BY p.PatientId DESC";
 
-            using var cmd = new SqlCommand(sql, con);
+            using var cmd = new SqlCommand(sql, conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
 
             cmd.Parameters.AddWithValue("@ClinicId", clinicId);
-
-            con.Open();
 
             using var reader = cmd.ExecuteReader();
 

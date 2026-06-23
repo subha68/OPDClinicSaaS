@@ -58,7 +58,6 @@ builder.Services.AddScoped<PatientDAL>();
 builder.Services.AddScoped<PatientService>();
 builder.Services.AddScoped<PharmacologyDAL>();
 builder.Services.AddScoped<PharmacologyService>();
-builder.Services.AddScoped<AppointmentSlotDAL>();
 builder.Services.AddScoped<AppointmentSlotService>();
 builder.Services.AddScoped<DoctorScheduleDAL>();
 builder.Services.AddScoped<DoctorScheduleService>();

@@ -62,88 +62,88 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public List<Clinic> GetAll()
+        public List<Clinic> GetAll(SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Clinic>();
 
-            using (var conn = _db.GetConnection())
+            var cmd = new SqlCommand("SELECT * FROM Clinics", conn);
+            if (tran != null)
             {
-                conn.Open();
+                cmd.Transaction = tran;
+            }
 
-                var cmd = new SqlCommand("SELECT * FROM Clinics", conn);
-                var reader = cmd.ExecuteReader();
+            using var reader = cmd.ExecuteReader();
 
-                while (reader.Read())
+            while (reader.Read())
+            {
+                list.Add(new Clinic
                 {
-                    list.Add(new Clinic
-                    {
-                        ClinicId = (int)reader["ClinicId"],
-                        ClinicCode = reader["ClinicCode"].ToString(),
-                        Name = reader["Name"].ToString(),
-                        Address = reader["Address"].ToString(),
-                        Phone = reader["Phone"].ToString(),
-                        LogoPath = reader["LogoPath"].ToString()
-                    });
-                }
+                    ClinicId = (int)reader["ClinicId"],
+                    ClinicCode = reader["ClinicCode"].ToString(),
+                    Name = reader["Name"].ToString(),
+                    Address = reader["Address"].ToString(),
+                    Phone = reader["Phone"].ToString(),
+                    LogoPath = reader["LogoPath"].ToString()
+                });
             }
 
             return list;
         }
 
-        public Clinic Get(int clinicId)
+        public Clinic Get(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             Clinic clinic = null;
 
-            using (var conn = _db.GetConnection())
+            var cmd = new SqlCommand("SELECT * FROM Clinics WHERE ClinicId = @id", conn);
+            if (tran != null)
             {
-                conn.Open();
+                cmd.Transaction = tran;
+            }
 
-                var cmd = new SqlCommand("SELECT * FROM Clinics WHERE ClinicId = @id", conn);
-                cmd.Parameters.AddWithValue("@id", clinicId);
-                var reader = cmd.ExecuteReader();
+            cmd.Parameters.AddWithValue("@id", clinicId);
+            using var reader = cmd.ExecuteReader();
 
-                if (reader.Read())
+            if (reader.Read())
+            {
+                clinic = new Clinic
                 {
-                    clinic = new Clinic
-                    {
-                        ClinicId = (int)reader["ClinicId"],
-                        ClinicCode = reader["ClinicCode"].ToString(),
-                        Name = reader["Name"].ToString(),
-                        Address = reader["Address"].ToString(),
-                        Phone = reader["Phone"].ToString(),
-                        LogoPath = reader["LogoPath"].ToString()
-                    };
-                }
+                    ClinicId = (int)reader["ClinicId"],
+                    ClinicCode = reader["ClinicCode"].ToString(),
+                    Name = reader["Name"].ToString(),
+                    Address = reader["Address"].ToString(),
+                    Phone = reader["Phone"].ToString(),
+                    LogoPath = reader["LogoPath"].ToString()
+                };
             }
 
             return clinic;
         }
 
-        public Clinic ValidateClinicCode(string clinicCode)
+        public Clinic ValidateClinicCode(string clinicCode, SqlConnection conn, SqlTransaction? tran = null)
         {
             Clinic clinic = null;
 
-            using (var conn = _db.GetConnection())
+            var cmd = new SqlCommand("SELECT * FROM Clinics WHERE ClinicCode = @code", conn);
+            if (tran != null)
             {
-                conn.Open();
+                cmd.Transaction = tran;
+            }
 
-                var cmd = new SqlCommand("SELECT * FROM Clinics WHERE ClinicCode = @code", conn);
-                cmd.Parameters.AddWithValue("@code", clinicCode);
+            cmd.Parameters.AddWithValue("@code", clinicCode);
 
-                var reader = cmd.ExecuteReader();
+            using var reader = cmd.ExecuteReader();
 
-                if (reader.Read())
+            if (reader.Read())
+            {
+                clinic = new Clinic
                 {
-                    clinic = new Clinic
-                    {
-                        ClinicId = (int)reader["ClinicId"],
-                        ClinicCode = reader["ClinicCode"].ToString(),
-                        Name = reader["Name"].ToString(),
-                        Address = reader["Address"].ToString(),
-                        Phone = reader["Phone"].ToString(),
-                        LogoPath = reader["LogoPath"].ToString()
-                    };
-                }
+                    ClinicId = (int)reader["ClinicId"],
+                    ClinicCode = reader["ClinicCode"].ToString(),
+                    Name = reader["Name"].ToString(),
+                    Address = reader["Address"].ToString(),
+                    Phone = reader["Phone"].ToString(),
+                    LogoPath = reader["LogoPath"].ToString()
+                };
             }
 
             return clinic;

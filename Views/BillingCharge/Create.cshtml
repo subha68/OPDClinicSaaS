@@ -11,15 +11,25 @@
 
     ViewBag.Fields = new[]
     {
+        new { Name="ClinicId", Label="Clinic Id", Type="hidden", Col="0"},
         new { Name="ChargeCode", Label="Charge Code", Type="text", Col="6"},
         new { Name="ChargeName", Label="Charge Name", Type="text", Col="6"},
         new { Name="Description", Label="Description", Type="text", Col="12"},
+        new { Name="ServiceType", Label="Service Type", Type="dropdown", Col="12"},
         new { Name="Rate", Label="Rate", Type="number", Col="6"},
         new { Name="IsActive", Label="Active", Type="checkbox", Col="6"}
     };
 
+    ViewBag.ServiceType = new SelectList(
+        new List<string>
+        {                                                                                                                                                                                                                                                                                                                                                                                                                                           
+            "Registration", "Consultation", "Lab Tests", "Procedures", "Vaccinations", "Radiology"
+        });
+
+
     ViewBag.Dropdowns = new Dictionary<string, object>()
     {
+        { "ServiceType", ViewBag.ServiceType }
     };
 
     ViewBag.KeyField = "ChargeId";

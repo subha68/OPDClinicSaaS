@@ -55,78 +55,80 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public List<Feature> GetAll()
+        public List<Feature> GetAll(SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Feature>();
 
-            using (var conn = _db.GetConnection())
+            var cmd = new SqlCommand("SELECT * FROM Features", conn);
+            if (tran != null)
             {
-                conn.Open();
+                cmd.Transaction = tran;
+            }
 
-                var cmd = new SqlCommand("SELECT * FROM Features", conn);
-                var reader = cmd.ExecuteReader();
+            using var reader = cmd.ExecuteReader();
 
-                while (reader.Read())
+            while (reader.Read())
+            {
+                list.Add(new Feature
                 {
-                    list.Add(new Feature
-                    {
-                        FeatureId = (int)reader["FeatureId"],
-                        Name = reader["Name"].ToString(),
-                        Code = reader["Code"].ToString()
-                    });
-                }
+                    FeatureId = (int)reader["FeatureId"],
+                    Name = reader["Name"].ToString(),
+                    Code = reader["Code"].ToString()
+                });
             }
 
             return list;
         }
 
-        public List<Feature> GetFeaturesByRole(int roleId)
+        public List<Feature> GetFeaturesByRole(int roleId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Feature>();
 
-            using (var conn = _db.GetConnection())
+            var cmd = new SqlCommand("SELECT * FROM Features WHERE FeatureId IN (SELECT FeatureId FROM RoleFeatures WHERE RoleId = @RoleId)", conn);
+            if (tran != null)
             {
-                conn.Open();
+                cmd.Transaction = tran;
+            }
 
-                var cmd = new SqlCommand("SELECT * FROM Features WHERE FeatureId IN (SELECT FeatureId FROM RoleFeatures WHERE RoleId = @RoleId)", conn);
-                cmd.Parameters.AddWithValue("@RoleId", roleId);
-                var reader = cmd.ExecuteReader();
+            cmd.Parameters.AddWithValue("@RoleId", roleId);
+            using var reader = cmd.ExecuteReader();
 
-                while (reader.Read())
+            while (reader.Read())
+            {
+                list.Add(new Feature
                 {
-                    list.Add(new Feature
-                    {
-                        FeatureId = (int)reader["FeatureId"],
-                        Name = reader["Name"].ToString(),
-                        Code = reader["Code"].ToString()
-                    });
-                }
+                    FeatureId = (int)reader["FeatureId"],
+                    Name = reader["Name"].ToString(),
+                    Code = reader["Code"].ToString()
+                });
             }
 
             return list;
         }
 
-        public Feature Get(int featureId)
+        public Feature Get(int featureId, SqlConnection conn, SqlTransaction? tran = null)
         {
-            using (SqlConnection conn = _db.GetConnection())
+            string query = "SELECT * FROM Features WHERE FeatureId = @FeatureId";
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = "SELECT * FROM Features WHERE FeatureId = @FeatureId";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@FeatureId", featureId);
-
-                conn.Open();
-                var reader = cmd.ExecuteReader();
-
-                if (reader.Read())
-                {
-                    return new Feature
-                    {
-                        FeatureId = (int)reader["FeatureId"],
-                        Name = reader["Name"].ToString(),
-                        Code = reader["Code"].ToString()
-                    };
-                }
+                cmd.Transaction = tran;
             }
+
+            cmd.Parameters.AddWithValue("@FeatureId", featureId);
+
+            using var reader = cmd.ExecuteReader();
+
+            if (reader.Read())
+            {
+                return new Feature
+                {
+                    FeatureId = (int)reader["FeatureId"],
+                    Name = reader["Name"].ToString(),
+                    Code = reader["Code"].ToString()
+                };
+            }
+
             return null; // Not found
         }
     }

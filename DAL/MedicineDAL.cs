@@ -89,143 +89,143 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public List<Medicine> GetAll()
+        public List<Medicine> GetAll(SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Medicine>();
 
-            using (var conn = _db.GetConnection())
+            var cmd = new SqlCommand("SELECT * FROM Medicines", conn);
+            if (tran != null)
             {
-                conn.Open();
+                cmd.Transaction = tran;
+            }
 
-                var cmd = new SqlCommand("SELECT * FROM Medicines", conn);
-                var reader = cmd.ExecuteReader();
+            using var reader = cmd.ExecuteReader();
 
-                while (reader.Read())
+            while (reader.Read())
+            {
+                list.Add(new Medicine
                 {
-                    list.Add(new Medicine
-                    {
-                        MedicineId = (int)reader["MedicineId"],
-                        MedicineCode = reader["MedicineCode"].ToString(),
-                        MedicineName = reader["MedicineName"].ToString(),
-                        GenericName = reader["GenericName"].ToString(),
-                        HSNCode = reader["HSNCode"].ToString(),
-                        Strength = reader["Strength"].ToString(),
-                        DosageForm = reader["DosageForm"].ToString(),
-                        UnitOfMeasure = reader["UnitOfMeasure"].ToString(),
-                        ReorderLevel = Convert.ToInt32(reader["ReorderLevel"]),
-                        GSTPercent = Convert.ToDecimal(reader["GSTPercent"]),
-                        Manufacturer = reader["Manufacturer"].ToString(),
-                        ScheduleType = reader["ScheduleType"].ToString(),
-                        CreatedFromPrescription = Convert.ToBoolean(reader["CreatedFromPrescription"]),
-                        IsActive = Convert.ToBoolean(reader["IsActive"])
-                    });
-                }
+                    MedicineId = (int)reader["MedicineId"],
+                    MedicineCode = reader["MedicineCode"].ToString(),
+                    MedicineName = reader["MedicineName"].ToString(),
+                    GenericName = reader["GenericName"].ToString(),
+                    HSNCode = reader["HSNCode"].ToString(),
+                    Strength = reader["Strength"].ToString(),
+                    DosageForm = reader["DosageForm"].ToString(),
+                    UnitOfMeasure = reader["UnitOfMeasure"].ToString(),
+                    ReorderLevel = Convert.ToInt32(reader["ReorderLevel"]),
+                    GSTPercent = Convert.ToDecimal(reader["GSTPercent"]),
+                    Manufacturer = reader["Manufacturer"].ToString(),
+                    ScheduleType = reader["ScheduleType"].ToString(),
+                    CreatedFromPrescription = Convert.ToBoolean(reader["CreatedFromPrescription"]),
+                    IsActive = Convert.ToBoolean(reader["IsActive"])
+                });
             }
 
             return list;
         }
 
-        public List<Medicine> GetAll(string term)
+        public List<Medicine> GetAll(string term, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Medicine>();
 
-            using (var conn = _db.GetConnection())
+            string query = @"SELECT TOP 10
+                                MedicineId,
+                                MedicineName
+                            FROM Medicines
+                            WHERE MedicineName LIKE '%' + @term + '%'
+                            ORDER BY MedicineName";
+
+            var cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                conn.Open();
+                cmd.Transaction = tran;
+            }
 
-                string query = @"SELECT TOP 10
-                                    MedicineId,
-                                    MedicineName
-                                FROM Medicines
-                                WHERE MedicineName LIKE '%' + @term + '%'
-                                ORDER BY MedicineName";
+            cmd.Parameters.AddWithValue("@term", term);
+            using var reader = cmd.ExecuteReader();
 
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@term", term);
-                var reader = cmd.ExecuteReader();
-
-                while (reader.Read())
+            while (reader.Read())
+            {
+                list.Add(new Medicine
                 {
-                    list.Add(new Medicine
-                    {
-                        MedicineId = (int)reader["MedicineId"],
-                        MedicineName = reader["MedicineName"].ToString()
-                    });
-                }
+                    MedicineId = (int)reader["MedicineId"],
+                    MedicineName = reader["MedicineName"].ToString()
+                });
             }
 
             return list;
         }
 
-        public Medicine Get(int medicineId)
+        public Medicine Get(int medicineId, SqlConnection conn, SqlTransaction? tran = null)
         {
             Medicine medicine = null;
 
-            using (var conn = _db.GetConnection())
+            var cmd = new SqlCommand("SELECT * FROM Medicines WHERE MedicineId = @id", conn);
+            if (tran != null)
             {
-                conn.Open();
+                cmd.Transaction = tran;
+            }
 
-                var cmd = new SqlCommand("SELECT * FROM Medicines WHERE MedicineId = @id", conn);
-                cmd.Parameters.AddWithValue("@id", medicineId);
-                var reader = cmd.ExecuteReader();
+            cmd.Parameters.AddWithValue("@id", medicineId);
+            using var reader = cmd.ExecuteReader();
 
-                if (reader.Read())
+            if (reader.Read())
+            {
+                medicine = new Medicine
                 {
-                    medicine = new Medicine
-                    {
-                        MedicineId = (int)reader["MedicineId"],
-                        MedicineCode = reader["MedicineCode"].ToString(),
-                        MedicineName = reader["MedicineName"].ToString(),
-                        GenericName = reader["GenericName"].ToString(),
-                        HSNCode = reader["HSNCode"].ToString(),
-                        Strength = reader["Strength"].ToString(),
-                        DosageForm = reader["DosageForm"].ToString(),
-                        UnitOfMeasure = reader["UnitOfMeasure"].ToString(),
-                        ReorderLevel = Convert.ToInt32(reader["ReorderLevel"]),
-                        GSTPercent = Convert.ToDecimal(reader["GSTPercent"]),
-                        Manufacturer = reader["Manufacturer"].ToString(),
-                        ScheduleType = reader["ScheduleType"].ToString(),
-                        CreatedFromPrescription = Convert.ToBoolean(reader["CreatedFromPrescription"]),
-                        IsActive = Convert.ToBoolean(reader["IsActive"])
-                    };
-                }
+                    MedicineId = (int)reader["MedicineId"],
+                    MedicineCode = reader["MedicineCode"].ToString(),
+                    MedicineName = reader["MedicineName"].ToString(),
+                    GenericName = reader["GenericName"].ToString(),
+                    HSNCode = reader["HSNCode"].ToString(),
+                    Strength = reader["Strength"].ToString(),
+                    DosageForm = reader["DosageForm"].ToString(),
+                    UnitOfMeasure = reader["UnitOfMeasure"].ToString(),
+                    ReorderLevel = Convert.ToInt32(reader["ReorderLevel"]),
+                    GSTPercent = Convert.ToDecimal(reader["GSTPercent"]),
+                    Manufacturer = reader["Manufacturer"].ToString(),
+                    ScheduleType = reader["ScheduleType"].ToString(),
+                    CreatedFromPrescription = Convert.ToBoolean(reader["CreatedFromPrescription"]),
+                    IsActive = Convert.ToBoolean(reader["IsActive"])
+                };
             }
 
             return medicine;
         }
 
-        public Medicine GetByName(string name)
+        public Medicine GetByName(string name, SqlConnection conn, SqlTransaction? tran = null)
         {
             Medicine medicine = null;
 
-            using (var conn = _db.GetConnection())
+            var cmd = new SqlCommand("SELECT * FROM Medicines WHERE MedicineName = @MedicineName", conn);
+            if (tran != null)
             {
-                conn.Open();
+                cmd.Transaction = tran;
+            }
 
-                var cmd = new SqlCommand("SELECT * FROM Medicines WHERE MedicineName = @MedicineName", conn);
-                cmd.Parameters.AddWithValue("@MedicineName", name);
-                var reader = cmd.ExecuteReader();
+            cmd.Parameters.AddWithValue("@MedicineName", name);
+            using var reader = cmd.ExecuteReader();
 
-                if (reader.Read())
+            if (reader.Read())
+            {
+                medicine = new Medicine
                 {
-                    medicine = new Medicine
-                    {
-                        MedicineId = (int)reader["MedicineId"],
-                        MedicineCode = reader["MedicineCode"].ToString(),
-                        MedicineName = reader["MedicineName"].ToString(),
-                        GenericName = reader["GenericName"].ToString(),
-                        HSNCode = reader["HSNCode"].ToString(),
-                        Strength = reader["Strength"].ToString(),
-                        DosageForm = reader["DosageForm"].ToString(),
-                        UnitOfMeasure = reader["UnitOfMeasure"].ToString(),
-                        ReorderLevel = Convert.ToInt32(reader["ReorderLevel"]),
-                        GSTPercent = Convert.ToDecimal(reader["GSTPercent"]),
-                        Manufacturer = reader["Manufacturer"].ToString(),
-                        ScheduleType = reader["ScheduleType"].ToString(),
-                        CreatedFromPrescription = Convert.ToBoolean(reader["CreatedFromPrescription"]),
-                        IsActive = Convert.ToBoolean(reader["IsActive"])
-                    };
-                }
+                    MedicineId = (int)reader["MedicineId"],
+                    MedicineCode = reader["MedicineCode"].ToString(),
+                    MedicineName = reader["MedicineName"].ToString(),
+                    GenericName = reader["GenericName"].ToString(),
+                    HSNCode = reader["HSNCode"].ToString(),
+                    Strength = reader["Strength"].ToString(),
+                    DosageForm = reader["DosageForm"].ToString(),
+                    UnitOfMeasure = reader["UnitOfMeasure"].ToString(),
+                    ReorderLevel = Convert.ToInt32(reader["ReorderLevel"]),
+                    GSTPercent = Convert.ToDecimal(reader["GSTPercent"]),
+                    Manufacturer = reader["Manufacturer"].ToString(),
+                    ScheduleType = reader["ScheduleType"].ToString(),
+                    CreatedFromPrescription = Convert.ToBoolean(reader["CreatedFromPrescription"]),
+                    IsActive = Convert.ToBoolean(reader["IsActive"])
+                };
             }
 
             return medicine;

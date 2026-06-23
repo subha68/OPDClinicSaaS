@@ -16,97 +16,97 @@ namespace DAL
             _db = new DbHelper(configuration);
         }
 
-        public List<DoctorScheduleVM> GetAllDoctorSchedulesByClinic(int clinicId)
+        public List<DoctorScheduleVM> GetAllDoctorSchedulesByClinic(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             List<DoctorScheduleVM> schedules = new List<DoctorScheduleVM>();
 
-            using (SqlConnection con = _db.GetConnection())
+            string query = @"
+                SELECT
+                    ScheduleId,
+                    Doctors.DoctorId,
+                    Doctors.FirstName AS DoctorFirstName,
+                    Doctors.LastName AS DoctorLastName,
+                    Clinics.Name AS ClinicName,
+                    Clinics.ClinicId,
+                    DayOfWeek,
+                    StartTime,
+                    EndTime,
+                    SlotDurationMinutes,
+                    MaxPatientsPerSlot,
+                    IsActive,
+                    CreatedOn
+                FROM DoctorSchedules
+                INNER JOIN Doctors ON DoctorSchedules.DoctorId = Doctors.DoctorId
+                INNER JOIN Clinics ON DoctorSchedules.ClinicId = Clinics.ClinicId
+                WHERE DoctorSchedules.ClinicId = @ClinicId
+                ORDER BY DoctorId, DayOfWeek";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = @"
-                    SELECT
-                        ScheduleId,
-                        Doctors.DoctorId,
-                        Doctors.FirstName AS DoctorFirstName,
-                        Doctors.LastName AS DoctorLastName,
-                        Clinics.Name AS ClinicName,
-                        Clinics.ClinicId,
-                        DayOfWeek,
-                        StartTime,
-                        EndTime,
-                        SlotDurationMinutes,
-                        MaxPatientsPerSlot,
-                        IsActive,
-                        CreatedOn
-                    FROM DoctorSchedules
-                    INNER JOIN Doctors ON DoctorSchedules.DoctorId = Doctors.DoctorId
-                    INNER JOIN Clinics ON DoctorSchedules.ClinicId = Clinics.ClinicId
-                    WHERE DoctorSchedules.ClinicId = @ClinicId
-                    ORDER BY DoctorId, DayOfWeek";
+                cmd.Transaction = tran;
+            }
 
-                SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
 
-                con.Open();
-                SqlDataReader sched = cmd.ExecuteReader();
+            using SqlDataReader sched = cmd.ExecuteReader();
 
-                while (sched.Read())
-                {
-                    schedules.Add(MapScheduleReader(sched));
-                }
+            while (sched.Read())
+            {
+                schedules.Add(MapScheduleReader(sched));
             }
 
             return schedules;
         }
 
-        public DoctorScheduleVM GetDoctorSchedule(int doctorId)
+        public DoctorScheduleVM GetDoctorSchedule(int doctorId, SqlConnection conn, SqlTransaction? tran = null)
         {
             DoctorScheduleVM vm = null;
 
-            using (SqlConnection con = _db.GetConnection())
+            string query = @"
+                SELECT
+                    ds.ScheduleId,
+                    ds.DoctorId,
+                    d.FirstName AS DoctorFirstName,
+                    d.LastName AS DoctorLastName,
+                    ds.ClinicId,
+                    c.Name AS ClinicName,
+                    ds.IsActive,
+                    ds.CreatedOn,
+                    ds.DayOfWeek,
+                    ds.StartTime,
+                    ds.EndTime,
+                    ds.SlotDurationMinutes,
+                    ds.MaxPatientsPerSlot
+                FROM DoctorSchedules ds
+                INNER JOIN Doctors d
+                    ON ds.DoctorId = d.DoctorId
+                INNER JOIN Clinics c
+                    ON ds.ClinicId = c.ClinicId
+                WHERE ds.DoctorId = @DoctorId
+                ORDER BY
+                    ds.DayOfWeek,
+                    ds.StartTime";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = @"
-                    SELECT
-                        ds.ScheduleId,
-                        ds.DoctorId,
-                        d.FirstName AS DoctorFirstName,
-                        d.LastName AS DoctorLastName,
-                        ds.ClinicId,
-                        c.Name AS ClinicName,
-                        ds.IsActive,
-                        ds.CreatedOn,
-                        ds.DayOfWeek,
-                        ds.StartTime,
-                        ds.EndTime,
-                        ds.SlotDurationMinutes,
-                        ds.MaxPatientsPerSlot
-                    FROM DoctorSchedules ds
-                    INNER JOIN Doctors d
-                        ON ds.DoctorId = d.DoctorId
-                    INNER JOIN Clinics c
-                        ON ds.ClinicId = c.ClinicId
-                    WHERE ds.DoctorId = @DoctorId
-                    ORDER BY
-                        ds.DayOfWeek,
-                        ds.StartTime";
+                cmd.Transaction = tran;
+            }
 
-                SqlCommand cmd = new SqlCommand(query, con);
+            cmd.Parameters.Add("@DoctorId", SqlDbType.Int).Value = doctorId;
 
-                cmd.Parameters.Add("@DoctorId", SqlDbType.Int).Value = doctorId;
-
-                con.Open();
-
-                using (SqlDataReader reader = cmd.ExecuteReader())
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
                 {
-                    while (reader.Read())
+                    // Create header once
+                    if (vm == null)
                     {
-                        // Create header once
-                        if (vm == null)
-                        {
-                            vm = MapScheduleReader(reader);
-                        }
-
-                        vm.Shifts.Add(MapShiftReader(reader));
+                        vm = MapScheduleReader(reader);
                     }
+
+                    vm.Shifts.Add(MapShiftReader(reader));
                 }
             }
 
@@ -288,7 +288,7 @@ namespace DAL
             }
         }
 
-        public List<DoctorScheduleVM> GetAll()
+        public List<DoctorScheduleVM> GetAll(SqlConnection conn, SqlTransaction? tran = null)
         {
             // This method is not used in our current design, but we need to implement it to satisfy the IDAL interface.
             // In a real application, we might want to throw a NotImplementedException or return an empty list instead.
@@ -298,166 +298,159 @@ namespace DAL
         /// Checks whether another active schedule overlaps
         /// with the provided schedule timings.
 
-        public bool ExistsOverlap(
+/*        public bool ExistsOverlap(
             int doctorId,
             int dayOfWeek,
             TimeSpan startTime,
             TimeSpan endTime,
-            int? excludeScheduleId = null)
+            int? excludeScheduleId = null,
+            SqlConnection conn)
         {
-            using (SqlConnection con = _db.GetConnection())
-            {
-                string query = @"
-                    SELECT COUNT(*)
-                    FROM DoctorSchedules
-                    WHERE DoctorId = @DoctorId
-                    AND DayOfWeek = @DayOfWeek
-                    AND IsActive = 1
-                    AND (
-                        @StartTime < EndTime
-                        AND @EndTime > StartTime
-                    )";
+            string query = @"
+                SELECT COUNT(*)
+                FROM DoctorSchedules
+                WHERE DoctorId = @DoctorId
+                AND DayOfWeek = @DayOfWeek
+                AND IsActive = 1
+                AND (
+                    @StartTime < EndTime
+                    AND @EndTime > StartTime
+                )";
 
-                // Exclude current schedule during update
+            // Exclude current schedule during update
+            if (excludeScheduleId.HasValue)
+            {
+                query += " AND ScheduleId <> @ExcludeScheduleId";
+            }
+
+            using (SqlCommand cmd = new SqlCommand(query, conn))
+            {
+                cmd.Parameters.AddWithValue("@DoctorId", doctorId);
+                cmd.Parameters.AddWithValue("@DayOfWeek", dayOfWeek);
+                cmd.Parameters.AddWithValue("@StartTime", startTime);
+                cmd.Parameters.AddWithValue("@EndTime", endTime);
+
                 if (excludeScheduleId.HasValue)
                 {
-                    query += " AND ScheduleId <> @ExcludeScheduleId";
+                    cmd.Parameters.AddWithValue("@ExcludeScheduleId", excludeScheduleId.Value);
                 }
 
-                using (SqlCommand cmd = new SqlCommand(query, con))
-                {
-                    cmd.Parameters.AddWithValue("@DoctorId", doctorId);
-                    cmd.Parameters.AddWithValue("@DayOfWeek", dayOfWeek);
-                    cmd.Parameters.AddWithValue("@StartTime", startTime);
-                    cmd.Parameters.AddWithValue("@EndTime", endTime);
+                int count = Convert.ToInt32(cmd.ExecuteScalar());
 
-                    if (excludeScheduleId.HasValue)
-                    {
-                        cmd.Parameters.AddWithValue(
-                            "@ExcludeScheduleId",
-                            excludeScheduleId.Value);
-                    }
-
-                    con.Open();
-
-                    int count = Convert.ToInt32(cmd.ExecuteScalar());
-
-                    return count > 0;
-                }
+                return count > 0;
             }
-        }
+        } */
 
-        public DoctorScheduleVM Get(int scheduleId)
+        public DoctorScheduleVM Get(int scheduleId, SqlConnection conn, SqlTransaction? tran = null)
         {
             DoctorScheduleVM vm = null;
 
-            using (SqlConnection con = _db.GetConnection())
+            string query = @"
+                SELECT
+                    ds.ScheduleId,
+                    ds.DoctorId,
+                    d.FirstName AS DoctorFirstName,
+                    d.LastName AS DoctorLastName,
+                    ds.ClinicId,
+                    c.Name AS ClinicName,
+                    ds.IsActive,
+                    ds.CreatedOn,
+                    ds.DayOfWeek,
+                    ds.StartTime,
+                    ds.EndTime,
+                    ds.SlotDurationMinutes,
+                    ds.MaxPatientsPerSlot
+
+                FROM DoctorSchedules ds
+                INNER JOIN Doctors d
+                    ON ds.DoctorId = d.DoctorId
+                INNER JOIN Clinics c
+                    ON ds.ClinicId = c.ClinicId
+
+                WHERE ds.ScheduleId = @ScheduleId
+
+                ORDER BY
+                    ds.DayOfWeek,
+                    ds.StartTime";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = @"
-                    SELECT
-                        ds.ScheduleId,
-                        ds.DoctorId,
-                        d.FirstName AS DoctorFirstName,
-                        d.LastName AS DoctorLastName,
-                        ds.ClinicId,
-                        c.Name AS ClinicName,
-                        ds.IsActive,
-                        ds.CreatedOn,
-                        ds.DayOfWeek,
-                        ds.StartTime,
-                        ds.EndTime,
-                        ds.SlotDurationMinutes,
-                        ds.MaxPatientsPerSlot
+                cmd.Transaction = tran;
+            }
 
-                    FROM DoctorSchedules ds
-                    INNER JOIN Doctors d
-                        ON ds.DoctorId = d.DoctorId
-                    INNER JOIN Clinics c
-                        ON ds.ClinicId = c.ClinicId
+            cmd.Parameters.Add("@ScheduleId", SqlDbType.Int).Value = scheduleId;
 
-                    WHERE ds.ScheduleId = @ScheduleId
-
-                    ORDER BY
-                        ds.DayOfWeek,
-                        ds.StartTime";
-
-                SqlCommand cmd = new SqlCommand(query, con);
-
-                cmd.Parameters.Add("@ScheduleId", SqlDbType.Int).Value = scheduleId;
-
-                con.Open();
-
-                using (SqlDataReader reader = cmd.ExecuteReader())
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
                 {
-                    while (reader.Read())
+                    // Create header once
+                    if (vm == null)
                     {
-                        // Create header once
-                        if (vm == null)
-                        {
-                            vm = MapScheduleReader(reader);
-                        }
-
-                        vm.Shifts.Add(MapShiftReader(reader));
+                        vm = MapScheduleReader(reader);
                     }
+
+                    vm.Shifts.Add(MapShiftReader(reader));
                 }
             }
 
             return vm;
         }
 
-        public DoctorScheduleVM GetSchedulesByDay(int clinicId, int doctorId, int dayOfWeek)
+        public DoctorScheduleVM GetSchedulesByDay(int clinicId, int doctorId, int dayOfWeek, SqlConnection conn, 
+                                                        SqlTransaction? tran = null)
         {
             DoctorScheduleVM vm = new DoctorScheduleVM();
 
-            using (SqlConnection con = _db.GetConnection())
+            string query = @"
+                SELECT
+                    ds.ScheduleId,
+                    ds.DoctorId,
+                    d.FirstName AS DoctorFirstName,
+                    d.LastName AS DoctorLastName,
+                    ds.ClinicId,
+                    c.Name AS ClinicName,
+                    ds.IsActive,
+                    ds.CreatedOn,
+                    ds.DayOfWeek,
+                    ds.StartTime,
+                    ds.EndTime,
+                    ds.SlotDurationMinutes,
+                    ds.MaxPatientsPerSlot
+
+                FROM DoctorSchedules ds
+                INNER JOIN Doctors d
+                    ON ds.DoctorId = d.DoctorId
+                INNER JOIN Clinics c
+                    ON ds.ClinicId = c.ClinicId
+
+                WHERE ds.ClinicId = @ClinicId
+                AND ds.DoctorId = @DoctorId
+                AND ds.DayOfWeek = @DayOfWeek
+
+                ORDER BY
+                    ds.DayOfWeek,
+                    ds.StartTime";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                string query = @"
-                    SELECT
-                        ds.ScheduleId,
-                        ds.DoctorId,
-                        d.FirstName AS DoctorFirstName,
-                        d.LastName AS DoctorLastName,
-                        ds.ClinicId,
-                        c.Name AS ClinicName,
-                        ds.IsActive,
-                        ds.CreatedOn,
-                        ds.DayOfWeek,
-                        ds.StartTime,
-                        ds.EndTime,
-                        ds.SlotDurationMinutes,
-                        ds.MaxPatientsPerSlot
+                cmd.Transaction = tran;
+            }
 
-                    FROM DoctorSchedules ds
-                    INNER JOIN Doctors d
-                        ON ds.DoctorId = d.DoctorId
-                    INNER JOIN Clinics c
-                        ON ds.ClinicId = c.ClinicId
+            cmd.Parameters.Add("@ClinicId", SqlDbType.Int).Value = clinicId;
+            cmd.Parameters.Add("@DoctorId", SqlDbType.Int).Value = doctorId;
+            cmd.Parameters.Add("@DayOfWeek", SqlDbType.Int).Value = dayOfWeek;
 
-                    WHERE ds.ClinicId = @ClinicId
-                    AND ds.DoctorId = @DoctorId
-                    AND ds.DayOfWeek = @DayOfWeek
-
-                    ORDER BY
-                        ds.DayOfWeek,
-                        ds.StartTime";
-
-                SqlCommand cmd = new SqlCommand(query, con);
-
-                cmd.Parameters.Add("@ClinicId", SqlDbType.Int).Value = clinicId;
-                cmd.Parameters.Add("@DoctorId", SqlDbType.Int).Value = doctorId;
-                cmd.Parameters.Add("@DayOfWeek", SqlDbType.Int).Value = dayOfWeek;
-
-                con.Open();
-
-                using (SqlDataReader reader = cmd.ExecuteReader())
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
                 {
-                    while (reader.Read())
-                    {
-                        // Create header once
-                        vm = MapScheduleReader(reader);
-                        
-                        vm.Shifts.Add(MapShiftReader(reader));
-                    }
+                    // Create header once
+                    vm = MapScheduleReader(reader);
+                    
+                    vm.Shifts.Add(MapShiftReader(reader));
                 }
             }
 

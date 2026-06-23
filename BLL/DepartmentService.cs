@@ -38,7 +38,18 @@ namespace BLL
 
         public override List<Department> List()
         {
-            return _departmentDAL.GetDepartmentsByClinic(ClinicId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _departmentDAL.GetDepartmentsByClinic(ClinicId, conn);
+            }
+            catch
+            {
+                throw;
+            }
+
         }
 
     }

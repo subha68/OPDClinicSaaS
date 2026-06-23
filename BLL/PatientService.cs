@@ -33,13 +33,51 @@ namespace BLL
 
         public List<Patient> Search(PatientSearchVM searchVM)
         {
-            searchVM.ClinicId = ClinicId;
-            return _patientDAL.Search(searchVM);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                searchVM.ClinicId = ClinicId;
+                return _patientDAL.Search(searchVM, conn);
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public List<Patient> Search(string term)
+        {
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                PatientSearchVM vm = new PatientSearchVM();
+                vm.ClinicId = ClinicId;
+                vm.SearchString = term;
+                return _patientDAL.Search(vm, conn);
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         public override List<Patient> List()
         {
-            return _patientDAL.ListByClinic(ClinicId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _patientDAL.ListByClinic(ClinicId, conn);
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         public Patient GetFirstOrDefault(List<Patient> patients)
@@ -65,73 +103,83 @@ namespace BLL
 
         public PatientHistoryVM GetHistory(int patientId, int page = 1)
         {
-            var patient = _dal.Get(patientId);
+            using var conn = _db.GetConnection();
+            conn.Open();
 
-            if (patient == null)
-                return new PatientHistoryVM();
-
-            PatientHistoryVM vm = new PatientHistoryVM(patient);
-
-            var visits = _visitDAL.ListByPatient(patientId)
-                      .OrderByDescending(x => x.VisitDate)
-                      .Skip((page - 1) * 3)
-                      .Take(3)
-                      .ToList();
-
-            vm.TotalVisits = _visitDAL.ListByPatient(patientId).Count();
-
-            var appointments = _appointmentDAL.ListByPatient(patientId);
-
-            var bills = _billDAL.ListByPatient(ClinicId, patientId);
-
-            var billLines = _billLineDAL.ListByPatient(patientId);
-
-            var payments = _paymentDAL.ListByPatient(patientId);
-
-            foreach (var visit in visits)
+            try
             {
-                VisitHistoryVM visitHistoryVM = new VisitHistoryVM(visit);
+                var patient = _dal.Get(patientId, conn);
 
-                foreach (var appointment in appointments)
+                if (patient == null)
+                    return new PatientHistoryVM();
+
+                PatientHistoryVM vm = new PatientHistoryVM(patient);
+
+                var visits = _visitDAL.ListByPatient(patientId, conn)
+                        .OrderByDescending(x => x.VisitDate)
+                        .Skip((page - 1) * 3)
+                        .Take(3)
+                        .ToList();
+
+                vm.TotalVisits = _visitDAL.ListByPatient(patientId, conn).Count();
+
+                var appointments = _appointmentDAL.ListByPatient(patientId, conn);
+
+                var bills = _billDAL.ListByPatient(ClinicId, patientId, conn);
+
+                var billLines = _billLineDAL.ListByPatient(patientId, conn);
+
+                var payments = _paymentDAL.ListByPatient(patientId, conn);
+
+                foreach (var visit in visits)
                 {
-                    if (visit.VisitId == appointment.VisitId)
+                    VisitHistoryVM visitHistoryVM = new VisitHistoryVM(visit);
+
+                    foreach (var appointment in appointments)
                     {
-                        var prescription = _consultationDAL.GetPrescription(appointment.AppointmentId);
+                        if (visit.VisitId == appointment.VisitId)
+                        {
+                            var prescription = _consultationDAL.GetPrescription(appointment.AppointmentId, conn);
 
-                        AppointmentHistoryVM appointmentHistoryVM = new AppointmentHistoryVM(appointment, prescription);
+                            AppointmentHistoryVM appointmentHistoryVM = new AppointmentHistoryVM(appointment, prescription);
 
-                        visitHistoryVM.Appointments.Add(appointmentHistoryVM);
+                            visitHistoryVM.Appointments.Add(appointmentHistoryVM);
+                        }
                     }
-                }
 
-                foreach (var bill in bills)
-                {
-                    if (visit.VisitId == bill.VisitId)
+                    foreach (var bill in bills)
                     {
-                        foreach (var line in billLines)
+                        if (visit.VisitId == bill.VisitId)
                         {
-                            if (line.BillId == bill.BillId)
+                            foreach (var line in billLines)
                             {
-                                bill.BillLines.Add(line);
+                                if (line.BillId == bill.BillId)
+                                {
+                                    bill.BillLines.Add(line);
+                                }
                             }
-                        }
 
-                        foreach (var payment in payments)
-                        {
-                            if (payment.BillId == bill.BillId)
+                            foreach (var payment in payments)
                             {
-                                bill.Payments.Add(payment);
+                                if (payment.BillId == bill.BillId)
+                                {
+                                    bill.Payments.Add(payment);
+                                }
                             }
-                        }
 
-                        visitHistoryVM.Bills.Add(bill);
-                    }  
+                            visitHistoryVM.Bills.Add(bill);
+                        }  
+                    }
+
+                    vm.Visits.Add(visitHistoryVM);
                 }
 
-                vm.Visits.Add(visitHistoryVM);
+                return vm;
             }
-
-            return vm;
+            catch
+            {
+                throw;
+            }
         }
 
     }

@@ -8,19 +8,24 @@
 
 <form asp-action="Create" method="post">
 
-    <div class="mb-3">
-        <label>Date</label>
-        <input asp-for="BillDate" type="date" class="form-control" />
-    </div>
+    <input type="hidden" name="BillType" value="Service" />
 
-    <div class="mb-3">
-        <label>Patient</label>
-        <select asp-for="PatientId"
-                asp-items="ViewBag.Patients"
-                class="form-control"
-                id="PatientId">
-            <option value="">--select--</option>
-        </select>
+    <div class="row mb-3">
+
+        <div class="col-md-3">
+            <label>Date</label>
+            <input asp-for="BillDate" type="date" class="form-control" />
+        </div>
+
+        <div class="col-md-9">
+            <label>Patient</label>
+
+            <input type="text" id="PatientSearch" class="form-control"
+                                placeholder="Search patient by name, mobile or UHID" />
+
+            <input type="hidden" asp-for="PatientId" id="PatientId" />
+        </div>
+
     </div>
 
     <div class="mb-3">
@@ -70,8 +75,6 @@
 </form>
 
 @section Scripts{
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
     <script>
 
     let lineIndex = 0;
@@ -113,18 +116,15 @@
     $("#addLine").click(function(){
 
         let row = `
-        let lineIndex = 0;
-
         <tr>
             <td>
-                <select name="BillLines[${lineIndex}].ChargeId"
-                        class="form-control charge">
-                    <option value="">--select--</option>
-                    @foreach(var c in (IEnumerable<SelectListItem>)ViewBag.BillingCharges)
-                    {
-                        <option value="@c.Value">@c.Text</option>
-                    }
-                </select>
+                <input type="text"
+                    class="form-control chargeSearch"
+                    placeholder="Search charge..." />
+
+                <input type="hidden"
+                    name="BillLines[${lineIndex}].ReferenceId"
+                    class="chargeId" />
             </td>
 
             <td>
@@ -159,23 +159,11 @@
         </tr>`;
 
         $("#billTable tbody").append(row);
+
+        initializeChargeAutocomplete($("#billTable tbody tr:last"));
+
         lineIndex++;
     });
-
-
-    $(document).on("change",".charge", function(){
-
-        let row = $(this).closest("tr");
-        let id = $(this).val();
-
-        $.get('/Billing/GetChargeRate',
-            { id:id },
-            function(rate){
-                row.find(".rate").val(rate);
-                calculateRow(row);
-            });
-    });
-
 
     $(document).on("keyup change", 
         ".rate,.qty,.disc",
@@ -214,6 +202,77 @@
         $(this).closest("tr").remove();
         calculateTotal();
     });
+
+    $(function () {
+        $("#PatientSearch").autocomplete({
+
+            minLength: 2,
+            delay: 300,
+
+            source: function (request, response) {
+
+                $.getJSON('/Patient/SearchPatient',
+                    { term: request.term },
+                    function (data) {
+
+                        response($.map(data, function (item) {
+
+                            return {
+                                label: item.text,
+                                value: item.text,
+                                id: item.id
+                            };
+                        }));
+                    });
+            },
+
+            select: function (event, ui) {
+
+                $("#PatientId").val(ui.item.id);
+
+                setTimeout(function () {
+                    $("#PatientId").trigger("change");
+                }, 100);
+            }
+        }); 
+    });   
+
+    function initializeChargeAutocomplete(row) {
+
+        row.find(".chargeSearch").autocomplete({
+
+            minLength: 2,
+
+            source: function (request, response) {
+
+                $.getJSON('/BillingCharge/SearchCharge',
+                    { term: request.term },
+                    function (data) {
+
+                        response($.map(data, function (item) {
+
+                            return {
+                                label: item.text,
+                                value: item.text,
+                                id: item.id,
+                                rate: item.rate
+                            };
+                        }));
+                    });
+            },
+
+            select: function (event, ui) {
+
+                row.find(".chargeId").val(ui.item.id);
+
+                row.find(".rate").val(ui.item.rate);
+
+                calculateRow(row);
+
+                return false;
+            }
+        });
+    }
 
     </script>
 }

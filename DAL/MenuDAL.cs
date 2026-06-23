@@ -59,22 +59,54 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public List<MenuItem> GetAll()
+        public List<MenuItem> GetAll(SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<MenuItem>();
 
-            using (var conn = _db.GetConnection())
+            var cmd = new SqlCommand("SELECT * FROM Menus ORDER BY DisplayOrder", conn);
+            if (tran != null)
             {
-                conn.Open();
+                cmd.Transaction = tran;
+            }
 
-                var cmd = new SqlCommand("SELECT * FROM Menus ORDER BY DisplayOrder", conn);
-                var menu = cmd.ExecuteReader();
+            using var menu = cmd.ExecuteReader();
 
-                while (menu.Read())
+            while (menu.Read())
+            {
+                list.Add(new MenuItem
+                {
+                    MenuId = Convert.ToInt32(menu["MenuId"]),
+                    Title = menu["Title"].ToString(),
+                    Controller = menu["Controller"].ToString(),
+                    Action = menu["Action"].ToString(),
+                    Icon = menu["Icon"].ToString()
+                });
+            }
+
+            return list;
+        }
+
+        public List<MenuItem> GetMenuItems(string featureCsv, SqlConnection conn, SqlTransaction? tran = null)
+        {
+            var features = featureCsv.Split(',').ToList();
+            var list = new List<MenuItem>();
+
+            var cmd = new SqlCommand("SELECT * FROM Menus ORDER BY DisplayOrder", conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
+
+            using var menu = cmd.ExecuteReader();
+
+            while (menu.Read())
+            {
+                string feature = menu["FeatureCode"].ToString();
+
+                if (features.Contains(feature))
                 {
                     list.Add(new MenuItem
                     {
-                        MenuId = Convert.ToInt32(menu["MenuId"]),
                         Title = menu["Title"].ToString(),
                         Controller = menu["Controller"].ToString(),
                         Action = menu["Action"].ToString(),
@@ -86,59 +118,27 @@ namespace DAL
             return list;
         }
 
-        public List<MenuItem> GetMenuItems(string featureCsv)
+        public MenuItem Get(int id, SqlConnection conn, SqlTransaction? tran = null)
         {
-            var features = featureCsv.Split(',').ToList();
-            var list = new List<MenuItem>();
-
-            using (var conn = _db.GetConnection())
+            var cmd = new SqlCommand("SELECT * FROM Menus WHERE MenuId = @id", conn);
+            if (tran != null)
             {
-                conn.Open();
-
-                var cmd = new SqlCommand("SELECT * FROM Menus ORDER BY DisplayOrder", conn);
-                var menu = cmd.ExecuteReader();
-
-                while (menu.Read())
-                {
-                    string feature = menu["FeatureCode"].ToString();
-
-                    if (features.Contains(feature))
-                    {
-                        list.Add(new MenuItem
-                        {
-                            Title = menu["Title"].ToString(),
-                            Controller = menu["Controller"].ToString(),
-                            Action = menu["Action"].ToString(),
-                            Icon = menu["Icon"].ToString()
-                        });
-                    }
-                }
+                cmd.Transaction = tran;
             }
 
-            return list;
-        }
+            cmd.Parameters.AddWithValue("@id", id);
+            using var menu = cmd.ExecuteReader();
 
-        public MenuItem Get(int id)
-        {
-            using (var conn = _db.GetConnection())
+            if (menu.Read())
             {
-                conn.Open();
-
-                var cmd = new SqlCommand("SELECT * FROM Menus WHERE MenuId = @id", conn);
-                cmd.Parameters.AddWithValue("@id", id);
-                var menu = cmd.ExecuteReader();
-
-                if (menu.Read())
+                return new MenuItem
                 {
-                    return new MenuItem
-                    {
-                        MenuId = Convert.ToInt32(menu["MenuId"]),
-                        Title = menu["Title"].ToString(),
-                        Controller = menu["Controller"].ToString(),
-                        Action = menu["Action"].ToString(),
-                        Icon = menu["Icon"].ToString()
-                    };
-                }
+                    MenuId = Convert.ToInt32(menu["MenuId"]),
+                    Title = menu["Title"].ToString(),
+                    Controller = menu["Controller"].ToString(),
+                    Action = menu["Action"].ToString(),
+                    Icon = menu["Icon"].ToString()
+                };
             }
 
             return null;

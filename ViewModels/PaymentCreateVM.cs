@@ -9,5 +9,16 @@ namespace ViewModels
 
         // New Payment Entry
         public Payment Payment { get; set; } = new();
+
+        public PaymentCreateVM()
+        {
+            
+        }
+
+        public PaymentCreateVM(Bill bill)
+        {
+            Bill = bill;
+            Payment = new Payment(bill);
+        }
     }
 }

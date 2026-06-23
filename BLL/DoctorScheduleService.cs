@@ -9,24 +9,42 @@ namespace BLL
     public class DoctorScheduleService : BaseService<DoctorScheduleVM>
     {
         private readonly DoctorScheduleDAL _scheduleDAL;
-        private readonly AppointmentSlotDAL _slotDAL;
 
         public DoctorScheduleService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
                                 : base(config, httpContextAccessor)
         {
             _scheduleDAL = new DoctorScheduleDAL(config);
-            _slotDAL = new AppointmentSlotDAL(config);
             _dal = _scheduleDAL;
         }
 
         public override List<DoctorScheduleVM> List()
         {
-            return _scheduleDAL.GetAllDoctorSchedulesByClinic(ClinicId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _scheduleDAL.GetAllDoctorSchedulesByClinic(ClinicId, conn);
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         public DoctorScheduleVM GetDoctorSchedule(int doctorId)
         {
-            return _scheduleDAL.GetDoctorSchedule(doctorId);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _scheduleDAL.GetDoctorSchedule(doctorId, conn);
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         /// Validates and saves doctor schedule.
