@@ -26,10 +26,7 @@
 
     <div class="col-md-4">
         <label>Date</label>
-        <input type="date"
-            id="appointmentDate"
-            class="form-control"
-            value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+        <input type="date" id="appointmentDate" asp-for="AppointmentDate" class="form-control" />
     </div>
 
 </div>
@@ -58,8 +55,7 @@
 
             <div class="modal-body">
 
-                <input type="hidden"
-                       id="modalAppointmentId" />
+                <input type="hidden" id="modalAppointmentId" />
 
                 <div id="appointmentDetailsSection">
 
@@ -83,8 +79,7 @@
                         <span id="modalStatus"></span>
                     </div>
 
-                    <div class="mb-2"
-                         id="financialStatusRow">
+                    <div class="mb-2" id="financialStatusRow">
                         <strong>Financial Status:</strong>
                         <span id="modalFinancialStatus"></span>
                     </div>
@@ -96,7 +91,7 @@
                     <strong>Reason:</strong>
 
                     <textarea id="cancelReason"
-                            class="form-control mt-1"
+                            class="form-control"
                             rows="2"
                             style="max-width:280px;">
                     </textarea>
@@ -434,8 +429,18 @@ $('#btnCancel').click(function () {
             appointmentId: $('#modalAppointmentId').val(),
             cancellationReason: $('#cancelReason').val()
         },
+
         success: function () {
-            location.reload();
+
+            let departmentId = $("#departmentId").val();
+            let doctorId = $("#doctorId").val();
+            let appointmentDate = $("#appointmentDate").val();
+
+            window.location.href =
+                '/AppointmentBooking/Index'
+                + '?departmentId=' + departmentId
+                + '&doctorId=' + doctorId
+                + '&appointmentDate=' + appointmentDate;
         }
     });
 });
@@ -457,7 +462,7 @@ function renderCancelledCards(cancelledAppointments)
         <div class="cancelled-tab"
              onclick="event.stopPropagation();
                       showCancelledAppointments('${json}')">
-            C${cancelledAppointments.length}
+            ${cancelledAppointments.length}
         </div>
     `;
 }

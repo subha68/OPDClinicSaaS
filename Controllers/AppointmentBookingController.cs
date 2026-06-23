@@ -33,12 +33,13 @@ namespace Controllers
             _visit = visit;
         }
 
-        public IActionResult Index(int? departmentId, int? doctorId)
+        public IActionResult Index(int? departmentId, int? doctorId, DateTime? appointmentDate)
         {
             var vm = new AppointmentBookingVM();
 
             vm.DepartmentId = departmentId ?? 0;
             vm.DoctorId = doctorId ?? 0;
+            vm.AppointmentDate = appointmentDate ?? DateTime.Today;
 
             vm.Departments = _department.List()
                 .Select(x => new SelectListItem
