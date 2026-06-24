@@ -1,0 +1,42 @@
+@model IEnumerable<Models.PrescriptionTemplateSection>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h3>Sections</h3>
+
+<p>
+    <a asp-action="Create"
+       asp-route-templateId="@ViewBag.TemplateId"
+       class="btn btn-primary">
+       Add Section
+    </a>
+</p>
+
+<table class="table">
+
+@foreach(var item in Model)
+{
+    <tr>
+
+        <td>@item.DisplayOrder</td>
+
+        <td>@item.SectionName</td>
+
+        <td>
+
+            <a asp-action="FieldIndex"
+               asp-route-sectionId="@item.SectionId"
+               class="btn btn-info btn-sm">
+
+               Fields
+
+            </a>
+
+        </td>
+
+    </tr>
+}
+
+</table>

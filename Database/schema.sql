@@ -4,6 +4,12 @@ GO
 USE OPDClinicDB;
 GO
 
+-- Field Types
+CREATE TABLE FieldTypes
+(
+    FieldTypeCode VARCHAR(30) PRIMARY KEY
+);
+
 -- Clinics
 CREATE TABLE Clinics (
     ClinicId INT IDENTITY(1,1) PRIMARY KEY,
@@ -69,6 +75,68 @@ CREATE TABLE Doctors (
 
 ALTER TABLE Doctors
 ADD CONSTRAINT UQ_Doctor_User UNIQUE(UserId);
+
+CREATE TABLE PrescriptionTemplates
+(
+    TemplateId INT IDENTITY PRIMARY KEY,
+    ClinicId INT NOT NULL,
+    DepartmentId INT NOT NULL,
+    DoctorId INT,
+    TemplateName VARCHAR(100) NOT NULL,
+    IsActive BIT NOT NULL DEFAULT 1
+
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
+);
+
+CREATE TABLE PrescriptionTemplateSections
+(
+    SectionId INT IDENTITY PRIMARY KEY,
+    TemplateId INT NOT NULL,
+    ClinicId INT NOT NULL,
+    SectionName VARCHAR(100) NOT NULL,
+    DisplayOrder INT NOT NULL,
+    IsActive BIT NOT NULL DEFAULT 1
+
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
+    FOREIGN KEY (TemplateId) REFERENCES PrescriptionTemplates(TemplateId)
+);
+
+CREATE TABLE PrescriptionTemplateFields
+(
+    FieldId INT IDENTITY PRIMARY KEY,
+    SectionId INT NOT NULL,
+    TemplateId int not null,
+    ClinicId INT NOT NULL,
+    FieldLabel VARCHAR(100) NOT NULL,
+    FieldTypeCode VARCHAR(30) NOT NULL,
+    IsRequired BIT NOT NULL DEFAULT 0,
+    DisplayOrder INT NOT NULL,
+    IsActive BIT NOT NULL DEFAULT 1
+
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
+    FOREIGN KEY (SectionId) REFERENCES PrescriptionTemplateSections(SectionId),
+    FOREIGN KEY (TemplateId) REFERENCES PrescriptionTemplates(TemplateId),
+    FOREIGN KEY (FieldTypeCode) REFERENCES FieldTypes(FieldTypeCode)
+);
+
+CREATE TABLE PrescriptionTemplateFieldOptions
+(
+    OptionId INT IDENTITY PRIMARY KEY,
+    FieldId INT NOT NULL,
+    SectionId INT NOT NULL,
+    TemplateId int not null,
+    ClinicId INT NOT NULL,
+    OptionText VARCHAR(100) NOT NULL,
+    OptionValue VARCHAR(100) NOT NULL,
+    IsRequired BIT NOT NULL DEFAULT 0,
+    DisplayOrder INT NOT NULL,
+    IsActive BIT NOT NULL DEFAULT 1
+
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
+    FOREIGN KEY (SectionId) REFERENCES PrescriptionTemplateSections(SectionId),
+    FOREIGN KEY (TemplateId) REFERENCES PrescriptionTemplates(TemplateId),
+    FOREIGN KEY (FieldId) REFERENCES PrescriptionTemplateFields(FieldId)
+);
 
 CREATE TABLE Patients (
     PatientId INT IDENTITY PRIMARY KEY,

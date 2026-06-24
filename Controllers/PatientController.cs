@@ -233,7 +233,11 @@ namespace Controllers
                                         {
                                             id = x.PatientId,
                                             text = "ID: " + x.PatientId + " - " + x.FirstName + " " + x.LastName + 
-                                                            " (" + x.Phone + ")"
+                                                            " (" + x.Phone + ")",
+                                            patientName = x.FirstName + ' ' + x.LastName,
+                                            phone = x.Phone,
+                                            age = x.Age,
+                                            gender = x.Gender
                                         })
                                         .ToList();
 

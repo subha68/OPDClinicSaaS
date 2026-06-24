@@ -9,7 +9,7 @@
     left: 0;
     top: 0;
     width: 180px;
-    height: 90px;
+    height: 150px;
     border-radius: 12px;
     padding: 12px;
     border: 1px solid #ddd;
@@ -39,6 +39,7 @@
 
 .slot-time {
     text-align: center;
+    margin-bottom: 6px;
     font-size: 24px;
     font-weight: 700;
     color: #333;
@@ -53,6 +54,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    margin-bottom: 6px;
 }
 
 .slot-footer {
@@ -181,7 +183,7 @@
 .slot-stack {
     position: relative;
     width: 220px;
-    height: 100px;
+    height: 160px;
 }
 
 .cancelled-card {
@@ -191,7 +193,7 @@
     top: -8px;
 
     width: 180px;
-    height: 90px;
+    height: 150px;
 
     border-radius: 12px;
 
@@ -228,4 +230,12 @@
     border-radius: 0 6px 6px 0;
 
     z-index: 2;
+}
+
+.ui-autocomplete {
+    z-index: 999999 !important;
+}
+
+.modal-body {
+    overflow: visible !important;
 }

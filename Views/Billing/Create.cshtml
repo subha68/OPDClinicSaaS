@@ -204,75 +204,36 @@
     });
 
     $(function () {
-        $("#PatientSearch").autocomplete({
 
-            minLength: 2,
-            delay: 300,
+        wirePatientAutocomplete(
+            "#PatientSearch",
+            function (patient) {
 
-            source: function (request, response) {
-
-                $.getJSON('/Patient/SearchPatient',
-                    { term: request.term },
-                    function (data) {
-
-                        response($.map(data, function (item) {
-
-                            return {
-                                label: item.text,
-                                value: item.text,
-                                id: item.id
-                            };
-                        }));
-                    });
-            },
-
-            select: function (event, ui) {
-
-                $("#PatientId").val(ui.item.id);
+                $("#PatientId").val(patient.id);
 
                 setTimeout(function () {
+
                     $("#PatientId").trigger("change");
+
                 }, 100);
-            }
-        }); 
-    });   
+            });
+    });
 
-    function initializeChargeAutocomplete(row) {
+    function initializeChargeAutocomplete(row)
+    {
+        wireChargeAutocomplete(
 
-        row.find(".chargeSearch").autocomplete({
+            row.find(".chargeSearch"),
 
-            minLength: 2,
+            function (charge) {
 
-            source: function (request, response) {
+                row.find(".chargeId").val(charge.id);
 
-                $.getJSON('/BillingCharge/SearchCharge',
-                    { term: request.term },
-                    function (data) {
-
-                        response($.map(data, function (item) {
-
-                            return {
-                                label: item.text,
-                                value: item.text,
-                                id: item.id,
-                                rate: item.rate
-                            };
-                        }));
-                    });
-            },
-
-            select: function (event, ui) {
-
-                row.find(".chargeId").val(ui.item.id);
-
-                row.find(".rate").val(ui.item.rate);
+                row.find(".rate").val(charge.rate);
 
                 calculateRow(row);
-
-                return false;
-            }
-        });
+            });
     }
 
-    </script>
+    </script>   
 }

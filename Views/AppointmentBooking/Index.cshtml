@@ -106,21 +106,15 @@
 
             <div class="modal-footer">
 
-                <button type="button"
-                        class="btn btn-primary"
-                        id="btnReschedule">
+                <button type="button" class="btn btn-primary" id="btnReschedule">
                     Reschedule
                 </button>
 
-                <button type="button"
-                        class="btn btn-danger"
-                        id="btnCancel">
+                <button type="button" class="btn btn-danger" id="btnCancel">
                     Cancel Appointment
                 </button>
 
-                <button type="button"
-                        class="btn btn-secondary"
-                        data-bs-dismiss="modal">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     Close
                 </button>
 
@@ -129,6 +123,95 @@
         </div>
     </div>
 
+</div>
+
+<div class="modal fade" id="bookingModal" tabindex="-1">
+
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Book Appointment
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="bookAppointmentDateTime" />
+                <input type="hidden" id="bookPatientId" />
+                <input type="hidden" id="bookVisitId" />
+                <input type="hidden" id="bookIsVisitLocked" />
+
+                <div class="mb-3">
+                    <label>Patient</label>
+
+                    <input type="text"
+                           id="patientSearch"
+                           class="form-control"
+                           autocomplete="off" />
+
+                </div>
+
+                <div class="mb-3">
+                    <label>Patient Name</label>
+                    <input type="text"
+                           id="bookPatientName"
+                           class="form-control"
+                           readonly />
+                </div>
+
+                <div class="mb-3">
+                    <label>Mobile</label>
+                    <input type="text"
+                           id="bookPatientPhone"
+                           class="form-control"
+                           readonly />
+                </div>
+
+                <div class="mb-3">
+
+                    <label>Visit Type</label>
+
+                    <div>
+
+                        <input type="radio" name="bookVisitType" value="New" checked />
+
+                        New
+
+                        <input type="radio" name="bookVisitType" value="Follow Up" class="ms-3" />
+
+                        Follow Up
+
+                        <input type="radio" name="bookVisitType" value="Report" class="ms-3" />
+
+                        Report
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button" class="btn btn-success" id="btnConfirmBooking">
+                    Confirm Booking
+                </button>
+
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Close
+                </button>
+
+            </div>
+
+        </div>
+    </div>
 </div>
 
 @section Scripts{
@@ -245,6 +328,10 @@ function renderSlots(slots) {
                         ${slot.slotTime}
                     </div>
 
+                    <div class="slot-patient">
+                        ${slot.patientName || ''}
+                    </div>
+
                     <div class="status-row">
 
                         <span class="slot-status ${getStatusClass(slot.appointmentStatus)}">
@@ -257,10 +344,6 @@ function renderSlots(slots) {
                             </span>
                         ` : ''}
 
-                    </div>
-
-                    <div class="slot-patient">
-                        ${slot.patientName || ''}
                     </div>
 
                 </div>
@@ -314,11 +397,13 @@ function selectSlot(appointmentId, slotTime, patientName, appointmentStatus, fin
     console.log(appointmentDateTime);
 
     if (!appointmentId) {
-        window.location.href =
-                '/AppointmentBooking/Book'
-                + '?departmentId=' + $("#departmentId").val()
-                + '&doctorId=' + $("#doctorId").val()
-                + '&appointmentDateTime=' + encodeURIComponent(appointmentDateTime);
+        clearBookingModal();
+
+        $("#bookAppointmentDateTime").val(appointmentDateTime);
+
+        new bootstrap.Modal(
+            document.getElementById('bookingModal')
+        ).show();
 
         return;
     }
@@ -527,6 +612,101 @@ function showCancelledAppointments(encodedAppointments)
     new bootstrap.Modal(
         document.getElementById('appointmentModal')
     ).show();
+}
+
+$('#bookingModal').on('shown.bs.modal', function () {
+
+    if ($("#patientSearch").data("ui-autocomplete")) {
+        $("#patientSearch").autocomplete("destroy");
+    }
+
+    wirePatientAutocomplete(
+        "#patientSearch",
+        function (patient) {
+
+            $("#bookPatientId").val(patient.id);
+            $("#bookPatientName").val(patient.patientName);
+            $("#bookPatientPhone").val(patient.phone);
+
+            checkVisit();
+        },
+        "#bookingModal"
+    );
+});
+
+function checkVisit()
+{
+    let patientId = $("#bookPatientId").val();
+    let date = $("#appointmentDate").val();
+
+    $.get('/AppointmentBooking/GetVisit',
+        {
+            patientId: patientId,
+            visitDate: date
+        },
+        function(data)
+        {
+            if(data && data.visitId > 0)
+            {
+                $("#bookVisitId").val(data.visitId);
+                $("input[name='bookVisitType']").prop("disabled", true);
+                $("input[name='bookVisitType'][value='" + data.visitType + "']").prop("checked", true);
+                $("#bookIsVisitLocked").val(true);
+            }
+            else
+            {
+                $("#bookVisitId").val(0);
+                $("input[name='bookVisitType']").prop("disabled", false);
+                $("input[name='bookVisitType'][value='New']").prop("checked", true);
+                $("#bookIsVisitLocked").val(false);
+            }
+        });
+}
+
+$("#btnConfirmBooking").click(function () {
+
+    $.post(
+        '/AppointmentBooking/BookAjax',
+        {
+            doctorId: $("#doctorId").val(),
+            departmentId: $("#departmentId").val(),
+            patientId: $("#bookPatientId").val(),
+            visitId: $("#bookVisitId").val(),
+            visitType: $("input[name='bookVisitType']:checked").val(),
+            appointmentDateTime: $("#bookAppointmentDateTime").val()
+        },
+        function() {
+
+            bootstrap.Modal
+                .getInstance(
+                    document.getElementById(
+                        'bookingModal'
+                    )
+                )
+                .hide();
+
+            loadSlots();
+        });
+});
+
+function clearBookingModal()
+{
+    $("#bookAppointmentDateTime").val('');
+
+    $("#bookPatientId").val('');
+    $("#bookVisitId").val('');
+    $("#bookIsVisitLocked").val(false);
+
+    $("#patientSearch").val('');
+
+    $("#bookPatientName").val('');
+    $("#bookPatientPhone").val('');
+
+    $("input[name='bookVisitType']")
+        .prop("disabled", false);
+
+    $("input[name='bookVisitType'][value='New']")
+        .prop("checked", true);
 }
 
 </script>

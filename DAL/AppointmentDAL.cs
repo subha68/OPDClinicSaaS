@@ -396,6 +396,7 @@ namespace DAL
                     //SlotEndTime = (TimeSpan)dr["SlotEndTime"],
                     Status = dr["Status"].ToString(),
                     CancellationReason = dr["CancellationReason"].ToString(),
+                    PatientId = Convert.ToInt32(dr["PatientId"]),
                     PatientName = dr["PatientName"].ToString(),
                     BillingStatus = dr["BillStatus"].ToString(),
                     PaymentStatus = dr["PaymentStatus"].ToString()

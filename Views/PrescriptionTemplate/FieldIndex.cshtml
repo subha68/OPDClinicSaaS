@@ -1,0 +1,61 @@
+@model IEnumerable<Models.PrescriptionTemplateField>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h3>Fields</h3>
+
+<p>
+    <a asp-action="Create"
+       asp-route-sectionId="@ViewBag.SectionId"
+       class="btn btn-primary">
+       Add Field
+    </a>
+</p>
+
+<table class="table table-bordered">
+
+    <thead>
+
+        <tr>
+            <th>Label</th>
+            <th>Type</th>
+            <th></th>
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+    @foreach(var item in Model)
+    {
+        <tr>
+
+            <td>@item.FieldLabel</td>
+
+            <td>@item.FieldTypeCode</td>
+
+            <td>
+
+                @if(item.FieldTypeCode == "Dropdown"
+                   || item.FieldTypeCode == "Radio"
+                   || item.FieldTypeCode == "CheckboxGroup")
+                {
+                    <a asp-action="OptionIndex"
+                       asp-route-fieldId="@item.FieldId"
+                       class="btn btn-sm btn-info">
+
+                       Options
+
+                    </a>
+                }
+
+            </td>
+
+        </tr>
+    }
+
+    </tbody>
+
+</table>

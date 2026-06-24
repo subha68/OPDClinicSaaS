@@ -1,0 +1,55 @@
+@model Models.PrescriptionTemplate
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h3>Template</h3>
+
+<form method="post">
+
+    <input type="hidden"
+           asp-for="TemplateId" />
+
+    <div class="mb-3">
+
+        <label>Department</label>
+
+        <select asp-for="DepartmentId"
+                asp-items="ViewBag.Departments"
+                class="form-control">
+        </select>
+
+    </div>
+
+    <div class="mb-3">
+
+        <label>Template Name</label>
+
+        <input asp-for="TemplateName"
+               class="form-control" />
+
+    </div>
+
+    <div class="form-check mb-3">
+
+        <input asp-for="IsActive"
+               class="form-check-input" />
+
+        <label class="form-check-label">
+            Active
+        </label>
+
+    </div>
+
+    <button type="submit"
+            class="btn btn-success">
+        Save
+    </button>
+
+    <a asp-action="Index"
+       class="btn btn-secondary">
+        Back
+    </a>
+
+</form>

@@ -1,0 +1,32 @@
+@model IEnumerable<Models.PrescriptionTemplateFieldOption>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h3>Options</h3>
+
+<p>
+    <a asp-action="Create"
+       asp-route-fieldId="@ViewBag.FieldId"
+       class="btn btn-primary">
+        Add Option
+    </a>
+</p>
+
+<table class="table">
+
+@foreach(var option in Model)
+{
+    <tr>
+
+        <td>@option.DisplayOrder</td>
+
+        <td>@option.OptionText</td>
+
+        <td>@option.OptionValue</td>
+
+    </tr>
+}
+
+</table>

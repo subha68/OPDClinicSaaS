@@ -131,6 +131,21 @@ namespace Controllers
                                 });
         }
 
+        [HttpPost]
+        public IActionResult BookAjax(AppointmentCreateVM vm)
+        {
+            if (!ModelState.IsValid)
+                return View(vm);
+
+            int appointmentId = _appointment.BookAppointment(vm);
+
+            return Json(new
+            {
+                success = true,
+                appointmentId = appointmentId
+            });
+        }
+
         [HttpGet]
         public IActionResult SearchPatient(int departmentId, int doctorId, DateTime appointmentDateTime)
         {

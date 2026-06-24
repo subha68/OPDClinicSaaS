@@ -1,3 +1,13 @@
+INSERT INTO FieldTypes VALUES
+('Text'),
+('TextArea'),
+('Number'),
+('Date'),
+('CheckboxGroup'),
+('Dropdown'),
+('Radio'),
+('MultiSelect');
+
 INSERT INTO Roles VALUES
 (1,'SuperAdmin'),
 (2,'ClinicAdmin'),
@@ -26,7 +36,7 @@ VALUES
 
 -- Departments
 INSERT INTO Departments (ClinicId, Name)
-VALUES (1,'General'), (1,'Cardiology'), (1,'ENT');
+VALUES (1,'General'), (1,'Cardiology'), (1,'ENT'), (1, 'Orthopaedics'), (1, 'Ophthalmology');
 
 -- Doctors
 INSERT INTO Doctors (ClinicId, DepartmentId, FirstName, LastName, UserId, RegistrationNo, Qualification)
@@ -53,14 +63,15 @@ INSERT INTO Features (Name, Code) VALUES
 ('Billing Management', 'BILLING_MANAGEMENT'),
 ('Patient History', 'PATIENT_HISTORY'),
 ('Billing Charges', 'BILLING_CHARGES'),
-('Medicine Management', 'MEDICINE_MANAGEMENT');
+('Medicine Management', 'MEDICINE_MANAGEMENT'),
+('Prescription Templates', 'PRESCRIPTION_TEMPLATE');
 
 -- Role Mapping
 INSERT INTO RoleFeatures (RoleId, FeatureId)
 SELECT 1, FeatureId FROM Features WHERE Code IN ('CLINIC_VIEW', 'USER_VIEW', 'ROLE_VIEW');
 
 INSERT INTO RoleFeatures (RoleId, FeatureId)
-SELECT 2, FeatureId FROM Features WHERE Code IN ('DEPT_VIEW','DOC_VIEW','USER_VIEW','DOCTOR_SCHEDULE');
+SELECT 2, FeatureId FROM Features WHERE Code IN ('DEPT_VIEW','DOC_VIEW','USER_VIEW','DOCTOR_SCHEDULE', 'PRESCRIPTION_TEMPLATE');
 
 INSERT INTO RoleFeatures (RoleId, FeatureId)
 SELECT 3, FeatureId FROM Features WHERE Code IN ('APPOINTMENT_BOOKING', 'PATIENT_HISTORY');
@@ -69,7 +80,7 @@ INSERT INTO RoleFeatures (RoleId, FeatureId)
 SELECT 4, FeatureId FROM Features WHERE Code IN ('CONSULTATION_MANAGEMENT', 'PATIENT_HISTORY');
 
 INSERT INTO RoleFeatures (RoleId, FeatureId)
-SELECT 5, FeatureId FROM Features WHERE Code IN ('BILLING_CHARGES', 'PATIENT_HISTORY', 'BILLING_MANAGEMENT');
+SELECT 5, FeatureId FROM Features WHERE Code IN ('BILLING_CHARGES', 'PATIENT_HISTORY', 'BILLING_MANAGEMENT'),
 
 INSERT INTO RoleFeatures (RoleId, FeatureId)
 SELECT 6, FeatureId FROM Features WHERE Code IN ('MEDICINE_MANAGEMENT');
@@ -89,7 +100,8 @@ VALUES
 ('Consultation','Consultation','Index','fa-stethoscope','CONSULTATION_MANAGEMENT',9),
 ('Billing','Billing','Index','fa-file-invoice-dollar','BILLING_MANAGEMENT', 10),
 ('Billing Charges', 'BillingCharge', 'Index', 'fa fa-money-bill', 'BILLING_CHARGES', 11),
-('Medicines', 'Medicine', 'Index', 'fa fa-pills', 'MEDICINE_MANAGEMENT', 12);
+('Medicines', 'Medicine', 'Index', 'fa fa-pills', 'MEDICINE_MANAGEMENT', 12),
+('Prescription Templates', 'PrescriptionTemplate', 'Index', 'fa-file-medical', 'PRESCRIPTION_TEMPLATE', 13);
 
 -- Change ClinicId before running below script
 SET IDENTITY_INSERT AccountGroups ON;
