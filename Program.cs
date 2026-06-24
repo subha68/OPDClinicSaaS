@@ -76,6 +76,8 @@ builder.Services.AddScoped<VisitDAL>();
 builder.Services.AddScoped<VisitService>();
 builder.Services.AddScoped<MedicineDAL>();
 builder.Services.AddScoped<MedicineService>();
+builder.Services.AddScoped<PrescriptionTemplateDAL>();
+builder.Services.AddScoped<PrescriptionTemplateService>();
 
 var app = builder.Build();
 
