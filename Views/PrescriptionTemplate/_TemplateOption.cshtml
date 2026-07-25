@@ -1,0 +1,41 @@
+@model Models.PrescriptionTemplateFieldOption
+
+<div class="option-wrapper" data-option-id="@Model.OptionId">
+
+    <div class="option-card" @(Model.IsActive ? "" : "inactive")>
+
+        <span class="option-drag">
+            <i class="fa fa-grip-vertical"></i>
+        </span>
+
+        <span class="option-name"
+            data-id="@Model.OptionId">
+            @Model.OptionText
+        </span>
+
+        <div class="option-actions">
+
+            <button class="btn btn-sm insert-before-option"
+                    data-option-id="@Model.OptionId">
+                + Before
+            </button>
+
+            <button class="btn btn-sm insert-after-option"
+                    data-option-id="@Model.OptionId">
+                + After
+            </button>
+
+            <button class="btn btn-sm toggle-option"
+                    data-option-id="@Model.OptionId">
+
+                <i class="toggle-icon @(Model.IsActive ? "bi bi-eye-slash" : "bi bi-eye")"></i>
+
+                <span class="toggle-text">
+                    @(Model.IsActive ? "Deactivate" : "Reactivate")
+                </span>
+            </button>
+
+        </div>
+
+    </div>
+</div>

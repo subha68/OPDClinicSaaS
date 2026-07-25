@@ -1,62 +1,143 @@
-@model IEnumerable<Models.PrescriptionTemplate>
+@model Models.PrescriptionTemplate
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h3>Prescription Templates</h3>
+@section Styles
+{
+    <link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
 
-<p>
-    <a asp-action="Create"
-       class="btn btn-primary">
-        New Template
-    </a>
-</p>
+    <link href="~/css/prescriptiontemplate.css" rel="stylesheet" />
+}
 
-<table class="table table-bordered">
+<div class="row mb-3">
 
-    <thead>
-        <tr>
-            <th>Department</th>
-            <th>Template</th>
-            <th>Active</th>
-            <th width="250"></th>
-        </tr>
-    </thead>
+    <div class="col-md-4">
 
-    <tbody>
+        <label>Department</label>
 
-    @foreach(var item in Model)
+        <select id="DepartmentId"
+                class="form-control"
+                asp-items="ViewBag.Departments">
+
+            <option value="">-- Select Department --</option>
+
+        </select>
+
+    </div>
+
+    <div class="col-md-4">
+        <label>Doctor</label>
+        <select id="DoctorId"
+                class="form-control">
+            <option value="">-- Select Doctor --</option>
+        </select>
+    </div>
+
+    <div class="col-md-2 d-flex align-items-end">
+        <button id="btnShowTemplate" class="btn btn-primary w-100">
+            Show Template
+        </button>
+    </div>
+
+    <div class="col-md-2 d-flex justify-content-end align-items-center">
+
+        <div class="form-check form-switch d-flex align-items-center mb-0">
+
+            <input class="form-check-input showInactiveSwitch"
+                   type="checkbox"
+                   id="showInactive">
+
+            <label class="form-check-label showInactiveLabel"
+                   for="showInactive">
+                Show Inactive
+            </label>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div id="designerContainer">
+
+    <input type="hidden" id="TemplateId" value="@Model.TemplateId" />
+
+    @if (Model != null)
     {
-        <tr>
-
-            <td>@item.DepartmentName</td>
-
-            <td>@item.TemplateName</td>
-
-            <td>
-                @(item.IsActive ? "Yes" : "No")
-            </td>
-
-            <td>
-
-                <a asp-action="Edit"
-                   asp-route-id="@item.TemplateId"
-                   class="btn btn-sm btn-warning">
-                    Edit
-                </a>
-
-                <a asp-action="SectionIndex"
-                   asp-route-templateId="@item.TemplateId"
-                   class="btn btn-sm btn-info">
-                    Sections
-                </a>
-
-            </td>
-
-        </tr>
+        @await Html.PartialAsync(
+            "_TemplateDesigner",
+            Model)
     }
 
-    </tbody>
+</div>
 
-</table>
+@section Scripts
+{
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
+<script src="~/js/template-core.js"></script>
+<script src="~/js/template-runtime.js"></script>
+<script src="~/js/template-event.js"></script>
+<script src="~/js/template-lifecycle.js"></script>
+
+<script>
+
+let isSavingSectionOrder = false;
+let isSavingFieldOrder = false;
+let isSavingOptionOrder = false;
+
+$(function () {
+
+    initializeDesignerCore();
+
+    $("#showInactive").change(function () {
+        applyInactiveFilter();
+    });
+
+});
+
+$("#btnShowTemplate").click(function () {
+
+    let departmentId = $("#DepartmentId").val();
+    let doctorId = $("#DoctorId").val();
+
+    let url = "";
+    let data = {};
+
+    // PRIORITY 1: Doctor
+    if (doctorId) {
+
+        url = "/PrescriptionTemplate/GetByDoctor";
+        data = { doctorId: doctorId };
+
+    }
+    // PRIORITY 2: Department
+    else if (departmentId) {
+
+        url = "/PrescriptionTemplate/GetByDepartment";
+        data = { departmentId: departmentId };
+
+    }
+    // PRIORITY 3: Default clinic template
+    else {
+
+        url = "/PrescriptionTemplate/GetByClinic";
+        data = { clinicId: $("#ClinicId").val() }; // or hidden field
+    }
+
+    $.get(url, data, function (html) {
+
+        $("#designerContainer").html(html);
+
+        initializeDesignerRuntime();
+
+        applyInactiveFilter();
+    });
+
+});
+
+</script>
+}

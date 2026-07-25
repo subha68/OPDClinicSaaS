@@ -219,8 +219,7 @@ namespace DAL
                     EndTime,
                     SlotDurationMinutes,
                     MaxPatientsPerSlot,
-                    IsActive,
-                    CreatedOn
+                    IsActive
                 )
                 VALUES
                 (
@@ -231,8 +230,7 @@ namespace DAL
                     @EndTime,
                     @SlotDurationMinutes,
                     @MaxPatientsPerSlot,
-                    @IsActive,
-                    @CreatedOn
+                    @IsActive
                 )";
 
             foreach (var shift in schedule.Shifts)
@@ -247,13 +245,12 @@ namespace DAL
                     cmd.Parameters.Add("@SlotDurationMinutes", SqlDbType.Int).Value = schedule.SlotDurationMinutes;
                     cmd.Parameters.Add("@MaxPatientsPerSlot", SqlDbType.Int).Value = schedule.MaxPatientsPerSlot;
                     cmd.Parameters.Add("@IsActive", SqlDbType.Bit).Value = schedule.IsActive;
-                    cmd.Parameters.Add("@CreatedOn", SqlDbType.DateTime).Value = schedule.CreatedOn;
-
+                    
                     insertRowsAffected += cmd.ExecuteNonQuery();
                 }
             }
 
-            return deleteRowsAffected > 0 && insertRowsAffected > 0;
+            return insertRowsAffected > 0;
         }
 
         public bool Delete(int scheduleId, SqlConnection conn, SqlTransaction tran)

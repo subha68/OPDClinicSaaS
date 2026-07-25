@@ -1,0 +1,62 @@
+@model IEnumerable<Models.PrescriptionTemplate>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h3>Prescription Templates</h3>
+
+<p>
+    <a asp-action="Create"
+       class="btn btn-primary">
+        New Template
+    </a>
+</p>
+
+<table class="table table-bordered">
+
+    <thead>
+        <tr>
+            <th>Department</th>
+            <th>Template</th>
+            <th>Active</th>
+            <th width="250"></th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+    @foreach(var item in Model)
+    {
+        <tr>
+
+            <td>@item.DepartmentName</td>
+
+            <td>@item.TemplateName</td>
+
+            <td>
+                @(item.IsActive ? "Yes" : "No")
+            </td>
+
+            <td>
+
+                <a asp-action="Edit"
+                   asp-route-id="@item.TemplateId"
+                   class="btn btn-sm btn-warning">
+                    Edit
+                </a>
+
+                <a asp-action="SectionIndex"
+                   asp-route-templateId="@item.TemplateId"
+                   class="btn btn-sm btn-info">
+                    Sections
+                </a>
+
+            </td>
+
+        </tr>
+    }
+
+    </tbody>
+
+</table>

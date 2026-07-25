@@ -29,7 +29,7 @@ namespace BLL
             using var tran = conn.BeginTransaction();
             try
             {
-                int doctorRoleId =_roleDAL.GetRoleByName("Doctor", conn).RoleId;
+                int doctorRoleId =_roleDAL.GetRoleByName("Doctor", conn, tran).RoleId;
 
                 // STEP 1: create user
                 var user = new User
@@ -38,7 +38,7 @@ namespace BLL
                     PasswordHash = model.Password,
                     RoleId = doctorRoleId,   // Doctor Role
                     ClinicId = model.ClinicId,
-                    FirstName = model.FirstName,
+                    FirstName = model.Salutation + " " + model.FirstName,
                     LastName = model.LastName,
                     Email = model.Email,
                     Phone = model.Phone,
@@ -51,6 +51,7 @@ namespace BLL
                 // STEP 2: create doctor
                 var doctor = new Doctor
                 {
+                    Salutation = model.Salutation,
                     FirstName = model.FirstName,
                     LastName = model.LastName,
                     DepartmentId = model.DepartmentId,
@@ -86,14 +87,14 @@ namespace BLL
 
             try
             {
-                int doctorRoleId =_roleDAL.GetRoleByName("Doctor", conn).RoleId;
+                int doctorRoleId =_roleDAL.GetRoleByName("Doctor", conn, tran).RoleId;
 
                 var user = new User
                 {
                     Username = model.Username,
                     PasswordHash = model.Password,
                     RoleId = doctorRoleId,   // Doctor Role
-                    FirstName = model.FirstName,
+                    FirstName = model.Salutation + " " + model.FirstName,
                     LastName = model.LastName
                 };
 

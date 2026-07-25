@@ -1,0 +1,91 @@
+@model Models.PrescriptionTemplateSection
+
+@{  
+    var fieldNames = Model.Fields
+        .OrderBy(x => x.DisplayOrder)
+        .Select(x => x.FieldLabel)
+        .Take(5);
+
+    var preview = string.Join(", ", fieldNames);
+
+    if (Model.Fields.Count > 5)
+    {
+        preview += "...";
+    }
+}
+
+<div class="section-wrapper"
+    data-section-id="@Model.SectionId">
+
+    <div class="section-card @(Model.IsActive ? "" : "inactive")">
+
+        <div class="section-header">
+
+            <div class="section-drag drag-handle">
+                <i class="bi bi-grip-vertical"></i>
+            </div>
+
+            <button class="expand-section btn btn-link p-0"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#section_@Model.SectionId">
+
+                <i class="bi bi-chevron-right"></i>
+
+            </button>
+
+            <div class="section-content">
+
+                <div class="section-name" data-id="@Model.SectionId">
+                    @Model.SectionName
+                </div>
+
+                <div class="section-preview">
+                    @preview
+                </div>
+
+            </div>
+
+            <div class="section-actions">
+
+                <button class="insert-before btn btn-sm btn-light"
+                        data-section-id="@Model.SectionId">
+                    + Before
+                </button>
+
+                <button class="insert-after btn btn-sm btn-light"
+                        data-section-id="@Model.SectionId">
+                    + After
+                </button>
+
+                <button class="section-action-btn toggle-section"
+                        data-section-id="@Model.SectionId">
+
+                    <i class="toggle-icon @(Model.IsActive ? "bi bi-eye-slash" : "bi bi-eye")"></i>
+
+                    <span class="toggle-text">
+                        @(Model.IsActive ? "Deactivate" : "Reactivate")
+                    </span>
+
+                </button>
+            </div>
+
+        </div>
+
+        <div id="section_@Model.SectionId"
+            class="collapse section-collapse">
+
+            <div id="fields_@Model.SectionId"
+                    class="card-body fields-container"                        
+                    data-section-id="@Model.SectionId">
+
+                @foreach (var field in Model.Fields.OrderBy(f => f.DisplayOrder))
+                {
+                    @await Html.PartialAsync("_TemplateField", field)
+                }
+
+            </div>
+
+        </div>
+    </div>
+
+</div>

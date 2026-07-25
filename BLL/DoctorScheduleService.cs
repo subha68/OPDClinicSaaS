@@ -39,7 +39,8 @@ namespace BLL
 
             try
             {
-                return _scheduleDAL.GetDoctorSchedule(doctorId, conn);
+                var schedule = _scheduleDAL.GetDoctorSchedule(doctorId, conn);
+                return schedule ?? new DoctorScheduleVM(ClinicId);
             }
             catch
             {
@@ -57,6 +58,7 @@ namespace BLL
             using var tran = conn.BeginTransaction();
             try
             {
+                model.ClinicId = ClinicId;
                 bool result = _scheduleDAL.SaveDoctorSchedule(model.DoctorId, model, conn, tran);
 
                 tran.Commit();

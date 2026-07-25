@@ -15,17 +15,17 @@ namespace Controllers
     public class DoctorScheduleController : Controller
     {
         private readonly DoctorScheduleService _schedule;
-        private readonly AppointmentSlotService _slot;
+        //private readonly AppointmentSlotService _slot;
         private readonly DepartmentService _department;
         private readonly DoctorService _doctor;
 
         public DoctorScheduleController(DoctorScheduleService schedule, 
-                                        AppointmentSlotService slot, 
+                                        //AppointmentSlotService slot, 
                                         DoctorService doctor,
                                         DepartmentService department)
         {
             _schedule = schedule;
-            _slot = slot;
+            //_slot = slot;
             _doctor = doctor;
             _department = department;
         }

@@ -10,7 +10,7 @@ namespace Models
 
         public string OptionText { get; set; }
         public string OptionValue { get; set; }
-        public bool IsRequired { get; set; }
+        public bool IsActive { get; set; }
         public int DisplayOrder { get; set; }
     }
 }

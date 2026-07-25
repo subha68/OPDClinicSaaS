@@ -33,6 +33,13 @@
 
             <td class="right-panel">
 
+                @if (!string.IsNullOrEmpty(Model.ClinicLogo))
+                {
+                    <div class="clinic-logo">
+                        <img src="~/images/Model.ClinicLogo" alt="Clinic Logo" />
+                    </div>
+                }
+
                 <div class="clinic-name">
                     @Model.ClinicName
                 </div>

@@ -6,7 +6,7 @@ using Helpers;
 
 namespace Controllers
 {
-    [AuthorizeRole(1)] // SuperAdmin only
+    //[AuthorizeRole(1)] // SuperAdmin only
     public class ClinicController : Controller
     {
         private readonly ClinicService _clinic;

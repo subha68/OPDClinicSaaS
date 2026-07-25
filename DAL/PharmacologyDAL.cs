@@ -46,10 +46,10 @@ namespace DAL
             cmd.Parameters.AddWithValue("@ConsultationId", advice.ConsultationId);
             cmd.Parameters.AddWithValue("@AppointmentId", advice.AppointmentId);
             cmd.Parameters.AddWithValue("@MedicineName", advice.MedicineName);
-            cmd.Parameters.AddWithValue("@Dosage", advice.Dosage);
-            cmd.Parameters.AddWithValue("@Frequency", advice.Frequency);
-            cmd.Parameters.AddWithValue("@Duration", advice.Duration);
-            cmd.Parameters.AddWithValue("@Instructions", advice.Instructions);
+            cmd.Parameters.AddWithValue("@Dosage", advice.Dosage ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@Frequency", advice.Frequency ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@Duration", advice.Duration ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@Instructions", advice.Instructions ?? (object)DBNull.Value);
 
             return Convert.ToInt32(cmd.ExecuteScalar());
         }

@@ -13,6 +13,7 @@ namespace ViewModels
 
         public string ClinicName { get; set; }
         public string ClinicAddress { get; set; }
+        public string ClinicLogo { get; set; }
 
         public int PatientId { get; set; }
         public string PatientName { get; set; }

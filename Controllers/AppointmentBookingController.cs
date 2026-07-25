@@ -13,21 +13,21 @@ namespace Controllers
     {
         private readonly DepartmentService _department;
         private readonly DoctorService _doctor;
-        private readonly AppointmentSlotService _slot;
+        //private readonly AppointmentSlotService _slot;
         private readonly AppointmentService _appointment;
         private readonly PatientService _patient;
         private readonly VisitService _visit;
 
         public AppointmentBookingController(DepartmentService department, 
                                             DoctorService doctor, 
-                                            AppointmentSlotService slot, 
+                                            //AppointmentSlotService slot, 
                                             AppointmentService appointment, 
                                             PatientService patient, 
                                             VisitService visit)
         {
             _department = department;
             _doctor = doctor;
-            _slot = slot;
+            //_slot = slot;
             _appointment = appointment;
             _patient = patient;
             _visit = visit;

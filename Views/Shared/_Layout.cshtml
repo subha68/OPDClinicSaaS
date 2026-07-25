@@ -56,22 +56,48 @@
 
         <aside class="sidebar">
 
-            <div class="sidebar-user">
+            <div class="sidebar-header">
 
-                <div class="sidebar-avatar">
-                    <i class="fa-solid fa-user-doctor"></i>
+                <div class="sidebar-logo">
+
+                    @if (!string.IsNullOrEmpty(clinicLogo))
+                    {
+                        <img src="~/images/@clinicLogo"
+                            asp-append-version="true"
+                            alt="@clinicName" />
+                    }
+                    else
+                    {
+                        <img src="~/images/default-clinic.png"
+                            asp-append-version="true"
+                            alt="Clinic" />
+                    }
+
+                </div>
+
+                <div class="sidebar-clinic-name">
+                    @clinicName
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(clinicCode))
+                {
+                    <div class="sidebar-clinic-code">
+                        @clinicCode
+                    </div>
+                }
+
+                <div class="sidebar-user-divider"></div>
+
+                <div class="sidebar-welcome">
+                    Welcome
                 </div>
 
                 <div class="sidebar-user-name">
-                    Welcome @firstName @lastName
+                    @firstName @lastName
                 </div>
 
                 <div class="sidebar-user-role">
                     @role
-                </div>
-
-                <div class="sidebar-user-clinic">
-                    @clinicCode - @clinicName
                 </div>
 
             </div>

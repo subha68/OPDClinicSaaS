@@ -1,0 +1,37 @@
+@model Models.PrescriptionTemplate
+
+<input type="hidden"
+       id="TemplateId"
+       value="@Model.TemplateId" />
+
+@if (Model == null)
+{
+    <div class="alert alert-warning">
+        No template found.
+    </div>
+    return;
+}
+
+<h3>@Model.TemplateName</h3>
+
+<div id="sectionsContainer" data-template-id="@Model.TemplateId">
+
+    <select id="fieldTypeTemplate" class="form-select form-select-sm d-none">
+        @foreach (var item in Model.FieldTypes)
+        {
+            <option value="@item.Value">
+                @item.Text
+            </option>
+        }
+
+    </select>
+
+
+@foreach(var sec in Model.Sections.OrderBy(x => x.DisplayOrder))
+{
+    @await Html.PartialAsync("_TemplateSection", sec)
+
+}
+
+</div>
+

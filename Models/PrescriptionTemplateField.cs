@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc.Rendering;
+
 namespace Models
 {
     public class PrescriptionTemplateField
@@ -9,9 +11,16 @@ namespace Models
 
         public string FieldLabel { get; set; }
         public string FieldTypeCode { get; set; }
-        public bool IsRequired { get; set; }
+        public bool IsActive { get; set; }
         public int DisplayOrder { get; set; }
+        public bool SupportOptions => 
+                        FieldTypeCode == "Dropdown" ||
+                        FieldTypeCode == "CheckboxGroup" ||
+                        FieldTypeCode == "RadioGroup";
+
+        public int OptionCount { get; set; }
 
         public List<PrescriptionTemplateFieldOption> Options { get; set; } = new();
+        //public List<SelectListItem> FieldTypes { get; set; }
     }
 }

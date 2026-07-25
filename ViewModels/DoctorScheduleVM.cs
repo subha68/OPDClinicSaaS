@@ -16,6 +16,20 @@ namespace ViewModels
         public bool IsActive { get; set; }
         public DateTime CreatedOn { get; set; }
 
-        public List<DoctorShiftVM> Shifts { get; set; } = new();
+        public List<DoctorShiftVM> Shifts { get; set; }
+
+        public DoctorScheduleVM()
+        {
+            SlotDurationMinutes = 15;
+            MaxPatientsPerSlot = 1;
+            Shifts = new List<DoctorShiftVM>();
+        }
+        public DoctorScheduleVM(int clinicId)
+        {
+            ClinicId = clinicId;
+            SlotDurationMinutes = 15;
+            MaxPatientsPerSlot = 1;
+            Shifts = new List<DoctorShiftVM>();
+        }        
     }
 }

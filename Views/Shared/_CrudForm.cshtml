@@ -108,6 +108,22 @@
                                 class="form-control" />
                         </div>
                     }
+
+                    @if(field.Type == "autocomplete")
+                    {
+                        <div class="col-md-@field.Col mb-4">
+                            <label>@field.Label</label>
+
+                            <input type="text"
+                                id="@field.Name + "_Text""
+                                class="form-control autocomplete-field"
+                                autocomplete="off" />
+
+                            <input type="hidden"
+                                name="@field.Name"
+                                id="@field.Name" />
+                        </div>
+                    }
                 }
             </div>
             <button class="btn btn-future">

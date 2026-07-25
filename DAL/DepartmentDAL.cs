@@ -1,6 +1,7 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Models;
+using Helpers;
 
 namespace DAL
 {
@@ -58,7 +59,17 @@ namespace DAL
         {
             List<Department> list = new List<Department>();
 
-            string query = "SELECT d.*, c.Name as ClinicName FROM Departments d, Clinics c WHERE d.ClinicId = c.ClinicId";
+            string query = @"SELECT d.*, 
+                                    c.Name as ClinicName,
+                                    t.TemplateId as PrescriptionTemplateId,
+                                    t.TemplateName as PrescriptionTemplateName 
+                                FROM Departments d 
+                                LEFT JOIN Clinics c 
+                                    ON d.ClinicId = c.ClinicId 
+                                LEFT JOIN PrescriptionTemplates t 
+                                    ON (d.DepartmentId = t.DepartmentId
+                                    AND d.ClinicId = t.ClinicId) 
+                            WHERE d.DepartmentId = @DepartmentId";
 
             SqlCommand cmd = new SqlCommand(query, conn);
             if (tran != null)
@@ -76,7 +87,9 @@ namespace DAL
                     ClinicId = Convert.ToInt32(dept["ClinicId"]),
                     Name = dept["Name"].ToString(),
                     Description = dept["Description"].ToString(),
-                    ClinicName = dept["ClinicName"].ToString()
+                    ClinicName = dept["ClinicName"].ToString(),
+                    PrescriptionTemplateId = DbConvert.ToInt(dept["PrescriptionTemplateId"]),
+                    PrescriptionTemplateName = DbConvert.ToString(dept["PrescriptionTemplateName"])
                 });
             }
 
@@ -85,7 +98,17 @@ namespace DAL
 
         public Department Get(int id, SqlConnection conn, SqlTransaction? tran = null)
         {
-            string query = "SELECT d.*, c.Name as ClinicName FROM Departments d, Clinics c WHERE d.ClinicId = c.ClinicId AND d.DepartmentId = @DepartmentId";
+            string query = @"SELECT d.*, 
+                                    c.Name as ClinicName,
+                                    t.TemplateId as PrescriptionTemplateId, 
+                                    t.TemplateName as PrescriptionTemplateName 
+                            FROM Departments d 
+                            LEFT JOIN Clinics c
+                                ON d.ClinicId = c.ClinicId 
+                            LEFT JOIN PrescriptionTemplates t 
+                                ON (d.DepartmentId = t.DepartmentId
+                                AND d.ClinicId = t.ClinicId) 
+                            WHERE d.DepartmentId = @DepartmentId";
 
             SqlCommand cmd = new SqlCommand(query, conn);
             if (tran != null)
@@ -105,7 +128,9 @@ namespace DAL
                     ClinicId = Convert.ToInt32(dept["ClinicId"]),
                     Name = dept["Name"].ToString(),
                     Description = dept["Description"].ToString(),
-                    ClinicName = dept["ClinicName"].ToString()
+                    ClinicName = dept["ClinicName"].ToString(),
+                    PrescriptionTemplateId = DbConvert.ToInt(dept["PrescriptionTemplateId"]),
+                    PrescriptionTemplateName = DbConvert.ToString(dept["PrescriptionTemplateName"])
                 };
             }
 
@@ -116,7 +141,17 @@ namespace DAL
         {
             List<Department> list = new List<Department>();
 
-            string query = "SELECT d.*, c.Name as ClinicName FROM Departments d, Clinics c WHERE d.ClinicId = c.ClinicId AND d.ClinicId=@ClinicId";
+            string query = @"SELECT d.*, 
+                                    c.Name as ClinicName,
+                                    t.TemplateId as PrescriptionTemplateId,
+                                    t.TemplateName as PrescriptionTemplateName
+                            FROM Departments d 
+                            LEFT JOIN Clinics c 
+                                ON d.ClinicId = c.ClinicId 
+                            LEFT JOIN PrescriptionTemplates t 
+                                ON (d.DepartmentId = t.DepartmentId
+                                AND d.ClinicId = t.ClinicId) 
+                            WHERE d.ClinicId = @ClinicId";
 
             SqlCommand cmd = new SqlCommand(query, conn);
             if (tran != null)
@@ -136,7 +171,9 @@ namespace DAL
                     ClinicId = Convert.ToInt32(dept["ClinicId"]),
                     Name = dept["Name"].ToString(),
                     Description = dept["Description"].ToString(),
-                    ClinicName = dept["ClinicName"].ToString()
+                    ClinicName = dept["ClinicName"].ToString(),
+                    PrescriptionTemplateId = DbConvert.ToInt(dept["PrescriptionTemplateId"]),
+                    PrescriptionTemplateName = DbConvert.ToString(dept["PrescriptionTemplateName"])
                 });
             }
 

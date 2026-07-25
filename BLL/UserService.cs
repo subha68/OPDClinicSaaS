@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using DAL;
 using Helpers;
 using Models;
+using Microsoft.Data.SqlClient;
 
 namespace BLL
 {
@@ -25,28 +26,15 @@ namespace BLL
             _dal = _userDAL;
         }
 
-        public override int Create(User user)
+        public override int Add(User user, SqlConnection conn, SqlTransaction tran)
         {
             user.PasswordHash = PasswordHelper.HashPassword(user.PasswordHash);
 
-            using var conn = _db.GetConnection();
-            conn.Open();
-            using var tran = conn.BeginTransaction();
+            return base.Add(user, conn, tran);
 
-            try
-            {
-                int id = Add(user, conn, tran);
-                tran.Commit();
-                return id;
-            }
-            catch
-            {
-                tran.Rollback();
-                throw;
-            }
         }
 
-        public override bool Modify(User user)
+        public override bool Update(User user, SqlConnection conn, SqlTransaction tran)
         {
             if (string.IsNullOrWhiteSpace(user.PasswordHash))
             {
@@ -57,20 +45,7 @@ namespace BLL
                 user.PasswordHash = PasswordHelper.HashPassword(user.PasswordHash);
             }
             
-            using var conn = _db.GetConnection();
-            conn.Open();
-            using var tran = conn.BeginTransaction();
-            try
-            {
-                bool result = Update(user, conn, tran);
-                tran.Commit();
-                return result;
-            }
-            catch
-            {
-                tran.Rollback();
-                throw;
-            }
+            return base.Update(user, conn, tran);
         }
 
         public User ValidateUser(string username, string password)

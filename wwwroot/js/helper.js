@@ -92,3 +92,30 @@ function wireChargeAutocomplete(
         appendToSelector
     );
 }
+
+function wireTemplateAutocomplete(selector, appendToSelector) {
+
+    wireAutocomplete(
+        selector,
+
+        '/Template/SearchTemplates', // your backend
+
+        function (item) {
+            return {
+                label: item.text,
+                value: item.text,
+                id: item.id,
+                templateName: item.templateName,
+                departmentName: item.departmentName
+            };
+        },
+
+        function (item) {
+
+            // optional: store selected ID in hidden field
+            $("#PrescriptionTemplateId").val(item.id);
+        },
+
+        appendToSelector
+    );
+}

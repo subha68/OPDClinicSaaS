@@ -17,15 +17,16 @@ namespace DAL
         public int Add(Doctor model, SqlConnection conn, SqlTransaction tran)
         {
             string query = @"INSERT INTO Doctors 
-                            (ClinicId, DepartmentId, FirstName, LastName, RegistrationNo, Qualification, UserId)
+                            (ClinicId, DepartmentId, Salutation, FirstName, LastName, RegistrationNo, Qualification, UserId)
                             VALUES
-                            (@ClinicId, @DepartmentId, @FirstName, @LastName, @RegNo, @Qualification, @UserId);
+                            (@ClinicId, @DepartmentId, @Salutation, @FirstName, @LastName, @RegNo, @Qualification, @UserId);
                             SELECT SCOPE_IDENTITY();";
 
             SqlCommand cmd = new SqlCommand(query, conn, tran);
 
             cmd.Parameters.AddWithValue("@ClinicId", model.ClinicId);
             cmd.Parameters.AddWithValue("@DepartmentId", model.DepartmentId);
+            cmd.Parameters.AddWithValue("@Salutation", model.Salutation);
             cmd.Parameters.AddWithValue("@FirstName", model.FirstName);
             cmd.Parameters.AddWithValue("@LastName", model.LastName ?? "");
             cmd.Parameters.AddWithValue("@RegNo", model.RegistrationNo ?? "");
@@ -41,6 +42,7 @@ namespace DAL
 
             string query = @"UPDATE Doctors
                             SET DepartmentId = @DepartmentId,
+                                Salutation = @Salutation,
                                 FirstName = @FirstName,
                                 LastName = @LastName,
                                 RegistrationNo = @RegNo,
@@ -50,6 +52,7 @@ namespace DAL
             SqlCommand cmd = new SqlCommand(query, conn, tran);
 
             cmd.Parameters.AddWithValue("@DepartmentId", model.DepartmentId);
+            cmd.Parameters.AddWithValue("@Salutation", model.Salutation);
             cmd.Parameters.AddWithValue("@FirstName", model.FirstName);
             cmd.Parameters.AddWithValue("@LastName", model.LastName ?? "");
             cmd.Parameters.AddWithValue("@RegNo", model.RegistrationNo ?? "");
@@ -134,6 +137,7 @@ namespace DAL
                     ClinicId = Convert.ToInt32(dr["ClinicId"]),
                     UserId = Convert.ToInt32(dr["UserId"]),
                     DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
+                    Salutation = dr["Salutation"].ToString(),
                     FirstName = dr["FirstName"].ToString(),
                     LastName = dr["LastName"].ToString(),
                     RegistrationNo = dr["RegistrationNo"].ToString(),
@@ -177,6 +181,7 @@ namespace DAL
                     ClinicId = Convert.ToInt32(dr["ClinicId"]),
                     UserId = Convert.ToInt32(dr["UserId"]),
                     DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
+                    Salutation = dr["Salutation"].ToString(),
                     FirstName = dr["FirstName"].ToString(),
                     LastName = dr["LastName"].ToString(),
                     RegistrationNo = dr["RegistrationNo"].ToString(),
@@ -221,6 +226,7 @@ namespace DAL
                     DoctorId = Convert.ToInt32(dr["DoctorId"]),
                     ClinicId = Convert.ToInt32(dr["ClinicId"]),
                     UserId = Convert.ToInt32(dr["UserId"]),
+                    Salutation = dr["Salutation"].ToString(),
                     FirstName = dr["FirstName"].ToString(),
                     LastName = dr["LastName"].ToString(),
                     DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
@@ -264,6 +270,7 @@ namespace DAL
                 {
                     DoctorId = Convert.ToInt32(dr["DoctorId"]),
                     ClinicId = Convert.ToInt32(dr["ClinicId"]),
+                    Salutation = dr["Salutation"].ToString(),
                     FirstName = dr["FirstName"].ToString(),
                     LastName = dr["LastName"].ToString(),
                     DepartmentId = Convert.ToInt32(dr["DepartmentId"]),

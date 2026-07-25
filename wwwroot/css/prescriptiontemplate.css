@@ -1,0 +1,467 @@
+.showInactiveSwitch {
+    transform: scale(1.5);
+    cursor: pointer;
+}
+
+.showInactiveLabel {
+    margin-left: 18px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+}
+
+.section-card {
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 15px;
+    border: 1px solid #d0d7de;
+    background: white;
+}
+
+.section-card.inactive {
+    background: #dddddd;
+    border-color: #b5b5b5;
+}
+
+.section-card.inactive .section-header {
+    background: #cccccc;
+}
+
+.section-card.inactive .section-name {
+    color: #444;
+}
+
+.section-card.inactive .drag-handle,
+.section-card.inactive .dropdown-toggle {
+    color: #777;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    background: #1b2f45;
+    color: white;
+    min-height: 90px;
+    cursor: pointer;
+}
+
+.section-drag {
+    width:70px;
+    min-width:70px;
+    height:90px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#132436;
+    font-size:2rem;
+    cursor:move;
+    user-select:none;
+}
+
+.section-drag:active {
+    cursor: grabbing;
+}
+
+.sorting-disabled .section-drag {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+.section-content {
+    flex: 1;
+    padding: 12px 20px;
+}
+
+.section-name {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-size: 1.2rem;
+    font-weight: 600;
+    padding: 2px 4px;
+    outline: none;
+}
+
+.section-name:focus {
+    background: #fff;
+    border: 1px solid #86b7fe;
+    border-radius: 4px;
+}
+
+.section-preview {
+    margin-top: 6px;
+    font-size: .95rem;
+    color: rgba(255,255,255,.75);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.section-name,
+.section-preview {
+    user-select: none;
+}
+
+.section-action-btn {
+    margin-right: 15px;
+    border: none;
+    border-radius: 20px;
+    background: #ffc107;
+    color: black;
+    padding: 8px 16px;
+    font-weight: 600;
+}
+
+.section-main {
+    flex: 1;
+    padding: 12px 20px;
+}
+
+.section-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+.section-summary {
+    margin-top: 6px;
+    font-size: .95rem;
+    color: rgba(255,255,255,.8);
+}
+
+.section-actions {
+    display:flex;
+    gap:8px;
+    margin-right:15px;
+}
+
+.insert-before,
+.insert-after {
+    display:none;
+}
+
+.section-card:hover .insert-before,
+.section-card:hover .insert-after {
+    display:inline-block;
+}
+
+/*----------------------------------------------------------
+    FIELD CARD
+----------------------------------------------------------*/
+
+.field-wrapper {
+    margin:10px 0 10px 35px;
+}
+
+.field-card {
+    border: 1px solid #9db4c8;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #edf3f8;
+    margin-bottom: 8px;
+}
+
+.field-card.inactive {
+    background:#e7edf2;
+    border-color:#c4d0da;
+}
+
+.field-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background: #6f8faa;
+    color: white;
+}
+
+.field-card.inactive .field-header {
+    background:#a7b8c8;
+}
+
+.field-card.inactive .field-name {
+    color: #555;
+}
+
+.field-card.inactive .field-summary {
+    color: #777;
+}
+
+.field-drag {
+    width: 24px;
+    cursor: move;
+    color: white;
+    margin-right: 10px;
+}
+
+.field-expand {
+    width: 24px;
+    text-align: center;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.field-content {
+    flex: 1;
+}
+
+.field-content .d-flex {
+    gap: 10px;
+}
+
+.field-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;           /* Space between name and type */
+}
+
+.field-name {
+    font-weight: 600;
+    flex: 0 0 auto;
+    min-width: 0;
+}
+
+.field-type {
+    font-size: .75rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #e9ecef;
+    color: #495057;
+    white-space: nowrap;
+}
+
+.field-summary {
+    font-size: .85rem;
+    color: rgba(255,255,255,.85);
+    margin-top: 2px;
+}
+
+.field-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.field-body {
+    background: #f7fafc;
+    padding: 10px 15px;
+    border-top: 1px solid #c8d5df;
+}
+
+/*==================================================
+  OPTION CONTAINER
+==================================================*/
+
+.option-container {
+    margin:12px 0 0 45px;
+    padding-left:18px;
+    border-left:2px dashed #b8c7d8;
+}
+
+
+/*==================================================
+  OPTION CARD
+==================================================*/
+
+.option-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+
+    border: 1px solid #cfdce8;
+    border-radius: 8px;
+    background: #f8fbff;
+}
+
+.option-card.inactive {
+    background:#f3f6f9;
+    border-color:#d6e0e8;
+}
+
+/*==================================================
+  OPTION HEADER
+==================================================*/
+
+.option-card .card-header {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    background: #dbe7f2;
+    color: #24384d;
+    min-height: 42px;
+}
+
+.option-card.inactive .card-header {
+    background:#e4ebf2;
+}
+
+/*==================================================
+  DRAG HANDLE
+==================================================*/
+
+.option-card .drag-handle {
+    width: 38px;
+    text-align: center;
+    cursor: move;
+    color: #59728a;
+    user-select: none;
+}
+
+.option-drag {
+    width: 24px;
+    text-align: center;
+    cursor: move;
+    color: #59728a;
+    user-select: none;
+}
+
+
+/*==================================================
+  OPTION BODY
+==================================================*/
+
+.option-card .card-body {
+    padding: 15px;
+    background: white;
+}
+
+
+/*==================================================
+  DROPDOWN
+==================================================*/
+
+.option-card .dropdown {
+    margin-right: 8px;
+}
+
+.option-card .dropdown-toggle::after {
+    display: none;
+}
+
+
+/*==================================================
+  ADD OPTION BUTTON
+==================================================*/
+
+.add-option {
+    margin-top: 10px;
+    margin-left: 25px;
+}
+
+
+/*==================================================
+  SORTABLE PLACEHOLDER
+==================================================*/
+
+.option-placeholder {
+    border: 2px dashed #0d6efd;
+    background: #e9f3ff;
+    border-radius: 10px;
+    height: 45px;
+    margin-bottom: 8px;
+}
+
+
+/*==================================================
+  DRAGGING
+==================================================*/
+
+.option-card.sortable-ghost {
+    opacity: .45;
+}
+
+.option-card.sortable-chosen {
+    box-shadow: 0 0 10px rgba(0,0,0,.18);
+}
+
+
+/*==================================================
+  INPUTS
+==================================================*/
+
+.option-card input,
+.option-card select,
+.option-card textarea {
+    margin-bottom: 10px;
+}
+
+
+/*==================================================
+  COLLAPSE ANIMATION
+==================================================*/
+
+.option-card .collapse {
+    transition: all .25s ease;
+}
+
+.option-name {
+    flex: 1;
+    font-weight: 600;
+    cursor: text;
+    padding: 4px 6px;
+    border-radius: 4px;
+}
+
+.option-name:hover {
+    background: rgba(0,0,0,.05);
+}
+
+.option-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+/*==================================================
+  OPTION ACTION BUTTONS
+==================================================*/
+
+.option-actions .btn {
+    border-radius: 16px;
+    font-size: .8rem;
+    font-weight: 500;
+    padding: 3px 10px;
+    transition: all .2s ease;
+}
+
+/* Insert Before / After */
+
+.insert-before-option,
+.insert-after-option {
+    display: none;
+
+    background: #edf3f8;
+    border: 1px solid #9db4c8;
+    color: #48657f;
+}
+
+.option-card:hover .insert-before-option,
+.option-card:hover .insert-after-option {
+    display: inline-block;
+}
+
+.insert-before-option:hover,
+.insert-after-option:hover {
+    background: #6f8faa;
+    border-color: #5c7b95;
+    color: white;
+}
+
+/* Deactivate / Reactivate */
+
+.toggle-option {
+    background: #edf3f8;
+    border: 1px solid #9db4c8;
+    color: #48657f;
+}
+
+.toggle-option:hover {
+    background: #6f8faa;
+    border-color: #5c7b95;
+    color: white;
+}
+
+.toggle-option:hover .toggle-icon,
+.toggle-option:hover .toggle-text {
+    color: white;
+}

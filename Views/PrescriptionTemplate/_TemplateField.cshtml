@@ -1,0 +1,127 @@
+@model Models.PrescriptionTemplateField
+
+@{
+    string summary = "";
+
+    if (Model.SupportOptions)
+    {
+        var optionTexts = Model.Options
+            .OrderBy(x => x.DisplayOrder)
+            .Select(x => x.OptionText)
+            .Take(5);
+
+        summary = string.Join(", ", optionTexts);
+
+        if (Model.Options.Count > 5)
+        {
+            summary += "...";
+        }
+    }
+    else
+    {
+        summary = Model.FieldTypeCode;
+    }
+}
+
+<div class="field-wrapper" data-field-id="@Model.FieldId">
+
+    <div class="field-card @(Model.IsActive ? "" : "inactive")">
+
+        <div class="field-header">
+
+            <div class="field-drag drag-handle">
+                <i class="bi bi-grip-vertical"></i>
+            </div>
+
+            @if (Model.SupportOptions)
+            {
+                <div class="field-expand"
+                     data-bs-toggle="collapse"
+                     data-bs-target="#field_@Model.FieldId"
+                     style="cursor:pointer;">
+
+                    <i class="bi bi-chevron-right field-chevron"></i>
+
+                </div>
+            }
+            else
+            {
+                <div class="field-expand"></div>
+            }
+
+            <div class="field-content">
+
+                <div class="field-title">
+
+                    <div class="field-name" data-id="@Model.FieldId">
+                        @Model.FieldLabel
+                    </div>
+
+                    <span class="field-type"
+                        data-field-id="@Model.FieldId"
+                        data-value="@Model.FieldTypeCode">
+                        @Model.FieldTypeCode
+                    </span>
+
+                </div>
+
+                @if (Model.SupportOptions)
+                {
+                    <div class="field-summary">
+                        @summary
+                    </div>
+                }
+            </div>
+
+            <div class="field-actions">
+
+                <button class="insert-field-before btn btn-sm btn-light"
+                        data-field-id="@Model.FieldId">
+
+                    + Before
+
+                </button>
+
+                <button class="insert-field-after btn btn-sm btn-light"
+                        data-field-id="@Model.FieldId">
+
+                    + After
+
+                </button>
+
+                <button class="field-action-btn toggle-field"
+                        data-field-id="@Model.FieldId">
+
+                    <i class="toggle-icon @(Model.IsActive ? "bi bi-eye-slash" : "bi bi-eye")"></i>
+
+                    <span class="toggle-text">
+                        @(Model.IsActive ? "Deactivate" : "Reactivate")
+                    </span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+        @if (Model.SupportOptions)
+        {
+            <div id="field_@Model.FieldId"
+                 class="collapse field-collapse">
+
+                <div id="options_@Model.FieldId"
+                        class="field-body options-container"
+                        data-field-id="@Model.FieldId">
+
+                        @foreach (var option in Model.Options)
+                        {
+                            @await Html.PartialAsync("_TemplateOption", option)
+                        }
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+</div>

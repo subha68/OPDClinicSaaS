@@ -62,6 +62,7 @@ CREATE TABLE Doctors (
     DoctorId INT IDENTITY PRIMARY KEY,
     ClinicId INT,
     DepartmentId INT,
+    Salutation NVARCHAR(15),
     FirstName NVARCHAR(100),
     LastName NVARCHAR(100),
     RegistrationNo NVARCHAR(100),
@@ -79,8 +80,8 @@ ADD CONSTRAINT UQ_Doctor_User UNIQUE(UserId);
 CREATE TABLE PrescriptionTemplates
 (
     TemplateId INT IDENTITY PRIMARY KEY,
-    ClinicId INT NOT NULL,
-    DepartmentId INT NOT NULL,
+    ClinicId INT,
+    DepartmentId INT,
     DoctorId INT,
     TemplateName VARCHAR(100) NOT NULL,
     IsActive BIT NOT NULL DEFAULT 1
@@ -92,7 +93,7 @@ CREATE TABLE PrescriptionTemplateSections
 (
     SectionId INT IDENTITY PRIMARY KEY,
     TemplateId INT NOT NULL,
-    ClinicId INT NOT NULL,
+    ClinicId INT,
     SectionName VARCHAR(100) NOT NULL,
     DisplayOrder INT NOT NULL,
     IsActive BIT NOT NULL DEFAULT 1
@@ -105,8 +106,8 @@ CREATE TABLE PrescriptionTemplateFields
 (
     FieldId INT IDENTITY PRIMARY KEY,
     SectionId INT NOT NULL,
-    TemplateId int not null,
-    ClinicId INT NOT NULL,
+    TemplateId INT NOT NULL,
+    ClinicId INT,
     FieldLabel VARCHAR(100) NOT NULL,
     FieldTypeCode VARCHAR(30) NOT NULL,
     IsRequired BIT NOT NULL DEFAULT 0,
@@ -125,9 +126,8 @@ CREATE TABLE PrescriptionTemplateFieldOptions
     FieldId INT NOT NULL,
     SectionId INT NOT NULL,
     TemplateId int not null,
-    ClinicId INT NOT NULL,
+    ClinicId INT,
     OptionText VARCHAR(100) NOT NULL,
-    OptionValue VARCHAR(100) NOT NULL,
     IsRequired BIT NOT NULL DEFAULT 0,
     DisplayOrder INT NOT NULL,
     IsActive BIT NOT NULL DEFAULT 1

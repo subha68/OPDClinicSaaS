@@ -1,392 +1,454 @@
-INSERT INTO PrescriptionTemplates
-(
-ClinicId,
-DepartmentId,
-TemplateName,
-IsActive
-)
-VALUES
-(
-1,
-5,
-'Default Ophthalmology Template',
-1
-);
+-- EXEC dbo.GenerateDefaultOphthalmologyTemplate @ClinicId = 7;
 
-DECLARE @TemplateId INT = SCOPE_IDENTITY();
+CREATE OR ALTER PROCEDURE dbo.GenerateDefaultOphthalmologyTemplate
+    @ClinicId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
 
--- SECTION : CHIEF COMPLAINTS
+    BEGIN TRY
+        BEGIN TRANSACTION;
 
-INSERT INTO PrescriptionTemplateSections
-(
-TemplateId,
-ClinicId,
-SectionName,
-DisplayOrder
-)
-VALUES
-(
-@TemplateId,
-1,
-'Chief Complaints',
-1
-);
+        DECLARE @TemplateId INT;
+        DECLARE @SectionId INT;
+        DECLARE @FieldId INT;
 
-DECLARE @ChiefComplaintSectionId INT = SCOPE_IDENTITY();
+        ----------------------------------------------------
+        -- TEMPLATE
+        ----------------------------------------------------
+        INSERT INTO PrescriptionTemplates
+        (
+            ClinicId,
+            DepartmentId,
+            DoctorId,
+            TemplateName
+        )
+        VALUES
+        (
+            @ClinicId,
+            5,
+            NULL,
+            'Default Ophthalmology Template'
+        );
 
-INSERT INTO PrescriptionTemplateFields
-(
-SectionId,
-TemplateId,
-ClinicId,
-FieldLabel,
-FieldTypeCode,
-IsRequired,
-DisplayOrder
-)
-VALUES
-(
-@ChiefComplaintSectionId,
-@TemplateId,
-1,
-'Symptoms',
-'CheckboxGroup',
-0,
-1
-);
+        SET @TemplateId = SCOPE_IDENTITY();
 
-DECLARE @SymptomsFieldId INT = SCOPE_IDENTITY();
+        ----------------------------------------------------
+        -- SECTION : CHIEF COMPLAINTS
+        ----------------------------------------------------
+        INSERT INTO PrescriptionTemplateSections
+        (
+            TemplateId,
+            ClinicId,
+            SectionName,
+            DisplayOrder
+        )
+        VALUES
+        (
+            @TemplateId,
+            @ClinicId,
+            'Chief Complaints',
+            1
+        );
 
-INSERT INTO PrescriptionTemplateFieldOptions
-(
-FieldId,
-SectionId,
-TemplateId,
-ClinicId,
-OptionText,
-OptionValue,
-IsRequired,
-DisplayOrder
-)
-VALUES
-(@SymptomsFieldId,@ChiefComplaintSectionId,@TemplateId,1,'Diminished Vision','Diminished Vision',0,1),
-(@SymptomsFieldId,@ChiefComplaintSectionId,@TemplateId,1,'Redness','Redness',0,2),
-(@SymptomsFieldId,@ChiefComplaintSectionId,@TemplateId,1,'Watering','Watering',0,3),
-(@SymptomsFieldId,@ChiefComplaintSectionId,@TemplateId,1,'Eye Pain','Eye Pain',0,4),
-(@SymptomsFieldId,@ChiefComplaintSectionId,@TemplateId,1,'Itching','Itching',0,5),
-(@SymptomsFieldId,@ChiefComplaintSectionId,@TemplateId,1,'Photophobia','Photophobia',0,6),
-(@SymptomsFieldId,@ChiefComplaintSectionId,@TemplateId,1,'Discharge','Discharge',0,7),
-(@SymptomsFieldId,@ChiefComplaintSectionId,@TemplateId,1,'Foreign Body Sensation','Foreign Body Sensation',0,8);
+        SET @SectionId = SCOPE_IDENTITY();
 
--- SECTION : VISUAL ACUITY
+        INSERT INTO PrescriptionTemplateFields
+        (
+            SectionId,
+            TemplateId,
+            ClinicId,
+            FieldLabel,
+            FieldTypeCode,
+            IsRequired,
+            DisplayOrder
+        )
+        VALUES
+        (
+            @SectionId,
+            @TemplateId,
+            @ClinicId,
+            'Symptoms',
+            'CheckboxGroup',
+            0,
+            1
+        );
 
-INSERT INTO PrescriptionTemplateSections
-(
-TemplateId,
-ClinicId,
-SectionName,
-DisplayOrder
-)
-VALUES
-(
-@TemplateId,
-1,
-'Visual Acuity',
-2
-);
+        SET @FieldId = SCOPE_IDENTITY();
 
-DECLARE @VisualAcuitySectionId INT = SCOPE_IDENTITY();
+        INSERT INTO PrescriptionTemplateFieldOptions
+        (
+            FieldId,
+            SectionId,
+            TemplateId,
+            ClinicId,
+            OptionText,
+            IsRequired,
+            DisplayOrder
+        )
+        VALUES
+        (@FieldId, @SectionId, @TemplateId, @ClinicId, 'Diminished Vision', 0, 1),
+        (@FieldId, @SectionId, @TemplateId, @ClinicId, 'Redness', 0, 2),
+        (@FieldId, @SectionId, @TemplateId, @ClinicId, 'Watering', 0, 3),
+        (@FieldId, @SectionId, @TemplateId, @ClinicId, 'Eye Pain', 0, 4),
+        (@FieldId, @SectionId, @TemplateId, @ClinicId, 'Itching', 0, 5),
+        (@FieldId, @SectionId, @TemplateId, @ClinicId, 'Photophobia', 0, 6),
+        (@FieldId, @SectionId, @TemplateId, @ClinicId, 'Discharge', 0, 7),
+        (@FieldId, @SectionId, @TemplateId, @ClinicId, 'Foreign Body Sensation', 0, 8);
 
-INSERT INTO PrescriptionTemplateFields
-(
-SectionId,
-TemplateId,
-ClinicId,
-FieldLabel,
-FieldTypeCode,
-IsRequired,
-DisplayOrder
-)
-VALUES
-(@VisualAcuitySectionId,@TemplateId,1,'Distance Vision OD','Text',0,1),
-(@VisualAcuitySectionId,@TemplateId,1,'Distance Vision OS','Text',0,2),
-(@VisualAcuitySectionId,@TemplateId,1,'Near Vision OD','Text',0,3),
-(@VisualAcuitySectionId,@TemplateId,1,'Near Vision OS','Text',0,4);
+        ----------------------------------------------------
+        -- SECTION : VISUAL ACUITY
+        ----------------------------------------------------
+        INSERT INTO PrescriptionTemplateSections
+        (
+            TemplateId,
+            ClinicId,
+            SectionName,
+            DisplayOrder
+        )
+        VALUES
+        (
+            @TemplateId,
+            @ClinicId,
+            'Visual Acuity',
+            2
+        );
 
--- SECTION : REFRACTION
+        SET @SectionId = SCOPE_IDENTITY();
 
-INSERT INTO PrescriptionTemplateSections
-(
-TemplateId,
-ClinicId,
-SectionName,
-DisplayOrder
-)
-VALUES
-(
-@TemplateId,
-1,
-'Refraction',
-3
-);
+        INSERT INTO PrescriptionTemplateFields
+        (
+            SectionId,
+            TemplateId,
+            ClinicId,
+            FieldLabel,
+            FieldTypeCode,
+            IsRequired,
+            DisplayOrder
+        )
+        VALUES
+        (@SectionId, @TemplateId, @ClinicId, 'Distance Vision OD', 'Text', 0, 1),
+        (@SectionId, @TemplateId, @ClinicId, 'Distance Vision OS', 'Text', 0, 2),
+        (@SectionId, @TemplateId, @ClinicId, 'Near Vision OD', 'Text', 0, 3),
+        (@SectionId, @TemplateId, @ClinicId, 'Near Vision OS', 'Text', 0, 4);
 
-DECLARE @RefractionSectionId INT = SCOPE_IDENTITY();
+        ----------------------------------------------------
+        -- SECTION : REFRACTION
+        ----------------------------------------------------
+        INSERT INTO PrescriptionTemplateSections
+        (
+            TemplateId,
+            ClinicId,
+            SectionName,
+            DisplayOrder
+        )
+        VALUES
+        (
+            @TemplateId,
+            @ClinicId,
+            'Refraction',
+            3
+        );
 
-INSERT INTO PrescriptionTemplateFields
-(
-SectionId,
-TemplateId,
-ClinicId,
-FieldLabel,
-FieldTypeCode,
-IsRequired,
-DisplayOrder
-)
-VALUES
-(@RefractionSectionId,@TemplateId,1,'OD Sphere','Text',0,1),
-(@RefractionSectionId,@TemplateId,1,'OD Cylinder','Text',0,2),
-(@RefractionSectionId,@TemplateId,1,'OD Axis','Text',0,3),
-(@RefractionSectionId,@TemplateId,1,'OS Sphere','Text',0,4),
-(@RefractionSectionId,@TemplateId,1,'OS Cylinder','Text',0,5),
-(@RefractionSectionId,@TemplateId,1,'OS Axis','Text',0,6);
+        SET @SectionId = SCOPE_IDENTITY();
 
--- SECTION : INTRA OCULAR PRESSURE
+        INSERT INTO PrescriptionTemplateFields
+        (
+            SectionId,
+            TemplateId,
+            ClinicId,
+            FieldLabel,
+            FieldTypeCode,
+            IsRequired,
+            DisplayOrder
+        )
+        VALUES
+        (@SectionId, @TemplateId, @ClinicId, 'OD Sphere', 'Text', 0, 1),
+        (@SectionId, @TemplateId, @ClinicId, 'OD Cylinder', 'Text', 0, 2),
+        (@SectionId, @TemplateId, @ClinicId, 'OD Axis', 'Text', 0, 3),
+        (@SectionId, @TemplateId, @ClinicId, 'OS Sphere', 'Text', 0, 4),
+        (@SectionId, @TemplateId, @ClinicId, 'OS Cylinder', 'Text', 0, 5),
+        (@SectionId, @TemplateId, @ClinicId, 'OS Axis', 'Text', 0, 6);
 
-INSERT INTO PrescriptionTemplateSections
-(
-TemplateId,
-ClinicId,
-SectionName,
-DisplayOrder
-)
-VALUES
-(
-@TemplateId,
-1,
-'Intra Ocular Pressure',
-4
-);
+        ----------------------------------------------------
+        -- SECTION : INTRA OCULAR PRESSURE
+        ----------------------------------------------------
+        INSERT INTO PrescriptionTemplateSections
+        (
+            TemplateId,
+            ClinicId,
+            SectionName,
+            DisplayOrder
+        )
+        VALUES
+        (
+            @TemplateId,
+            @ClinicId,
+            'Intra Ocular Pressure',
+            4
+        );
 
-DECLARE @IOPSectionId INT = SCOPE_IDENTITY();
+        SET @SectionId = SCOPE_IDENTITY();
 
-INSERT INTO PrescriptionTemplateFields
-(
-SectionId,
-TemplateId,
-ClinicId,
-FieldLabel,
-FieldTypeCode,
-IsRequired,
-DisplayOrder
-)
-VALUES
-(@IOPSectionId,@TemplateId,1,'IOP OD (mmHg)','Number',0,1),
-(@IOPSectionId,@TemplateId,1,'IOP OS (mmHg)','Number',0,2);
+        INSERT INTO PrescriptionTemplateFields
+        (
+            SectionId,
+            TemplateId,
+            ClinicId,
+            FieldLabel,
+            FieldTypeCode,
+            IsRequired,
+            DisplayOrder
+        )
+        VALUES
+        (@SectionId, @TemplateId, @ClinicId, 'IOP OD (mmHg)', 'Number', 0, 1),
+        (@SectionId, @TemplateId, @ClinicId, 'IOP OS (mmHg)', 'Number', 0, 2);
 
--- SECTION : ANTERIOR SEGMENT
+        ----------------------------------------------------
+        -- SECTION : ANTERIOR SEGMENT EXAMINATION
+        ----------------------------------------------------
+        INSERT INTO PrescriptionTemplateSections
+        (
+            TemplateId,
+            ClinicId,
+            SectionName,
+            DisplayOrder
+        )
+        VALUES
+        (
+            @TemplateId,
+            @ClinicId,
+            'Anterior Segment Examination',
+            5
+        );
 
-INSERT INTO PrescriptionTemplateSections
-(
-TemplateId,
-ClinicId,
-SectionName,
-DisplayOrder
-)
-VALUES
-(
-@TemplateId,
-1,
-'Anterior Segment Examination',
-5
-);
+        SET @SectionId = SCOPE_IDENTITY();
 
-DECLARE @AnteriorSectionId INT = SCOPE_IDENTITY();
+        INSERT INTO PrescriptionTemplateFields
+        (
+            SectionId,
+            TemplateId,
+            ClinicId,
+            FieldLabel,
+            FieldTypeCode,
+            IsRequired,
+            DisplayOrder
+        )
+        VALUES
+        (@SectionId, @TemplateId, @ClinicId, 'Lids & Adnexa', 'TextArea', 0, 1),
+        (@SectionId, @TemplateId, @ClinicId, 'Conjunctiva', 'TextArea', 0, 2),
+        (@SectionId, @TemplateId, @ClinicId, 'Cornea', 'TextArea', 0, 3),
+        (@SectionId, @TemplateId, @ClinicId, 'Anterior Chamber', 'TextArea', 0, 4),
+        (@SectionId, @TemplateId, @ClinicId, 'Iris', 'TextArea', 0, 5),
+        (@SectionId, @TemplateId, @ClinicId, 'Lens', 'TextArea', 0, 6);
 
-INSERT INTO PrescriptionTemplateFields
-(
-SectionId,
-TemplateId,
-ClinicId,
-FieldLabel,
-FieldTypeCode,
-IsRequired,
-DisplayOrder
-)
-VALUES
-(@AnteriorSectionId,@TemplateId,1,'Lids & Adnexa','TextArea',0,1),
-(@AnteriorSectionId,@TemplateId,1,'Conjunctiva','TextArea',0,2),
-(@AnteriorSectionId,@TemplateId,1,'Cornea','TextArea',0,3),
-(@AnteriorSectionId,@TemplateId,1,'Anterior Chamber','TextArea',0,4),
-(@AnteriorSectionId,@TemplateId,1,'Iris','TextArea',0,5),
-(@AnteriorSectionId,@TemplateId,1,'Lens','TextArea',0,6);
+        ----------------------------------------------------
+        -- SECTION : POSTERIOR SEGMENT EXAMINATION
+        ----------------------------------------------------
+        INSERT INTO PrescriptionTemplateSections
+        (
+            TemplateId,
+            ClinicId,
+            SectionName,
+            DisplayOrder
+        )
+        VALUES
+        (
+            @TemplateId,
+            @ClinicId,
+            'Posterior Segment Examination',
+            6
+        );
 
--- SECTION : POSTERIOR SEGMENT
+        SET @SectionId = SCOPE_IDENTITY();
 
-INSERT INTO PrescriptionTemplateSections
-(
-TemplateId,
-ClinicId,
-SectionName,
-DisplayOrder
-)
-VALUES
-(
-@TemplateId,
-1,
-'Posterior Segment Examination',
-6
-);
+        INSERT INTO PrescriptionTemplateFields
+        (
+            SectionId,
+            TemplateId,
+            ClinicId,
+            FieldLabel,
+            FieldTypeCode,
+            IsRequired,
+            DisplayOrder
+        )
+        VALUES
+        (@SectionId, @TemplateId, @ClinicId, 'Optic Disc', 'TextArea', 0, 1),
+        (@SectionId, @TemplateId, @ClinicId, 'Macula', 'TextArea', 0, 2),
+        (@SectionId, @TemplateId, @ClinicId, 'Retinal Vessels', 'TextArea', 0, 3),
+        (@SectionId, @TemplateId, @ClinicId, 'Peripheral Retina', 'TextArea', 0, 4);
 
-DECLARE @PosteriorSectionId INT = SCOPE_IDENTITY();
+        ----------------------------------------------------
+        -- SECTION : DIAGNOSIS
+        ----------------------------------------------------
+        INSERT INTO PrescriptionTemplateSections
+        (
+            TemplateId,
+            ClinicId,
+            SectionName,
+            DisplayOrder
+        )
+        VALUES
+        (
+            @TemplateId,
+            @ClinicId,
+            'Diagnosis',
+            7
+        );
 
-INSERT INTO PrescriptionTemplateFields
-(
-SectionId,
-TemplateId,
-ClinicId,
-FieldLabel,
-FieldTypeCode,
-IsRequired,
-DisplayOrder
-)
-VALUES
-(@PosteriorSectionId,@TemplateId,1,'Optic Disc','TextArea',0,1),
-(@PosteriorSectionId,@TemplateId,1,'Macula','TextArea',0,2),
-(@PosteriorSectionId,@TemplateId,1,'Retinal Vessels','TextArea',0,3),
-(@PosteriorSectionId,@TemplateId,1,'Peripheral Retina','TextArea',0,4);
+        SET @SectionId = SCOPE_IDENTITY();
 
--- SECTION : DIAGNOSIS
+        INSERT INTO PrescriptionTemplateFields
+        (
+            SectionId,
+            TemplateId,
+            ClinicId,
+            FieldLabel,
+            FieldTypeCode,
+            IsRequired,
+            DisplayOrder
+        )
+        VALUES
+        (
+            @SectionId,
+            @TemplateId,
+            @ClinicId,
+            'Diagnosis',
+            'TextArea',
+            1,
+            1
+        );
 
-INSERT INTO PrescriptionTemplateSections
-(
-TemplateId,
-ClinicId,
-SectionName,
-DisplayOrder
-)
-VALUES
-(
-@TemplateId,
-1,
-'Diagnosis',
-7
-);
+        ----------------------------------------------------
+        -- SECTION : ADVICE
+        ----------------------------------------------------
+        INSERT INTO PrescriptionTemplateSections
+        (
+            TemplateId,
+            ClinicId,
+            SectionName,
+            DisplayOrder
+        )
+        VALUES
+        (
+            @TemplateId,
+            @ClinicId,
+            'Advice',
+            8
+        );
 
-DECLARE @DiagnosisSectionId INT = SCOPE_IDENTITY();
+        SET @SectionId = SCOPE_IDENTITY();
 
-INSERT INTO PrescriptionTemplateFields
-(
-SectionId,
-TemplateId,
-ClinicId,
-FieldLabel,
-FieldTypeCode,
-IsRequired,
-DisplayOrder
-)
-VALUES
-(
-@DiagnosisSectionId,
-@TemplateId,
-1,
-'Diagnosis',
-'TextArea',
-1,
-1
-);
+        INSERT INTO PrescriptionTemplateFields
+        (
+            SectionId,
+            TemplateId,
+            ClinicId,
+            FieldLabel,
+            FieldTypeCode,
+            IsRequired,
+            DisplayOrder
+        )
+        VALUES
+        (
+            @SectionId,
+            @TemplateId,
+            @ClinicId,
+            'Advice',
+            'CheckboxGroup',
+            0,
+            1
+        );
 
--- SECTION : ADVICE
+        SET @FieldId = SCOPE_IDENTITY();
 
-INSERT INTO PrescriptionTemplateSections
-(
-TemplateId,
-ClinicId,
-SectionName,
-DisplayOrder
-)
-VALUES
-(
-@TemplateId,
-1,
-'Advice',
-8
-);
+        INSERT INTO PrescriptionTemplateFieldOptions
+        (
+            FieldId,
+            SectionId,
+            TemplateId,
+            ClinicId,
+            OptionText,
+            IsRequired,
+            DisplayOrder
+        )
+        VALUES
+        (@FieldId, @SectionId, @TemplateId, @ClinicId, 'Spectacles Advised', 0, 1),
+        (@FieldId, @SectionId, @TemplateId, @ClinicId, 'Continue Existing Glasses', 0, 2),
+        (@FieldId, @SectionId, @TemplateId, @ClinicId, 'Artificial Tears', 0, 3),
+        (@FieldId, @SectionId, @TemplateId, @ClinicId, 'Warm Compress', 0, 4),
+        (@FieldId, @SectionId, @TemplateId, @ClinicId, 'Diabetic Eye Evaluation', 0, 5),
+        (@FieldId, @SectionId, @TemplateId, @ClinicId, 'Glaucoma Workup', 0, 6),
+        (@FieldId, @SectionId, @TemplateId, @ClinicId, 'Cataract Surgery Evaluation', 0, 7),
+        (@FieldId, @SectionId, @TemplateId, @ClinicId, 'Retina Evaluation', 0, 8);
 
-DECLARE @AdviceSectionId INT = SCOPE_IDENTITY();
+        ----------------------------------------------------
+        -- SECTION : FOLLOW UP
+        ----------------------------------------------------
+        INSERT INTO PrescriptionTemplateSections
+        (
+            TemplateId,
+            ClinicId,
+            SectionName,
+            DisplayOrder
+        )
+        VALUES
+        (
+            @TemplateId,
+            @ClinicId,
+            'Follow Up',
+            9
+        );
 
-INSERT INTO PrescriptionTemplateFields
-(
-SectionId,
-TemplateId,
-ClinicId,
-FieldLabel,
-FieldTypeCode,
-IsRequired,
-DisplayOrder
-)
-VALUES
-(
-@AdviceSectionId,
-@TemplateId,
-1,
-'Advice',
-'CheckboxGroup',
-0,
-1
-);
+        SET @SectionId = SCOPE_IDENTITY();
 
-DECLARE @AdviceFieldId INT = SCOPE_IDENTITY();
+        INSERT INTO PrescriptionTemplateFields
+        (
+            SectionId,
+            TemplateId,
+            ClinicId,
+            FieldLabel,
+            FieldTypeCode,
+            IsRequired,
+            DisplayOrder
+        )
+        VALUES
+        (
+            @SectionId,
+            @TemplateId,
+            @ClinicId,
+            'Review After',
+            'Text',
+            0,
+            1
+        ),
+        (
+            @SectionId,
+            @TemplateId,
+            @ClinicId,
+            'Next Visit Date',
+            'Date',
+            0,
+            2
+        );
 
-INSERT INTO PrescriptionTemplateFieldOptions
-(
-FieldId,
-SectionId,
-TemplateId,
-ClinicId,
-OptionText,
-OptionValue,
-IsRequired,
-DisplayOrder
-)
-VALUES
-(@AdviceFieldId,@AdviceSectionId,@TemplateId,1,'Spectacles Advised','Spectacles Advised',0,1),
-(@AdviceFieldId,@AdviceSectionId,@TemplateId,1,'Continue Existing Glasses','Continue Existing Glasses',0,2),
-(@AdviceFieldId,@AdviceSectionId,@TemplateId,1,'Artificial Tears','Artificial Tears',0,3),
-(@AdviceFieldId,@AdviceSectionId,@TemplateId,1,'Warm Compress','Warm Compress',0,4),
-(@AdviceFieldId,@AdviceSectionId,@TemplateId,1,'Diabetic Eye Evaluation','Diabetic Eye Evaluation',0,5),
-(@AdviceFieldId,@AdviceSectionId,@TemplateId,1,'Glaucoma Workup','Glaucoma Workup',0,6),
-(@AdviceFieldId,@AdviceSectionId,@TemplateId,1,'Cataract Surgery Evaluation','Cataract Surgery Evaluation',0,7),
-(@AdviceFieldId,@AdviceSectionId,@TemplateId,1,'Retina Evaluation','Retina Evaluation',0,8);
+        ----------------------------------------------------
+        -- COMMIT TRANSACTION
+        ----------------------------------------------------
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
 
--- SECTION : FOLLOW UP
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
 
-INSERT INTO PrescriptionTemplateSections
-(
-TemplateId,
-ClinicId,
-SectionName,
-DisplayOrder
-)
-VALUES
-(
-@TemplateId,
-1,
-'Follow Up',
-9
-);
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+        DECLARE @ErrorState INT = ERROR_STATE();
 
-DECLARE @FollowUpSectionId INT = SCOPE_IDENTITY();
+        RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
 
-INSERT INTO PrescriptionTemplateFields
-(
-SectionId,
-TemplateId,
-ClinicId,
-FieldLabel,
-FieldTypeCode,
-IsRequired,
-DisplayOrder
-)
-VALUES
-(@FollowUpSectionId,@TemplateId,1,'Review After','Text',0,1),
-(@FollowUpSectionId,@TemplateId,1,'Next Visit Date','Date',0,2);
+    END CATCH
+END
+GO        

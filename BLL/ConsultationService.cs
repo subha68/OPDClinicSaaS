@@ -35,9 +35,11 @@ namespace BLL
                 if (cons == null)
                 {
                     cons = new Consultation();
+                    cons.AppointmentId = app.AppointmentId;
+                    cons.PatientId = app.PatientId;
+                    cons.DoctorName = app.DoctorName;
+                    cons.PatientName = app.PatientName;
                 }
-                cons.AppointmentId = app.AppointmentId;
-                cons.PatientId = app.PatientId;
                 return cons;
             }
             catch

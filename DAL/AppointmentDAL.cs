@@ -470,14 +470,15 @@ namespace DAL
 
         public void UpdateStatus(int appointmentId, string status, string cancellationReason, SqlConnection conn, SqlTransaction tran)
         {
+
             string sql = @"UPDATE Appointments 
                                 SET Status=@Status, CancellationReason=@CancellationReason
-                                WHERE AppointmentId=@AppointmentId";
+                                WHERE AppointmentId=@AppointmentId";                
 
             using var cmd = new SqlCommand(sql, conn, tran);
 
             cmd.Parameters.AddWithValue("@Status", status);
-            cmd.Parameters.AddWithValue("@CancellationReason", cancellationReason);
+            cmd.Parameters.AddWithValue("@CancellationReason", cancellationReason ?? (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@AppointmentId", appointmentId);
 
             cmd.ExecuteNonQuery();

@@ -638,6 +638,14 @@
     {
         let shifts=[];
 
+        console.log("scheduleVm =", scheduleVm);
+
+        if (!scheduleVm)
+        {
+            console.error("scheduleVm has not been initialized.");
+            return;
+        }
+
         $(".shift-bar").each(function()
         {
             let day = parseInt($(this).data("day"));
@@ -664,10 +672,7 @@
 
     $("#btnSave").click(function ()
     {
-        rebuildShiftCollection();
-
         scheduleVm.doctorId = parseInt($("#DoctorId").val());
-
         scheduleVm.departmentId = parseInt($("#DepartmentId").val());
 
         if(!scheduleVm.doctorId)
@@ -678,6 +683,8 @@
 
             return;
         }
+
+        rebuildShiftCollection();
 
         $.ajax({
 

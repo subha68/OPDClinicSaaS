@@ -259,6 +259,7 @@ namespace DAL
                 d.RegistrationNo,
                 c.Name ClinicName,
                 c.Address ClinicAddress,
+                c.LogoPath as ClinicLogo,
                 p.PatientId,
                 p.FirstName + ' ' + p.LastName AS PatientName,
                 p.Phone AS PatientPhoneNo,
@@ -301,6 +302,7 @@ namespace DAL
 
                     vm.ClinicName = rdr["ClinicName"].ToString();
                     vm.ClinicAddress = rdr["ClinicAddress"].ToString();
+                    vm.ClinicLogo = rdr["ClinicLogo"].ToString();
 
                     vm.PatientId = Convert.ToInt32(rdr["PatientId"]);
                     vm.PatientName = rdr["PatientName"].ToString();
@@ -366,6 +368,7 @@ namespace DAL
                 d.RegistrationNo,
                 c.Name ClinicName,
                 c.Address ClinicAddress,
+                c.LogoPath ClinicLogo,
                 p.PatientId,
                 p.FirstName + ' ' + p.LastName AS PatientName,
                 p.Phone AS PatientPhoneNo,
@@ -412,6 +415,7 @@ namespace DAL
 
                     vm.ClinicName = rdr["ClinicName"].ToString();
                     vm.ClinicAddress = rdr["ClinicAddress"].ToString();
+                    vm.ClinicLogo = rdr["ClinicLogo"].ToString();
 
                     vm.PatientId = Convert.ToInt32(rdr["PatientId"]);
                     vm.PatientName = rdr["PatientName"].ToString();

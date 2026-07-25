@@ -5,7 +5,7 @@ INSERT INTO FieldTypes VALUES
 ('Date'),
 ('CheckboxGroup'),
 ('Dropdown'),
-('Radio'),
+('RadioGroup'),
 ('MultiSelect');
 
 INSERT INTO Roles VALUES
@@ -14,12 +14,14 @@ INSERT INTO Roles VALUES
 (3,'ClinicUser'),
 (4,'Doctor'),
 (5,'BillingUser'),
-(6, 'PharmacyUser');
+(6, 'PharmacyUser'),
+(7, 'Nurse');
 
 -- Clinics
 INSERT INTO Clinics (ClinicCode, Name) VALUES
 ('CLN001','City Care'),
-('CLN002','Health Plus');
+('CLN002','Health Plus'),
+('CLN000','Library');
 
 -- Users
 INSERT INTO Users (RoleId, Username, PasswordHash)
@@ -37,6 +39,13 @@ VALUES
 -- Departments
 INSERT INTO Departments (ClinicId, Name)
 VALUES (1,'General'), (1,'Cardiology'), (1,'ENT'), (1, 'Orthopaedics'), (1, 'Ophthalmology');
+
+INSERT INTO Departments (ClinicId, Name)
+SELECT ClinicId, 'General' FROM Clinics WHERE Name = 'Library' UNION ALL
+SELECT ClinicId, 'Cardiology' FROM Clinics WHERE Name = 'Library' UNION ALL
+SELECT ClinicId, 'ENT' FROM Clinics WHERE Name = 'Library' UNION ALL
+SELECT ClinicId, 'Orthopaedics' FROM Clinics WHERE Name = 'Library' UNION ALL
+SELECT ClinicId, 'Ophthalmology' FROM Clinics WHERE Name = 'Library';
 
 -- Doctors
 INSERT INTO Doctors (ClinicId, DepartmentId, FirstName, LastName, UserId, RegistrationNo, Qualification)
@@ -84,6 +93,9 @@ SELECT 5, FeatureId FROM Features WHERE Code IN ('BILLING_CHARGES', 'PATIENT_HIS
 
 INSERT INTO RoleFeatures (RoleId, FeatureId)
 SELECT 6, FeatureId FROM Features WHERE Code IN ('MEDICINE_MANAGEMENT');
+
+INSERT INTO RoleFeatures (RoleId, FeatureId)
+SELECT 7, FeatureId FROM Features WHERE Code IN ('APPOINTMENT_BOOKING', 'PATIENT_HISTORY', 'BILLING_CHARGES', 'BILLING_MANAGEMENT');
 
 
 -- Menus

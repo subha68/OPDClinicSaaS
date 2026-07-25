@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using DAL;
 using BLL;
 using Models;
@@ -15,12 +16,15 @@ namespace Controllers
     {
         private readonly DepartmentService _department;
         private readonly ClinicService _clinic;
+        private readonly PrescriptionTemplateService _template;
 
         public DepartmentController(DepartmentService department, 
-                                    ClinicService clinic)
+                                    ClinicService clinic,
+                                    PrescriptionTemplateService template)
         {
             _department = department;
             _clinic = clinic;
+            _template = template;
         }
 
         public ActionResult Index()

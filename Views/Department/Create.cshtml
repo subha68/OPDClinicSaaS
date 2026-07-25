@@ -13,7 +13,8 @@
     {
         new { Name="Name", Label="Name", Type="text", Col="6"},
         new { Name="Description", Label="Description", Type="text", Col="6"},
-        new { Name="ClinicName", Label="Clinic", Type="readonly", Col="6"}
+        new { Name="ClinicName", Label="Clinic", Type="readonly", Col="6"},
+        new { Name="PrescriptionTemplateId", Label="Prescription Template", Type="autocomplete", Col="6"}
     };
 
     ViewBag.Dropdowns = new Dictionary<string, object>()
@@ -23,4 +24,20 @@
     ViewBag.KeyField = "DepartmentId";
 }
 
+<input type="hidden" name="PrescriptionTemplateId" id="PrescriptionTemplateId" />
+
 @await Html.PartialAsync("_CrudForm", Model)
+
+@section Scripts {
+<script src="~/js/helper.js"></script>
+
+<script>
+$(function () {
+
+    wireTemplateAutocomplete(
+        "#PrescriptionTemplateName"
+    );
+
+});
+</script>
+}

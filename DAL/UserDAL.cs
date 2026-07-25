@@ -25,7 +25,7 @@ namespace DAL
                                 r.RoleName = 'SuperAdmin'
                                 OR
                                 (
-                                    r.RoleName IN ('ClinicAdmin','ClinicUser','Doctor','BillingUser','PharmacyUser')
+                                    r.RoleName IN ('ClinicAdmin','ClinicUser','Doctor','BillingUser','PharmacyUser', 'Nurse')
                                     AND u.ClinicId = @ClinicId
                                 )
                             )
