@@ -1,0 +1,7 @@
+@model Models.ConsultationField
+
+@{
+    var partial = $"~/Views/Consultation/Controls/_{Model.FieldTypeCode}.cshtml";
+}
+
+<partial name="@partial" model="Model" />

@@ -40,7 +40,7 @@ namespace DAL
                     DepartmentId = (int)templateReader["DepartmentId"],
                     DepartmentName = templateReader["Name"].ToString(),
                     TemplateName = templateReader["TemplateName"].ToString(),
-                    IsActive = (bool)templateReader["IsActive"]
+                    IsActive = (bool)templateReader["IsActive"],
                 });
             }
 
@@ -244,7 +244,9 @@ namespace DAL
                         SectionId = (int)sectionReader["SectionId"],
                         SectionName = sectionReader["SectionName"].ToString(),
                         DisplayOrder = (int)sectionReader["DisplayOrder"],
-                        IsActive = (bool)sectionReader["IsActive"] 
+                        IsActive = (bool)sectionReader["IsActive"],
+                        Multiline = (bool)sectionReader["Multiline"],
+                        IsPharmacologyAdvice = (bool)sectionReader["IsPharmacologyAdvice"]
                     });
                 }
             }
@@ -258,6 +260,7 @@ namespace DAL
 
             string fieldQuery = @"SELECT * FROM PrescriptionTemplateFields 
                                         WHERE TemplateId = @TemplateId
+                                        AND IsArchived = 0
                                         ORDER BY DisplayOrder";
             using SqlCommand fieldCmd = new SqlCommand(fieldQuery, conn);
             if (tran != null)
@@ -281,8 +284,8 @@ namespace DAL
                         FieldLabel = fieldReader["FieldLabel"].ToString(),
                         FieldTypeCode = fieldReader["FieldTypeCode"].ToString(),
                         IsActive = (bool)fieldReader["IsActive"],
-                        DisplayOrder = (int)fieldReader["DisplayOrder"]
-
+                        DisplayOrder = (int)fieldReader["DisplayOrder"],
+                        IsArchived = (bool)fieldReader["IsArchived"]
                     });
 
                 }
@@ -297,6 +300,7 @@ namespace DAL
 
             string fieldQuery = @"SELECT * FROM PrescriptionTemplateFields 
                                     WHERE SectionId = @SectionId
+                                    AND IsArchived = 0
                                     ORDER BY DisplayOrder";
             using SqlCommand fieldCmd = new SqlCommand(fieldQuery, conn);
             if (tran != null)
@@ -320,8 +324,8 @@ namespace DAL
                         FieldLabel = fieldReader["FieldLabel"].ToString(),
                         FieldTypeCode = fieldReader["FieldTypeCode"].ToString(),
                         IsActive = (bool)fieldReader["IsActive"],
-                        DisplayOrder = (int)fieldReader["DisplayOrder"]
-
+                        DisplayOrder = (int)fieldReader["DisplayOrder"],
+                        IsArchived = (bool)fieldReader["IsArchived"]
                     });
 
                 }
@@ -336,6 +340,7 @@ namespace DAL
 
             string optionQuery = @"SELECT * FROM PrescriptionTemplateFieldOptions 
                                         WHERE TemplateId = @TemplateId
+                                        AND IsArchived = 0
                                         ORDER BY DisplayOrder";
             using SqlCommand optionCmd = new SqlCommand(optionQuery, conn);
             if (tran != null)
@@ -359,6 +364,7 @@ namespace DAL
                         OptionId = (int)optionReader["OptionId"],
                         OptionText = optionReader["OptionText"].ToString(),
                         IsActive = (bool)optionReader["IsActive"],
+                        IsArchived = (bool)optionReader["IsArchived"],
                         DisplayOrder = (int)optionReader["DisplayOrder"]
 
                     });
@@ -375,6 +381,7 @@ namespace DAL
 
             string optionQuery = @"SELECT * FROM PrescriptionTemplateFieldOptions 
                                         WHERE FieldId = @FieldId
+                                        AND IsArchived = 0
                                         ORDER BY DisplayOrder";
             using SqlCommand optionCmd = new SqlCommand(optionQuery, conn);
             if (tran != null)
@@ -397,6 +404,7 @@ namespace DAL
                         FieldId = (int)optionReader["FieldId"],
                         OptionText = optionReader["OptionText"].ToString(),
                         IsActive = (bool)optionReader["IsActive"],
+                        IsArchived = (bool)optionReader["IsArchived"],
                         DisplayOrder = (int)optionReader["DisplayOrder"]
 
                     });
@@ -429,9 +437,9 @@ namespace DAL
                 section.ClinicId = template.ClinicId;
                 
                 string sectionQuery = @"INSERT INTO PrescriptionTemplateSections
-                             (TemplateId, ClinicId, SectionName, DisplayOrder, IsActive) 
+                             (TemplateId, ClinicId, SectionName, DisplayOrder, IsActive, Multiline, IsPharmacologyAdvice) 
                              VALUES 
-                             (@TemplateId, @ClinicId, @SectionName, @DisplayOrder, @IsActive);
+                             (@TemplateId, @ClinicId, @SectionName, @DisplayOrder, @IsActive, @Multiline, @IsPharmacologyAdvice);
                                 SELECT SCOPE_IDENTITY();";
                 using SqlCommand sectionCmd = new SqlCommand(sectionQuery, conn, tran);
 
@@ -440,6 +448,8 @@ namespace DAL
                 sectionCmd.Parameters.AddWithValue("@SectionName", section.SectionName);
                 sectionCmd.Parameters.AddWithValue("@DisplayOrder", section.DisplayOrder);
                 sectionCmd.Parameters.AddWithValue("@IsActive", section.IsActive);
+                sectionCmd.Parameters.AddWithValue("@Multiline", section.Multiline);
+                sectionCmd.Parameters.AddWithValue("@IsPharmacologyAdvice", section.IsPharmacologyAdvice);
 
                 int sectionId = Convert.ToInt32(sectionCmd.ExecuteScalar());
 
@@ -450,9 +460,9 @@ namespace DAL
                     field.ClinicId = template.ClinicId;
                     
                     string fieldQuery = @"INSERT INTO PrescriptionTemplateFields
-                                (TemplateId, SectionId, ClinicId, FieldLabel, FieldType, IsActive, DisplayOrder) 
+                                (TemplateId, SectionId, ClinicId, FieldLabel, FieldType, IsActive, DisplayOrder, IsArchived) 
                                 VALUES 
-                                (@TemplateId, @SectionId, @ClinicId, @FieldLabel, @FieldType, @IsActive, @DisplayOrder);
+                                (@TemplateId, @SectionId, @ClinicId, @FieldLabel, @FieldType, @IsActive, @DisplayOrder, 0);
                                     SELECT SCOPE_IDENTITY();";
                     using SqlCommand fieldCmd = new SqlCommand(fieldQuery, conn, tran);
 
@@ -474,9 +484,9 @@ namespace DAL
                         option.ClinicId = template.ClinicId;
                         
                         string optionQuery = @"INSERT INTO PrescriptionTemplateFieldOptions
-                                    (TemplateId, SectionId, ClinicId, FieldId, OptionText, IsActive, DisplayOrder) 
+                                    (TemplateId, SectionId, ClinicId, FieldId, OptionText, IsActive, DisplayOrder, IsArchived) 
                                     VALUES 
-                                    (@TemplateId, @SectionId, @ClinicId, @FieldId, @OptionText, @IsActive, @DisplayOrder);
+                                    (@TemplateId, @SectionId, @ClinicId, @FieldId, @OptionText, @IsActive, @DisplayOrder, 0);
                                         SELECT SCOPE_IDENTITY();";
                         using SqlCommand optionCmd = new SqlCommand(optionQuery, conn, tran);
 
@@ -531,7 +541,9 @@ namespace DAL
                                                 ClinicId = @ClinicId, 
                                                 SectionName = @SectionName, 
                                                 DisplayOrder = @DisplayOrder,
-                                                IsActive = @IsActive
+                                                IsActive = @IsActive,
+                                                Multiline = @Multiline,
+                                                IsPharmacologyAdvice = @IsPharmacologyAdvice
                                             WHERE SectionId = @SectionId";
                 using SqlCommand sectionCmd = new SqlCommand(sectionQuery, conn, tran);
 
@@ -541,6 +553,8 @@ namespace DAL
                 sectionCmd.Parameters.AddWithValue("@DisplayOrder", section.DisplayOrder);
                 sectionCmd.Parameters.AddWithValue("@SectionId", section.SectionId);
                 sectionCmd.Parameters.AddWithValue("@IsActive", section.IsActive);
+                sectionCmd.Parameters.AddWithValue("@Multiline", section.Multiline);
+                sectionCmd.Parameters.AddWithValue("@IsPharmacologyAdvice", section.IsPharmacologyAdvice);
 
                 sectionRowsAffected += templateCmd.ExecuteNonQuery();
 
@@ -556,7 +570,8 @@ namespace DAL
                                                 ClinicId = @ClinicId, 
                                                 FieldLabel = @FieldLabel, 
                                                 FieldType = @FieldType, 
-                                                IsActive = @IsActive, 
+                                                IsActive = @IsActive,
+                                                IsArchived = @IsArchived,
                                                 DisplayOrder = @DisplayOrder 
                                             WHERE FieldId = @FieldId";
                     using SqlCommand fieldCmd = new SqlCommand(fieldQuery, conn, tran);
@@ -567,6 +582,7 @@ namespace DAL
                     fieldCmd.Parameters.AddWithValue("@FieldLabel", field.FieldLabel);
                     fieldCmd.Parameters.AddWithValue("@FieldType", field.FieldTypeCode);
                     fieldCmd.Parameters.AddWithValue("@IsActive", field.IsActive);
+                    fieldCmd.Parameters.AddWithValue("@IsArchived", field.IsArchived);
                     fieldCmd.Parameters.AddWithValue("@DisplayOrder", field.DisplayOrder);
                     fieldCmd.Parameters.AddWithValue("@FieldId", field.FieldId);
 
@@ -586,6 +602,7 @@ namespace DAL
                                                     ClinicId = @ClinicId, 
                                                     OptionText = @OptionText, 
                                                     IsActive = @IsActive, 
+                                                    IsArchived = @IsArchived,
                                                     DisplayOrder = @DisplayOrder 
                                                 WHERE OptionId = @OptionId";
                         using SqlCommand optionCmd = new SqlCommand(optionQuery, conn, tran);
@@ -596,6 +613,7 @@ namespace DAL
                         optionCmd.Parameters.AddWithValue("@FieldId", option.FieldId);
                         optionCmd.Parameters.AddWithValue("@OptionText", option.OptionText);
                         optionCmd.Parameters.AddWithValue("@IsActive", option.IsActive);
+                        optionCmd.Parameters.AddWithValue("@IsArchived", option.IsArchived);
                         optionCmd.Parameters.AddWithValue("@DisplayOrder", option.DisplayOrder);
                         optionCmd.Parameters.AddWithValue("@FieldId", option.FieldId);
 
@@ -760,7 +778,9 @@ namespace DAL
                         SectionId = (int)sectionReader["SectionId"],
                         SectionName = sectionReader["SectionName"].ToString(),
                         DisplayOrder = (int)sectionReader["DisplayOrder"],
-                        IsActive = (bool)sectionReader["IsActive"] 
+                        IsActive = (bool)sectionReader["IsActive"],
+                        Multiline = (bool)sectionReader["Multiline"],
+                        IsPharmacologyAdvice = (bool)sectionReader["IsPharmacologyAdvice"] 
                     };
                 }
             }
@@ -822,6 +842,7 @@ namespace DAL
                         FieldLabel = fieldReader["FieldLabel"].ToString(),
                         FieldTypeCode = fieldReader["FieldTypeCode"].ToString(),
                         IsActive = (bool)fieldReader["IsActive"],
+                        IsArchived = (bool)fieldReader["IsArchived"],
                         DisplayOrder = (int)fieldReader["DisplayOrder"],
                         OptionCount = (int)fieldReader["OptionCount"]
                     });
@@ -880,6 +901,7 @@ namespace DAL
                         OptionId = (int)fieldReader["OptionId"],
                         OptionText = fieldReader["OptionText"].ToString(),
                         IsActive = (bool)fieldReader["IsActive"],
+                        IsArchived = (bool)fieldReader["IsArchived"],
                         DisplayOrder = (int)fieldReader["DisplayOrder"]
                     });
                 }
@@ -905,9 +927,9 @@ namespace DAL
             updateRowsAffected = updateCmd.ExecuteNonQuery();
 
             string insertQuery = @"INSERT INTO PrescriptionTemplateSections
-                                    (TemplateId, ClinicId, SectionName, DisplayOrder, IsActive)
+                                    (TemplateId, ClinicId, SectionName, DisplayOrder, IsActive, Multiline, IsPharmacologyAdvice)
                                     VALUES
-                                    (@TemplateId, @ClinicId, @SectionName, @CurrentOrder, 1);
+                                    (@TemplateId, @ClinicId, @SectionName, @CurrentOrder, 1, 0, 0);
                                     SELECT SCOPE_IDENTITY();";
             using SqlCommand insertCmd = new SqlCommand(insertQuery, conn, tran);
 
@@ -938,9 +960,9 @@ namespace DAL
             updateRowsAffected = updateCmd.ExecuteNonQuery();
 
             string insertQuery = @"INSERT INTO PrescriptionTemplateSections
-                                    (TemplateId, ClinicId, SectionName, DisplayOrder, IsActive)
+                                    (TemplateId, ClinicId, SectionName, DisplayOrder, IsActive, Multiline, IsPharmacologyAdvice)
                                     VALUES
-                                    (@TemplateId, @ClinicId, @SectionName, @CurrentOrder + 1, 1);
+                                    (@TemplateId, @ClinicId, @SectionName, @CurrentOrder + 1, 1, 0, 0);
                                     SELECT SCOPE_IDENTITY();";
             using SqlCommand insertCmd = new SqlCommand(insertQuery, conn, tran);
 
@@ -958,9 +980,9 @@ namespace DAL
                                             SqlConnection conn, SqlTransaction tran)
         {
             string insertQuery = @"INSERT INTO PrescriptionTemplateFields
-                                    (TemplateId, ClinicId, SectionId, FieldLabel, FieldTypeCode, DisplayOrder, IsActive)
+                                    (TemplateId, ClinicId, SectionId, FieldLabel, FieldTypeCode, DisplayOrder, IsActive, IsArchived)
                                     VALUES
-                                    (@TemplateId, @ClinicId, @SectionId, @FieldLabel, @FieldTypeCode, 1, 1);
+                                    (@TemplateId, @ClinicId, @SectionId, @FieldLabel, @FieldTypeCode, 1, 1, 0);
                                     SELECT SCOPE_IDENTITY();";
             using SqlCommand insertCmd = new SqlCommand(insertQuery, conn, tran);
 
@@ -994,9 +1016,9 @@ namespace DAL
             updateRowsAffected = updateCmd.ExecuteNonQuery();
 
             string insertQuery = @"INSERT INTO PrescriptionTemplateFields
-                                    (TemplateId, ClinicId, SectionId, FieldLabel, FieldTypeCode, DisplayOrder, IsActive)
+                                    (TemplateId, ClinicId, SectionId, FieldLabel, FieldTypeCode, DisplayOrder, IsActive, IsArchived)
                                     VALUES
-                                    (@TemplateId, @ClinicId, @SectionId, @FieldLabel, @FieldTypeCode, @CurrentOrder, 1);
+                                    (@TemplateId, @ClinicId, @SectionId, @FieldLabel, @FieldTypeCode, @CurrentOrder, 1, 0);
                                     SELECT SCOPE_IDENTITY();";
             using SqlCommand insertCmd = new SqlCommand(insertQuery, conn, tran);
 
@@ -1031,9 +1053,9 @@ namespace DAL
             updateRowsAffected = updateCmd.ExecuteNonQuery();
 
             string insertQuery = @"INSERT INTO PrescriptionTemplateFields
-                                    (TemplateId, ClinicId, SectionId, FieldLabel, FieldTypeCode, DisplayOrder, IsActive)
+                                    (TemplateId, ClinicId, SectionId, FieldLabel, FieldTypeCode, DisplayOrder, IsActive, IsArchived)
                                     VALUES
-                                    (@TemplateId, @ClinicId, @SectionId, @FieldLabel, @FieldTypeCode, @CurrentOrder + 1, 1);
+                                    (@TemplateId, @ClinicId, @SectionId, @FieldLabel, @FieldTypeCode, @CurrentOrder + 1, 1, 0);
                                     SELECT SCOPE_IDENTITY();";
             using SqlCommand insertCmd = new SqlCommand(insertQuery, conn, tran);
 
@@ -1068,9 +1090,9 @@ namespace DAL
             updateRowsAffected = updateCmd.ExecuteNonQuery();
 
             string insertQuery = @"INSERT INTO PrescriptionTemplateFieldOptions
-                                    (TemplateId, ClinicId, SectionId, FieldId, OptionText, DisplayOrder, IsActive)
+                                    (TemplateId, ClinicId, SectionId, FieldId, OptionText, DisplayOrder, IsActive, IsArchived)
                                     VALUES
-                                    (@TemplateId, @ClinicId, @SectionId, @FieldId, @OptionText, @CurrentOrder, 1);
+                                    (@TemplateId, @ClinicId, @SectionId, @FieldId, @OptionText, @CurrentOrder, 1, 0);
                                     SELECT SCOPE_IDENTITY();";
 
             using SqlCommand insertCmd = new SqlCommand(insertQuery, conn, tran);
@@ -1106,9 +1128,9 @@ namespace DAL
             updateRowsAffected = updateCmd.ExecuteNonQuery();
 
             string insertQuery = @"INSERT INTO PrescriptionTemplateFieldOptions
-                                    (TemplateId, ClinicId, SectionId, FieldId, OptionText, DisplayOrder, IsActive)
+                                    (TemplateId, ClinicId, SectionId, FieldId, OptionText, DisplayOrder, IsActive, IsArchived)
                                     VALUES
-                                    (@TemplateId, @ClinicId, @SectionId, @FieldId, @OptionText, @CurrentOrder + 1, 1);
+                                    (@TemplateId, @ClinicId, @SectionId, @FieldId, @OptionText, @CurrentOrder + 1, 1, 0);
                                     SELECT SCOPE_IDENTITY();";
             using SqlCommand insertCmd = new SqlCommand(insertQuery, conn, tran);
 
@@ -1222,9 +1244,9 @@ namespace DAL
                                 bool isActive, int displayOrder, SqlConnection conn, SqlTransaction tran)
         {
             string query = @"INSERT INTO PrescriptionTemplateFieldOptions
-                                    (TemplateId, SectionId, ClinicId, FieldId, OptionText, IsActive, DisplayOrder) 
+                                    (TemplateId, SectionId, ClinicId, FieldId, OptionText, IsActive, IsArchived, DisplayOrder) 
                                     VALUES 
-                                    (@TemplateId, @SectionId, @ClinicId, @FieldId, @OptionText, @IsActive, @DisplayOrder);
+                                    (@TemplateId, @SectionId, @ClinicId, @FieldId, @OptionText, @IsActive, 0, @DisplayOrder);
                                         SELECT SCOPE_IDENTITY();";
             using SqlCommand cmd = new SqlCommand(query, conn, tran);
 
@@ -1309,6 +1331,67 @@ namespace DAL
 
             return list;
         }
+
+        public bool SaveSectionOptions(int templateId, int sectionId, bool isMultiline, bool isRx, SqlConnection conn, SqlTransaction tran)
+        {
+            int rowsAffected = 0;
+
+            string query = @"UPDATE PrescriptionTemplateSections
+                                        SET Multiline = @IsMultiline,
+                                            IsPharmacologyAdvice = @IsRx
+                                        WHERE TemplateId = @TemplateId
+                                        AND SectionId = @SectionId;";
+            using SqlCommand cmd = new SqlCommand(query, conn, tran);
+
+            cmd.Parameters.AddWithValue("@TemplateId", templateId);
+            cmd.Parameters.AddWithValue("@SectionId", sectionId);
+            cmd.Parameters.AddWithValue("@IsMultiline", isMultiline);
+            cmd.Parameters.AddWithValue("@IsRx", isRx);
+
+            rowsAffected = cmd.ExecuteNonQuery();
+
+            return rowsAffected > 0;
+        }
+
+        public bool UpdateFieldsArchival(int templateId, int sectionId, bool isArchived, SqlConnection conn, SqlTransaction tran)
+        {
+            int rowsAffected = 0;
+
+            string query = @"UPDATE PrescriptionTemplateFields
+                                        SET IsArchived = @IsArchived
+                                        WHERE TemplateId = @TemplateId
+                                        AND SectionId = @SectionId;";
+            using SqlCommand cmd = new SqlCommand(query, conn, tran);
+
+            cmd.Parameters.AddWithValue("@TemplateId", templateId);
+            cmd.Parameters.AddWithValue("@SectionId", sectionId);
+            cmd.Parameters.AddWithValue("@IsArchived", isArchived);
+
+            rowsAffected = cmd.ExecuteNonQuery();
+
+            return rowsAffected > 0;
+        }
+
+        public bool UpdateOptionsArchival(int templateId, int sectionId, bool isArchived, SqlConnection conn, SqlTransaction tran)
+        {
+            int rowsAffected = 0;
+
+            string query = @"UPDATE PrescriptionTemplateFieldOptions
+                                        SET IsArchived = @IsArchived
+                                        WHERE TemplateId = @TemplateId
+                                        AND SectionId = @SectionId;";
+            using SqlCommand cmd = new SqlCommand(query, conn, tran);
+
+            cmd.Parameters.AddWithValue("@TemplateId", templateId);
+            cmd.Parameters.AddWithValue("@SectionId", sectionId);
+            cmd.Parameters.AddWithValue("@IsArchived", isArchived);
+
+            rowsAffected = cmd.ExecuteNonQuery();
+
+            return rowsAffected > 0;
+        }
+
+
 
     }
 

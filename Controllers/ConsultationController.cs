@@ -57,9 +57,19 @@ namespace Controllers
         }
 
         [HttpPost]
+        public IActionResult Save(Consultation model)
+        {
+            int consultationId = _consultation.SaveDraft(model);
+
+            TempData["Success"] = "Draft Consultation saved";
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
         public IActionResult Consult(Consultation model)
         {
-            int consultationId = _consultation.SaveConsultation(model);
+            int consultationId = _consultation.CompleteConsultation(model);
 
             TempData["Success"] = "Consultation completed";
 

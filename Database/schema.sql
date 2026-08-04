@@ -93,10 +93,12 @@ CREATE TABLE PrescriptionTemplateSections
 (
     SectionId INT IDENTITY PRIMARY KEY,
     TemplateId INT NOT NULL,
-    ClinicId INT,
+    ClinicId INT NOT NULL,
     SectionName VARCHAR(100) NOT NULL,
     DisplayOrder INT NOT NULL,
-    IsActive BIT NOT NULL DEFAULT 1
+    IsActive BIT NOT NULL DEFAULT 1,
+    Multiline BIT NOT NULL DEFAULT 0,
+    IsPharmacologyAdvice BIT NOT NULL DEFAULT 0,
 
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
     FOREIGN KEY (TemplateId) REFERENCES PrescriptionTemplates(TemplateId)
@@ -107,12 +109,13 @@ CREATE TABLE PrescriptionTemplateFields
     FieldId INT IDENTITY PRIMARY KEY,
     SectionId INT NOT NULL,
     TemplateId INT NOT NULL,
-    ClinicId INT,
+    ClinicId INT NOT NULL,
     FieldLabel VARCHAR(100) NOT NULL,
     FieldTypeCode VARCHAR(30) NOT NULL,
     IsRequired BIT NOT NULL DEFAULT 0,
     DisplayOrder INT NOT NULL,
-    IsActive BIT NOT NULL DEFAULT 1
+    IsActive BIT NOT NULL DEFAULT 1,
+    IsArchived bit NOT NULL DEFAULT 0,
 
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
     FOREIGN KEY (SectionId) REFERENCES PrescriptionTemplateSections(SectionId),
@@ -126,11 +129,12 @@ CREATE TABLE PrescriptionTemplateFieldOptions
     FieldId INT NOT NULL,
     SectionId INT NOT NULL,
     TemplateId int not null,
-    ClinicId INT,
+    ClinicId INT NOT NULL,
     OptionText VARCHAR(100) NOT NULL,
     IsRequired BIT NOT NULL DEFAULT 0,
     DisplayOrder INT NOT NULL,
-    IsActive BIT NOT NULL DEFAULT 1
+    IsActive BIT NOT NULL DEFAULT 1,
+    IsArchived bit NOT NULL DEFAULT 0,
 
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
     FOREIGN KEY (SectionId) REFERENCES PrescriptionTemplateSections(SectionId),
@@ -212,14 +216,106 @@ CREATE TABLE MedicalHistories (
     FOREIGN KEY (PatientId) REFERENCES Patients(PatientId)
 );
 
+CREATE TABLE PharmacologyAdvices
+(
+    PharmacologyId INT IDENTITY PRIMARY KEY,
+    ConsultationId INT NOT NULL,
+    SectionId INT NOT NULL,
+    LineNumber INT NOT NULL DEFAULT 1,
+    MedicineId INT,
+    MedicineName NVARCHAR(200),
+    Dosage NVARCHAR(100),
+    Frequency NVARCHAR(100),
+    Duration NVARCHAR(100),
+    Instructions NVARCHAR(500),
+
+    FOREIGN KEY (ConsultationId) REFERENCES Consultations(ConsultationId),
+    FOREIGN KEY (SectionId) REFERENCES ConsultationSections(SectionId),
+    FOREIGN KEY (MedicineId) REFERENCES Medicines(MedicineId)
+);
+
 CREATE TABLE Consultations (
     ConsultationId INT IDENTITY PRIMARY KEY,
-    AppointmentId INT,
-    Symptoms NVARCHAR(MAX),
-    Diagnosis NVARCHAR(MAX),
-    Notes NVARCHAR(MAX),
+    AppointmentId INT NOT NULL,
+    TemplateId    INT NOT NULL,
+    TemplateName  NVARCHAR(200) NOT NULL,
+    Status       NVARCHAR(20) NOT NULL DEFAULT 'Draft',
+    CreatedBy     INT NOT NULL,
+    CreatedOn     DATETIME NOT NULL DEFAULT(GETDATE()),
 
     FOREIGN KEY (AppointmentId) REFERENCES Appointments(AppointmentId)
+);
+
+CREATE TABLE ConsultationSections
+(
+    SectionId  INT IDENTITY PRIMARY KEY,
+    ConsultationId INT NOT NULL,
+    TemplateId INT NOT NULL,
+    TemplateSectionId INT NOT NULL,
+    SectionName  NVARCHAR(200) NOT NULL,
+    DisplayOrder INT NOT NULL,
+    IsVisible  BIT NOT NULL DEFAULT(1),
+    Multiline BIT NOT NULL DEFAULT(0),
+    IsPharmacologyAdvice BIT NOT NULL DEFAULT(0),
+
+    FOREIGN KEY (ConsultationId) REFERENCES Consultations(ConsultationId)
+);
+
+CREATE TABLE ConsultationRows
+(
+    RowId               INT IDENTITY(1,1) PRIMARY KEY,
+    ConsultationId      INT NOT NULL,
+    ClinicId            INT NOT NULL,
+    SectionId           INT NOT NULL,
+    RowNumber           INT NOT NULL,
+    DisplayOrder        INT NOT NULL,
+    IsTemplate          BIT NOT NULL DEFAULT(0),
+    CreatedOn           DATETIME2 NOT NULL DEFAULT(SYSDATETIME()),
+    ModifiedOn          DATETIME2 NULL,
+
+    FOREIGN KEY (ConsultationId) REFERENCES Consultations(ConsultationId),
+    FOREIGN KEY (SectionId) REFERENCES ConsultationSections(SectionId),
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
+);
+
+CREATE TABLE ConsultationFields
+(
+    FieldId INT IDENTITY PRIMARY KEY,
+    ConsultationId INT NOT NULL,
+    ClinicId            INT NOT NULL,
+    TemplateId INT NOT NULL,
+    SectionId INT NOT NULL,
+    RowId INT NOT NULL,
+    TemplateFieldId INT NOT NULL,
+    FieldLabel NVARCHAR(200) NOT NULL,
+    FieldTypeCode NVARCHAR(50) NOT NULL,
+    DisplayOrder INT NOT NULL,
+    IsMandatory BIT NOT NULL,
+    FieldValue NVARCHAR(MAX),
+    Unit NVARCHAR(50) NULL,
+
+    FOREIGN KEY (ConsultationId) REFERENCES Consultations(ConsultationId),
+    FOREIGN KEY (SectionId) REFERENCES ConsultationSections(SectionId),
+    FOREIGN KEY (RowId) REFERENCES ConsultationRows(RowId)
+);
+
+CREATE TABLE ConsultationFieldOptions
+(
+    OptionId INT IDENTITY PRIMARY KEY,
+    ConsultationId INT NOT NULL,
+    TemplateId INT NOT NULL,
+    SectionId INT NOT NULL,
+    RowId INT NOT NULL,
+    FieldId INT NOT NULL,
+    TemplateOptionId INT NOT NULL,
+    OptionText NVARCHAR(200) NOT NULL,
+    DisplayOrder INT NOT NULL,
+    IsSelected BIT NOT NULL DEFAULT(0),
+
+    FOREIGN KEY (ConsultationId) REFERENCES Consultations(ConsultationId),
+    FOREIGN KEY (SectionId) REFERENCES ConsultationSections(SectionId),
+    FOREIGN KEY (RowId) REFERENCES ConsultationRows(RowId),
+    FOREIGN KEY (FieldId) REFERENCES ConsultationFields(FieldId)
 );
 
 CREATE TABLE BillingCharges (
@@ -385,21 +481,6 @@ CREATE TABLE AppointmentSlot
 
     FOREIGN KEY (DoctorId) REFERENCES Doctors(DoctorId),
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
-);
-
-CREATE TABLE PharmacologyAdvices
-(
-    PharmacologyId INT IDENTITY PRIMARY KEY,
-    ConsultationId INT NOT NULL,
-    MedicineId INT,
-    MedicineName NVARCHAR(200),
-    Dosage NVARCHAR(100),
-    Frequency NVARCHAR(100),
-    Duration NVARCHAR(100),
-    Instructions NVARCHAR(500),
-
-    FOREIGN KEY (ConsultationId) REFERENCES Consultations(ConsultationId)
-    FOREIGN KEY (MedicineId) REFERENCES Medicines(MedicineId)
 );
 
 CREATE TABLE Medicines

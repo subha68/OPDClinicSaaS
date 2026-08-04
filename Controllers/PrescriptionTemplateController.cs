@@ -416,6 +416,25 @@ namespace Controllers
             return Json(templates);
         }
 
+        [HttpPost]
+        public IActionResult SaveSectionOptions(
+            int templateId,
+            int sectionId,
+            bool isMultiline,
+            bool isRx)
+        {
+            _template.SaveSectionOptions(
+                templateId,
+                sectionId,
+                isMultiline,
+                isRx);
+
+            return Json(new
+            {
+                success = true
+            });
+        }
+
     }
 
 }

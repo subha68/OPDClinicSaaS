@@ -1,0 +1,90 @@
+@model Models.ConsultationField
+
+<div class="@Model.ColumnClass">
+
+    <div class="consultation-field @Model.LayoutClass">
+
+        @if (Model.IsOptionGroup)
+        {
+            <div class="field-row">
+
+                <div class="field-label">
+
+                    <label class="form-label mb-0">
+
+                        @Model.FieldLabel
+
+                        @if (Model.IsMandatory)
+                        {
+                            <span class="text-danger">*</span>
+                        }
+
+                    </label>
+
+                </div>
+
+                <div class="field-editor">
+
+                    <partial name="_FieldRenderer" model="Model" />
+
+                </div>
+
+            </div>
+        }
+        else if (Model.IsFullWidth)
+        {
+            <label class="form-label">
+
+                @Model.FieldLabel
+
+            </label>
+
+            <div class="field-editor">
+
+                <partial name="_FieldRenderer" model="Model" />
+
+            </div>
+        }
+        else
+        {
+            <div class="field-row">
+
+                <div class="field-label">
+
+                    <label class="form-label mb-0">
+
+                        @Model.FieldLabel
+
+                        @if (Model.IsMandatory)
+                        {
+                            <span class="text-danger">*</span>
+                        }
+
+                    </label>
+
+                </div>
+
+                <div class="field-editor">
+
+                    <partial name="_FieldRenderer" model="Model" />
+
+                </div>
+
+            </div>
+        }
+
+        <input asp-for="ConsultationId" type="hidden" />
+        <input asp-for="TemplateId" type="hidden" />
+        <input asp-for="SectionId" type="hidden" />
+        <input asp-for="FieldId" type="hidden" />
+        <input asp-for="TemplateFieldId" type="hidden" />
+        <input asp-for="FieldLabel" type="hidden" />
+        <input asp-for="FieldTypeCode" type="hidden" />
+        <input asp-for="DisplayOrder" type="hidden" />
+
+        <input asp-for="RowState" type="hidden" 
+                class="row-state" />
+
+    </div>
+
+</div>

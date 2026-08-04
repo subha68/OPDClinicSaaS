@@ -7,8 +7,11 @@ namespace Models
     {
         public int PrescriptionId { get; set; }
         public int ConsultationId { get; set; }
+        public int SectionId { get; set; }
         public int AppointmentId { get; set; }
         public int PatientId { get; set; }
+        public int PharmacologyId { get; set; }
+        public int LineNumber { get; set; }
         public int? MedicineId { get; set; }
 
         public string? MedicineName { get; set; }

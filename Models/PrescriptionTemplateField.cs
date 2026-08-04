@@ -12,6 +12,7 @@ namespace Models
         public string FieldLabel { get; set; }
         public string FieldTypeCode { get; set; }
         public bool IsActive { get; set; }
+        public bool IsArchived { get; set; }
         public int DisplayOrder { get; set; }
         public bool SupportOptions => 
                         FieldTypeCode == "Dropdown" ||

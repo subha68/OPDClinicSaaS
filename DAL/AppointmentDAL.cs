@@ -113,7 +113,7 @@ namespace DAL
                     a.SlotEndTime,
                     a.Status,
                     p.FirstName + ' ' + p.LastName as PatientName,
-                    d.FirstName + ' ' + d.LastName as DoctorName,
+                    d.Salutation + ' ' + d.FirstName + ' ' + d.LastName as DoctorName,
                     c.Name as ClinicName,
                     d.DepartmentId,
                     t.Name as DepartmentName
@@ -168,12 +168,13 @@ namespace DAL
                     a.AppointmentId,
                     a.AppointmentDate,
                     a.PatientId,
+                    a.DoctorId,
                     a.SlotStartTime,
                     a.SlotEndTime,
                     v.VisitId,
                     a.Status,
                     p.FirstName + ' ' + p.LastName as PatientName,
-                    d.FirstName + ' ' + d.LastName as DoctorName,
+                    d.Salutation + ' ' + d.FirstName + ' ' + d.LastName as DoctorName,
                     c.Name as ClinicName,
                     d.DepartmentId,
                     t.Name as DepartmentName,
@@ -241,7 +242,8 @@ namespace DAL
                         ClinicName = dr["ClinicName"].ToString(),
                         VisitId = Convert.ToInt32(dr["VisitId"]),
                         DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
-                        DepartmentName = dr["DepartmentName"].ToString()                                
+                        DepartmentName = dr["DepartmentName"].ToString(),
+                        DoctorId = Convert.ToInt32(dr["DoctorId"])
                     };
                 }
             }
@@ -263,7 +265,7 @@ namespace DAL
                     v.VisitId,
                     a.Status,
                     p.FirstName + ' ' + p.LastName as PatientName,
-                    d.FirstName + ' ' + d.LastName as DoctorName,
+                    d.Salutation + ' ' + d.FirstName + ' ' + d.LastName as DoctorName,
                     c.Name as ClinicName,
                     d.DepartmentId,
                     t.Name as DepartmentName
@@ -418,7 +420,7 @@ namespace DAL
                     a.SlotEndTime,
                     a.Status,
                     p.FirstName + ' ' + p.LastName as PatientName,
-                    d.FirstName + ' ' + d.LastName as DoctorName,
+                    d.Salutation + ' ' + d.FirstName + ' ' + d.LastName as DoctorName,
                     c.Name as ClinicName,
                     v.VisitId,
                     d.DepartmentId,

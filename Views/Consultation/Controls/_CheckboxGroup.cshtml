@@ -1,0 +1,57 @@
+@model Models.ConsultationField
+
+@{
+    int rowWidth = 70;
+    int currentWidth = 0;
+}
+
+<partial name="_ConsultationFieldHidden" model="Model" />
+
+<div class="option-list">
+
+    <div class="option-row">
+
+    @for (int i = 0; i < Model.Options.Count; i++)
+    {
+        var option = Model.Options[i];
+
+        int width = option.OptionText.Length + 8;
+
+        if (i > 0 && currentWidth + width > rowWidth)
+        {
+            @:</div>
+            @:<div class="option-row">
+
+            currentWidth = 0;
+        }
+
+        currentWidth += width;
+
+        <input asp-for="Options[i].OptionId" type="hidden" />
+        <input asp-for="Options[i].ConsultationId" type="hidden" />
+        <input asp-for="Options[i].ClinicId" type="hidden" />
+        <input asp-for="Options[i].TemplateId" type="hidden" />
+        <input asp-for="Options[i].SectionId" type="hidden" />
+        <input asp-for="Options[i].FieldId" type="hidden" />
+        <input asp-for="Options[i].TemplateOptionId" type="hidden" />
+        <input asp-for="Options[i].DisplayOrder" type="hidden" />
+        <input asp-for="Options[i].OptionText" type="hidden" />
+
+        <div class="option-item">
+
+            <input asp-for="Options[i].IsSelected"
+                class="form-check-input" />
+
+            <label class="form-check-label"
+                asp-for="Options[i].IsSelected">
+
+                @option.OptionText
+
+            </label>
+
+        </div>
+    }
+
+    </div>
+
+</div>

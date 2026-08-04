@@ -1,0 +1,26 @@
+@model Models.ConsultationField
+
+<partial name="_ConsultationFieldHidden" model="Model" />
+
+<select asp-for="FieldValue"
+        class="form-select">
+
+    @for (int i = 0; i < Model.Options.Count; i++)
+    {
+        <input asp-for="Options[i].OptionId" type="hidden" />
+        <input asp-for="Options[i].ConsultationId" type="hidden" />
+        <input asp-for="Options[i].ClinicId" type="hidden" />
+        <input asp-for="Options[i].TemplateId" type="hidden" />
+        <input asp-for="Options[i].SectionId" type="hidden" />
+        <input asp-for="Options[i].FieldId" type="hidden" />
+        <input asp-for="Options[i].TemplateOptionId" type="hidden" />
+        <input asp-for="Options[i].DisplayOrder" type="hidden" />
+        <input asp-for="Options[i].OptionText" type="hidden" />
+
+        <option value="@Model.Options[i].OptionText"
+                selected="@Model.Options[i].IsSelected">
+            @Model.Options[i].OptionText
+        </option>
+    }
+
+</select>

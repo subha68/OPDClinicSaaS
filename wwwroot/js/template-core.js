@@ -81,7 +81,7 @@ function initializeDesignerCore() {
     initializeToggles();
     initializeInlineEditors();
     initializeInlineSelects();
-
+    initializeSectionCheckboxes();
     initializeAccordionFirstTime();
 
 }
@@ -188,6 +188,61 @@ function initializeInlineSelects()
         }
 
     });
+}
+
+function initializeSectionCheckboxes() {
+
+    const designer = $("#designerContainer");
+
+    designer
+        .off("change", ".section-multiline")
+        .on("change", ".section-multiline", function () {
+
+            const chk = $(this);
+
+            $.post(
+                "/PrescriptionTemplate/SaveSectionOptions",
+                {
+                    templateId: $("#TemplateId").val(),
+                    sectionId: chk.data("section-id"),
+                    isMultiline: chk.is(":checked"),
+                    isRx: chk.closest(".section-content")
+                             .find(".section-rx")
+                             .is(":checked")
+                })
+                .fail(function () {
+                    alert("Unable to save.");
+                    chk.prop("checked", !chk.prop("checked"));
+                });
+
+        });
+
+    designer
+        .off("change", ".section-rx")
+        .on("change", ".section-rx", function () {
+
+            const chk = $(this);
+
+            $.post(
+                "/PrescriptionTemplate/SaveSectionOptions",
+                {
+                    templateId: $("#TemplateId").val(),
+                    sectionId: chk.data("section-id"),
+                    isMultiline: chk.closest(".section-content")
+                                    .find(".section-multiline")
+                                    .is(":checked"),
+                    isRx: chk.is(":checked")
+                })
+                .done(function (response) {
+                    reloadTemplate();
+                })
+                .fail(function () {
+                    alert("Unable to save.");
+                    chk.prop("checked", !chk.prop("checked"));
+                });
+
+        });
+
 }
 
 function wireToggle(config) {

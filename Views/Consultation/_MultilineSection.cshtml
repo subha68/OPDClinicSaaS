@@ -1,0 +1,89 @@
+@model Models.ConsultationSection
+
+<div class="table-responsive">
+
+    <table class="table table-bordered table-hover consultation-grid"
+                data-section-id="@Model.SectionId"
+                    data-rx="@Model.IsPharmacologyAdvice.ToString().ToLower()">
+
+        <thead>
+
+            <tr>
+
+                <th class="line-no-column">
+                    #
+                </th>
+
+                @foreach (var field in Model.TemplateRow.Fields.OrderBy(f => f.DisplayOrder))
+                {
+                    <th>
+
+                        @field.FieldLabel
+
+                        @if (field.IsMandatory)
+                        {
+                            <span class="text-danger">*</span>
+                        }
+
+                    </th>
+                }
+
+                <th class="action-column">
+                    Action
+                </th>
+
+            </tr>
+
+        </thead>
+
+        <tbody class="consultation-body"
+               data-section-id="@Model.SectionId">
+
+            @foreach (var row in Model.Rows.OrderBy(r => r.RowNumber))
+            {
+                <partial name="_MultilineRow" model="row" />
+            }
+
+        </tbody>
+
+        <tbody class="consultation-template d-none">
+
+            @{
+                var vd = new ViewDataDictionary(ViewData);
+                vd.TemplateInfo.HtmlFieldPrefix =
+                    ViewData.TemplateInfo.GetFullHtmlFieldName("TemplateRow");
+
+                vd["IsTemplate"] = true;
+            }
+
+            <partial name="_MultilineRow"
+                    model="Model.TemplateRow"
+                    view-data="vd" />
+
+        </tbody>
+
+        <tfoot>
+
+            <tr>
+
+                <td colspan="@(Model.TemplateRow.Fields.Count + 2)">
+
+                    <button type="button"
+                            class="btn btn-outline-primary btn-sm add-line"
+                            data-section-id="@Model.SectionId">
+
+                        <i class="bi bi-plus-circle"></i>
+
+                        Add Line
+
+                    </button>
+
+                </td>
+
+            </tr>
+
+        </tfoot>
+
+    </table>
+
+</div>

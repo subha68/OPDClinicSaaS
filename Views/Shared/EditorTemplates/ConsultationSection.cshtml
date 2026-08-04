@@ -1,0 +1,38 @@
+@model Models.ConsultationSection
+
+<div class="card consultation-section">
+
+    <div class="card-header bg-light">
+
+        <h5 class="mb-0">@Model.SectionName</h5>
+
+        <input asp-for="SectionId" type="hidden" />
+        <input asp-for="ConsultationId" type="hidden" />
+        <input asp-for="TemplateId" type="hidden" />
+        <input asp-for="TemplateSectionId" type="hidden" />
+        <input asp-for="SectionName" type="hidden" />
+        <input asp-for="IsVisible" type="hidden" />
+        <input asp-for="Multiline" type="hidden" />
+        <input asp-for="IsPharmacologyAdvice" type="hidden" />
+        <input asp-for="DisplayOrder" type="hidden" />
+
+    </div>
+
+    <div class="card-body">
+
+        @if (Model.IsMultiline)
+        {
+            <partial name="_MultilineSection" model="Model" />
+        }
+        else if (Model.Rows.Any())
+        {
+            <div class="row g-3">
+
+                @Html.EditorFor(m => m.Rows[0].Fields)
+
+            </div>
+        }
+
+    </div>
+
+</div>

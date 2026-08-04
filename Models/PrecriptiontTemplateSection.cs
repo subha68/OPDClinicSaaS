@@ -7,6 +7,8 @@ namespace Models
         public int SectionId { get; set; }
         public string SectionName { get; set; }
         public bool IsActive { get; set; }
+        public bool Multiline { get; set; }
+        public bool IsPharmacologyAdvice { get; set; }
         public int DisplayOrder { get; set; }
         public List<PrescriptionTemplateField> Fields { get; set; } = new();
     }

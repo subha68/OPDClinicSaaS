@@ -11,6 +11,7 @@ namespace Models
         public string OptionText { get; set; }
         public string OptionValue { get; set; }
         public bool IsActive { get; set; }
+        public bool IsArchived { get; set; }
         public int DisplayOrder { get; set; }
     }
 }

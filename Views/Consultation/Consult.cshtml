@@ -1,78 +1,132 @@
+@model Models.Consultation
+
 @{
+    ViewData["Title"] = "Consultation";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-@model Models.Consultation
+<form asp-action="Consult" method="post"
+      class="consultation-form">
 
-<h3>Consultation</h3>
+    <input asp-for="ConsultationId" type="hidden" />
+    <input asp-for="AppointmentId" type="hidden" />
+    <input asp-for="TemplateId" type="hidden" />
+    <input asp-for="TemplateName" type="hidden" />
 
-<form asp-action="Consult" method="post">
+    <!-- ====================================================== -->
+    <!-- Patient Header -->
+    <!-- ====================================================== -->
 
-    <input type="hidden" asp-for="AppointmentId" />
-    <input type="hidden" asp-for="PatientId" />
+    <div class="card consultation-card patient-summary">
 
-    <div class="mb-3">
-        <label class="form-label">Patient Name</label>
-        <input asp-for="PatientName"
-               class="form-control"
-               readonly />
+        <div class="card-header bg-primary text-white">
+
+            <strong>Patient Consultation</strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <div class="col-md-3">
+                    <div class="patient-item">
+                        <span class="patient-label">Patient ID</span>
+                        <span>@Model.PatientId</span>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="patient-item">
+                        <span class="patient-label">Name</span>
+                        <span class="patient-value">@Model.PatientName</span>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="patient-item">
+                        <span class="patient-label">Gender</span>
+                        <span class="patient-value">@Model.Gender</span>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="patient-item">
+                        <span class="patient-label">Age</span>
+                        <span class="patient-value">@Model.Age</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-3">
+                    <div class="patient-item">
+                        <span class="patient-label">Doctor</span>
+                        <span class="patient-value">@Model.DoctorName</span>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="patient-item">
+                        <span class="patient-label">Appointment Date</span>
+                        <span class="patient-value">@Model.AppointmentDate.ToString("dd MMM yyyy")</span>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="patient-item">
+                        <span class="patient-label">Time</span>
+                        <span class="patient-value">@Model.SlotStartTime.ToString(@"hh\:mm")</span>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="patient-item">
+                        <span class="patient-label">Status</span>
+                        <span class="patient-value">@Model.Status</span>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
     </div>
 
-    <div class="mb-3">
-        <label class="form-label">Symptoms</label>
-        <textarea asp-for="Symptoms"
-                  class="form-control"
-                  rows="3">
-        </textarea>
+    <!-- ====================================================== -->
+    <!-- Dynamic Sections -->
+    <!-- ====================================================== -->
+
+    @Html.EditorFor(m => m.Sections)
+
+    <div class="consultation-actions">
+
+        <button class="btn btn-secondary"
+                type="submit"
+                name="Status"
+                value="Draft"
+                asp-action="Save">
+
+            Save Draft
+
+        </button>
+
+        <button class="btn btn-success"
+                type="submit"
+                name="Status"
+                value="Completed">
+
+            Complete Consultation
+
+        </button>
+
     </div>
-
-    <div class="mb-3">
-        <label class="form-label">Diagnosis</label>
-        <textarea asp-for="Diagnosis"
-                  class="form-control"
-                  rows="3">
-        </textarea>
-    </div>
-
-    <h4>Medicines</h4>
-
-    <table class="table" id="medicineTable">
-        <thead>
-            <tr>
-                <th>Medicine</th>
-                <th>Dosage</th>
-                <th>Frequency</th>
-                <th>Duration</th>
-                <th>Instructions</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
-
-    <button type="button"
-            class="btn btn-primary"
-            onclick="addRow()">
-        Add Medicine
-    </button>
-
-    <div class="mb-3">
-        <label class="form-label">Notes</label>
-        <textarea asp-for="Notes"
-                  class="form-control"
-                  rows="3">
-        </textarea>
-    </div>
-
-    <button type="submit"
-            class="btn btn-success">
-        Complete Consultation
-    </button>
-
-    <a asp-action="Index"
-       class="btn btn-secondary">
-        Cancel
-    </a>
 
 </form>
+
+@section Scripts
+{
+    <script src="~/js/consultation.js" asp-append-version="true"></script>
+}

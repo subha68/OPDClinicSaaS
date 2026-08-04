@@ -514,7 +514,44 @@ namespace BLL
                 throw;
             }
 
-        }       
+        }  
+
+        public bool SaveSectionOptions(int templateId, int sectionId, bool isMultiline, bool isRx)
+        {
+            if (templateId == 0 || sectionId == 0)
+                return false;
+
+            using var conn = _db.GetConnection();
+            conn.Open();
+            using var tran = conn.BeginTransaction();
+
+            try
+            {
+                _templateDAL.SaveSectionOptions(templateId, sectionId, isMultiline, isRx, conn, tran);
+
+                if (isRx)
+                {
+                    bool isArchived = true;
+                    _templateDAL.UpdateFieldsArchival(templateId, sectionId, isArchived, conn, tran);
+                    _templateDAL.UpdateOptionsArchival(templateId, sectionId, isArchived, conn, tran);
+                }
+                else
+                {
+                    bool isArchived = false;
+                    _templateDAL.UpdateFieldsArchival(templateId, sectionId, isArchived, conn, tran);
+                    _templateDAL.UpdateOptionsArchival(templateId, sectionId, isArchived, conn, tran);
+                }
+
+                tran.Commit();
+                return true;
+            }
+            catch
+            {
+                tran.Rollback();
+                throw;
+            }
+        }     
+   
 
     }
 

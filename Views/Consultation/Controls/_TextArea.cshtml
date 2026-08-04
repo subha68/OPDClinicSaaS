@@ -1,0 +1,11 @@
+@model Models.ConsultationField
+
+<partial name="_ConsultationFieldHidden" model="Model" />
+
+<textarea asp-for="FieldValue"
+          class="form-control consultation-textarea"
+          rows="5">
+</textarea>
+
+<span asp-validation-for="FieldValue"
+      class="text-danger"></span>

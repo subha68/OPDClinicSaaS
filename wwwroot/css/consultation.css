@@ -1,0 +1,426 @@
+/*=========================================================
+    ClinicsRUs Consultation
+=========================================================*/
+
+/*---------------------------------------------------------
+    Page
+---------------------------------------------------------*/
+
+body {
+    background: #f4f7fb;
+}
+
+.consultation-form {
+    max-width: 1400px;
+    margin: 20px auto;
+}
+
+/*---------------------------------------------------------
+    Cards
+---------------------------------------------------------*/
+
+.consultation-card,
+.consultation-section {
+    border: none;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    margin-bottom: 24px;
+}
+
+.consultation-card .card-header {
+    background: #0d6efd;
+    color: #fff;
+    border: 0;
+    padding: 14px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.consultation-section .card-header {
+    background: #f8fbff;
+    color: #0d47a1;
+    border-bottom: 1px solid #e7eef8;
+    padding: 12px 18px;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.consultation-card .card-body,
+.consultation-section .card-body {
+    padding: 20px;
+}
+
+/*---------------------------------------------------------
+    Patient Summary
+---------------------------------------------------------*/
+
+.patient-summary .row + .row {
+    margin-top: 14px;
+}
+
+.patient-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.patient-label {
+    width: 120px;
+    color: #6c757d;
+    font-size: .82rem;
+    font-weight: 600;
+}
+
+.patient-value {
+    color: #212529;
+    font-size: .95rem;
+    font-weight: 500;
+}
+
+/*---------------------------------------------------------
+    Consultation Fields
+---------------------------------------------------------*/
+
+/*---------------------------------------------------------
+    Consultation Fields
+---------------------------------------------------------*/
+
+.consultation-field {
+    margin-bottom: 16px;
+}
+
+/*---------------------------------------------------------
+    Standard Fields
+---------------------------------------------------------*/
+
+.field-row {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    column-gap: 16px;
+    align-items: center;
+}
+
+.field-label {
+    padding-top: 2px;
+}
+
+.field-label .form-label {
+    margin-bottom: 0;
+    color: #495057;
+    font-size: .88rem;
+    font-weight: 600;
+}
+
+.field-editor {
+    width: 100%;
+}
+
+/*---------------------------------------------------------
+    Full Width Fields
+---------------------------------------------------------*/
+
+.field-full-width {
+    display: block;
+}
+
+.field-full-width > .form-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #495057;
+    font-size: .88rem;
+    font-weight: 600;
+}
+
+.field-full-width > .field-editor {
+    width: 100%;
+}
+
+.consultation-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/*---------------------------------------------------------
+    Option Groups
+---------------------------------------------------------*/
+
+.field-option-group {
+    width: 100%;
+}
+
+.field-row {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    column-gap: 16px;
+    align-items: start;
+}
+
+.field-label {
+    padding-top: 4px;
+}
+
+.field-label .form-label {
+    margin-bottom: 0;
+    color: #495057;
+    font-size: .88rem;
+    font-weight: 600;
+}
+
+/*=========================================================
+    Option Groups
+=========================================================*/
+
+.option-list {
+    gap: 10px 20px;
+}
+
+/*---------------------------------------
+    Up to 4 options
+---------------------------------------*/
+
+.options-1row {
+
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+
+}
+
+/*---------------------------------------
+    5-8 options
+---------------------------------------*/
+
+.options-2row {
+
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+
+}
+
+/*---------------------------------------
+    9-12 options
+---------------------------------------*/
+
+.options-3row {
+
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+
+}
+
+/*---------------------------------------
+    More than 12
+---------------------------------------*/
+
+.options-flow {
+
+    display: flex;
+    flex-wrap: wrap;
+
+}
+
+.options-flow .option-item {
+
+    flex: 0 1 280px;
+
+}
+
+/*=========================================================
+    Checkbox / Radio Groups
+=========================================================*/
+
+.option-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.option-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 28px;
+}
+
+.option-item {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    gap: 6px;
+}
+
+.option-item .form-check-input {
+    margin-top: 0;
+    flex-shrink: 0;
+}
+
+.option-item .form-check-label {
+    margin-bottom: 0;
+    cursor: pointer;
+}
+
+/*---------------------------------------------------------
+    Inputs
+---------------------------------------------------------*/
+
+.form-control,
+.form-select {
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    font-size: .9rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #4c8bf5;
+    box-shadow: 0 0 0 .15rem rgba(13,110,253,.15);
+}
+
+textarea.form-control {
+    min-height: 90px;
+    resize: vertical;
+}
+
+/*---------------------------------------------------------
+    Mandatory
+---------------------------------------------------------*/
+
+.text-danger {
+    font-weight: 700;
+}
+
+/*=========================================================
+    Multiline Sections
+=========================================================*/
+
+.consultation-grid {
+
+    margin-bottom: 0;
+    font-size: .90rem;
+
+}
+
+.consultation-grid thead th {
+
+    background: #f8fbff;
+    color: #0d47a1;
+    font-weight: 600;
+    vertical-align: middle;
+    white-space: nowrap;
+
+}
+
+.consultation-grid td {
+
+    vertical-align: middle;
+
+}
+
+.line-no-column {
+
+    width: 60px;
+    text-align: center;
+
+}
+
+.line-number {
+
+    text-align: center;
+    font-weight: 600;
+    background: #fafafa;
+
+}
+
+.action-column {
+
+    width: 90px;
+    text-align: center;
+
+}
+
+.consultation-grid tfoot td {
+
+    background: #fff;
+
+}
+
+.consultation-grid .form-control,
+.consultation-grid .form-select {
+
+    min-width: 140px;
+
+}
+
+.consultation-grid textarea {
+
+    min-width: 220px;
+    min-height: 70px;
+
+}
+
+/*---------------------------------------------------------
+    Action Buttons
+---------------------------------------------------------*/
+
+.consultation-actions {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    padding: 16px 20px;
+    border-top: 1px solid #dee2e6;
+    text-align: right;
+    z-index: 100;
+}
+
+.consultation-actions .btn {
+    min-width: 170px;
+    border-radius: 6px;
+    font-weight: 600;
+    padding: 10px 20px;
+}
+
+.consultation-actions .btn + .btn {
+    margin-left: 10px;
+}
+
+/*---------------------------------------------------------
+    Responsive
+---------------------------------------------------------*/
+
+@media (max-width: 992px) {
+
+    .field-standard,
+    .field-row {
+        grid-template-columns: 1fr;
+    }
+
+    .field-standard > .form-label,
+    .field-label {
+        margin-bottom: 8px;
+        padding-top: 0;
+    }
+
+    .option-list {
+        grid-template-columns: repeat(2, minmax(140px, 1fr));
+    }
+}
+
+@media (max-width: 576px) {
+
+    .option-list {
+        grid-template-columns: 1fr;
+    }
+
+    .consultation-actions {
+        text-align: center;
+    }
+
+    .consultation-actions .btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .consultation-actions .btn + .btn {
+        margin-left: 0;
+    }
+}

@@ -1,0 +1,51 @@
+@model Models.ConsultationRow
+
+<tr data-rowid="@Model.RowId"
+    data-rownumber="@Model.RowNumber"
+    data-rowguid="@Model.RowGuid">
+
+    <td class="line-number">
+
+        @Model.RowNumber
+
+        <input asp-for="RowGuid"
+               class="row-guid"
+               type="hidden" />
+
+        <input asp-for="RowNumber"
+               class="row-number-hidden"
+               type="hidden" />
+
+        <input asp-for="RowState"
+               class="row-state"
+               type="hidden" />
+
+        <input asp-for="RowId" type="hidden" />
+        <input asp-for="ConsultationId" type="hidden" />
+        <input asp-for="SectionId" type="hidden" />
+        <input asp-for="DisplayOrder" type="hidden" />    
+
+    </td>
+
+    @for (int i = 0; i < Model.Fields.Count; i++)
+    {
+        <td class="field-cell">
+
+            @Html.EditorFor(m => m.Fields[i])
+
+        </td>
+    }
+
+    <td class="action-cell text-center">
+
+        <button type="button"
+                class="btn btn-sm btn-outline-danger delete-line"
+                data-rowid="@Model.RowId">
+
+            <i class="bi bi-trash"></i>
+
+        </button>
+
+    </td>
+
+</tr>

@@ -153,6 +153,7 @@ function initializeAccordion() {
     );
 }
 
+/*
 function wireInsert(
     button,
     url,
@@ -248,7 +249,7 @@ function wireAccordion(
 
         });
 
-}
+}*/
 
 $(".section-collapse").each(function () {
 
