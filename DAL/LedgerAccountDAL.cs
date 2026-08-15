@@ -51,7 +51,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
+        public bool Delete(int id, int clinicId, SqlConnection conn, SqlTransaction tran)
         {
             string query = @"DELETE FROM LedgerAccounts WHERE LedgerAccountId = @id";
 
@@ -62,7 +62,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public List<LedgerAccount> GetAll(SqlConnection conn, SqlTransaction? tran = null)
+        public List<LedgerAccount> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<LedgerAccount>();
 
@@ -90,7 +90,7 @@ namespace DAL
             return list;
         }
 
-        public LedgerAccount Get(int ledgerAccountId, SqlConnection conn, SqlTransaction? tran = null)
+        public LedgerAccount Get(int ledgerAccountId, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             LedgerAccount ledgerAccount = null;
 

@@ -6,11 +6,13 @@ namespace BLL
     public class ClinicService : BaseService<Clinic>
     {
         private readonly ClinicDAL _clinicDAL;
+        private readonly PrescriptionTemplateDAL _templateDAL;
 
         public ClinicService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
                                 : base(config, httpContextAccessor)
         {
             _clinicDAL = new ClinicDAL(config);
+            _templateDAL = new PrescriptionTemplateDAL(config);
             _dal = _clinicDAL;
         }
 
@@ -23,9 +25,13 @@ namespace BLL
             try
             {
                 clinic.ClinicCode = "CLN" + DateTime.Now.Ticks.ToString().Substring(10);
-                int id = base.Add(clinic, conn, tran);
+                int clinicId = base.Add(clinic, conn, tran);
+
+                // copy default template for new Clinic
+                _templateDAL.CloneTemplate("DEFAULT", 0, clinicId, 0, conn, tran);
+
                 tran.Commit();
-                return id;
+                return clinicId;
             }
             catch
             {

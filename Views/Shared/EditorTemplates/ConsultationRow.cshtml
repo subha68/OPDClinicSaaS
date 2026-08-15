@@ -1,0 +1,21 @@
+@model Models.ConsultationRow
+
+<div class="consultation-row">
+
+    <input asp-for="RowId" type="hidden" />
+    <input asp-for="SectionId" type="hidden" />
+    <input asp-for="RowNumber" type="hidden" />
+    <input asp-for="DisplayOrder" type="hidden" />
+    <input asp-for="RowGuid" type="hidden" />
+    <input type="hidden"
+       name="@Html.NameFor(m => m.RowState)"
+       value="@((int)Model.RowState)"
+       class="row-state" />
+
+    <div class="row g-3">
+
+        @Html.EditorFor(m => m.Fields)
+
+    </div>
+
+</div>

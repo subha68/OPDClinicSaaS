@@ -16,15 +16,6 @@ namespace Models
         public string? OptionText { get; set; }
         public int DisplayOrder { get; set; }
         public bool IsSelected { get; set; }
-        public RowState RowState { get; set; } = RowState.Unchanged;
-        public bool IsAdded => RowState == RowState.Added;
-        public bool IsModified => RowState == RowState.Modified;
-        public bool IsDeleted => RowState == RowState.Deleted;
-        public bool IsUnchanged => RowState == RowState.Unchanged;
-        public bool IsDirty =>
-            RowState == RowState.Added ||
-            RowState == RowState.Modified ||
-            RowState == RowState.Deleted;
 
         public ConsultationField? Field { get; set; }
 
@@ -47,7 +38,7 @@ namespace Models
             IsSelected = false;
         }
 
-        public ConsultationFieldOption Clone(RowState rowState = RowState.Unchanged)
+        public ConsultationFieldOption Clone()
         {
             return new ConsultationFieldOption
             {
@@ -60,8 +51,7 @@ namespace Models
                 TemplateOptionId = TemplateOptionId,
                 DisplayOrder = DisplayOrder,
                 OptionText = OptionText,
-                IsSelected = false,
-                RowState = rowState
+                IsSelected = false
             };
         }
     }

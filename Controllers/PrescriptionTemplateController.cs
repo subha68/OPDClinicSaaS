@@ -37,6 +37,9 @@ namespace Controllers
         {
             var model = _template.GetByDepartment(departmentId);
 
+            if (model == null)
+                return PartialView("_NoTemplateFound");
+
             model.FieldTypes = PopulateFieldTypes();
 
             return PartialView("_TemplateDesigner", model);
@@ -45,6 +48,9 @@ namespace Controllers
         public IActionResult GetByDoctor(int doctorId)
         {
             var model = _template.GetByDoctor(doctorId);
+
+            if (model == null)
+                return PartialView("_NoTemplateFound");
 
             model.FieldTypes = PopulateFieldTypes();
 
@@ -402,16 +408,15 @@ namespace Controllers
         [HttpGet]
         public JsonResult SearchTemplates(string term)
         {
-            var templates =
-                _template.Search(term)
-                        .Take(10)
-                        .Select(x => new
-                        {
-                            id = x.TemplateId,
-                            label = x.TemplateName,
-                            departmentId = x.DepartmentId,
-                            departmentName = x.DepartmentName
-                        });
+            var templates = _template.Search(term)
+                                        .Take(10)
+                                        .Select(x => new
+                                        {
+                                            id = x.TemplateId,
+                                            text = x.TemplateName,
+                                            label = x.TemplateName,
+                                            templateName = x.TemplateName
+                                        });
 
             return Json(templates);
         }
@@ -434,6 +439,21 @@ namespace Controllers
                 success = true
             });
         }
+
+        [HttpPost]
+        public IActionResult SaveFieldSource(
+            int templateId,
+            int fieldId,
+            string fieldSource)
+        {
+            _template.SaveFieldSource(templateId, fieldId, fieldSource);
+
+            return Json(new
+            {
+                success = true
+            });
+        }
+        
 
     }
 

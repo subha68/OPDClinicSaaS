@@ -1,10 +1,14 @@
 @model ViewModels.PrescriptionVM
 
+@using Models
+
 <div class="prescription-sheet">
 
     <!-- HEADER -->
     <table class="rx-header-table">
         <tr>
+
+            <!-- LEFT: Doctor, Patient & Appointment -->
             <td class="left-panel">
 
                 <div class="doctor-line">
@@ -19,8 +23,10 @@
                 </div>
 
                 <div class="patient-block">
+
                     <div class="patient-name">
-                        Patient ID: @Model.PatientId | Name: @Model.PatientName 
+                        Patient ID: @Model.PatientId |
+                        Name: @Model.PatientName
                     </div>
 
                     <div class="patient-meta">
@@ -28,15 +34,27 @@
                         Gender: @Model.Gender |
                         Ph: @Model.PatientPhoneNo
                     </div>
+
+                    <div class="visit-datetime">
+                        Appointment:
+                        @Model.VisitDateTime.ToString("dd/MM/yyyy")
+                        &nbsp;|&nbsp;
+                        @Model.VisitDateTime.ToString("HH:mm")
+                    </div>
+
                 </div>
+
             </td>
 
+
+            <!-- RIGHT: Clinic Branding & Contact -->
             <td class="right-panel">
 
                 @if (!string.IsNullOrEmpty(Model.ClinicLogo))
                 {
                     <div class="clinic-logo">
-                        <img src="~/images/Model.ClinicLogo" alt="Clinic Logo" />
+                        <img src="@Url.Content("~/images/" + Model.ClinicLogo)"
+                            alt="Clinic Logo" />
                     </div>
                 }
 
@@ -48,78 +66,165 @@
                     @Model.ClinicAddress
                 </div>
 
-                <div class="visit-datetime">
-                    Date:
-                    @Model.VisitDateTime.ToString("dd/MM/yyyy")
-                    <br />
-                    Time:
-                    @Model.VisitDateTime.ToString("HH:mm")
-                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.ClinicPhoneNo))
+                {
+                    <div class="clinic-phone">
+                        Ph: @Model.ClinicPhoneNo
+                    </div>
+                }
 
             </td>
+
         </tr>
     </table>
 
     <hr class="soft-divider" />
 
     <!-- BODY -->
-    <section>
-        <h5>Symptoms</h5>
-        <p>@Model.Symptoms</p>
-    </section>
 
-    <section>
-        <h5>Diagnosis</h5>
-        <p>@Model.Diagnosis</p>
-    </section>
+    @if (Model.Sections != null)
+    {
+        foreach (var consultationSection in Model.Sections.OrderBy(s => s.DisplayOrder))
+        {
+            if (!consultationSection.IsVisible)
+            {
+                continue;
+            }
 
-    <section>
-        <h5>Medicines</h5>
+            <section class="consultation-section">
 
-        <table class="table table-bordered prescription-table">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Medicine</th>
-                    <th>Dosage</th>
-                    <th>Frequency</th>
-                    <th>Duration</th>
-                    <th>Instructions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @{
-                    int i = 1;
-                }
+                <h5>@consultationSection.SectionName</h5>
 
-                @foreach (var m in Model.Medicines)
+                @if (consultationSection.Multiline)
                 {
-                    <tr>
-                        <td>@i</td>
-                        <td>@m.MedicineName</td>
-                        <td>@m.Dosage</td>
-                        <td>@m.Frequency</td>
-                        <td>@m.Duration</td>
-                        <td>@m.Instructions</td>
-                    </tr>
+                    <!-- ========================= -->
+                    <!-- Generic tabular section -->
+                    <!-- ========================= -->
 
-                    i++;
+                    var orderedRows = consultationSection.Rows
+                        .OrderBy(r => r.DisplayOrder)
+                        .ToList();
+
+                    var headerFields = orderedRows
+                        .FirstOrDefault()?
+                        .Fields
+                        .OrderBy(f => f.DisplayOrder)
+                        .ToList();
+
+                    if (headerFields != null && headerFields.Any())
+                    {
+                        <table class="table table-bordered prescription-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+
+                                    @foreach (var field in headerFields)
+                                    {
+                                        <th>@field.FieldLabel</th>
+                                    }
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                @{
+                                    int rowNo = 1;
+                                }
+
+                                @foreach (var row in orderedRows)
+                                {
+                                    <tr>
+                                        <td>@rowNo</td>
+
+                                        @foreach (var field in row.Fields)
+                                        {
+                                            //var field = row.Fields
+                                            //    .FirstOrDefault(f => f.FieldId == headerField.FieldId);
+
+                                            <td>
+                                                @field?.FieldValue
+                                            </td>
+                                        }
+                                    </tr>
+
+                                    rowNo++;
+                                }
+
+                            </tbody>
+                        </table>
+                    }
                 }
-            </tbody>
-        </table>
-    </section>
+                else
+                {
+                    <!-- ========================= -->
+                    <!-- GENERIC CONSULTATION DATA -->
+                    <!-- ========================= -->
 
-    <section>
-        <h5>Notes</h5>
-        <p>@Model.Notes</p>
-    </section>
+                    @foreach (var row in consultationSection.Rows.OrderBy(r => r.DisplayOrder))
+                    {
+                        <div class="consultation-row">
+
+                            @foreach (var field in row.Fields.OrderBy(f => f.DisplayOrder))
+                            {
+                                var selectedOptions = field.Options
+                                                            // .Where(o => o.IsSelected)
+                                                                .OrderBy(o => o.DisplayOrder)
+                                                                .ToList();
+
+                                var hasValue =
+                                    !string.IsNullOrWhiteSpace(field.FieldValue);
+
+                                if (!hasValue && !selectedOptions.Any())
+                                {
+                                    continue;
+                                }
+
+                                <div class="consultation-field">
+
+                                    <span class="field-label">
+                                        @field.FieldLabel
+                                    </span>
+
+                                    <span class="field-value">
+
+                                        @if (hasValue)
+                                        {
+                                            @field.FieldValue
+                                        }
+
+                                        @if (selectedOptions.Any())
+                                        {
+                                            @if (hasValue)
+                                            {
+                                                <text> </text>
+                                            }
+
+                                            @string.Join(", ",
+                                                selectedOptions.Select(o => o.OptionText))
+                                        }
+
+                                    </span>
+
+                                </div>
+                            }
+
+                        </div>
+                    }
+                }
+            </section>
+        }
+    }
+
 
     <!-- SIGNATURE -->
+
     <div class="signature-block">
         ___________________________
+
         <div class="signature-name">
             @Model.DoctorName
         </div>
+
         <div class="signature-qualification">
             @Model.Qualification
         </div>
@@ -127,28 +232,35 @@
 
     <hr class="soft-divider" />
 
+
     <!-- FOOTER -->
+
     <footer class="rx-footer">
         This prescription is valid only with physician signature.
         Follow dosage instructions carefully.
         Contact your doctor immediately in case of any adverse reaction.
     </footer>
+</div>
 
-    <div class="print-buttons">
+<!-- PRINT BUTTONS -->
 
-        <a asp-controller="Consultation"
-        asp-action="Download"
-        asp-route-appointmentId="@Model.AppointmentId"
-        class="btn btn-success">
-            <i class="fa fa-download"></i>
-            Download PDF
-        </a>
+<div class="print-buttons">
 
-        <button onclick="window.print()"
-                class="btn btn-primary">
-            <i class="fa fa-print"></i>
-            Print
-        </button>
+    <button onclick="window.print()"
+            class="btn btn-primary">
 
-    </div>
+        <i class="fa fa-print"></i>
+        Print
+
+    </button>
+
+    <a asp-controller="Consultation" 
+            asp-action="Index" 
+            class="btn btn-secondary"> 
+            
+        <i class="fa fa-arrow-left"></i> 
+        Back 
+        
+    </a>
+
 </div>

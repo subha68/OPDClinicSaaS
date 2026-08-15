@@ -87,7 +87,7 @@ namespace DAL
             }
         }
 
-        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
+        public bool Delete(int id, int clinicId, SqlConnection conn, SqlTransaction tran)
         {
             string query = "DELETE FROM Appointments WHERE AppointmentId = @AppointmentId";
 
@@ -100,7 +100,7 @@ namespace DAL
             }
         }
 
-        public List<Appointment> GetAll(SqlConnection conn, SqlTransaction? tran = null)
+        public List<Appointment> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Appointment>();
 
@@ -159,7 +159,7 @@ namespace DAL
             return list;
         }
 
-        public Appointment Get(int appointmentId, SqlConnection conn, SqlTransaction? tran = null)
+        public Appointment Get(int appointmentId, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             Appointment appointment = null;
 

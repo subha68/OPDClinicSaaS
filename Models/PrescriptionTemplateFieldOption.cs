@@ -13,5 +13,31 @@ namespace Models
         public bool IsActive { get; set; }
         public bool IsArchived { get; set; }
         public int DisplayOrder { get; set; }
+
+        public PrescriptionTemplateFieldOption()
+        {
+            // default constructor
+        }
+
+        public PrescriptionTemplateFieldOption(string optionText, int displayOrder)
+        {
+            OptionText = optionText;
+            DisplayOrder = displayOrder;
+            IsActive = true;
+            IsArchived = false;
+        }
+
+        public PrescriptionTemplateFieldOption(int templateId, int sectionId, int fieldId, int clinicId,
+                                                    string optionText, int displayOrder)
+        {
+            TemplateId = templateId;
+            SectionId = sectionId;
+            FieldId = fieldId;
+            ClinicId = clinicId;
+            OptionText = optionText;
+            DisplayOrder = displayOrder;
+            IsActive = true;
+            IsArchived = false;
+        }
     }
 }

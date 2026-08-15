@@ -42,7 +42,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
+        public bool Delete(int id, int clinicId, SqlConnection conn, SqlTransaction tran)
         {
             string query = @"DELETE FROM Visits WHERE VisitId = @VisitId";
             SqlCommand cmd = new SqlCommand(query, conn, tran);
@@ -51,7 +51,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public List<Visit> GetAll(SqlConnection conn, SqlTransaction? tran = null)
+        public List<Visit> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Visit>();
 
@@ -141,7 +141,7 @@ namespace DAL
             return null;
         }
 
-        public Visit Get(int visitId, SqlConnection conn, SqlTransaction? tran = null)
+        public Visit Get(int visitId, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             string query = "SELECT * FROM Visits WHERE VisitId = @VisitId";
             SqlCommand cmd = new SqlCommand(query, conn);

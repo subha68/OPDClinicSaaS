@@ -42,10 +42,20 @@ namespace Controllers
         }
 
         [HttpPost]
-        public ActionResult Create(Department model)
+        public ActionResult Create(Department model, int sourceTemplateId = 0)
         {
+            foreach (var key in ModelState.Keys)
+            {
+                var errors = ModelState[key].Errors;
+                foreach (var err in errors)
+                {
+                    Console.WriteLine($"Field: {key} → Error: {err.ErrorMessage}");
+                }
+            }
+            
             if (ModelState.IsValid)
             {
+                //model.ToBeSourceTemplateId = sourceTemplateId;
                 _department.Create(model);
 
                 return RedirectToAction("Index");
@@ -65,7 +75,7 @@ namespace Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(Department model)
+        public IActionResult Edit(Department model, int sourceTemplateId = 0)
         {
             //model.ClinicName = _clinic.Get(model.ClinicId).Name;
 
@@ -83,6 +93,7 @@ namespace Controllers
                 return View("Create", model);
             }
 
+            //model.ToBeSourceTemplateId = sourceTemplateId;
             _department.Modify(model);
 
             TempData["Success"] = "Department updated successfully.";

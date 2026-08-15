@@ -63,6 +63,16 @@
                         @Model.FieldTypeCode
                     </span>
 
+                    @if (Model.FieldTypeCode == "Lookup")
+                    {
+                        <span class="field-source-label">Source:</span>
+
+                        <span class="field-source"
+                            data-field-id="@Model.FieldId"
+                            data-value="@Model.FieldSource">
+                            @Model.FieldSource
+                        </span>
+                    }
                 </div>
 
                 @if (Model.SupportOptions)

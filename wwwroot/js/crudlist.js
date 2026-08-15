@@ -9,8 +9,7 @@ $(function () {
 
     function refreshGrid() {
 
-        let search =
-            $("#txtSearch").val().toLowerCase();
+        let search = ($("#txtSearch").val() || "").toLowerCase();
 
         let rows =
             $("#crudBody tr");

@@ -32,7 +32,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
+        public bool Delete(int id, int clinicId, SqlConnection conn, SqlTransaction tran)
         {
             string query = @"DELETE FROM Roles WHERE RoleId = @RoleId";
             SqlCommand cmd = new SqlCommand(query, conn, tran);
@@ -41,7 +41,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public List<Role> GetAll(SqlConnection conn, SqlTransaction? tran = null)
+        public List<Role> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Role>();
 
@@ -90,7 +90,7 @@ namespace DAL
             return null; // Not found
         }
 
-        public Role Get(int roleId, SqlConnection conn, SqlTransaction? tran = null)
+        public Role Get(int roleId, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             string query = "SELECT * FROM Roles WHERE RoleId = @RoleId";
             SqlCommand cmd = new SqlCommand(query, conn);

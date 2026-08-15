@@ -6,7 +6,6 @@ using BLL;
 using Models;
 using ViewModels;
 using Filters;
-using Documents;
 using Helpers;
 
 namespace Controllers
@@ -18,16 +17,13 @@ namespace Controllers
         private AppointmentService _appointment;
         private ConsultationService _consultation;
         private DoctorService _doctor;
-        private PharmacologyService _pharmacology;
 
         public ConsultationController(AppointmentService appointment, 
                                         ConsultationService consultation, 
-                                        DoctorService doctor, 
-                                        PharmacologyService pharmacology)
+                                        DoctorService doctor)
         {
             _appointment = appointment;
             _doctor = doctor;
-            _pharmacology = pharmacology;
             _consultation = consultation;
         }
 
@@ -43,7 +39,7 @@ namespace Controllers
 
         public IActionResult Start(int appointmentId)
         {
-            _appointment.UpdateStatus(appointmentId, "In Consultation");
+           // _appointment.UpdateStatus(appointmentId, "In Consultation");
 
             return RedirectToAction("Consult", new { appointmentId });
         }
@@ -59,6 +55,20 @@ namespace Controllers
         [HttpPost]
         public IActionResult Save(Consultation model)
         {
+            var formCount = Request.Form.Count;
+            var hasFormContent = Request.HasFormContentType;
+            var modelStateValid = ModelState.IsValid;
+
+            var errors = ModelState
+                .Where(x => x.Value != null && x.Value.Errors.Count > 0)
+                .SelectMany(x => x.Value.Errors.Select(e => new
+                {
+                    Key = x.Key,
+                    Error = e.ErrorMessage,
+                    Exception = e.Exception?.ToString()
+                }))
+                .ToList();
+
             int consultationId = _consultation.SaveDraft(model);
 
             TempData["Success"] = "Draft Consultation saved";
@@ -83,7 +93,7 @@ namespace Controllers
             return View(vm);
         }
 
-        public IActionResult Download(int appointmentId)
+    /*    public IActionResult Download(int appointmentId)
         {
             var vm = _consultation.GetPrescription(appointmentId);
 
@@ -95,6 +105,6 @@ namespace Controllers
                 bytes,
                 "application/pdf",
                 $"Prescription_{appointmentId}.pdf");
-        }
+        } */
     }
 }

@@ -10,20 +10,25 @@
 /* ======================
    HEADER
 ====================== */
-.rx-header-table{
-    width:100%;
-    border-collapse:collapse;
+
+.rx-header-table {
+    width: 100%;
+    border-collapse: collapse;
 }
 
-.left-panel{
-    width:60%;
-    vertical-align:top;
+.rx-header-table td {
+    vertical-align: top;
 }
 
-.right-panel{
-    width:40%;
-    text-align:right;
-    vertical-align:top;
+.left-panel {
+    width: 58%;
+    padding-right: 20px;
+}
+
+.right-panel {
+    width: 42%;
+    text-align: right;
+    vertical-align: top;
 }
 
 /* doctor */
@@ -67,35 +72,38 @@
 
 /* clinic */
 .clinic-logo {
-    width: 100px;
-    height: 100px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
+    margin-bottom: 8px;
 }
 
 .clinic-logo img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    display: block;
+    max-height: 130px;
+    max-width: 240px;
+    width: auto;
+    height: auto;
 }
 
-.clinic-name{
-    font-size:28px;
-    font-weight:800;
+.clinic-name {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 5px;
 }
 
-.clinic-address{
-    margin-top:6px;
-    font-size:16px;
+.clinic-address {
+    font-size: 16px;
+    line-height: 1.5;
+    font-weight: 500;
 }
 
-.visit-datetime{
-    margin-top:18px;
-    font-size:16px;
-    font-weight:600;
+.clinic-phone {
+    font-size: 16px;
+    margin-top: 5px;
+    font-weight: 500;
+}
+
+.visit-datetime {
+    font-size: 16px;
+    margin-top: 8px;
+    line-height: 1.4;
 }
 
 /* separator */
@@ -109,6 +117,35 @@
 h5{
     margin-top:25px;
     font-weight:700;
+}
+
+/* consultations */
+.consultation-section {
+    margin-bottom: 18px;
+}
+
+.consultation-section h5 {
+    font-weight: 600;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 4px;
+}
+
+.consultation-row {
+    margin-bottom: 6px;
+}
+
+.consultation-field {
+    margin-bottom: 5px;
+}
+
+.field-label {
+    font-weight: 600;
+    margin-right: 6px;
+}
+
+.field-value {
+    white-space: pre-wrap;
 }
 
 /* medicines */
@@ -160,106 +197,7 @@ h5{
     width:100%;
 }
 
-@media print {
 
-    /* browser page setup */
-    @page{
-        size: A4;
-        margin: 12mm;
-    }
 
-    html, body{
-        margin:0 !important;
-        padding:0 !important;
-        background:white !important;
-        width:100%;
-        height:auto;
-    }
 
-    /* remove app shell / layout padding */
-    .app-shell,
-    .page-body,
-    .container,
-    .container-fluid{
-        margin:0 !important;
-        padding:0 !important;
-        max-width:100% !important;
-        width:100% !important;
-        background:white !important;
-        box-shadow:none !important;
-        border:none !important;
-    }
 
-    /* hide non-print UI */
-    .top-header,
-    .navbar,
-    .print-buttons{
-        display:none !important;
-    }
-
-    /* let prescription occupy full printable width */
-    .prescription-sheet{
-        width:100% !important;
-        max-width:none !important;
-        margin:0 !important;
-        padding:0 !important;
-        border:none !important;
-        border-radius:0 !important;
-        box-shadow:none !important;
-        background:white !important;
-    }
-
-    /* prevent browser color suppression */
-    *{
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
-
-    /* keep natural column widths for medicines */
-    .prescription-table{
-        width:100% !important;
-        table-layout:auto !important;
-        font-size:10px !important;
-        border-collapse:collapse !important;
-    }
-
-    /* tighter cell padding */
-    .prescription-table th,
-    .prescription-table td{
-        padding:3px 5px !important;
-        white-space:normal !important;
-        word-break:break-word !important;
-        vertical-align:top !important;
-    }
-
-    /* assign practical relative widths */
-    .prescription-table th:nth-child(1),
-    .prescription-table td:nth-child(1){
-        width:4% !important;
-    }
-
-    .prescription-table th:nth-child(2),
-    .prescription-table td:nth-child(2){
-        width:28% !important;
-    }
-
-    .prescription-table th:nth-child(3),
-    .prescription-table td:nth-child(3){
-        width:12% !important;
-    }
-
-    .prescription-table th:nth-child(4),
-    .prescription-table td:nth-child(4){
-        width:18% !important;
-    }
-
-    .prescription-table th:nth-child(5),
-    .prescription-table td:nth-child(5){
-        width:12% !important;
-    }
-
-    .prescription-table th:nth-child(6),
-    .prescription-table td:nth-child(6){
-        width:26% !important;
-    }
-}

@@ -34,7 +34,7 @@ namespace DAL
             return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
-        public Payment Get(int id, SqlConnection conn, SqlTransaction? tran = null)
+        public Payment Get(int id, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             string query = @"SELECT p.*, v.PatientId 
                                 FROM Payments p 
@@ -78,12 +78,12 @@ namespace DAL
             throw new NotImplementedException();
         }
 
-        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
+        public bool Delete(int id, int clinicId, SqlConnection conn, SqlTransaction tran)
         {
             throw new NotImplementedException();
         }
 
-        public List<Payment> GetAll(SqlConnection conn, SqlTransaction? tran = null)
+        public List<Payment> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             throw new NotImplementedException();
         }
@@ -151,12 +151,12 @@ namespace DAL
 
         public List<Payment> ListByPatient(int patientId, SqlConnection conn, SqlTransaction? tran = null)
         {
-            List<Payment> list = new();
+            List<Payment> list = new List<Payment>();
 
             string query = @"
                 SELECT p.*, v.PatientId
                 FROM Payments p
-                INNER JOIN Bills b ON p.BillId = b.BillId
+                LEFT JOIN Bills b ON p.BillId = b.BillId
                 INNER JOIN Visits v ON b.VisitId = v.VisitId
                 WHERE v.PatientId=@PatientId
                 ORDER BY CreatedAt
@@ -178,11 +178,11 @@ namespace DAL
                 {
                     PaymentId = Convert.ToInt32(rdr["PaymentId"]),
                     BillId = Convert.ToInt32(rdr["BillId"]),
-                    ClinicId = Convert.ToInt32(rdr["ClinicId"]),
+                    ClinicId = rdr["ClinicId"] != DBNull.Value ? Convert.ToInt32(rdr["ClinicId"]) : 0,
                     PaymentDate = (DateTime)rdr["PaymentDate"],
                     Amount = Convert.ToDecimal(rdr["Amount"]),
                     Mode = rdr["Mode"].ToString(),
-                    ReferenceNo = rdr["ReferenceNo"].ToString(),
+                    ReferenceNo = rdr["ReferenceNo"] != DBNull.Value ? rdr["ReferenceNo"].ToString() : "",
                     PatientId = Convert.ToInt32(rdr["PatientId"]),
                     CreatedAt = Convert.ToDateTime(rdr["CreatedAt"])
                 });

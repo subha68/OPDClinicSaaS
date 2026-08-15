@@ -12,6 +12,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.9" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.3.9" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.1" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.62.0" />
     <PackageReference Include="QuestPDF" Version="2026.5.0" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.7" />
     <PackageReference Include="System.Data.SqlClient" Version="4.9.1" />

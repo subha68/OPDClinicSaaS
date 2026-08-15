@@ -12,7 +12,9 @@ namespace Models
         public string Name { get; set; }
 
         public string Description { get; set; }
-        public int PrescriptionTemplateId { get; set; }
-        public string PrescriptionTemplateName { get; set; }
+        public int? PrescriptionTemplateId { get; set; }
+        public string? PrescriptionTemplateName { get; set; }
+        public int? SourceTemplateId { get; set; }
+        public int? ToBeSourceTemplateId { get; set; }
     }
 }

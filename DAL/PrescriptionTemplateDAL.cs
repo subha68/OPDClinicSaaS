@@ -13,7 +13,7 @@ namespace DAL
             _db = new DbHelper(configuration);
         }
 
-        public List<PrescriptionTemplate> GetAll(SqlConnection conn, SqlTransaction? tran = null)
+        public List<PrescriptionTemplate> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             // only template is retrieved
 
@@ -47,17 +47,22 @@ namespace DAL
             return templates;
         }
 
-        public PrescriptionTemplate Get(int templateId, SqlConnection conn, SqlTransaction? tran = null)
+        public PrescriptionTemplate Get(int templateId, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             PrescriptionTemplate template = null;
 
             // retrieve template
 
-            string templateQuery = @"SELECT t.*, d.Name 
+            string templateQuery = @"SELECT t.*, d.Name AS DepartmentName 
                                     FROM PrescriptionTemplates t
-                                    INNER JOIN Departments d
+                                    LEFT JOIN Departments d
                                         ON t.DepartmentId = d.DepartmentId
                                     WHERE TemplateId = @TemplateId";
+            if (clinicId == 0)
+                templateQuery += " AND t.ClinicId IS NULL";
+            else
+                templateQuery += " AND t.ClinicId = @ClinicId";
+
             using SqlCommand templateCmd = new SqlCommand(templateQuery, conn);
             if (tran != null)
             {
@@ -65,6 +70,8 @@ namespace DAL
             }
 
             templateCmd.Parameters.AddWithValue("@TemplateId", templateId);
+            if (clinicId != 0)
+                templateCmd.Parameters.AddWithValue("@ClinicId", clinicId);
 
             using (var templateReader = templateCmd.ExecuteReader())
             {
@@ -73,10 +80,16 @@ namespace DAL
                     template = new PrescriptionTemplate
                     {
                         TemplateId = (int)templateReader["TemplateId"],
-                        ClinicId = (int)templateReader["ClinicId"],
-                        DepartmentId = (int)templateReader["DepartmentId"],
-                        DepartmentName = templateReader["Name"].ToString(),
+                        ClinicId = templateReader["ClinicId"] != DBNull.Value ? (int)templateReader["ClinicId"] : 0,
+                        DepartmentId = templateReader["DepartmentId"] != DBNull.Value ? (int)templateReader["DepartmentId"] : 0,
+                        DepartmentName = templateReader["DepartmentName"] != DBNull.Value 
+                                                                                ? templateReader["DepartmentName"].ToString() 
+                                                                                : null,
+                        TemplateCode = templateReader["TemplateCode"].ToString(),
                         TemplateName = templateReader["TemplateName"].ToString(),
+                        SourceTemplateId = templateReader["SourceTemplateId"] != DBNull.Value 
+                                                                                ? (int)templateReader["SourceTemplateId"] 
+                                                                                : 0,
                         IsActive = (bool)templateReader["IsActive"]
                     };
                 }
@@ -91,17 +104,22 @@ namespace DAL
             return template;
         }
 
-        public PrescriptionTemplate GetByDepartment(int departmentId, SqlConnection conn, SqlTransaction? tran = null)
+        public PrescriptionTemplate GetByDepartment(int departmentId, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             PrescriptionTemplate template = null;
 
             // retrieve template
 
-            string templateQuery = @"SELECT t.*, d.Name 
+            string templateQuery = @"SELECT t.*, d.Name as DepartmentName 
                                     FROM PrescriptionTemplates t
                                     INNER JOIN Departments d
                                         ON t.DepartmentId = d.DepartmentId 
                                     WHERE t.DepartmentId = @DepartmentId";
+            if (clinicId == 0)
+                templateQuery += " AND t.ClinicId IS NULL";
+            else
+                templateQuery += " AND t.ClinicId = @ClinicId";
+
             using SqlCommand templateCmd = new SqlCommand(templateQuery, conn);
             if (tran != null)
             {
@@ -109,6 +127,8 @@ namespace DAL
             }
 
             templateCmd.Parameters.AddWithValue("@DepartmentId", departmentId);
+            if (clinicId != 0)
+                templateCmd.Parameters.AddWithValue("@ClinicId", clinicId);
 
             using (var templateReader = templateCmd.ExecuteReader())
             {
@@ -118,10 +138,16 @@ namespace DAL
                     template = new PrescriptionTemplate
                     {
                         TemplateId = (int)templateReader["TemplateId"],
-                        ClinicId = (int)templateReader["ClinicId"],
-                        DepartmentId = (int)templateReader["DepartmentId"],
-                        DepartmentName = templateReader["Name"].ToString(),
+                        ClinicId = templateReader["ClinicId"] != DBNull.Value ? (int)templateReader["ClinicId"] : 0,
+                        DepartmentId = templateReader["DepartmentId"] != DBNull.Value ? (int)templateReader["DepartmentId"] : 0,
+                        DepartmentName = templateReader["DepartmentName"] != DBNull.Value 
+                                                                                ? templateReader["DepartmentName"].ToString() 
+                                                                                : null,
+                        TemplateCode = templateReader["TemplateCode"].ToString(),
                         TemplateName = templateReader["TemplateName"].ToString(),
+                        SourceTemplateId = templateReader["SourceTemplateId"] != DBNull.Value 
+                                                                                ? (int)templateReader["SourceTemplateId"] 
+                                                                                : 0,
                         IsActive = (bool)templateReader["IsActive"]
                     };
                 }
@@ -181,7 +207,54 @@ namespace DAL
             return template;
         }
 
-        private List<PrescriptionTemplateSection> GetSectionsAndFields(int templateId, SqlConnection conn, SqlTransaction? tran = null)
+        public PrescriptionTemplate GetByCode(string templateCode, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
+        {
+            PrescriptionTemplate template = null;
+
+            // retrieve template
+
+            string templateQuery = @"SELECT t.* 
+                                    FROM PrescriptionTemplates t
+                                    WHERE TemplateCode = @TemplateCode";
+            if (clinicId == 0)
+                templateQuery += " AND ClinicId IS NULL;";
+            else
+                templateQuery += " AND ClinicId = @ClinicId;";
+
+            using SqlCommand templateCmd = new SqlCommand(templateQuery, conn);
+            if (tran != null)
+            {
+                templateCmd.Transaction = tran;
+            }
+
+            templateCmd.Parameters.AddWithValue("@TemplateCode", templateCode);
+            if (clinicId != 0)
+                templateCmd.Parameters.AddWithValue("@ClinicId", clinicId);
+
+            using (var templateReader = templateCmd.ExecuteReader())
+            {
+                if (templateReader.Read())
+                {
+                    template = new PrescriptionTemplate
+                    {
+                        TemplateId = (int)templateReader["TemplateId"],
+                        TemplateName = templateReader["TemplateName"].ToString(),
+                        TemplateCode = templateReader["TemplateCode"].ToString(),
+                        IsActive = (bool)templateReader["IsActive"]
+                    };
+                }
+            }
+
+            if (template == null)
+                return null; // Not found
+
+            // Now retrieve sections & fields
+            template.Sections = GetSectionsAndFields(template.TemplateId, conn, tran);
+
+            return template;
+        }
+
+        public List<PrescriptionTemplateSection> GetSectionsAndFields(int templateId, SqlConnection conn, SqlTransaction? tran = null)
         {
             List<PrescriptionTemplateSection> sections = GetSections(templateId, conn, tran);
 
@@ -218,6 +291,74 @@ namespace DAL
             return sections;
         }
 
+        public PrescriptionTemplateSection GetSectionAndAllFields(int templateId, int sectionId, SqlConnection conn, SqlTransaction? tran = null)
+        {
+            PrescriptionTemplateSection section = GetSection(templateId, sectionId, conn, tran);
+
+            List<PrescriptionTemplateField> fields = GetAllFieldsForTemplate(templateId, conn, tran);
+
+            List<PrescriptionTemplateFieldOption> options = GetAllOptionsForTemplate(templateId, conn, tran);
+
+            // arrange the field options
+            foreach (var field in fields)
+            {
+                foreach (var option in options)
+                {
+                    if (field.FieldId == option.FieldId)
+                    {
+                        var matchedOption = option;
+                        field.Options.Add(matchedOption);
+                    }    
+                }
+            }
+
+            // arrange the fields
+            foreach (var field in fields)
+            {
+                if (section.SectionId == field.SectionId)
+                {
+                    var matchedField = field;
+                    section.Fields.Add(matchedField);
+                }    
+            }
+
+            return section;
+        }
+
+        public PrescriptionTemplateSection GetSectionAndFields(int templateId, int sectionId, SqlConnection conn, SqlTransaction? tran = null)
+        {
+            PrescriptionTemplateSection section = GetSection(templateId, sectionId, conn, tran);
+
+            List<PrescriptionTemplateField> fields = GetFieldsForTemplate(templateId, conn, tran);
+
+            List<PrescriptionTemplateFieldOption> options = GetOptionsForTemplate(templateId, conn, tran);
+
+            // arrange the field options
+            foreach (var field in fields)
+            {
+                foreach (var option in options)
+                {
+                    if (field.FieldId == option.FieldId)
+                    {
+                        var matchedOption = option;
+                        field.Options.Add(matchedOption);
+                    }    
+                }
+            }
+
+            // arrange the fields
+            foreach (var field in fields)
+            {
+                if (section.SectionId == field.SectionId)
+                {
+                    var matchedField = field;
+                    section.Fields.Add(matchedField);
+                }    
+            }
+
+            return section;
+        }
+
         public List<PrescriptionTemplateSection> GetSections(int templateId, SqlConnection conn, SqlTransaction? tran = null)
         {
             List<PrescriptionTemplateSection> sections = new List<PrescriptionTemplateSection>();
@@ -240,7 +381,7 @@ namespace DAL
                     sections.Add(new PrescriptionTemplateSection
                     {
                         TemplateId = (int)sectionReader["TemplateId"],
-                        ClinicId = (int)sectionReader["ClinicId"],
+                        ClinicId = sectionReader["ClinicId"] != DBNull.Value ? (int)sectionReader["ClinicId"] : 0,
                         SectionId = (int)sectionReader["SectionId"],
                         SectionName = sectionReader["SectionName"].ToString(),
                         DisplayOrder = (int)sectionReader["DisplayOrder"],
@@ -252,6 +393,47 @@ namespace DAL
             }
 
             return sections;
+        }
+
+        public List<PrescriptionTemplateField> GetAllFieldsForTemplate(int templateId, SqlConnection conn, SqlTransaction? tran = null)
+        {
+            List<PrescriptionTemplateField> fields = new List<PrescriptionTemplateField>();
+
+            string fieldQuery = @"SELECT * FROM PrescriptionTemplateFields 
+                                        WHERE TemplateId = @TemplateId
+                                        ORDER BY DisplayOrder";
+            using SqlCommand fieldCmd = new SqlCommand(fieldQuery, conn);
+            if (tran != null)
+            {
+                fieldCmd.Transaction = tran;
+            }
+
+            fieldCmd.Parameters.AddWithValue("@TemplateId", templateId);
+
+            using (var fieldReader = fieldCmd.ExecuteReader())
+            {
+
+                while (fieldReader.Read())
+                {
+                    fields.Add(new PrescriptionTemplateField
+                    {
+                        TemplateId = (int)fieldReader["TemplateId"],
+                        ClinicId = fieldReader["ClinicId"] != DBNull.Value ? (int)fieldReader["ClinicId"] : 0,
+                        SectionId = (int)fieldReader["SectionId"],
+                        FieldId = (int)fieldReader["FieldId"],
+                        FieldLabel = fieldReader["FieldLabel"].ToString(),
+                        FieldTypeCode = fieldReader["FieldTypeCode"].ToString(),
+                        FieldCode = fieldReader["FieldCode"] != null ? fieldReader["FieldCode"].ToString() : null,
+                        FieldSource = fieldReader["FieldSource"] != null ? fieldReader["FieldSource"].ToString() : null,
+                        IsActive = (bool)fieldReader["IsActive"],
+                        DisplayOrder = (int)fieldReader["DisplayOrder"],
+                        IsArchived = (bool)fieldReader["IsArchived"]
+                    });
+
+                }
+            }
+
+            return fields;
         }
 
         public List<PrescriptionTemplateField> GetFieldsForTemplate(int templateId, SqlConnection conn, SqlTransaction? tran = null)
@@ -278,14 +460,16 @@ namespace DAL
                     fields.Add(new PrescriptionTemplateField
                     {
                         TemplateId = (int)fieldReader["TemplateId"],
-                        ClinicId = (int)fieldReader["ClinicId"],
+                        ClinicId = fieldReader["ClinicId"] != DBNull.Value ? (int)fieldReader["ClinicId"] : 0,
                         SectionId = (int)fieldReader["SectionId"],
                         FieldId = (int)fieldReader["FieldId"],
                         FieldLabel = fieldReader["FieldLabel"].ToString(),
                         FieldTypeCode = fieldReader["FieldTypeCode"].ToString(),
+                        FieldCode = fieldReader["FieldCode"] != null ? fieldReader["FieldCode"].ToString() : null,
                         IsActive = (bool)fieldReader["IsActive"],
                         DisplayOrder = (int)fieldReader["DisplayOrder"],
-                        IsArchived = (bool)fieldReader["IsArchived"]
+                        IsArchived = (bool)fieldReader["IsArchived"],
+                        FieldSource = fieldReader["FieldSource"] != null ? fieldReader["FieldSource"].ToString() : null
                     });
 
                 }
@@ -323,15 +507,56 @@ namespace DAL
                         FieldId = (int)fieldReader["FieldId"],
                         FieldLabel = fieldReader["FieldLabel"].ToString(),
                         FieldTypeCode = fieldReader["FieldTypeCode"].ToString(),
+                        FieldCode = fieldReader["FieldCode"] != null ? fieldReader["FieldCode"].ToString() : null,
                         IsActive = (bool)fieldReader["IsActive"],
                         DisplayOrder = (int)fieldReader["DisplayOrder"],
-                        IsArchived = (bool)fieldReader["IsArchived"]
+                        IsArchived = (bool)fieldReader["IsArchived"],
+                        FieldSource = fieldReader["FieldSource"] != null ? fieldReader["FieldSource"].ToString() : null
                     });
 
                 }
             }
 
             return fields;
+        }
+
+        public List<PrescriptionTemplateFieldOption> GetAllOptionsForTemplate(int templateId, SqlConnection conn, SqlTransaction? tran = null)
+        {
+            List<PrescriptionTemplateFieldOption> options = new List<PrescriptionTemplateFieldOption>();
+
+            string optionQuery = @"SELECT * FROM PrescriptionTemplateFieldOptions 
+                                        WHERE TemplateId = @TemplateId
+                                        ORDER BY DisplayOrder";
+            using SqlCommand optionCmd = new SqlCommand(optionQuery, conn);
+            if (tran != null)
+            {
+                optionCmd.Transaction = tran;
+            }
+
+            optionCmd.Parameters.AddWithValue("@TemplateId", templateId);
+
+            using (var optionReader = optionCmd.ExecuteReader())
+            {
+
+                while (optionReader.Read())
+                {
+                    options.Add(new PrescriptionTemplateFieldOption
+                    {
+                        TemplateId = (int)optionReader["TemplateId"],
+                        ClinicId = optionReader["ClinicId"] != DBNull.Value ? (int)optionReader["ClinicId"] : 0,
+                        SectionId = (int)optionReader["SectionId"],
+                        FieldId = (int)optionReader["FieldId"],
+                        OptionId = (int)optionReader["OptionId"],
+                        OptionText = optionReader["OptionText"].ToString(),
+                        IsActive = (bool)optionReader["IsActive"],
+                        IsArchived = (bool)optionReader["IsArchived"],
+                        DisplayOrder = (int)optionReader["DisplayOrder"]
+                    });
+
+                }
+            }
+
+            return options;            
         }
 
         public List<PrescriptionTemplateFieldOption> GetOptionsForTemplate(int templateId, SqlConnection conn, SqlTransaction? tran = null)
@@ -358,7 +583,7 @@ namespace DAL
                     options.Add(new PrescriptionTemplateFieldOption
                     {
                         TemplateId = (int)optionReader["TemplateId"],
-                        ClinicId = (int)optionReader["ClinicId"],
+                        ClinicId = optionReader["ClinicId"] != DBNull.Value ? (int)optionReader["ClinicId"] : 0,
                         SectionId = (int)optionReader["SectionId"],
                         FieldId = (int)optionReader["FieldId"],
                         OptionId = (int)optionReader["OptionId"],
@@ -418,24 +643,35 @@ namespace DAL
         public int Add(PrescriptionTemplate template, SqlConnection conn, SqlTransaction tran)
         {
             string templateQuery = @"INSERT INTO PrescriptionTemplates
-                             (ClinicId, DepartmentId, TemplateName, IsActive) 
+                             (ClinicId, DepartmentId, DoctorId, TemplateCode, TemplateName, SourceTemplateId, IsActive) 
                              VALUES 
-                             (@ClinicId, @DepartmentId, @TemplateName, @IsActive);
+                             (@ClinicId, @DepartmentId, @DoctorId, @TemplateCode, @TemplateName, @SourceTemplateId, @IsActive);
                                 SELECT SCOPE_IDENTITY();";
             using SqlCommand templateCmd = new SqlCommand(templateQuery, conn, tran);
 
             templateCmd.Parameters.AddWithValue("@ClinicId", template.ClinicId);
-            templateCmd.Parameters.AddWithValue("@DepartmentId", template.DepartmentId);
+            templateCmd.Parameters.AddWithValue("@DepartmentId", template.DepartmentId.HasValue ? template.DepartmentId.Value : DBNull.Value);
+            templateCmd.Parameters.AddWithValue("@DoctorId", template.DoctorId.HasValue ? template.DoctorId.Value : DBNull.Value);
+            templateCmd.Parameters.AddWithValue("@TemplateCode", template.TemplateCode);
             templateCmd.Parameters.AddWithValue("@TemplateName", template.TemplateName);
+            templateCmd.Parameters.AddWithValue("@SourceTemplateId", template.SourceTemplateId.HasValue 
+                                                                                            ? template.SourceTemplateId.Value
+                                                                                                : DBNull.Value);
             templateCmd.Parameters.AddWithValue("@IsActive", template.IsActive);
 
             int templateId = Convert.ToInt32(templateCmd.ExecuteScalar());
 
-            foreach (var section in template.Sections)
+            template.TemplateId = templateId;
+
+            return templateId;
+        }
+
+        public int AddSections(List<PrescriptionTemplateSection> sections, SqlConnection conn, SqlTransaction tran)
+        {
+            int sectionId = 0;
+
+            foreach (var section in sections)
             {
-                section.TemplateId = templateId;
-                section.ClinicId = template.ClinicId;
-                
                 string sectionQuery = @"INSERT INTO PrescriptionTemplateSections
                              (TemplateId, ClinicId, SectionName, DisplayOrder, IsActive, Multiline, IsPharmacologyAdvice) 
                              VALUES 
@@ -451,69 +687,79 @@ namespace DAL
                 sectionCmd.Parameters.AddWithValue("@Multiline", section.Multiline);
                 sectionCmd.Parameters.AddWithValue("@IsPharmacologyAdvice", section.IsPharmacologyAdvice);
 
-                int sectionId = Convert.ToInt32(sectionCmd.ExecuteScalar());
+                sectionId = Convert.ToInt32(sectionCmd.ExecuteScalar());
 
-                foreach (var field in section.Fields)
-                {
-                    field.TemplateId = templateId;
-                    field.SectionId = sectionId;
-                    field.ClinicId = template.ClinicId;
-                    
-                    string fieldQuery = @"INSERT INTO PrescriptionTemplateFields
-                                (TemplateId, SectionId, ClinicId, FieldLabel, FieldType, IsActive, DisplayOrder, IsArchived) 
-                                VALUES 
-                                (@TemplateId, @SectionId, @ClinicId, @FieldLabel, @FieldType, @IsActive, @DisplayOrder, 0);
-                                    SELECT SCOPE_IDENTITY();";
-                    using SqlCommand fieldCmd = new SqlCommand(fieldQuery, conn, tran);
-
-                    fieldCmd.Parameters.AddWithValue("@TemplateId", field.TemplateId);
-                    fieldCmd.Parameters.AddWithValue("@SectionId", field.SectionId);
-                    fieldCmd.Parameters.AddWithValue("@ClinicId", field.ClinicId);
-                    fieldCmd.Parameters.AddWithValue("@FieldLabel", field.FieldLabel);
-                    fieldCmd.Parameters.AddWithValue("@FieldType", field.FieldTypeCode);
-                    fieldCmd.Parameters.AddWithValue("@IsActive", field.IsActive);
-                    fieldCmd.Parameters.AddWithValue("@DisplayOrder", field.DisplayOrder);
-
-                    int fieldId = Convert.ToInt32(fieldCmd.ExecuteScalar());
-
-                    foreach (var option in field.Options)
-                    {
-                        option.TemplateId = templateId;
-                        option.SectionId = sectionId;
-                        option.FieldId = fieldId;
-                        option.ClinicId = template.ClinicId;
-                        
-                        string optionQuery = @"INSERT INTO PrescriptionTemplateFieldOptions
-                                    (TemplateId, SectionId, ClinicId, FieldId, OptionText, IsActive, DisplayOrder, IsArchived) 
-                                    VALUES 
-                                    (@TemplateId, @SectionId, @ClinicId, @FieldId, @OptionText, @IsActive, @DisplayOrder, 0);
-                                        SELECT SCOPE_IDENTITY();";
-                        using SqlCommand optionCmd = new SqlCommand(optionQuery, conn, tran);
-
-                        optionCmd.Parameters.AddWithValue("@TemplateId", option.TemplateId);
-                        optionCmd.Parameters.AddWithValue("@SectionId", option.SectionId);
-                        optionCmd.Parameters.AddWithValue("@ClinicId", option.ClinicId);
-                        optionCmd.Parameters.AddWithValue("@FieldId", option.FieldId);
-                        optionCmd.Parameters.AddWithValue("@OptionText", option.OptionText);
-                        optionCmd.Parameters.AddWithValue("@IsActive", option.IsActive);
-                        optionCmd.Parameters.AddWithValue("@DisplayOrder", option.DisplayOrder);
-
-                        int optionId = Convert.ToInt32(optionCmd.ExecuteScalar());
-                    }
-
-                }
-
+                section.SectionId = sectionId;
             }
 
-            return templateId;
+            return sectionId;
+        }
+
+        public int AddFields(List<PrescriptionTemplateField> fields, SqlConnection conn, SqlTransaction tran)
+        {
+            int fieldId = 0;
+
+            foreach (var field in fields)
+            {
+                string fieldQuery = @"INSERT INTO PrescriptionTemplateFields
+                            (TemplateId, SectionId, ClinicId, FieldLabel, FieldTypeCode, FieldCode, IsActive, 
+                                DisplayOrder, IsArchived, FieldSource) 
+                            VALUES 
+                            (@TemplateId, @SectionId, @ClinicId, @FieldLabel, @FieldTypeCode, @FieldCode, @IsActive, 
+                                @DisplayOrder, 0, @FieldSource);
+                                SELECT SCOPE_IDENTITY();";
+                using SqlCommand fieldCmd = new SqlCommand(fieldQuery, conn, tran);
+
+                fieldCmd.Parameters.AddWithValue("@TemplateId", field.TemplateId);
+                fieldCmd.Parameters.AddWithValue("@SectionId", field.SectionId);
+                fieldCmd.Parameters.AddWithValue("@ClinicId", field.ClinicId);
+                fieldCmd.Parameters.AddWithValue("@FieldLabel", field.FieldLabel);
+                fieldCmd.Parameters.AddWithValue("@FieldTypeCode", field.FieldTypeCode);
+                fieldCmd.Parameters.AddWithValue("@FieldCode", field.FieldCode == null ? DBNull.Value : field.FieldCode);
+                fieldCmd.Parameters.AddWithValue("@IsActive", field.IsActive);
+                fieldCmd.Parameters.AddWithValue("@DisplayOrder", field.DisplayOrder);
+                fieldCmd.Parameters.AddWithValue("@FieldSource", field.FieldSource == null ? DBNull.Value : field.FieldSource);
+
+                fieldId = Convert.ToInt32(fieldCmd.ExecuteScalar());
+
+                field.FieldId = fieldId;
+            }
+
+            return fieldId;
+        }
+
+        public int AddOptions(List<PrescriptionTemplateFieldOption> options, SqlConnection conn, SqlTransaction tran)
+        {
+            int optionId = 0;
+
+            foreach (var option in options)
+            {
+                string optionQuery = @"INSERT INTO PrescriptionTemplateFieldOptions
+                            (TemplateId, SectionId, ClinicId, FieldId, OptionText, IsActive, DisplayOrder, IsArchived) 
+                            VALUES 
+                            (@TemplateId, @SectionId, @ClinicId, @FieldId, @OptionText, @IsActive, @DisplayOrder, 0);
+                                SELECT SCOPE_IDENTITY();";
+                using SqlCommand optionCmd = new SqlCommand(optionQuery, conn, tran);
+
+                optionCmd.Parameters.AddWithValue("@TemplateId", option.TemplateId);
+                optionCmd.Parameters.AddWithValue("@SectionId", option.SectionId);
+                optionCmd.Parameters.AddWithValue("@ClinicId", option.ClinicId);
+                optionCmd.Parameters.AddWithValue("@FieldId", option.FieldId);
+                optionCmd.Parameters.AddWithValue("@OptionText", option.OptionText);
+                optionCmd.Parameters.AddWithValue("@IsActive", option.IsActive);
+                optionCmd.Parameters.AddWithValue("@DisplayOrder", option.DisplayOrder);
+
+                optionId = Convert.ToInt32(optionCmd.ExecuteScalar());
+
+                option.OptionId = optionId;
+            }
+
+            return optionId;
         }
 
         public bool Update(PrescriptionTemplate template, SqlConnection conn, SqlTransaction tran)
         {
             int templateRowsAffected = 0;
-            int sectionRowsAffected = 0;
-            int fieldRowsAffected = 0;
-            int optionRowsAffected = 0;
 
             string templateQuery = @"UPDATE PrescriptionTemplates
                                     SET ClinicId = @ClinicId, 
@@ -531,11 +777,15 @@ namespace DAL
 
             templateRowsAffected = templateCmd.ExecuteNonQuery();
 
-            foreach (var section in template.Sections)
+            return templateRowsAffected > 0;
+        }
+
+        public bool UpdateSections(List<PrescriptionTemplateSection> sections, SqlConnection conn, SqlTransaction tran)
+        {
+            int sectionRowsAffected = 0;
+
+            foreach (var section in sections)
             {
-                section.TemplateId = template.TemplateId;
-                section.ClinicId = template.ClinicId;
-                
                 string sectionQuery = @"UPDATE PrescriptionTemplateSections
                                             SET TemplateId = @TemplateId, 
                                                 ClinicId = @ClinicId, 
@@ -556,85 +806,92 @@ namespace DAL
                 sectionCmd.Parameters.AddWithValue("@Multiline", section.Multiline);
                 sectionCmd.Parameters.AddWithValue("@IsPharmacologyAdvice", section.IsPharmacologyAdvice);
 
-                sectionRowsAffected += templateCmd.ExecuteNonQuery();
-
-                foreach (var field in section.Fields)
-                {
-                    field.TemplateId = section.TemplateId;
-                    field.SectionId = section.SectionId;
-                    field.ClinicId = template.ClinicId;
-                    
-                    string fieldQuery = @"UPDATE PrescriptionTemplateFields
-                                            SET TemplateId = @TemplateId,
-                                                SectionId = @SectionId, 
-                                                ClinicId = @ClinicId, 
-                                                FieldLabel = @FieldLabel, 
-                                                FieldType = @FieldType, 
-                                                IsActive = @IsActive,
-                                                IsArchived = @IsArchived,
-                                                DisplayOrder = @DisplayOrder 
-                                            WHERE FieldId = @FieldId";
-                    using SqlCommand fieldCmd = new SqlCommand(fieldQuery, conn, tran);
-
-                    fieldCmd.Parameters.AddWithValue("@TemplateId", field.TemplateId);
-                    fieldCmd.Parameters.AddWithValue("@SectionId", field.SectionId);
-                    fieldCmd.Parameters.AddWithValue("@ClinicId", field.ClinicId);
-                    fieldCmd.Parameters.AddWithValue("@FieldLabel", field.FieldLabel);
-                    fieldCmd.Parameters.AddWithValue("@FieldType", field.FieldTypeCode);
-                    fieldCmd.Parameters.AddWithValue("@IsActive", field.IsActive);
-                    fieldCmd.Parameters.AddWithValue("@IsArchived", field.IsArchived);
-                    fieldCmd.Parameters.AddWithValue("@DisplayOrder", field.DisplayOrder);
-                    fieldCmd.Parameters.AddWithValue("@FieldId", field.FieldId);
-
-                    fieldRowsAffected += fieldCmd.ExecuteNonQuery();
-
-                    foreach (var option in field.Options)
-                    {
-                        option.TemplateId = section.TemplateId;
-                        option.SectionId = section.SectionId;
-                        option.FieldId = field.FieldId;
-                        option.ClinicId = template.ClinicId;
-                        
-                        string optionQuery = @"UPDATE PrescriptionTemplateFieldOptions
-                                                SET TemplateId = @TemplateId,
-                                                    SectionId = @SectionId,
-                                                    FieldId = @FieldId, 
-                                                    ClinicId = @ClinicId, 
-                                                    OptionText = @OptionText, 
-                                                    IsActive = @IsActive, 
-                                                    IsArchived = @IsArchived,
-                                                    DisplayOrder = @DisplayOrder 
-                                                WHERE OptionId = @OptionId";
-                        using SqlCommand optionCmd = new SqlCommand(optionQuery, conn, tran);
-
-                        optionCmd.Parameters.AddWithValue("@TemplateId", option.TemplateId);
-                        optionCmd.Parameters.AddWithValue("@SectionId", option.SectionId);
-                        optionCmd.Parameters.AddWithValue("@ClinicId", option.ClinicId);
-                        optionCmd.Parameters.AddWithValue("@FieldId", option.FieldId);
-                        optionCmd.Parameters.AddWithValue("@OptionText", option.OptionText);
-                        optionCmd.Parameters.AddWithValue("@IsActive", option.IsActive);
-                        optionCmd.Parameters.AddWithValue("@IsArchived", option.IsArchived);
-                        optionCmd.Parameters.AddWithValue("@DisplayOrder", option.DisplayOrder);
-                        optionCmd.Parameters.AddWithValue("@FieldId", option.FieldId);
-
-                        optionRowsAffected += optionCmd.ExecuteNonQuery();
-                    }
-
-                }
-
+                sectionRowsAffected += sectionCmd.ExecuteNonQuery();
             }
 
-            return templateRowsAffected > 0 || sectionRowsAffected > 0 || fieldRowsAffected > 0 || optionRowsAffected > 0;
+            return sectionRowsAffected > 0;
         }
 
-        public bool Delete(int templateId, SqlConnection conn, SqlTransaction tran)
+        public bool UpdateFields(List<PrescriptionTemplateField> fields, SqlConnection conn, SqlTransaction tran)
+        {
+            int fieldRowsAffected = 0;
+
+            foreach (var field in fields)
+            {
+                string fieldQuery = @"UPDATE PrescriptionTemplateFields
+                                        SET TemplateId = @TemplateId,
+                                            SectionId = @SectionId, 
+                                            ClinicId = @ClinicId, 
+                                            FieldLabel = @FieldLabel, 
+                                            FieldTypeCode = @FieldTypeCode, 
+                                            FieldCode = @FieldCode, 
+                                            IsActive = @IsActive,
+                                            IsArchived = @IsArchived,
+                                            DisplayOrder = @DisplayOrder,
+                                            FieldSource = @FieldSource 
+                                        WHERE FieldId = @FieldId";
+                using SqlCommand fieldCmd = new SqlCommand(fieldQuery, conn, tran);
+
+                fieldCmd.Parameters.AddWithValue("@TemplateId", field.TemplateId);
+                fieldCmd.Parameters.AddWithValue("@SectionId", field.SectionId);
+                fieldCmd.Parameters.AddWithValue("@ClinicId", field.ClinicId);
+                fieldCmd.Parameters.AddWithValue("@FieldLabel", field.FieldLabel);
+                fieldCmd.Parameters.AddWithValue("@FieldTypeCode", field.FieldTypeCode);
+                fieldCmd.Parameters.AddWithValue("@FieldCode", field.FieldCode == null ? DBNull.Value : field.FieldCode);
+                fieldCmd.Parameters.AddWithValue("@IsActive", field.IsActive);
+                fieldCmd.Parameters.AddWithValue("@IsArchived", field.IsArchived);
+                fieldCmd.Parameters.AddWithValue("@DisplayOrder", field.DisplayOrder);
+                fieldCmd.Parameters.AddWithValue("@FieldSource", field.FieldSource == null ? DBNull.Value : field.FieldSource);
+                fieldCmd.Parameters.AddWithValue("@FieldId", field.FieldId);
+
+                fieldRowsAffected += fieldCmd.ExecuteNonQuery();
+            }
+
+            return fieldRowsAffected > 0;
+        }
+
+        public bool UpdateOptions(List<PrescriptionTemplateFieldOption> options, SqlConnection conn, SqlTransaction tran)
+        {
+            int optionRowsAffected = 0;
+
+            foreach (var option in options)
+            {
+                string optionQuery = @"UPDATE PrescriptionTemplateFieldOptions
+                                        SET TemplateId = @TemplateId,
+                                            SectionId = @SectionId,
+                                            FieldId = @FieldId, 
+                                            ClinicId = @ClinicId, 
+                                            OptionText = @OptionText, 
+                                            IsActive = @IsActive, 
+                                            IsArchived = @IsArchived,
+                                            DisplayOrder = @DisplayOrder 
+                                        WHERE OptionId = @OptionId";
+                using SqlCommand optionCmd = new SqlCommand(optionQuery, conn, tran);
+
+                optionCmd.Parameters.AddWithValue("@TemplateId", option.TemplateId);
+                optionCmd.Parameters.AddWithValue("@SectionId", option.SectionId);
+                optionCmd.Parameters.AddWithValue("@ClinicId", option.ClinicId);
+                optionCmd.Parameters.AddWithValue("@FieldId", option.FieldId);
+                optionCmd.Parameters.AddWithValue("@OptionText", option.OptionText);
+                optionCmd.Parameters.AddWithValue("@IsActive", option.IsActive);
+                optionCmd.Parameters.AddWithValue("@IsArchived", option.IsArchived);
+                optionCmd.Parameters.AddWithValue("@DisplayOrder", option.DisplayOrder);
+                optionCmd.Parameters.AddWithValue("@OptionId", option.OptionId);
+
+                optionRowsAffected += optionCmd.ExecuteNonQuery();
+            }
+
+            return optionRowsAffected > 0;
+        }
+
+        public bool Delete(int templateId, int clinicId, SqlConnection conn, SqlTransaction tran)
         {
             int optionRowsAffected = 0;
             int fieldRowsAffected = 0;
             int sectionRowsAffected = 0;
             int templateRowsAffected = 0;
 
-            var model = Get(templateId, conn, tran);
+            var model = Get(templateId, clinicId, conn, tran);
 
             if (model != null)
             {
@@ -660,12 +917,162 @@ namespace DAL
                 string templateQuery = @"DELETE FROM PrescriptionTemplates WHERE TemplateId = @TemplateId";
                 using SqlCommand templateCmd = new SqlCommand(templateQuery, conn, tran);
                 templateCmd.Parameters.AddWithValue("@TemplateId", templateId);
-                templateRowsAffected = sectionCmd.ExecuteNonQuery();
+                templateRowsAffected = templateCmd.ExecuteNonQuery();
 
             }
 
             return templateRowsAffected > 0 || sectionRowsAffected > 0 || fieldRowsAffected > 0 || optionRowsAffected > 0;
 
+        }
+
+        public int GetIdByCode(string templateCode, int clinicId, int departmentId, int doctorId, 
+                                    SqlConnection conn, SqlTransaction tran)
+        {
+            int templateId = 0;
+
+            string templateQuery = @"SELECT TemplateId 
+                                    FROM PrescriptionTemplates
+                                    WHERE TemplateCode = @TemplateCode";
+            if (clinicId == 0)
+                templateQuery += " AND ClinicId IS NULL";
+            else
+                templateQuery += " AND ClinicId = @ClinicId";
+
+            if (departmentId == 0)
+                templateQuery += " AND DepartmentId IS NULL";
+            else
+                templateQuery += " AND DepartmentId = @DepartmentId";
+
+            if (doctorId == 0)
+                templateQuery += " AND DoctorId IS NULL";
+            else
+                templateQuery += " AND DoctorId = @DoctorId";
+
+            using SqlCommand templateCmd = new SqlCommand(templateQuery, conn);
+            if (tran != null)
+            {
+                templateCmd.Transaction = tran;
+            }
+
+            templateCmd.Parameters.AddWithValue("@TemplateCode", templateCode);
+
+            if (clinicId != 0)
+                templateCmd.Parameters.AddWithValue("@ClinicId", clinicId);
+
+            if (departmentId != 0)
+                templateCmd.Parameters.AddWithValue("@DepartmentId", departmentId);
+            
+            if (doctorId != 0)
+                templateCmd.Parameters.AddWithValue("@DoctorId", doctorId);
+
+            using (var templateReader = templateCmd.ExecuteReader())
+            {
+                if (templateReader.Read())
+                {
+                    templateId = (int)templateReader["TemplateId"];
+                }
+            }
+
+            return templateId;
+            
+        }
+
+        public int CloneTemplate(string templateCode, int srcClinicId, int tgtClinicId, int tgtDepartmentId,
+                                                SqlConnection conn, SqlTransaction tran)
+        {
+            int templateId = GetIdByCode(templateCode, srcClinicId, 0, 0, conn, tran);
+            if (templateId == 0)
+                return templateId;
+
+            PrescriptionTemplate template = Get(templateId, srcClinicId, conn, tran);
+
+            template.ClinicId = tgtClinicId;
+            template.DepartmentId = tgtDepartmentId;
+            template.SourceTemplateId = template.TemplateId;
+            template.TemplateId = 0;
+
+            Add(template, conn, tran);
+
+            foreach (var section in template.Sections)
+            {
+                section.TemplateId = template.TemplateId;
+                section.ClinicId = template.ClinicId;
+            }
+
+            AddSections(template.Sections, conn, tran);
+
+            foreach (var section in template.Sections)
+            {
+                foreach (var field in section.Fields)
+                {
+                    field.SectionId = section.SectionId;
+                    field.TemplateId = template.TemplateId;
+                    field.ClinicId = template.ClinicId;
+                }
+
+                AddFields(section.Fields, conn, tran);
+
+                foreach (var field in section.Fields)
+                {
+                    foreach (var option in field.Options)
+                    {
+                        option.FieldId = field.FieldId;
+                        option.SectionId = section.SectionId;
+                        option.TemplateId = template.TemplateId;
+                        option.ClinicId = template.ClinicId;
+                    }
+
+                    AddOptions(field.Options, conn, tran);
+                }
+            }
+            return template.TemplateId;
+        }
+
+        public int CloneTemplate(int templateId, int srcClinicId, int tgtClinicId, int tgtDepartmentId, 
+                                                SqlConnection conn, SqlTransaction tran)
+        {
+            PrescriptionTemplate template = Get(templateId, srcClinicId, conn, tran);
+
+            template.ClinicId = tgtClinicId;
+            template.DepartmentId = tgtDepartmentId;
+            template.SourceTemplateId = template.TemplateId;
+            template.TemplateId = 0;
+
+            Add(template, conn, tran);
+
+            foreach (var section in template.Sections)
+            {
+                section.TemplateId = template.TemplateId;
+                section.ClinicId = template.ClinicId;
+            }
+
+            AddSections(template.Sections, conn, tran);
+
+            foreach (var section in template.Sections)
+            {
+                foreach (var field in section.Fields)
+                {
+                    field.SectionId = section.SectionId;
+                    field.TemplateId = template.TemplateId;
+                    field.ClinicId = template.ClinicId;
+                }
+
+                AddFields(section.Fields, conn, tran);
+
+                foreach (var field in section.Fields)
+                {
+                    foreach (var option in field.Options)
+                    {
+                        option.FieldId = field.FieldId;
+                        option.SectionId = section.SectionId;
+                        option.TemplateId = template.TemplateId;
+                        option.ClinicId = template.ClinicId;
+                    }
+
+                    AddOptions(field.Options, conn, tran);
+                }
+            }
+            return template.TemplateId;
         }
 
         public void SaveSectionOrder(List<SectionOrderVM> sections, SqlConnection conn, SqlTransaction tran)
@@ -819,7 +1226,7 @@ namespace DAL
                                     WHERE f.TemplateId = @TemplateId
                                     AND f.FieldId = @FieldId
                                     GROUP BY f.TemplateId, f.ClinicId, f.SectionId, f.FieldId, 
-                                            f.FieldLabel, f.FieldTypeCode, f.IsActive, f.DisplayOrder, f.IsRequired";
+                                            f.FieldLabel, f.FieldTypeCode, f.IsActive, f.DisplayOrder, f.IsRequired, f.IsArchived, f.FieldSource";
             using SqlCommand fieldCmd = new SqlCommand(fieldQuery, conn);
             if (tran != null)
             {
@@ -844,7 +1251,8 @@ namespace DAL
                         IsActive = (bool)fieldReader["IsActive"],
                         IsArchived = (bool)fieldReader["IsArchived"],
                         DisplayOrder = (int)fieldReader["DisplayOrder"],
-                        OptionCount = (int)fieldReader["OptionCount"]
+                        OptionCount = (int)fieldReader["OptionCount"],
+                        FieldSource = fieldReader["FieldSource"]!= DBNull.Value ? fieldReader["FieldSource"].ToString() : null
                     });
                 }
             }
@@ -1295,19 +1703,14 @@ namespace DAL
             var list = new List<PrescriptionTemplate>();
 
             string query = @"SELECT TOP 10
-                                t.TemplateId,
-                                t.TemplateName,
-                                t.DepartmentId,
-                                d.Name AS DepartmentName
-                            FROM PrescriptionTemplates t
-                            INNER JOIN Clinics c
-                                ON (t.ClinicId = c.ClinicId
-                                AND c.Name = 'Library')
-                            LEFT JOIN Departments d
-                                ON t.DepartmentId = d.DepartmentId
-                            WHERE t.TemplateName LIKE '%' + @term + '%'
-                            AND t.IsActive = 1
-                            ORDER BY t.TemplateName";
+                                TemplateId,
+                                TemplateName,
+                                SourceTemplateId
+                            FROM PrescriptionTemplates
+                            WHERE TemplateName LIKE '%' + @term + '%'
+                            AND IsActive = 1
+                            AND ClinicId IS NULL
+                            ORDER BY TemplateName";
 
             var cmd = new SqlCommand(query, conn);
             if (tran != null)
@@ -1324,8 +1727,7 @@ namespace DAL
                 {
                     TemplateId = (int)reader["TemplateId"],
                     TemplateName = reader["TemplateName"].ToString(),
-                    DepartmentId = reader["DepartmentId"] != DBNull.Value ? (int)reader["DepartmentId"] : 0,
-                    DepartmentName = reader["DepartmentName"]?.ToString() ?? ""
+                    SourceTemplateId = reader["SourceTemplateId"] != DBNull.Value ? (int)reader["SourceTemplateId"] : 0
                 });
             }
 
@@ -1356,16 +1758,19 @@ namespace DAL
         public bool UpdateFieldsArchival(int templateId, int sectionId, bool isArchived, SqlConnection conn, SqlTransaction tran)
         {
             int rowsAffected = 0;
+            bool existingIsArchived = !isArchived;
 
             string query = @"UPDATE PrescriptionTemplateFields
                                         SET IsArchived = @IsArchived
                                         WHERE TemplateId = @TemplateId
-                                        AND SectionId = @SectionId;";
+                                        AND SectionId = @SectionId
+                                        AND IsArchived = @ExistingIsArchived;";
             using SqlCommand cmd = new SqlCommand(query, conn, tran);
 
             cmd.Parameters.AddWithValue("@TemplateId", templateId);
             cmd.Parameters.AddWithValue("@SectionId", sectionId);
             cmd.Parameters.AddWithValue("@IsArchived", isArchived);
+            cmd.Parameters.AddWithValue("@ExistingIsArchived", existingIsArchived);
 
             rowsAffected = cmd.ExecuteNonQuery();
 
@@ -1375,23 +1780,43 @@ namespace DAL
         public bool UpdateOptionsArchival(int templateId, int sectionId, bool isArchived, SqlConnection conn, SqlTransaction tran)
         {
             int rowsAffected = 0;
+            bool existingIsArchived = !isArchived;
 
             string query = @"UPDATE PrescriptionTemplateFieldOptions
                                         SET IsArchived = @IsArchived
                                         WHERE TemplateId = @TemplateId
-                                        AND SectionId = @SectionId;";
+                                        AND SectionId = @SectionId
+                                        AND IsArchived = @ExistingIsArchived;";
             using SqlCommand cmd = new SqlCommand(query, conn, tran);
 
             cmd.Parameters.AddWithValue("@TemplateId", templateId);
             cmd.Parameters.AddWithValue("@SectionId", sectionId);
             cmd.Parameters.AddWithValue("@IsArchived", isArchived);
+            cmd.Parameters.AddWithValue("@ExistingIsArchived", existingIsArchived);
 
             rowsAffected = cmd.ExecuteNonQuery();
 
             return rowsAffected > 0;
         }
 
+        public bool SaveFieldSource(int templateId, int fieldId, string fieldSource, SqlConnection conn, SqlTransaction tran)
+        {
+            int rowsAffected = 0;
 
+            string query = @"UPDATE PrescriptionTemplateFields
+                                        SET FieldSource = @FieldSource
+                                        WHERE TemplateId = @TemplateId
+                                        AND FieldId = @FieldId;";
+            using SqlCommand cmd = new SqlCommand(query, conn, tran);
+
+            cmd.Parameters.AddWithValue("@TemplateId", templateId);
+            cmd.Parameters.AddWithValue("@FieldId", fieldId);
+            cmd.Parameters.AddWithValue("@FieldSource", fieldSource);
+
+            rowsAffected = cmd.ExecuteNonQuery();
+
+            return rowsAffected > 0;            
+        }
 
     }
 

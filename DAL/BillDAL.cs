@@ -77,9 +77,9 @@ namespace DAL
         }
 
 
-        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
+        public bool Delete(int id, int clinicId, SqlConnection conn, SqlTransaction tran)
         {
-            string query = @"DELETE FROM Bills WHERE Id = @id";
+            string query = @"DELETE FROM Bills WHERE BillId = @id";
 
             SqlCommand cmd = new SqlCommand(query, conn, tran);
             cmd.Parameters.AddWithValue("@id", id);
@@ -88,7 +88,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public Bill Get(int id, SqlConnection conn, SqlTransaction? tran = null)
+        public Bill Get(int id, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             string query = @"SELECT b.*,
                                     v.PatientId,
@@ -127,7 +127,7 @@ namespace DAL
             return null;
         }
 
-        public List<Bill> GetAll(SqlConnection conn, SqlTransaction? tran = null)
+        public List<Bill> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Bill>();
 

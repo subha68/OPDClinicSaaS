@@ -253,7 +253,7 @@ namespace DAL
             return insertRowsAffected > 0;
         }
 
-        public bool Delete(int scheduleId, SqlConnection conn, SqlTransaction tran)
+        public bool Delete(int scheduleId, int clinicId, SqlConnection conn, SqlTransaction tran)
         {
             string query = @"
                 DELETE FROM DoctorSchedules
@@ -285,60 +285,14 @@ namespace DAL
             }
         }
 
-        public List<DoctorScheduleVM> GetAll(SqlConnection conn, SqlTransaction? tran = null)
+        public List<DoctorScheduleVM> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             // This method is not used in our current design, but we need to implement it to satisfy the IDAL interface.
             // In a real application, we might want to throw a NotImplementedException or return an empty list instead.
             return new List<DoctorScheduleVM>();
         }
 
-        /// Checks whether another active schedule overlaps
-        /// with the provided schedule timings.
-
-/*        public bool ExistsOverlap(
-            int doctorId,
-            int dayOfWeek,
-            TimeSpan startTime,
-            TimeSpan endTime,
-            int? excludeScheduleId = null,
-            SqlConnection conn)
-        {
-            string query = @"
-                SELECT COUNT(*)
-                FROM DoctorSchedules
-                WHERE DoctorId = @DoctorId
-                AND DayOfWeek = @DayOfWeek
-                AND IsActive = 1
-                AND (
-                    @StartTime < EndTime
-                    AND @EndTime > StartTime
-                )";
-
-            // Exclude current schedule during update
-            if (excludeScheduleId.HasValue)
-            {
-                query += " AND ScheduleId <> @ExcludeScheduleId";
-            }
-
-            using (SqlCommand cmd = new SqlCommand(query, conn))
-            {
-                cmd.Parameters.AddWithValue("@DoctorId", doctorId);
-                cmd.Parameters.AddWithValue("@DayOfWeek", dayOfWeek);
-                cmd.Parameters.AddWithValue("@StartTime", startTime);
-                cmd.Parameters.AddWithValue("@EndTime", endTime);
-
-                if (excludeScheduleId.HasValue)
-                {
-                    cmd.Parameters.AddWithValue("@ExcludeScheduleId", excludeScheduleId.Value);
-                }
-
-                int count = Convert.ToInt32(cmd.ExecuteScalar());
-
-                return count > 0;
-            }
-        } */
-
-        public DoctorScheduleVM Get(int scheduleId, SqlConnection conn, SqlTransaction? tran = null)
+        public DoctorScheduleVM Get(int scheduleId, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             DoctorScheduleVM vm = null;
 

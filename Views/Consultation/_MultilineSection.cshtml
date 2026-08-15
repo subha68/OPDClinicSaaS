@@ -1,20 +1,26 @@
 @model Models.ConsultationSection
 
-<div class="table-responsive">
+<div class="table-responsive">  
 
     <table class="table table-bordered table-hover consultation-grid"
-                data-section-id="@Model.SectionId"
-                    data-rx="@Model.IsPharmacologyAdvice.ToString().ToLower()">
+           data-section-id="@Model.SectionId"
+           data-rx="@Model.IsPharmacologyAdvice.ToString().ToLower()">
 
         <thead>
 
             <tr>
 
+                <th class="action-column">
+                    Action
+                </th>
+
                 <th class="line-no-column">
                     #
                 </th>
 
-                @foreach (var field in Model.TemplateRow.Fields.OrderBy(f => f.DisplayOrder))
+                @foreach (var field in Model.TemplateRow.Fields
+                    .Where(f => f.FieldTypeCode != "Hidden")
+                    .OrderBy(f => f.DisplayOrder))
                 {
                     <th>
 
@@ -28,39 +34,59 @@
                     </th>
                 }
 
-                <th class="action-column">
-                    Action
-                </th>
-
             </tr>
 
         </thead>
 
+
         <tbody class="consultation-body"
                data-section-id="@Model.SectionId">
 
-            @foreach (var row in Model.Rows.OrderBy(r => r.RowNumber))
+            @{
+                var orderedRows = Model.Rows
+                    .OrderBy(r => r.RowNumber)
+                    .ToList();
+            }
+
+            @for (int rowIndex = 0; rowIndex < orderedRows.Count; rowIndex++)
             {
-                <partial name="_MultilineRow" model="row" />
+                var row = orderedRows[rowIndex];
+
+                var vd = new ViewDataDictionary(ViewData);
+
+                vd.TemplateInfo.HtmlFieldPrefix =
+                    ViewData.TemplateInfo.GetFullHtmlFieldName(
+                        $"Rows[{rowIndex}]");
+
+                vd["IsTemplate"] = false;
+
+                <partial name="_MultilineRow"
+                         model="row"
+                         view-data="vd" />
             }
 
         </tbody>
 
+
+        <!-- TEMPLATE ROW -->
         <tbody class="consultation-template d-none">
 
             @{
-                var vd = new ViewDataDictionary(ViewData);
-                vd.TemplateInfo.HtmlFieldPrefix =
-                    ViewData.TemplateInfo.GetFullHtmlFieldName("TemplateRow");
+                var vdTemplate = new ViewDataDictionary(ViewData);
 
-                vd["IsTemplate"] = true;
+                vdTemplate.TemplateInfo.HtmlFieldPrefix =
+                    ViewData.TemplateInfo.GetFullHtmlFieldName(
+                        "TemplateRow");
+
+                vdTemplate["IsTemplate"] = true;
             }
 
             <partial name="_MultilineRow"
-                    model="Model.TemplateRow"
-                    view-data="vd" />
+                     model="Model.TemplateRow"
+                     view-data="vdTemplate" />
 
         </tbody>
+
 
         <tfoot>
 
@@ -73,7 +99,6 @@
                             data-section-id="@Model.SectionId">
 
                         <i class="bi bi-plus-circle"></i>
-
                         Add Line
 
                     </button>

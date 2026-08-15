@@ -44,7 +44,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
+        public bool Delete(int id, int clinicId, SqlConnection conn, SqlTransaction tran)
         {
             string query = "DELETE FROM Departments WHERE DepartmentId = @DepartmentId";
 
@@ -55,14 +55,15 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public List<Department> GetAll(SqlConnection conn, SqlTransaction? tran = null)
+        public List<Department> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             List<Department> list = new List<Department>();
 
             string query = @"SELECT d.*, 
                                     c.Name as ClinicName,
                                     t.TemplateId as PrescriptionTemplateId,
-                                    t.TemplateName as PrescriptionTemplateName 
+                                    t.TemplateName as PrescriptionTemplateName,
+                                    t.SourceTemplateId as SourceTemplateId 
                                 FROM Departments d 
                                 LEFT JOIN Clinics c 
                                     ON d.ClinicId = c.ClinicId 
@@ -88,20 +89,28 @@ namespace DAL
                     Name = dept["Name"].ToString(),
                     Description = dept["Description"].ToString(),
                     ClinicName = dept["ClinicName"].ToString(),
-                    PrescriptionTemplateId = DbConvert.ToInt(dept["PrescriptionTemplateId"]),
-                    PrescriptionTemplateName = DbConvert.ToString(dept["PrescriptionTemplateName"])
+                    PrescriptionTemplateId = dept["PrescriptionTemplateId"] != DBNull.Value ? 
+                                                                Convert.ToInt32(dept["PrescriptionTemplateId"]) :
+                                                                0,
+                    PrescriptionTemplateName = dept["PrescriptionTemplateName"] !=DBNull.Value ? 
+                                                                 dept["PrescriptionTemplateName"].ToString() :
+                                                                 "",
+                    SourceTemplateId = dept["SourceTemplateId"] != DBNull.Value ? 
+                                                                Convert.ToInt32(dept["SourceTemplateId"]) :
+                                                                0                                                                 
                 });
             }
 
             return list;
         }
 
-        public Department Get(int id, SqlConnection conn, SqlTransaction? tran = null)
+        public Department Get(int id, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             string query = @"SELECT d.*, 
                                     c.Name as ClinicName,
                                     t.TemplateId as PrescriptionTemplateId, 
-                                    t.TemplateName as PrescriptionTemplateName 
+                                    t.TemplateName as PrescriptionTemplateName,
+                                    t.SourceTemplateId as SourceTemplateId 
                             FROM Departments d 
                             LEFT JOIN Clinics c
                                 ON d.ClinicId = c.ClinicId 
@@ -129,8 +138,18 @@ namespace DAL
                     Name = dept["Name"].ToString(),
                     Description = dept["Description"].ToString(),
                     ClinicName = dept["ClinicName"].ToString(),
-                    PrescriptionTemplateId = DbConvert.ToInt(dept["PrescriptionTemplateId"]),
-                    PrescriptionTemplateName = DbConvert.ToString(dept["PrescriptionTemplateName"])
+                    PrescriptionTemplateId = dept["PrescriptionTemplateId"] != DBNull.Value ? 
+                                                                Convert.ToInt32(dept["PrescriptionTemplateId"]) :
+                                                                0,
+                    PrescriptionTemplateName = dept["PrescriptionTemplateName"] !=DBNull.Value ? 
+                                                                 dept["PrescriptionTemplateName"].ToString() :
+                                                                 "",
+                    SourceTemplateId = dept["SourceTemplateId"] != DBNull.Value ? 
+                                                                Convert.ToInt32(dept["SourceTemplateId"]) :
+                                                                0,
+                    ToBeSourceTemplateId = dept["SourceTemplateId"] != DBNull.Value ? 
+                                                                Convert.ToInt32(dept["SourceTemplateId"]) :
+                                                                0                                                                 
                 };
             }
 
@@ -144,7 +163,8 @@ namespace DAL
             string query = @"SELECT d.*, 
                                     c.Name as ClinicName,
                                     t.TemplateId as PrescriptionTemplateId,
-                                    t.TemplateName as PrescriptionTemplateName
+                                    t.TemplateName as PrescriptionTemplateName,
+                                    t.SourceTemplateId as SourceTemplateId
                             FROM Departments d 
                             LEFT JOIN Clinics c 
                                 ON d.ClinicId = c.ClinicId 
@@ -172,8 +192,18 @@ namespace DAL
                     Name = dept["Name"].ToString(),
                     Description = dept["Description"].ToString(),
                     ClinicName = dept["ClinicName"].ToString(),
-                    PrescriptionTemplateId = DbConvert.ToInt(dept["PrescriptionTemplateId"]),
-                    PrescriptionTemplateName = DbConvert.ToString(dept["PrescriptionTemplateName"])
+                    PrescriptionTemplateId = dept["PrescriptionTemplateId"] != DBNull.Value ? 
+                                                                Convert.ToInt32(dept["PrescriptionTemplateId"]) :
+                                                                0,
+                    PrescriptionTemplateName = dept["PrescriptionTemplateName"] !=DBNull.Value ? 
+                                                                 dept["PrescriptionTemplateName"].ToString() :
+                                                                 "",
+                    SourceTemplateId = dept["SourceTemplateId"] != DBNull.Value ? 
+                                                                Convert.ToInt32(dept["SourceTemplateId"]) :
+                                                                0,                                                                 
+                    ToBeSourceTemplateId = dept["SourceTemplateId"] != DBNull.Value ? 
+                                                                Convert.ToInt32(dept["SourceTemplateId"]) :
+                                                                0                                                                 
                 });
             }
 

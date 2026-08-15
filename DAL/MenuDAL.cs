@@ -48,7 +48,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
+        public bool Delete(int id, int clinicId, SqlConnection conn, SqlTransaction tran)
         {
             string query = @"DELETE FROM Menus WHERE MenuId = @id";
 
@@ -59,7 +59,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public List<MenuItem> GetAll(SqlConnection conn, SqlTransaction? tran = null)
+        public List<MenuItem> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<MenuItem>();
 
@@ -118,7 +118,7 @@ namespace DAL
             return list;
         }
 
-        public MenuItem Get(int id, SqlConnection conn, SqlTransaction? tran = null)
+        public MenuItem Get(int id, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var cmd = new SqlCommand("SELECT * FROM Menus WHERE MenuId = @id", conn);
             if (tran != null)

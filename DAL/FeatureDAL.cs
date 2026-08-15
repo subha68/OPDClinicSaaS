@@ -44,7 +44,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
+        public bool Delete(int id, int clinicId, SqlConnection conn, SqlTransaction tran)
         {
             string query = @"DELETE FROM Features WHERE FeatureId = @id";
 
@@ -55,7 +55,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public List<Feature> GetAll(SqlConnection conn, SqlTransaction? tran = null)
+        public List<Feature> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Feature>();
 
@@ -106,7 +106,7 @@ namespace DAL
             return list;
         }
 
-        public Feature Get(int featureId, SqlConnection conn, SqlTransaction? tran = null)
+        public Feature Get(int featureId, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             string query = "SELECT * FROM Features WHERE FeatureId = @FeatureId";
             SqlCommand cmd = new SqlCommand(query, conn);

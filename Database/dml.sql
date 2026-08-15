@@ -6,7 +6,9 @@ INSERT INTO FieldTypes VALUES
 ('CheckboxGroup'),
 ('Dropdown'),
 ('RadioGroup'),
-('MultiSelect');
+('MultiSelect'),
+('Lookup'),
+('Hidden');
 
 INSERT INTO Roles VALUES
 (1,'SuperAdmin'),

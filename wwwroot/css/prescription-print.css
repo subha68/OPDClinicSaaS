@@ -1,0 +1,294 @@
+/* =========================================================
+   PRESCRIPTION PRINT STYLES
+   ========================================================= */
+
+@page {
+    size: A4;
+    margin: 12mm;
+}
+
+/* ---------------------------------------------------------
+   Basic document
+   --------------------------------------------------------- */
+
+html,
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    background: #fff !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 10.5pt !important;
+    line-height: 1.35 !important;
+    color: #000 !important;
+}
+
+/* ---------------------------------------------------------
+   Hide application chrome
+   --------------------------------------------------------- */
+
+.top-header,
+.navbar,
+.sidebar,
+.left-sidebar,
+.app-sidebar,
+.print-buttons {
+    display: none !important;
+}
+
+/* ---------------------------------------------------------
+   Remove application layout constraints
+   --------------------------------------------------------- */
+
+.app-shell,
+.page-body,
+.container,
+.container-fluid {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    background: #fff !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* ---------------------------------------------------------
+   Prescription itself
+   --------------------------------------------------------- */
+
+.prescription-sheet {
+    display: block !important;
+
+    width: 100% !important;
+    max-width: none !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    background: #fff !important;
+
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* ---------------------------------------------------------
+   Header
+   --------------------------------------------------------- */
+
+.rx-header-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    table-layout: fixed !important;
+}
+
+.rx-header-table td {
+    padding: 0 !important;
+    vertical-align: top !important;
+}
+
+.rx-header-table .left-panel {
+    width: 55% !important;
+    padding-right: 10mm !important;
+}
+
+.rx-header-table .right-panel {
+    width: 45% !important;
+    text-align: right !important;
+}
+
+/* Doctor */
+
+.doctor-name {
+    font-size: 16pt !important;
+    font-weight: 700 !important;
+}
+
+.doctor-reg {
+    font-size: 9pt !important;
+}
+
+.doctor-qualification {
+    font-size: 10pt !important;
+    margin-top: 1mm !important;
+}
+
+/* Patient */
+
+.patient-block {
+    margin-top: 6mm !important;
+}
+
+.patient-name {
+    font-size: 10.5pt !important;
+    font-weight: 600 !important;
+}
+
+.patient-meta {
+    font-size: 9.5pt !important;
+    margin-top: 1mm !important;
+}
+
+/* Clinic */
+
+.clinic-logo img {
+    max-width: 45mm !important;
+    max-height: 22mm !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+.clinic-name {
+    margin-top: 2mm !important;
+    font-size: 14pt !important;
+    font-weight: 700 !important;
+}
+
+.clinic-address {
+    margin-top: 1mm !important;
+    font-size: 10.5pt !important;
+    line-height: 1.3 !important;
+}
+
+.clinic-phone {
+    margin-top: 1mm !important;
+    font-size: 9.5pt !important;
+}
+
+/* ---------------------------------------------------------
+   Divider
+   --------------------------------------------------------- */
+
+.soft-divider {
+    margin: 4mm 0 !important;
+    border: 0 !important;
+    border-top: 1px solid #777 !important;
+}
+
+/* ---------------------------------------------------------
+   Consultation sections
+   --------------------------------------------------------- */
+
+.consultation-section {
+    margin: 0 0 5mm 0 !important;
+    padding: 0 !important;
+
+    page-break-inside: avoid;
+}
+
+.consultation-section h5 {
+    margin: 0 0 2mm 0 !important;
+    padding: 0 !important;
+
+    font-size: 11.5pt !important;
+    font-weight: 700 !important;
+}
+
+/* ---------------------------------------------------------
+   Generic multiline tables
+   --------------------------------------------------------- */
+
+.prescription-table {
+    width: 100% !important;
+
+    margin: 0 !important;
+
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+
+    table-layout: auto !important;
+
+    font-size: 9pt !important;
+}
+
+.prescription-table thead {
+    display: table-header-group !important;
+}
+
+.prescription-table tr {
+    page-break-inside: avoid !important;
+}
+
+.prescription-table th,
+.prescription-table td {
+    padding: 2.5mm 2mm !important;
+
+    vertical-align: top !important;
+
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+
+    line-height: 1.25 !important;
+}
+
+.prescription-table th {
+    font-weight: 700 !important;
+    background: #f2f2f2 !important;
+}
+
+/* ---------------------------------------------------------
+   Non-table consultation fields
+   --------------------------------------------------------- */
+
+.consultation-row {
+    margin: 0 0 2mm 0 !important;
+    padding: 0 !important;
+}
+
+.consultation-field {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.field-label {
+    font-weight: 600 !important;
+}
+
+.field-value {
+    font-weight: 400 !important;
+}
+
+/* ---------------------------------------------------------
+   Signature
+   --------------------------------------------------------- */
+
+.signature-block {
+    margin-top: 12mm !important;
+    text-align: right !important;
+    page-break-inside: avoid !important;
+}
+
+.signature-name {
+    margin-top: 2mm !important;
+    font-weight: 700 !important;
+}
+
+.signature-qualification {
+    font-size: 9pt !important;
+}
+
+/* ---------------------------------------------------------
+   Footer
+   --------------------------------------------------------- */
+
+.rx-footer {
+    margin-top: 5mm !important;
+
+    font-size: 8pt !important;
+    line-height: 1.3 !important;
+
+    color: #444 !important;
+
+    page-break-inside: avoid !important;
+}
+
+/* ---------------------------------------------------------
+   Browser print colors
+   --------------------------------------------------------- */
+
+* {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+}

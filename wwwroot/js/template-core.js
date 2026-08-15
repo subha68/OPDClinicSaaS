@@ -166,28 +166,37 @@ function initializeInlineSelects()
     wireInlineSelect({
 
         selector: ".field-type",
+        templateSelector: "#fieldTypeTemplate",
         dataAttribute: "field-id",
         saveFunction: function(fieldId, fieldType, force){
-                console.log("POST", {
-                    fieldId: fieldId,
-                    fieldType: fieldType,
-                    force: force
-                });
-
             return $.post(
-
                 "/PrescriptionTemplate/SaveFieldType",
-
                 {
                     templateId: $("#TemplateId").val(),
                     fieldId: fieldId,
                     fieldTypeCode: fieldType,
                     force: force
                 });
+        }
+    });
+
+    wireInlineSelect({
+
+        selector: ".field-source",
+        templateSelector: "#lookupSourceTemplate",
+        dataAttribute: "field-id",
+        saveFunction: function (fieldId, fieldSource) {
+            return $.post(
+                "/PrescriptionTemplate/SaveFieldSource",
+                {
+                    templateId: $("#TemplateId").val(),
+                    fieldId: fieldId,
+                    fieldSource: fieldSource
+                });
 
         }
 
-    });
+    });    
 }
 
 function initializeSectionCheckboxes() {
@@ -222,23 +231,40 @@ function initializeSectionCheckboxes() {
         .on("change", ".section-rx", function () {
 
             const chk = $(this);
+            const isRx = chk.is(":checked");
+
+            const multiline = chk.closest(".section-content")
+                                .find(".section-multiline");
+
+            // Rx always implies Multiline
+            multiline
+                .prop("checked", isRx)
+                .prop("disabled", isRx);
 
             $.post(
                 "/PrescriptionTemplate/SaveSectionOptions",
                 {
                     templateId: $("#TemplateId").val(),
                     sectionId: chk.data("section-id"),
-                    isMultiline: chk.closest(".section-content")
-                                    .find(".section-multiline")
-                                    .is(":checked"),
-                    isRx: chk.is(":checked")
+                    isMultiline: isRx,
+                    isRx: isRx
                 })
-                .done(function (response) {
+                .done(function () {
+
                     reloadTemplate();
+
                 })
                 .fail(function () {
+
                     alert("Unable to save.");
-                    chk.prop("checked", !chk.prop("checked"));
+
+                    // Restore previous state
+                    chk.prop("checked", !isRx);
+
+                    multiline
+                        .prop("checked", !isRx)
+                        .prop("disabled", !isRx);
+
                 });
 
         });
@@ -427,7 +453,7 @@ function wireInlineSelect(config) {
 
             const oldValue = element.data("value");
 
-            const select = $("#fieldTypeTemplate")
+            const select = $(config.templateSelector)
                 .clone()
                 .removeAttr("id")
                 .removeClass("d-none");
@@ -438,9 +464,16 @@ function wireInlineSelect(config) {
             let cancelled = false;
             let saved = false;
 
+            function getDisplayText() {
+                if (config.displayText)
+                    return config.displayText(select);
+
+                return select.find("option:selected").text();
+            }
+
             function cancel() {
                 cancelled = true;
-                element.text(select.find("option:selected").text());
+                element.text(oldValue);
                 element.attr("data-value", oldValue);
             }
 
@@ -455,7 +488,7 @@ function wireInlineSelect(config) {
 
                 if (newValue === oldValue) {
 
-                    element.text(select.find("option:selected").text());
+                    element.text(getDisplayText());
                     element.attr("data-value", oldValue);
 
                     return;
@@ -487,32 +520,30 @@ function wireInlineSelect(config) {
 
                         .done(function (response) {
 
-                            element.text(response.text);
-                            element.attr("data-value", response.value);
+                            element.text(response.text ?? getDisplayText());
+                            element.attr("data-value", response.value ?? newValue);
 
-                            reloadTemplate();
-
+                            if (config.afterSave)
+                                config.afterSave(response);
                         });
 
                         return;
                     }
 
-                    element.text(response.text);
-                    element.attr("data-value", response.value);
+                    element.text(response.text ?? getDisplayText());
+                    element.attr("data-value", response.value ?? newValue);
 
-                    reloadTemplate();
-
+                    if (config.afterSave)
+                        config.afterSave(response);
                 })
 
                 .fail(function () {
 
                     alert("Unable to save.");
 
-                    element.text(select.find("option[value='" + oldValue + "']").text());
+                    element.text(oldValue);
                     element.attr("data-value", oldValue);
-
                 });
-
             }
 
             select.on("keydown", function (e) {

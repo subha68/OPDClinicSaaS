@@ -9,7 +9,6 @@ namespace BLL
     public class ConsultationService : BaseService<Consultation>
     {
         private readonly ConsultationDAL _consultationDAL;
-        private readonly PharmacologyDAL _pharmacologyDAL;
         private readonly PrescriptionTemplateDAL _templateDAL;
         private readonly DoctorDAL _doctorDAL;
         private readonly AppointmentDAL _appointmentDAL;
@@ -20,7 +19,6 @@ namespace BLL
                                 : base(config, httpContextAccessor)
         {
             _consultationDAL = new ConsultationDAL(config);
-            _pharmacologyDAL = new PharmacologyDAL(config);
             _templateDAL = new PrescriptionTemplateDAL(config);
             _doctorDAL = new DoctorDAL(config);
             _appointmentDAL = new AppointmentDAL(config);
@@ -36,16 +34,16 @@ namespace BLL
 
             try
             {
-                Appointment app = _appointmentDAL.Get(appointmentId, conn);
-                Consultation cons = _consultationDAL.GetByAppointment(appointmentId, conn);
-                Patient patient = _patientDAL.Get(app.PatientId, conn);
+                Appointment app = _appointmentDAL.Get(appointmentId, ClinicId, conn);
+                Consultation cons = _consultationDAL.GetByAppointment(ClinicId, appointmentId, conn);
+                Patient patient = _patientDAL.Get(app.PatientId, ClinicId, conn);
                 if (cons == null)   // consultation yet to be started
                 {
                     PrescriptionTemplate template = _templateDAL.GetByDoctor(app.DoctorId, conn);
                     if (template == null)
                     {
-                        Doctor doctor = _doctorDAL.Get(app.DoctorId, conn);
-                        template = _templateDAL.GetByDepartment(doctor.DepartmentId, conn);
+                        Doctor doctor = _doctorDAL.Get(app.DoctorId, ClinicId, conn);
+                        template = _templateDAL.GetByDepartment(doctor.DepartmentId, ClinicId, conn);
                     }
 
                     cons = new Consultation(template, 
@@ -62,11 +60,11 @@ namespace BLL
                 }
                 else
                 {
-                    cons.Sections = _consultationDAL.ListSections(cons.ConsultationId, conn);
-                    var rows = _consultationDAL.ListRows(cons.ConsultationId, conn);
-                    var templateRows = _consultationDAL.ListTemplateRows(cons.ConsultationId, conn);
-                    var fields = _consultationDAL.ListFields(cons.ConsultationId, conn);
-                    var options = _consultationDAL.ListOptions(cons.ConsultationId, conn);
+                    cons.Sections = _consultationDAL.ListSections(cons.ConsultationId, ClinicId, conn);
+                    var rows = _consultationDAL.ListRows(cons.ConsultationId, ClinicId, conn);
+                    var templateRows = _consultationDAL.ListTemplateRows(cons.ConsultationId, ClinicId, conn);
+                    var fields = _consultationDAL.ListFields(cons.ConsultationId, ClinicId, conn);
+                    var options = _consultationDAL.ListOptions(cons.ConsultationId, ClinicId, conn);
 
                     var rowsBySection = rows.ToLookup(r => r.SectionId);
                     var templateRowBySection = templateRows.ToLookup(r => r.SectionId);
@@ -87,6 +85,9 @@ namespace BLL
 
                             foreach (var field in row.Fields)
                             {
+                                if (section.IsMultiline)
+                                    field.HideLabel = true;
+
                                 field.Options = optionsByField[field.FieldId]
                                     .OrderBy(o => o.DisplayOrder)
                                     .ToList();
@@ -103,6 +104,9 @@ namespace BLL
 
                             foreach (var field in section.TemplateRow.Fields)
                             {
+                                if (section.IsMultiline)
+                                    field.HideLabel = true;
+
                                 field.Options = optionsByField[field.FieldId]
                                     .OrderBy(o => o.DisplayOrder)
                                     .ToList();
@@ -122,14 +126,14 @@ namespace BLL
 
         public int SaveDraft(Consultation model)
         {
-            model.Status = "Draft"; // Ensure the status is set to Draft when saving a draft
+            model.Status = ConsultationStatus.Draft; // Ensure the status is set to Draft when saving a draft
 
             return SaveConsultation(model);
         }
 
         public int CompleteConsultation(Consultation model)
         {
-            model.Status = "Completed"; // Ensure the status is set to Completed when completing a consultation
+            model.Status = ConsultationStatus.Completed; // Ensure the status is set to Completed when completing a consultation
             return SaveConsultation(model);
         }
 
@@ -141,7 +145,7 @@ namespace BLL
             }
             else
             {
-                AddConsultation(model);
+                model.ConsultationId = AddConsultation(model);
             }
 
             return model.ConsultationId;
@@ -155,54 +159,88 @@ namespace BLL
 
             try
             {
+                model.ClinicId = ClinicId;
                 model.CreatedBy = UserId;
 
                 int consultationId = _dal.Add(model, conn, tran);
 
-                _consultationDAL.AddSections(consultationId, model.Sections, conn, tran);
+                foreach (var section in model.Sections)
+                {
+                    section.ConsultationId = consultationId;
+                    section.ClinicId = ClinicId;
+                }
+
+                _consultationDAL.AddSections(model.Sections, conn, tran);
 
                 foreach (var section in model.Sections)
                 {
-                    if (section.IsPharmacologyAdvice)
+                    foreach (var row in section.Rows)
                     {
-                        _consultationDAL.AddPharmacologyAdvices(consultationId, section.RXRows, conn, tran);
+                        row.SectionId = section.SectionId;
+                        row.ClinicId = ClinicId;
                     }
 
-                    _consultationDAL.AddRows(consultationId, section.SectionId, ClinicId, section.Rows, conn, tran);
+                    _consultationDAL.AddRows(section.Rows, conn, tran);
 
                     foreach(var row in section.Rows)
                     {
-                        _consultationDAL.AddFields(consultationId, section.SectionId, row.RowId, ClinicId, 
-                                                        row.Fields, conn, tran);
+                        foreach (var field in row.Fields)
+                        {
+                            field.RowId = row.RowId;
+                            field.ClinicId = ClinicId;
+                        }
+
+                        _consultationDAL.AddFields(row.Fields, conn, tran);
 
                         foreach (var field in row.Fields)
                         {
-                            _consultationDAL.AddOptions(consultationId, section.SectionId, row.RowId, field.FieldId, 
-                                                            field.Options, conn, tran);
+                            foreach (var option in field.Options)
+                            {
+                                option.FieldId = field.FieldId;
+                                option.ClinicId = ClinicId;
+                            }
+
+                            _consultationDAL.AddOptions(field.Options, conn, tran);
                         }
                     }
 
                     if (section.IsMultiline && section.TemplateRow != null)
                     {
-                        _consultationDAL.AddTemplateRow(consultationId, section.SectionId, ClinicId, section.TemplateRow, 
-                                                                conn, tran);
+                        section.TemplateRow.SectionId = section.SectionId;
+                        section.TemplateRow.ClinicId = ClinicId;
 
-                        _consultationDAL.AddFields(consultationId, section.SectionId, section.TemplateRow.RowId, ClinicId, 
-                                                            section.TemplateRow.Fields, conn, tran);
+                        _consultationDAL.AddTemplateRow(section.TemplateRow, conn, tran);
 
                         foreach (var field in section.TemplateRow.Fields)
                         {
-                            _consultationDAL.AddOptions(consultationId, section.SectionId, field.RowId, ClinicId, 
-                                                            field.Options, conn, tran);
+                            field.RowId = section.TemplateRow.RowId;
+                            field.ClinicId = ClinicId;
+                        }
+
+                        _consultationDAL.AddFields(section.TemplateRow.Fields, conn, tran);
+
+                        foreach (var field in section.TemplateRow.Fields)
+                        {
+                            foreach (var option in field.Options)
+                            {
+                                option.FieldId = field.FieldId;
+                                option.ClinicId = ClinicId;
+                            }
+
+                            _consultationDAL.AddOptions(field.Options, conn, tran);
                         }
                     }
                 }
 
-                if (model.Status == "Completed")
-                    _consultationDAL.DeleteTemplateRows(consultationId, conn, tran);
+                if (model.IsCompleted)
+                {
+                    _consultationDAL.DeleteTemplateRows(consultationId, ClinicId, conn, tran);
+                    _consultationDAL.DeleteUnusedOptions(consultationId, ClinicId, conn, tran);
+                    _consultationDAL.DeleteUnusedFields(consultationId, ClinicId, conn, tran);
+                }
 
                 _appointmentDAL.UpdateStatus(model.AppointmentId, 
-                                            model.Status == "Completed" ? "Completed" : "In Consultation", 
+                                            model.IsCompleted ? "Completed" : "In Consultation", 
                                             null, conn, tran);
 
                 tran.Commit();
@@ -231,17 +269,14 @@ namespace BLL
 
                 foreach (var section in model.Sections)
                 {
-                    if (section.RXRows != null && section.RXRows.Count > 0)
-                    {
-                        _consultationDAL.UpdatePharmacologyAdvices(section.RXRows, conn, tran);
-                    }
-
                     List<ConsultationRow> rowsToBeAdded = new List<ConsultationRow>();
                     List<ConsultationRow> rowsToBeUpdated = new List<ConsultationRow>();
                     List<ConsultationRow> rowsToBeDeleted = new List<ConsultationRow>();
 
                     foreach (var row in section.Rows)
                     {
+                        row.ClinicId = ClinicId;
+
                         switch(row.RowState)
                         {
                             case RowState.Added:
@@ -257,42 +292,69 @@ namespace BLL
                                 break;
                         }
 
-                        foreach (var field in row.Fields)
+                    /*    foreach (var field in row.Fields)
                         {
                             _consultationDAL.UpdateOptions(field.Options, conn, tran);
-                        }
+                        } */
                     }
 
                     if (rowsToBeAdded.Count > 0)
                     {
-                        _consultationDAL.AddRows(model.ConsultationId, section.SectionId, ClinicId,
-                                                            rowsToBeAdded, conn, tran);
                         foreach (var row in rowsToBeAdded)
                         {
-                            _consultationDAL.AddFields(model.ConsultationId, section.SectionId, row.RowId, ClinicId,
-                                                            row.Fields, conn, tran);
+                            row.ClinicId = ClinicId;
+                        }
+
+                        _consultationDAL.AddRows(rowsToBeAdded, conn, tran);
+
+                        foreach (var row in rowsToBeAdded)
+                        {
+                            foreach (var field in row.Fields)
+                            {
+                                field.RowId = row.RowId;
+                                field.ClinicId = ClinicId;
+                            }
+
+                            _consultationDAL.AddFields(row.Fields, conn, tran);
 
                             foreach (var field in row.Fields)
                             {
-                                _consultationDAL.AddOptions(model.ConsultationId, section.SectionId, row.RowId, ClinicId,
-                                                            field.Options, conn, tran);                                
+                                foreach (var option in field.Options)
+                                {
+                                    option.FieldId = field.FieldId;
+                                    option.ClinicId = ClinicId;
+                                }
+
+                                _consultationDAL.AddOptions(field.Options, conn, tran);                                
                             }
                         }
                     }
 
                     if (rowsToBeUpdated.Count > 0)
                     {
+                        foreach (var row in rowsToBeUpdated)
+                        {
+                            row.ClinicId = ClinicId;
+                        }
+
                         _consultationDAL.UpdateRows(rowsToBeUpdated, conn, tran);
 
                         foreach (var row in rowsToBeUpdated)
                         {
-                            _consultationDAL.UpdateFields(row.Fields, conn, tran);
-
                             foreach (var field in row.Fields)
                             {
-                                _consultationDAL.UpdateOptions(field.Options, conn, tran);                                
+                                field.ClinicId = ClinicId;
+
+                                foreach (var option in field.Options)
+                                {
+                                    option.ClinicId = ClinicId;
+                                }
+
+                                _consultationDAL.UpdateOptions(field.Options, conn, tran);
                             }
-                        }
+
+                            _consultationDAL.UpdateFields(row.Fields, conn, tran);
+                        }                        
                     }
 
                     if (rowsToBeDeleted.Count > 0)
@@ -301,10 +363,15 @@ namespace BLL
                     }
                 }
 
-                if (model.Status == "Completed")
-                    _consultationDAL.DeleteTemplateRows(model.ConsultationId, conn, tran);
+                if (model.IsCompleted)
+                {
+                    _consultationDAL.DeleteTemplateRows(model.ConsultationId, ClinicId, conn, tran);
+                    _consultationDAL.DeleteUnusedOptions(model.ConsultationId, ClinicId, conn, tran);
+                    _consultationDAL.DeleteUnusedFields(model.ConsultationId, ClinicId, conn, tran);
+                }
 
-                _appointmentDAL.UpdateStatus(model.AppointmentId, model.Status, null, conn, tran);
+                string appointmentStatus = model.IsCompleted ? "Completed" : "In Consultation";
+                _appointmentDAL.UpdateStatus(model.AppointmentId, appointmentStatus, null, conn, tran);
 
                 tran.Commit();
                 return result;
@@ -323,7 +390,37 @@ namespace BLL
 
             try
             {
-                return _consultationDAL.GetPrescription(appointmentId, conn);
+                PrescriptionVM prescription = _consultationDAL.GetPrescription(appointmentId, conn);
+
+                List<PrescriptionSectionVM> sections = _consultationDAL.ListPrescriptionSections(prescription.ConsultationId, conn);
+                List<PrescriptionRowVM> rows = _consultationDAL.ListPrescriptionRows(prescription.ConsultationId, conn);
+                List<PrescriptionFieldVM> fields = _consultationDAL.ListPrescriptionFields(prescription.ConsultationId, conn);
+                List<PrescriptionOptionVM> options = _consultationDAL.ListPrescriptionOptions(prescription.ConsultationId, conn);
+
+                prescription.Sections = sections;
+
+                foreach (var section in sections)
+                {
+                    section.Rows = rows
+                        .Where(r => r.SectionId == section.SectionId)
+                        .ToList();
+                }
+
+                foreach (var row in rows)
+                {
+                    row.Fields = fields
+                        .Where(r => r.RowId == row.RowId)
+                        .ToList();                    
+                }
+
+                foreach (var field in fields)
+                {
+                    field.Options = options
+                        .Where(r => r.FieldId == field.FieldId)
+                        .ToList();
+                }
+
+                return prescription;
             }
             catch
             {

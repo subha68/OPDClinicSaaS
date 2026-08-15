@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using QuestPDF.Infrastructure;
+using Microsoft.AspNetCore.Http.Features;
 using BLL;
 using DAL;
 using Helpers;
@@ -8,7 +9,10 @@ QuestPDF.Settings.License = LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSession();
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.ValueCountLimit = 10000;
+});
 
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -56,8 +60,6 @@ builder.Services.AddScoped<MenuDAL>();
 builder.Services.AddScoped<MenuService>();
 builder.Services.AddScoped<PatientDAL>();
 builder.Services.AddScoped<PatientService>();
-builder.Services.AddScoped<PharmacologyDAL>();
-builder.Services.AddScoped<PharmacologyService>();
 builder.Services.AddScoped<DoctorScheduleDAL>();
 builder.Services.AddScoped<DoctorScheduleService>();
 builder.Services.AddScoped<AppointmentDAL>();

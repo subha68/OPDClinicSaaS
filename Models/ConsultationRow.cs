@@ -35,6 +35,7 @@ namespace Models
         public ConsultationRow()
         {
             // default constructor
+            RowState = RowState.Unchanged;
             Fields = new List<ConsultationField>();
         }
         public ConsultationRow Clone(RowState rowState = RowState.Unchanged)
@@ -56,7 +57,7 @@ namespace Models
 
             foreach (var field in Fields)
             {
-                row.Fields.Add(field.Clone(rowState));
+                row.Fields.Add(field.Clone());
             }
 
             return row;

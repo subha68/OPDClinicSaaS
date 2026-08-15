@@ -87,10 +87,10 @@ namespace DAL
             return rowsAffected_doctor > 0 && rowsAffected_user > 0;
         }
 
-        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
+        public bool Delete(int id, int clinicId, SqlConnection conn, SqlTransaction tran)
         {
             int rowsAffected_doctor = 0;
-            int userId = Get(id, conn, tran).UserId;
+            int userId = Get(id, clinicId, conn, tran).UserId;
 
             string query = @"DELETE FROM Doctors WHERE DoctorId = @DoctorId";
 
@@ -111,7 +111,7 @@ namespace DAL
             return rowsAffected_doctor > 0 && rowsAffected_user > 0;
         }
 
-        public List<Doctor> GetAll(SqlConnection conn, SqlTransaction? tran = null)
+        public List<Doctor> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             List<Doctor> list = new List<Doctor>();
 
@@ -154,7 +154,7 @@ namespace DAL
             return list;
         }
 
-        public Doctor Get(int doctorId, SqlConnection conn, SqlTransaction? tran = null)
+        public Doctor Get(int doctorId, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             string query = @"SELECT d.*, u.*, dept.Name AS DepartmentName, c.Name AS ClinicName
                             FROM Doctors d

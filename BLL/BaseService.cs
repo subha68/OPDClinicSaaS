@@ -40,7 +40,7 @@ namespace BLL
 
         public virtual bool Delete(int id, SqlConnection conn, SqlTransaction tran)
         {
-            return _dal.Delete(id, conn, tran);
+            return _dal.Delete(id, ClinicId, conn, tran);
         }
 
         public virtual T Get(int id)
@@ -50,7 +50,7 @@ namespace BLL
 
             try
             {
-                return _dal.Get(id, conn);
+                return _dal.Get(id, ClinicId, conn);
             }
             catch
             {
@@ -66,7 +66,7 @@ namespace BLL
 
             try
             {
-                return _dal.GetAll(conn);
+                return _dal.GetAll(ClinicId, conn);
             }
             catch
             {
@@ -77,12 +77,12 @@ namespace BLL
 
         public virtual T Get(int id, SqlConnection conn)
         {
-            return _dal.Get(id, conn);
+            return _dal.Get(id, ClinicId, conn);
         }
 
         public virtual List<T> List(SqlConnection conn)
         {
-            return _dal.GetAll(conn);
+            return _dal.GetAll(ClinicId, conn);
         }
 
         public virtual int Create(T model)

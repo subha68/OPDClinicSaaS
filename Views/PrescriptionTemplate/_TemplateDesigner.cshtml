@@ -23,7 +23,13 @@
                 @item.Text
             </option>
         }
+    </select>
 
+    <select id="lookupSourceTemplate" class="form-select form-select-sm d-none">
+        @foreach (var item in Helpers.LookupLists.LookupSources)
+        {
+            <option value="@item.Value">@item.Text</option>
+        }
     </select>
 
 

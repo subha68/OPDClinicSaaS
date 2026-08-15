@@ -42,7 +42,7 @@ namespace BLL
 
             try
             {
-                return _medicineDAL.GetAll(term, conn);
+                return _medicineDAL.GetAll(term, ClinicId, conn);
             }
             catch
             {

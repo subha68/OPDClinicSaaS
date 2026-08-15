@@ -34,7 +34,7 @@ namespace DAL
             return Convert.ToInt32(Convert.ToInt32(cmd.ExecuteScalar()));
         }
 
-        public BillLine Get(int id, SqlConnection conn, SqlTransaction? tran = null)
+        public BillLine Get(int id, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var query = @"SELECT l.*, v.PatientId, bc.ChargeCode, bc.Description
                                 FROM BillLines l 
@@ -76,7 +76,7 @@ namespace DAL
             return null;
         }
 
-        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
+        public bool Delete(int id, int clinicId, SqlConnection conn, SqlTransaction tran)
         {
             var query = "DELETE FROM BillLines WHERE LineId = @LineId";
             SqlCommand cmd = new SqlCommand(query, conn, tran);
@@ -112,7 +112,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public List<BillLine> GetAll(SqlConnection conn, SqlTransaction? tran = null)
+        public List<BillLine> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             List<BillLine> lines = new List<BillLine>();
 

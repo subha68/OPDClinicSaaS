@@ -139,7 +139,7 @@ namespace BLL
             using var tran = conn.BeginTransaction();
             try
             {
-                bool deleted = _dal.Delete(scheduleId, conn, tran);
+                bool deleted = _dal.Delete(scheduleId, ClinicId, conn, tran);
 
                 if (!deleted)
                 {

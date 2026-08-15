@@ -56,7 +56,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public bool Delete(int chargeId, SqlConnection conn, SqlTransaction tran)
+        public bool Delete(int chargeId, int clinicId, SqlConnection conn, SqlTransaction tran)
         {
             string query = @"DELETE FROM BillingCharges WHERE ChargeId = @id";
 
@@ -67,7 +67,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public BillingCharge Get(int chargeId, SqlConnection conn, SqlTransaction? tran = null)
+        public BillingCharge Get(int chargeId, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             string query = @"SELECT ChargeId, ClinicId, ChargeCode, ChargeName, Description, ServiceType, Rate, IsActive
                                 FROM BillingCharges
@@ -102,7 +102,7 @@ namespace DAL
             return null;
         }
 
-        public List<BillingCharge> GetAll(SqlConnection conn, SqlTransaction? tran = null)
+        public List<BillingCharge> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<BillingCharge>();
 

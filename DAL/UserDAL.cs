@@ -113,7 +113,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public bool Delete(int userId, SqlConnection conn, SqlTransaction tran)
+        public bool Delete(int userId, int clinicId, SqlConnection conn, SqlTransaction tran)
         {
             string query = @"DELETE FROM Users WHERE UserId = @UserId";
 
@@ -124,7 +124,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public User Get(int userId, SqlConnection conn, SqlTransaction? tran = null)
+        public User Get(int userId, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             string query = @"SELECT u.*, c.Name as ClinicName, r.RoleName 
                                 FROM Users u
@@ -205,7 +205,7 @@ namespace DAL
             return count;
         }
 
-        public List<User> GetAll(SqlConnection conn, SqlTransaction? tran = null)
+        public List<User> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<User>();
 

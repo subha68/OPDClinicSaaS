@@ -63,13 +63,14 @@
 
 <div id="designerContainer">
 
-    <input type="hidden" id="TemplateId" value="@Model.TemplateId" />
-
     @if (Model != null)
     {
-        @await Html.PartialAsync(
-            "_TemplateDesigner",
-            Model)
+        <input type="hidden" id="TemplateId" value="@Model.TemplateId" />
+        @await Html.PartialAsync("_TemplateDesigner", Model)
+    }
+    else
+    {
+        @await Html.PartialAsync("_NoTemplateFound")
     }
 
 </div>
@@ -129,12 +130,13 @@ $("#btnShowTemplate").click(function () {
     }
 
     $.get(url, data, function (html) {
-
         $("#designerContainer").html(html);
 
-        initializeDesignerRuntime();
-
-        applyInactiveFilter();
+        // Only initialize the designer when a template was returned
+        if ($("#TemplateId").length) {
+            initializeDesignerRuntime();
+            applyInactiveFilter();
+        }
     });
 
 });

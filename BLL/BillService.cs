@@ -39,11 +39,11 @@ namespace BLL
 
             try
             {
-                bill.Visit = _visitDAL.Get(bill.VisitId, conn, tran);
+                bill.Visit = _visitDAL.Get(bill.VisitId, ClinicId, conn, tran);
                 bill.PatientId = bill.Visit.PatientId;
-                bill.Patient = _patientDAL.Get(bill.PatientId, conn, tran);
+                bill.Patient = _patientDAL.Get(bill.PatientId, ClinicId, conn, tran);
                 bill.ClinicId = ClinicId;
-                bill.Clinic = _clinicDAL.Get(bill.ClinicId, conn, tran);
+                bill.Clinic = _clinicDAL.Get(bill.ClinicId, ClinicId, conn, tran);
 
                 bill.GrossAmount = bill.BillLines.Sum(x => x.GrossAmount);
                 bill.DiscountAmount = bill.BillLines.Sum(x => x.DiscountAmount);
@@ -59,7 +59,7 @@ namespace BLL
                     if (bill.BillType == "Service")
                     {
                         int chargeId = line.ReferenceId;
-                        var charge = _billingChargeDAL.Get(chargeId, conn, tran);
+                        var charge = _billingChargeDAL.Get(chargeId, ClinicId, conn, tran);
                         line.ReferenceCode = charge.ChargeCode;
                         line.Description = charge.Description;
                         line.Rate = charge.Rate;
@@ -92,11 +92,11 @@ namespace BLL
                 var bill = base.Get(id);
                 if (bill != null)
                 {
-                    bill.Clinic = _clinicDAL.Get(ClinicId, conn);
+                    bill.Clinic = _clinicDAL.Get(ClinicId, ClinicId, conn);
                     bill.ClinicId = ClinicId;
-                    bill.Patient = _patientDAL.Get(bill.PatientId, conn);
+                    bill.Patient = _patientDAL.Get(bill.PatientId, ClinicId, conn);
                     bill.PatientId = bill.Patient.PatientId;
-                    bill.Visit = _visitDAL.Get(bill.VisitId, conn);
+                    bill.Visit = _visitDAL.Get(bill.VisitId, ClinicId, conn);
                     bill.VisitId = bill.Visit.VisitId;
                     bill.VisitDate = bill.Visit?.VisitDate;
                     bill.BillLines = _billLineDAL.GetByBillId(id, conn);

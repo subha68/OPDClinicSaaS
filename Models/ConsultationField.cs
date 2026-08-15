@@ -14,21 +14,16 @@ namespace Models
         public int TemplateFieldId { get; set; }
         public string FieldLabel { get; set; }
         public string FieldTypeCode { get; set; }
+        public string FieldCode { get; set; }
+        public string FieldSource { get; set; }
+        public int? FieldDataId { get; set; }
         public int DisplayOrder { get; set; }
         public bool IsMandatory { get; set; }
         public string? FieldValue { get; set; }
         public string Unit { get; set; }
+        public bool HideLabel { get; set; }
         public ConsultationRow? Row { get; set; }
         public List<ConsultationFieldOption> Options { get; set; } = new();
-        public RowState RowState { get; set; } = RowState.Unchanged;
-        public bool IsAdded => RowState == RowState.Added;
-        public bool IsModified => RowState == RowState.Modified;
-        public bool IsDeleted => RowState == RowState.Deleted;
-        public bool IsUnchanged => RowState == RowState.Unchanged;
-        public bool IsDirty =>
-            RowState == RowState.Added ||
-            RowState == RowState.Modified ||
-            RowState == RowState.Deleted;
         
         public string LayoutClass
         {
@@ -88,10 +83,11 @@ namespace Models
             FieldLabel = templateField.FieldLabel;
             // FieldCode = templateField.FieldCode;
             FieldTypeCode = templateField.FieldTypeCode;
+            FieldCode = templateField.FieldCode;
+            FieldSource = templateField.FieldSource;
             DisplayOrder = templateField.DisplayOrder;
             //IsTemplateRow = true; // Mark as a template row
             //IsMandatory = templateField.IsMandatory;
-            //Unit = templateField.Unit;
             //LineNumber = 0; // Default line number for new fields
             Options = new List<ConsultationFieldOption>();
             if (templateField.Options != null)
@@ -104,7 +100,7 @@ namespace Models
             }
         }
 
-        public ConsultationField Clone(RowState rowState = RowState.Added)
+        public ConsultationField Clone()
        {
             ConsultationField field = new ConsultationField
             {
@@ -118,15 +114,16 @@ namespace Models
                 DisplayOrder = DisplayOrder,
                 FieldLabel = FieldLabel,
                 FieldTypeCode = FieldTypeCode,
+                FieldSource = FieldSource,
+                FieldDataId = FieldDataId,
                 IsMandatory = IsMandatory,
                 Unit = Unit,
-                FieldValue = null,
-                RowState = rowState
+                FieldValue = null
             };
 
             foreach (var option in Options)
             {
-                field.Options.Add(option.Clone(rowState));
+                field.Options.Add(option.Clone());
             }
 
             return field;

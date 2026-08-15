@@ -14,6 +14,7 @@ namespace ViewModels
         public string ClinicName { get; set; }
         public string ClinicAddress { get; set; }
         public string ClinicLogo { get; set; }
+        public string ClinicPhoneNo { get; set; }
 
         public int PatientId { get; set; }
         public string PatientName { get; set; }
@@ -24,11 +25,8 @@ namespace ViewModels
         public DateTime VisitDateTime { get; set; }
         public int ConsultationId { get; set; }
 
-        public string? Symptoms { get; set; }
-        public string? Diagnosis { get; set; }
-        public string? Notes { get; set; }
-
-        public List<PharmacologyAdvice> Medicines { get; set; } 
+        public List<PrescriptionSectionVM> Sections { get; set; }
+        = new List<PrescriptionSectionVM>(); 
 
         public PrescriptionVM()
         {

@@ -18,13 +18,12 @@ namespace Models
         public ConsultationRow TemplateRow { get; set; }
         public List<ConsultationRow> Rows { get; set; } = new();
 
-        public PharmacologyAdvice TemplateRXRow { get; set; }
-        public List<PharmacologyAdvice> RXRows { get; set; } = new();
-
         public bool IsMultiline => Multiline || IsPharmacologyAdvice;
 
         public ConsultationSection()
         {
+            // default constructor
+            Rows = new List<ConsultationRow>();
         }
 
         public ConsultationSection(
@@ -60,16 +59,11 @@ namespace Models
                 {
                     foreach (var templateField in templateSection.Fields)
                     {
-                        TemplateRow.Fields.Add(
-                            new ConsultationField(templateField, clinicId));
+                        var field = new ConsultationField(templateField, clinicId);
+                        field.HideLabel = true;
+                        TemplateRow.Fields.Add(field);
                     }
                 }
-            }
-
-            if (IsPharmacologyAdvice && rx != null)
-            {
-                TemplateRXRow = new PharmacologyAdvice();
-                TemplateRXRow= rx;
             }
         }
     }

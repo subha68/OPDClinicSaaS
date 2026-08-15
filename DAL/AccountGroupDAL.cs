@@ -48,7 +48,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
+        public bool Delete(int id, int clinicId, SqlConnection conn, SqlTransaction tran)
         {
             string query = @"DELETE FROM AccountGroups WHERE ClinicId = @id";
 
@@ -59,7 +59,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public List<AccountGroup> GetAll(SqlConnection conn, SqlTransaction? tran = null)
+        public List<AccountGroup> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<AccountGroup>();
 
@@ -86,7 +86,7 @@ namespace DAL
             return list;
         }
 
-        public AccountGroup Get(int accountGroupId, SqlConnection conn, SqlTransaction? tran = null)
+        public AccountGroup Get(int accountGroupId, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             AccountGroup accountGroup = null;
 

@@ -51,18 +51,18 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public bool Delete(int clinicId, SqlConnection conn, SqlTransaction tran)
+        public bool Delete(int id, int clinicId, SqlConnection conn, SqlTransaction tran)
         {
             string query = @"DELETE FROM Clinics WHERE ClinicId = @id";
 
             SqlCommand cmd = new SqlCommand(query, conn, tran);
-            cmd.Parameters.AddWithValue("@id", clinicId);
+            cmd.Parameters.AddWithValue("@id", id);
 
             int rowsAffected = cmd.ExecuteNonQuery();
             return rowsAffected > 0;
         }
 
-        public List<Clinic> GetAll(SqlConnection conn, SqlTransaction? tran = null)
+        public List<Clinic> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<Clinic>();
 
@@ -90,7 +90,7 @@ namespace DAL
             return list;
         }
 
-        public Clinic Get(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
+        public Clinic Get(int id, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             Clinic clinic = null;
 
@@ -100,7 +100,7 @@ namespace DAL
                 cmd.Transaction = tran;
             }
 
-            cmd.Parameters.AddWithValue("@id", clinicId);
+            cmd.Parameters.AddWithValue("@id", id);
             using var reader = cmd.ExecuteReader();
 
             if (reader.Read())

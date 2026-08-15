@@ -1,0 +1,14 @@
+@model Models.ConsultationField
+
+<partial name="_ConsultationFieldHidden" model="Model" />
+
+<input asp-for="FieldValue"
+       class="form-control consultation-autocomplete"
+       autocomplete="off"
+       data-field-id="@Model.FieldId"
+       data-source="@Model.FieldSource"
+       data-field-data-id="@Model.FieldDataId" />
+
+<input asp-for="FieldSource" type="hidden" />
+<input asp-for="FieldDataId" type="hidden"
+       class="field-data-id" />

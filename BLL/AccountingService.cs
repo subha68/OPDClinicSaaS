@@ -48,7 +48,7 @@ namespace BLL
                     throw new InvalidOperationException("Ledger account is required.");
 
                 // Ledger Account must exist
-                var ledger = _ledgerAccountDAL.Get(line.LedgerAccountId, conn, tran);
+                var ledger = _ledgerAccountDAL.Get(line.LedgerAccountId, ClinicId, conn, tran);
 
                 if (ledger == null)
                     throw new InvalidOperationException($"Ledger account {line.LedgerAccountId} does not exist.");

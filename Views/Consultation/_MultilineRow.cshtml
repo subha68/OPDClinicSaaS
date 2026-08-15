@@ -1,51 +1,45 @@
 @model Models.ConsultationRow
 
+@using System
+
 <tr data-rowid="@Model.RowId"
     data-rownumber="@Model.RowNumber"
     data-rowguid="@Model.RowGuid">
 
+    <input asp-for="RowGuid" type="hidden" class="row-guid" />
+    <input asp-for="RowNumber" type="hidden" class="row-number-hidden" />
+    <input asp-for="RowId" type="hidden" />
+    <input asp-for="SectionId" type="hidden" />
+    <input asp-for="DisplayOrder" type="hidden" class="row-display-order" />    
+    <input type="hidden"
+       name="@Html.NameFor(m => m.RowState)"
+       value="@((int)Model.RowState)"
+       class="row-state" />
+       
+    <td class="action-cell text-center">
+        <button type="button"
+                class="btn btn-sm btn-outline-danger delete-line"
+                data-rowid="@Model.RowId">
+
+            <i class="bi bi-trash"></i>
+        </button>
+    </td>
+
     <td class="line-number">
-
-        @Model.RowNumber
-
-        <input asp-for="RowGuid"
-               class="row-guid"
-               type="hidden" />
-
-        <input asp-for="RowNumber"
-               class="row-number-hidden"
-               type="hidden" />
-
-        <input asp-for="RowState"
-               class="row-state"
-               type="hidden" />
-
-        <input asp-for="RowId" type="hidden" />
-        <input asp-for="ConsultationId" type="hidden" />
-        <input asp-for="SectionId" type="hidden" />
-        <input asp-for="DisplayOrder" type="hidden" />    
-
+        <span class="line-no">
+            @Model.RowNumber
+        </span>
     </td>
 
     @for (int i = 0; i < Model.Fields.Count; i++)
     {
+        var field = Model.Fields[i];
+
         <td class="field-cell">
 
             @Html.EditorFor(m => m.Fields[i])
 
         </td>
     }
-
-    <td class="action-cell text-center">
-
-        <button type="button"
-                class="btn btn-sm btn-outline-danger delete-line"
-                data-rowid="@Model.RowId">
-
-            <i class="bi bi-trash"></i>
-
-        </button>
-
-    </td>
 
 </tr>

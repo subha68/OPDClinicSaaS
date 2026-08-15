@@ -35,7 +35,9 @@ namespace Models
             }
         }
         public string Gender { get; set; }
-        public string Status { get; set; }
+        public ConsultationStatus Status { get; set; }
+        public bool IsDraft => Status == ConsultationStatus.Draft;
+        public bool IsCompleted => Status == ConsultationStatus.Completed;
 
         public List<ConsultationSection> Sections { get; set; }
 
@@ -70,7 +72,7 @@ namespace Models
             PatientName = patientName;
             DOB = dob;
             Gender = gender;
-            Status = "Draft"; // Default status
+            Status = ConsultationStatus.Draft; // Default status
 
             Sections = new List<ConsultationSection>();
             if (template.Sections != null)

@@ -51,7 +51,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
+        public bool Delete(int id, int clinicId, SqlConnection conn, SqlTransaction tran)
         {
             string query = @"DELETE FROM JournalLines WHERE JournalLineId = @id";
 
@@ -62,7 +62,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public List<JournalLine> GetAll(SqlConnection conn, SqlTransaction? tran = null)
+        public List<JournalLine> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<JournalLine>();
 
@@ -90,7 +90,7 @@ namespace DAL
             return list;
         }
 
-        public JournalLine Get(int journalLineId, SqlConnection conn, SqlTransaction? tran = null)
+        public JournalLine Get(int journalLineId, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             JournalLine journalLine = null;
 

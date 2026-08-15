@@ -4,125 +4,125 @@
 
 @model List<Models.Appointment>
 
-<h3>Today's Appointments</h3>
-
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success">
-        @TempData["Success"]
-    </div>
+    @TempData["Success"]
 }
 
-<table class="table table-bordered table-striped">
-    <thead class="table-dark">
-        <tr>
-            <th>Time</th>
-            <th>Patient</th>
-            <th>Doctor</th>
-            <th>Status</th>
-            <th width="180">Action</th>
-        </tr>
-    </thead>
+<div class="table-responsive">
+    <table class="table appointments-table">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Patient</th>
+                <th>Doctor</th>
+                <th>Status</th>
+                <th class="action-column">Action</th>
+            </tr>
+        </thead>
 
-    <tbody>
-        @if (Model != null && Model.Count > 0)
-        {
-            foreach (var item in Model)
+        <tbody>
+            @if (Model != null && Model.Count > 0)
+            {
+                foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @item.SlotTime.ToString(@"hh\:mm")
+                        </td>
+
+                        <td>
+                            @item.PatientName
+                        </td>
+
+                        <td>
+                            @item.DoctorName
+                        </td>
+
+                        <td>
+                            @if (item.Status == "Booked")
+                            {
+                                <span class="badge bg-primary">
+                                    @item.Status
+                                </span>
+                            }
+                            else if (item.Status == "In Consultation")
+                            {
+                                <span class="badge bg-warning text-dark">
+                                    @item.Status
+                                </span>
+                            }
+                            else if (item.Status == "Completed")
+                            {
+                                <span class="badge bg-success">
+                                    @item.Status
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">
+                                    @item.Status
+                                </span>
+                            }
+                        </td>
+
+                        <!-- ACTION -->
+                        <td class="action-column">
+
+                            @if (item.Status == "Booked")
+                            {
+                                <a asp-controller="Consultation"
+                                asp-action="Start"
+                                asp-route-appointmentId="@item.AppointmentId"
+                                class="btn btn-success btn-sm">
+                                    Start Consultation
+                                </a>
+                            }
+                            else if (item.Status == "In Consultation")
+                            {
+                                <a asp-controller="Consultation"
+                                asp-action="Consult"
+                                asp-route-appointmentId="@item.AppointmentId"
+                                class="btn btn-warning btn-sm">
+                                    Resume
+                                </a>
+
+                                <a asp-controller="Consultation"
+                                asp-action="Preview"
+                                asp-route-appointmentId="@item.AppointmentId"
+                                class="btn btn-success btn-sm ms-1">
+                                    <i class="fa fa-file-prescription"></i>
+                                    Prescription
+                                </a>
+                            }
+                            else if (item.Status == "Completed")
+                            {
+                                <a asp-controller="Consultation"
+                                asp-action="Preview"
+                                asp-route-appointmentId="@item.AppointmentId"
+                                class="btn btn-success btn-sm">
+                                    <i class="fa fa-file-prescription"></i>
+                                    Prescription
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+
+                        </td>
+                    </tr>
+                }
+            }
+            else
             {
                 <tr>
-                    <td>
-                        @item.SlotTime.ToString(@"hh\:mm")
-                    </td>
-
-                    <td>
-                        @item.PatientName
-                    </td>
-
-                    <td>
-                        @item.DoctorName
-                    </td>
-
-                    <td>
-                        @if (item.Status == "Booked")
-                        {
-                            <span class="badge bg-primary">
-                                @item.Status
-                            </span>
-                        }
-                        else if (item.Status == "In Consultation")
-                        {
-                            <span class="badge bg-warning text-dark">
-                                @item.Status
-                            </span>
-                        }
-                        else if (item.Status == "Completed")
-                        {
-                            <span class="badge bg-success">
-                                @item.Status
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary">
-                                @item.Status
-                            </span>
-                        }
-                    </td>
-
-                    <td>
-                        @if (item.Status == "Booked")
-                        {
-                            <a asp-controller="Consultation"
-                               asp-action="Start"
-                               asp-route-appointmentId="@item.AppointmentId"
-                               class="btn btn-success btn-sm">
-                                Start Consultation
-                            </a>
-                        }
-                        else if (item.Status == "In Consultation")
-                        {
-                            <a asp-controller="Consultation"
-                               asp-action="Consult"
-                               asp-route-appointmentId="@item.AppointmentId"
-                               class="btn btn-warning btn-sm">
-                                Resume
-                            </a>
-                        }
-                        else
-                        {
-                            <span class="text-muted">
-                                Completed
-                            </span>
-                        }
-                    </td>
-                    <td>
-                        @if (item.Status == "Completed")
-                        {
-                        <a asp-controller="Consultation"
-                            asp-action="Preview"
-                            asp-route-appointmentId="@item.AppointmentId"
-                            class="btn btn-success">
-                                <i class="fa fa-file-prescription"></i> Prescription
-                            </a>
-                        }
-                        else
-                        {
-                            <button class="btn btn-secondary" disabled>
-                                <i class="fa fa-file-prescription"></i> Prescription
-                            </button>
-                        }
+                    <td colspan="5"
+                        class="text-center text-muted">
+                        No appointments for today
                     </td>
                 </tr>
             }
-        }
-        else
-        {
-            <tr>
-                <td colspan="5"
-                    class="text-center text-muted">
-                    No appointments for today
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+        </tbody>
+    </table>
+</div>

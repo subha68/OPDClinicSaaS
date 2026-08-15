@@ -25,21 +25,14 @@
                 <i class="bi bi-grip-vertical"></i>
             </div>
 
-            @if (!Model.IsPharmacologyAdvice)
-            {
-                <button class="expand-section btn btn-link p-0"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#section_@Model.SectionId">
+            <button class="expand-section btn btn-link p-0"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#section_@Model.SectionId">
 
-                    <i class="bi bi-chevron-right"></i>
+                <i class="bi bi-chevron-right"></i>
 
-                </button>
-            }
-            else
-            {
-                <span style="display:inline-block;width:28px;"></span>
-            }
+            </button>
 
             <div class="section-content">
 

@@ -14,7 +14,6 @@ namespace BLL
         private readonly ConsultationDAL _consultationDAL;
         private readonly BillLineDAL _billLineDAL;
         private readonly PaymentDAL _paymentDAL;
-        private readonly PharmacologyDAL _pharmacologyDAL;
 
         public PatientService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
                                 : base(config, httpContextAccessor)
@@ -27,7 +26,6 @@ namespace BLL
             _consultationDAL = new ConsultationDAL(config);
             _billLineDAL = new BillLineDAL(config);
             _paymentDAL = new PaymentDAL(config);
-            _pharmacologyDAL = new PharmacologyDAL(config);
             _dal = _patientDAL;
         }
 
@@ -108,7 +106,7 @@ namespace BLL
 
             try
             {
-                var patient = _dal.Get(patientId, conn);
+                var patient = _dal.Get(patientId, ClinicId, conn);
 
                 if (patient == null)
                     return new PatientHistoryVM();

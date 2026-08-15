@@ -4,6 +4,9 @@ using DAL;
 using System;
 using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Configuration;
 using Helpers;
 
 namespace BLL
@@ -19,6 +22,155 @@ namespace BLL
             _dal = _templateDAL;
         }
 
+        public override int Add(PrescriptionTemplate template, SqlConnection conn, SqlTransaction tran)
+        {
+            int templateId = 0;
+            int sectionId = 0;
+            int fieldId = 0;
+            int optionId = 0;
+
+            if (template.TemplateId > 0)
+            {
+                templateId = template.TemplateId;
+                return templateId;
+            }
+
+            templateId = _templateDAL.Add(template, conn, tran);
+
+            foreach (var section in template.Sections)
+            {
+                section.TemplateId = template.TemplateId;
+                section.ClinicId = ClinicId;
+            }
+
+            sectionId = _templateDAL.AddSections(template.Sections, conn, tran);
+
+            List<PrescriptionTemplateField> fields = new List<PrescriptionTemplateField>();
+
+            foreach (var section in template.Sections)
+            {
+                foreach (var field in section.Fields)
+                {
+                    field.TemplateId = template.TemplateId;
+                    field.SectionId = section.SectionId;
+                    field.ClinicId = ClinicId;
+                    
+                    fields.Add(field);
+                }
+            }
+
+            fieldId = _templateDAL.AddFields(fields, conn, tran);
+
+            List<PrescriptionTemplateFieldOption> options = new List<PrescriptionTemplateFieldOption>();
+
+            foreach (var section in template.Sections)
+            {
+                foreach (var field in section.Fields)
+                {
+                    foreach (var option in field.Options)
+                    {
+                        option.TemplateId = template.TemplateId;
+                        option.SectionId = section.SectionId;
+                        option.FieldId = field.FieldId;
+                        option.ClinicId = ClinicId;
+
+                        options.Add(option);
+                    }
+                }
+            }
+
+            optionId = _templateDAL.AddOptions(options, conn, tran);
+
+            return templateId;
+        }
+
+        public override bool Update(PrescriptionTemplate template, SqlConnection conn, SqlTransaction tran)
+        {
+            bool templatesAffected = false;
+            bool sectionsAffected = false;
+            bool fieldsAffected = false;
+            bool optionsAffected = false;
+
+            if (template.TemplateId > 0)
+            {
+                templatesAffected = _templateDAL.Update(template, conn, tran);
+            }
+
+            List<PrescriptionTemplateSection> newSections = new List<PrescriptionTemplateSection>();
+            List<PrescriptionTemplateSection> modifiedSections = new List<PrescriptionTemplateSection>();
+
+            foreach (var section in template.Sections)
+            {
+                section.TemplateId = template.TemplateId;
+                section.ClinicId = ClinicId;
+
+                if (section.SectionId > 0)
+                    modifiedSections.Add(section);
+                else
+                    newSections.Add(section);
+            }
+
+            if (newSections.Count > 0)
+                _templateDAL.AddSections(newSections, conn, tran);
+
+            if (modifiedSections.Count > 0)
+                sectionsAffected = _templateDAL.UpdateSections(modifiedSections, conn, tran);;
+
+            List<PrescriptionTemplateField> newFields = new List<PrescriptionTemplateField>();
+            List<PrescriptionTemplateField> modifiedFields = new List<PrescriptionTemplateField>();
+
+            foreach (var section in template.Sections)
+            {
+                foreach (var field in section.Fields)
+                {
+                    field.TemplateId = template.TemplateId;
+                    field.SectionId = section.SectionId;
+                    field.ClinicId = ClinicId;
+
+                    if (field.FieldId > 0)
+                        modifiedFields.Add(field);
+                    else
+                        newFields.Add(field);
+                }
+            }
+
+            if (newFields.Count > 0)
+                _templateDAL.AddFields(newFields, conn, tran);
+
+            if (modifiedFields.Count > 0)
+                fieldsAffected = _templateDAL.UpdateFields(modifiedFields, conn, tran);
+
+            List<PrescriptionTemplateFieldOption> newOptions = new List<PrescriptionTemplateFieldOption>();
+            List<PrescriptionTemplateFieldOption> modifiedOptions = new List<PrescriptionTemplateFieldOption>();
+
+            foreach (var section in template.Sections)
+            {
+                foreach (var field in section.Fields)
+                {
+                    foreach (var option in field.Options)
+                    {
+                        option.TemplateId = template.TemplateId;
+                        option.SectionId = section.SectionId;
+                        option.FieldId = field.FieldId;
+                        option.ClinicId = ClinicId;
+
+                        if (option.OptionId > 0)
+                            modifiedOptions.Add(option);
+                        else
+                            newOptions.Add(option);
+                    }
+                }
+            }
+
+            if (newOptions.Count > 0)
+                _templateDAL.AddOptions(newOptions, conn, tran);
+
+            if (modifiedOptions.Count > 0)
+                optionsAffected = _templateDAL.UpdateOptions(modifiedOptions, conn, tran);
+
+            return templatesAffected || sectionsAffected || fieldsAffected || optionsAffected;
+        }
+
         public PrescriptionTemplate GetByDepartment(int departmentId)
         {
             using var conn = _db.GetConnection();
@@ -26,7 +178,7 @@ namespace BLL
 
             try
             {
-                return _templateDAL.GetByDepartment(departmentId, conn);
+                return _templateDAL.GetByDepartment(departmentId, ClinicId, conn);
             }
             catch
             {
@@ -514,7 +666,7 @@ namespace BLL
                 throw;
             }
 
-        }  
+        }
 
         public bool SaveSectionOptions(int templateId, int sectionId, bool isMultiline, bool isRx)
         {
@@ -527,19 +679,130 @@ namespace BLL
 
             try
             {
+                if (isRx)
+                    isMultiline = true;
+
                 _templateDAL.SaveSectionOptions(templateId, sectionId, isMultiline, isRx, conn, tran);
+
+                PrescriptionTemplateSection section = _templateDAL.GetSectionAndAllFields(templateId, sectionId, conn, tran);
+
+                List<List<object>> rxFields = new List<List<object>>
+                { 
+                    // Fieldabel, FieldTypeCode, DisplayOrder, FieldCode, FieldSource
+                    new List<object> {"Medicine", "Lookup", 1, FieldCode.Medicine, "Medicines"},
+                    new List<object> {"Dose", "Dropdown", 2, FieldCode.Dose, null},
+                    new List<object> {"Timing", "Dropdown", 3, FieldCode.Timing, null},
+                    new List<object> {"Duration", "Number", 4, FieldCode.Duration, null},
+                    new List<object> {"Unit", "Dropdown", 5, FieldCode.Unit, null},
+                    new List<object> {"Instructions", "Text", 6, FieldCode.Instructions, null}                        
+                };
+
+                Dictionary<string, List<string>> rxOptions = new ()
+                {
+                    // Key - FieldLabel, Values - OptionText
+                    {"Dose", new List<string> {"Once Daily", "Twice Daily", "Thrice Daily", "SOS"}},
+                    {"Timing", new List<string> {"Before Meal", "After Meal", "During Meal", "At Bedtime"}},
+                    {"Unit", new List<string> {"Days", "Weeks", "Months", "Years"}}
+                };
 
                 if (isRx)
                 {
                     bool isArchived = true;
                     _templateDAL.UpdateFieldsArchival(templateId, sectionId, isArchived, conn, tran);
                     _templateDAL.UpdateOptionsArchival(templateId, sectionId, isArchived, conn, tran);
+
+                    List <PrescriptionTemplateField> rxNewFields = new List <PrescriptionTemplateField>();
+                    List <PrescriptionTemplateField> rxModifiedFields = new List <PrescriptionTemplateField>();
+
+                    PrescriptionTemplateField field = null;
+                    bool optionFound = false;
+
+                    string fieldLabel;
+                    string fieldTypeCode;
+                    string fieldCode;
+                    int displayOrder;
+                    string fieldSource;
+
+                    foreach (var rxField in rxFields)
+                    {
+                        // Fieldabel, FieldTypeCode, DisplayOrder, FieldCode, FieldSource
+                        fieldLabel = (string)rxField[0];
+                        fieldTypeCode = (string)rxField[1];
+                        displayOrder = (int)rxField[2];
+                        fieldCode = (string)rxField[3];
+                        fieldSource = rxField[4] != null ? (string)rxField[4] : null;
+
+                        optionFound = false;
+                        foreach(var rxOption in rxOptions)
+                        {
+                            if ((string)rxField[0] == rxOption.Key)
+                            {
+                                // section, rxNewFields, rxModifiedFields, 
+                                // fieldLabel, fieldTypeCode, fieldCode, displayOrder, fieldSource, options
+
+                                FindField(section, rxNewFields, rxModifiedFields, 
+                                            fieldLabel, fieldTypeCode, fieldCode, displayOrder, null, 
+                                                                (IEnumerable<string>)rxOption.Value);
+                                optionFound = true;                                               
+                            }
+                        }
+
+                        if (!optionFound)
+                        {
+                            if (fieldSource == null)
+                                FindField(section, rxNewFields, rxModifiedFields, 
+                                            fieldLabel, fieldTypeCode, fieldCode, displayOrder, null, null);
+                            else
+                                FindField(section, rxNewFields, rxModifiedFields, 
+                                            fieldLabel, fieldTypeCode, fieldCode, displayOrder, fieldSource, null);
+                        }
+                    }
+
+                    if (rxNewFields.Count > 0)
+                    {
+                        _templateDAL.AddFields(rxNewFields, conn, tran);
+                        foreach (var aField in rxNewFields)
+                        {
+                            foreach (var anOption in aField.Options)
+                            {
+                                anOption.FieldId = aField.FieldId;
+                            }
+
+                            if (aField.Options.Count > 0)
+                                _templateDAL.AddOptions(aField.Options, conn, tran);
+                        }
+                    }
+
+                    if (rxModifiedFields.Count > 0)
+                    {
+                        _templateDAL.UpdateFields(rxModifiedFields, conn, tran);
+                        foreach (var aField in rxModifiedFields)
+                        {
+                            if (aField.Options.Count > 0)
+                            {
+                                _templateDAL.UpdateOptions(aField.Options, conn, tran);
+                            }
+                        }
+                    }
                 }
                 else
                 {
                     bool isArchived = false;
                     _templateDAL.UpdateFieldsArchival(templateId, sectionId, isArchived, conn, tran);
                     _templateDAL.UpdateOptionsArchival(templateId, sectionId, isArchived, conn, tran);
+
+                    List <PrescriptionTemplateField> fields = new List <PrescriptionTemplateField>();
+
+                    foreach (var rxField in rxFields)
+                    {
+                        fields.Add(Archive(section, (string)rxField[0]));
+                    }
+
+                    _templateDAL.UpdateFields(fields, conn, tran);
+                    foreach (var field in fields)
+                    {
+                        _templateDAL.UpdateOptions(field.Options, conn, tran);
+                    }
                 }
 
                 tran.Commit();
@@ -550,9 +813,96 @@ namespace BLL
                 tran.Rollback();
                 throw;
             }
-        }     
-   
+        }
 
+        private PrescriptionTemplateField Archive(PrescriptionTemplateSection section, string fieldLabel)
+        {
+            foreach (var field in section.Fields)
+            {
+                if (field.FieldLabel == fieldLabel)
+                {
+                    if (!field.IsArchived)
+                        field.IsArchived = true;
+
+                    foreach (var option in field.Options)
+                    {
+                        option.IsArchived = true;
+                    }
+
+                    return field;
+                }
+            }
+
+            return null;
+        }
+
+        private void FindField(PrescriptionTemplateSection section,
+                                        List<PrescriptionTemplateField> rxNewFields, 
+                                        List<PrescriptionTemplateField> rxModifiedFields,
+                                        string fieldLabel, string fieldTypeCode, string fieldCode, int displayOrder, string fieldSource,
+                                        IEnumerable<string> options)
+        {
+            foreach (var field in section.Fields)
+            {
+                if (field.FieldLabel == fieldLabel)
+                {
+                    field.IsArchived = false;
+
+                    if (field.Options.Count > 0)
+                    {
+                        foreach (var option in field.Options)
+                        {
+                            option.IsArchived = false;
+                        }
+                    }
+
+                    rxModifiedFields.Add(field);
+                    return;
+                }
+            }
+
+            var newField = new PrescriptionTemplateField(section.TemplateId, section.SectionId, ClinicId, 
+                                                            fieldLabel, fieldTypeCode, displayOrder, fieldCode, fieldSource);
+
+            if (options != null)
+            {
+                int optionDisplayOrder = 1;
+
+                foreach (var option in options)
+                {
+                    newField.Options.Add(
+                        new PrescriptionTemplateFieldOption(section.TemplateId, section.SectionId, 
+                                                                newField.FieldId, ClinicId, option, optionDisplayOrder++)
+                    );
+                }
+            }
+
+            section.Fields.Add(newField);
+            rxNewFields.Add(newField);
+
+            return;            
+        }
+
+        public bool SaveFieldSource(int templateId, int fieldId, string fieldSource)
+        {
+            bool result;
+
+            using var conn = _db.GetConnection();
+            conn.Open();
+            using var tran = conn.BeginTransaction();
+
+            try
+            {
+                result = _templateDAL.SaveFieldSource(templateId, fieldId, fieldSource, conn, tran);
+                tran.Commit();
+                return result;
+            }
+            catch
+            {
+                tran.Rollback();
+                throw;
+            }  
+        }
     }
 
 }

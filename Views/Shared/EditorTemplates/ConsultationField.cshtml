@@ -48,22 +48,22 @@
         else
         {
             <div class="field-row">
+                @if (!Model.HideLabel)
+                {
+                    <div class="field-label">
+                        <label class="form-label mb-0">
 
-                <div class="field-label">
+                            @Model.FieldLabel
 
-                    <label class="form-label mb-0">
+                            @if (Model.IsMandatory)
+                            {
+                                <span class="text-danger">*</span>
+                            }
 
-                        @Model.FieldLabel
-
-                        @if (Model.IsMandatory)
-                        {
-                            <span class="text-danger">*</span>
-                        }
-
-                    </label>
-
-                </div>
-
+                        </label>
+                    </div>
+                }
+                
                 <div class="field-editor">
 
                     <partial name="_FieldRenderer" model="Model" />
@@ -72,18 +72,6 @@
 
             </div>
         }
-
-        <input asp-for="ConsultationId" type="hidden" />
-        <input asp-for="TemplateId" type="hidden" />
-        <input asp-for="SectionId" type="hidden" />
-        <input asp-for="FieldId" type="hidden" />
-        <input asp-for="TemplateFieldId" type="hidden" />
-        <input asp-for="FieldLabel" type="hidden" />
-        <input asp-for="FieldTypeCode" type="hidden" />
-        <input asp-for="DisplayOrder" type="hidden" />
-
-        <input asp-for="RowState" type="hidden" 
-                class="row-state" />
 
     </div>
 

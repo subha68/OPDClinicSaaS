@@ -43,6 +43,7 @@
                     @if(field.Type == "hidden")
                     {
                         <input name="@field.Name"
+                            id="@field.Name"
                             value="@Model?.GetType().GetProperty(field.Name)?.GetValue(Model)"
                             type="hidden" />
                     }
@@ -109,19 +110,53 @@
                         </div>
                     }
 
-                    @if(field.Type == "autocomplete")
+                    @if (field.Type == "autocomplete")
                     {
+                        var textId = field.Name + "_Text";
+
                         <div class="col-md-@field.Col mb-4">
                             <label>@field.Label</label>
 
                             <input type="text"
-                                id="@field.Name + "_Text""
+                                id="@textId"
                                 class="form-control autocomplete-field"
                                 autocomplete="off" />
 
                             <input type="hidden"
                                 name="@field.Name"
-                                id="@field.Name" />
+                                id="@field.Name"
+                                value="@Model?.GetType().GetProperty(field.Name)?.GetValue(Model)" />
+                        </div>
+                    }
+
+                    @if (field.Type == "file")
+                    {
+                        var pickerId = field.Name + "_Picker";
+
+                        <div class="col-md-@field.Col mb-4">
+                            <label>@field.Label</label>
+
+                            <div class="input-group">
+                                <input type="text"
+                                    id="@field.Name"
+                                    name="@field.Name"
+                                    value="@Model?.GetType().GetProperty(field.Name)?.GetValue(Model)"
+                                    class="form-control"
+                                    readonly />
+
+                                <button type="button"
+                                        class="btn btn-outline-secondary"
+                                        onclick="document.getElementById('@pickerId').click();"
+                                        title="Select file">
+                                    <i class="bi bi-folder2-open"></i>
+                                </button>
+                            </div>
+
+                            <input type="file"
+                                id="@pickerId"
+                                class="d-none"
+                                accept="image/*"
+                                onchange="setSelectedFileName(this, '@field.Name')" />
                         </div>
                     }
                 }
@@ -139,3 +174,4 @@
 
     </div>
 </div>
+

@@ -33,7 +33,7 @@ namespace BLL
             try
             {
                 model.ClinicId = ClinicId;
-                model.Patient = _patientDAL.Get(model.PatientId, conn, tran);
+                model.Patient = _patientDAL.Get(model.PatientId, ClinicId, conn, tran);
                 int id = Add(model, conn, tran);
                 UpdateBillStatus(model.BillId, conn, tran);
                 model.PaymentId = id;
@@ -53,7 +53,7 @@ namespace BLL
 
         public void UpdateBillStatus(int billId, SqlConnection conn, SqlTransaction tran)
         {
-            Bill bill = _billDAL.Get(billId, conn, tran);
+            Bill bill = _billDAL.Get(billId, ClinicId, conn, tran);
 
             decimal totalPaid = _paymentDAL.GetTotalPaid(billId, conn, tran);
 

@@ -89,7 +89,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public bool Delete(int id, SqlConnection conn, SqlTransaction tran)
+        public bool Delete(int id, int clinicId, SqlConnection conn, SqlTransaction tran)
         {
             string query = @"DELETE FROM Patients WHERE PatientId = @id";
 
@@ -100,7 +100,7 @@ namespace DAL
             return rowsAffected > 0;
         }
 
-        public List<Patient> GetAll(SqlConnection conn, SqlTransaction? tran = null)
+        public List<Patient> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             List<Patient> patients = new List<Patient>();
 
@@ -141,7 +141,7 @@ namespace DAL
             return patients;
         }
 
-        public Patient Get(int id, SqlConnection conn, SqlTransaction? tran = null)
+        public Patient Get(int id, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             string query = @"SELECT * FROM Patients WHERE PatientId = @id";
 

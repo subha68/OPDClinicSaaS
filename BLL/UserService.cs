@@ -80,7 +80,7 @@ namespace BLL
 
             try
             {
-                return _roleDAL.Get(user.RoleId, conn);
+                return _roleDAL.Get(user.RoleId, ClinicId, conn);
             }
             catch
             {
@@ -99,7 +99,7 @@ namespace BLL
                 if (doctorId == 0) 
                     return null;
                 else
-                    return _doctorDAL.Get(doctorId, conn);
+                    return _doctorDAL.Get(doctorId, ClinicId, conn);
             }
             catch
             {

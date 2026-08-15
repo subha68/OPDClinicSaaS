@@ -384,6 +384,60 @@ textarea.form-control {
 }
 
 /*---------------------------------------------------------
+    Appointments
+---------------------------------------------------------*/
+.appointments-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.appointments-table th,
+.appointments-table td {
+    vertical-align: middle;
+    padding: 10px 8px;
+}
+
+/* Time - deliberately narrow */
+.appointments-table th:nth-child(1),
+.appointments-table td:nth-child(1) {
+    width: 80px;
+    white-space: nowrap;
+}
+
+/* Patient */
+.appointments-table th:nth-child(2),
+.appointments-table td:nth-child(2) {
+    width: 220px;
+    white-space: nowrap;
+}
+
+/* Doctor - gets the flexible space */
+.appointments-table th:nth-child(3),
+.appointments-table td:nth-child(3) {
+    width: auto;
+}
+
+/* Status */
+.appointments-table th:nth-child(4),
+.appointments-table td:nth-child(4) {
+    width: 150px;
+    white-space: nowrap;
+}
+
+/* Action */
+.appointments-table th:nth-child(5),
+.appointments-table td:nth-child(5) {
+    width: 220px;
+    white-space: nowrap;
+}
+
+.action-column .btn {
+    min-width: 100px;
+    margin-right: 6px;
+}
+
+
+/*---------------------------------------------------------
     Responsive
 ---------------------------------------------------------*/
 
@@ -422,5 +476,15 @@ textarea.form-control {
 
     .consultation-actions .btn + .btn {
         margin-left: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .appointments-table {
+        min-width: 750px;
     }
 }

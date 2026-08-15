@@ -3,7 +3,8 @@ function wireAutocomplete(
     url,
     mapper,
     onSelected,
-    appendToSelector)
+    appendToSelector,
+    onCleared)
 {
     $(selector).autocomplete({
 
@@ -21,17 +22,43 @@ function wireAutocomplete(
                     response(
                         $.map(data, mapper)
                     );
-                });
+                }
+            );
         },
 
         select: function (event, ui) {
 
-            $(this).val(ui.item.value);
+            event.preventDefault();
+
+            const input = $(this);
+            const value = ui.item.value;
+
+            input.val(value);
 
             if (onSelected)
-                onSelected(ui.item);
+                onSelected.call(this, ui.item);
 
             return false;
+        },
+
+        change: function (event, ui) {
+
+            const input = $(this);
+
+            if (!ui.item) {
+
+                const currentValue =
+                    (input.val() || "").trim();
+
+                input
+                    .closest(".field-cell")
+                    .find(".field-data-id")
+                    .val("");
+
+                if (currentValue === "" && onCleared) {
+                    onCleared.call(this);
+                }
+            }
         }
     });
 }
@@ -93,29 +120,78 @@ function wireChargeAutocomplete(
     );
 }
 
-function wireTemplateAutocomplete(selector, appendToSelector) {
+function wireMedicineAutocomplete(selector, appendToSelector) {
 
     wireAutocomplete(
+
         selector,
 
-        '/Template/SearchTemplates', // your backend
+        '/Medicine/SearchMedicine',
 
         function (item) {
+
             return {
-                label: item.text,
-                value: item.text,
+                label: item.label,
+                value: item.value,
                 id: item.id,
-                templateName: item.templateName,
-                departmentName: item.departmentName
+                dosageForm: item.dosageForm,
+                scheduleType: item.scheduleType
             };
         },
 
         function (item) {
 
-            // optional: store selected ID in hidden field
-            $("#PrescriptionTemplateId").val(item.id);
+            const input = $(this);
+
+            const row = input.closest("tr");
+
+            // Set the selected medicine ID
+            row.find(".field-data-id")
+                .val(item.id);
+
+            // Explicitly trigger change on the actual
+            // FieldValue input so Consultation.js
+            // marks the row as Modified.
+            input.trigger("change");
+
         },
 
         appendToSelector
     );
 }
+
+function wireTemplateAutocomplete(selector, appendToSelector) {
+
+    wireAutocomplete(
+
+        selector,
+
+        '/PrescriptionTemplate/SearchTemplates',
+
+        function (item) {
+
+            return {
+                label: item.text,
+                value: item.text,
+                id: item.id,
+                templateName: item.templateName
+            };
+        },
+
+        function (item) {
+
+            const selectedTemplateId = parseInt(item.id || "0");
+            $("#ToBeSourceTemplateId").val(selectedTemplateId);
+
+        },
+
+        appendToSelector,
+
+        function () {
+
+            $("#ToBeSourceTemplateId").val(0);
+
+        }
+    );
+}
+
