@@ -39,11 +39,16 @@ namespace BLL
                 Patient patient = _patientDAL.Get(app.PatientId, ClinicId, conn);
                 if (cons == null)   // consultation yet to be started
                 {
-                    PrescriptionTemplate template = _templateDAL.GetByDoctor(app.DoctorId, conn);
+                    PrescriptionTemplate template = _templateDAL.GetByDoctor(app.DoctorId, ClinicId, conn);
                     if (template == null)
                     {
                         Doctor doctor = _doctorDAL.Get(app.DoctorId, ClinicId, conn);
                         template = _templateDAL.GetByDepartment(doctor.DepartmentId, ClinicId, conn);
+                    }
+
+                    if (template == null)
+                    {
+                        template = _templateDAL.GetByClinic(ClinicId, conn);
                     }
 
                     cons = new Consultation(template, 

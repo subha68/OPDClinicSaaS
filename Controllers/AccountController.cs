@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using DAL;
 using BLL;
+using Models;
+using ViewModels;
 using Helpers;
 
 namespace Controllers   
@@ -99,6 +101,7 @@ namespace Controllers
                 HttpContext.Session.SetString("LastName", user.LastName ?? "");
                 HttpContext.Session.SetString("DisplayName", (user.FirstName ?? "") + " " + (user.LastName ?? ""));
                 HttpContext.Session.SetString("Features", _user.GetUserFeaturesAsString(user));
+                HttpContext.Session.SetString("IsFirstLogin", user.IsFirstLogin.ToString());
 
                 return RedirectToAction("Index", "Home");
             }
@@ -109,12 +112,12 @@ namespace Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
-            // Clear session
             HttpContext.Session.Clear();
 
-            // Remove auth cookie
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
             return RedirectToAction("Login", "Account");
         }
 
@@ -169,6 +172,90 @@ namespace Controllers
             return Json(new
             {
                 success = true
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ChangePassword(ChangePasswordVM model)
+        {
+            if (!(User.Identity?.IsAuthenticated ?? false))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Your session has expired. Please login again."
+                });
+            }
+
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState
+                    .Where(x => x.Value?.Errors.Count > 0)
+                    .SelectMany(x => x.Value!.Errors.Select(e => new
+                    {
+                        field = x.Key,
+                        message = string.IsNullOrWhiteSpace(e.ErrorMessage)
+                            ? "Invalid value."
+                            : e.ErrorMessage
+                    }))
+                    .ToList();
+
+                return Json(new
+                {
+                    success = false,
+                    message = "Please correct the errors below.",
+                    errors
+                });
+            }
+
+            var userIdClaim = User.FindFirst("UserId");
+
+            if (userIdClaim == null ||
+                !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Unable to identify the logged-in user."
+                });
+            }
+
+            if (model.CurrentPassword == model.NewPassword)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "The new password must be different from the current password.",
+                    errors = new[]
+                    {
+                        new
+                        {
+                            field = "NewPassword",
+                            message = "The new password must be different from the current password."
+                        }
+                    }
+                });
+            }
+
+            var result = _user.ChangePassword(userId, model.CurrentPassword, model.NewPassword);
+
+            if (!result.Success)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = result.Message
+                });
+            }
+
+            // Keep the current session in sync.
+            HttpContext.Session.SetString("IsFirstLogin", "False");
+
+            return Json(new
+            {
+                success = true,
+                message = "Your password has been changed successfully."
             });
         }
 

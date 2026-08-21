@@ -67,9 +67,6 @@ function bindInsertUI() {
 
         function (btn, html) {
             btn.closest(".field-wrapper").before(html);
-            //const container = btn.closest(".field-wrapper")
-            //                    .closest(".fields-container");
-            //initializeFieldSortable(container);
         });
 
     wireInsert(
@@ -89,9 +86,6 @@ function bindInsertUI() {
 
         function (btn, html) {
             btn.closest(".field-wrapper").after(html);
-            //const container = btn.closest(".field-wrapper")
-            //                    .closest(".fields-container");
-            //initializeFieldSortable(container);
         });
 
     wireInsert(
@@ -152,104 +146,6 @@ function initializeAccordion() {
         ".expand-field i"
     );
 }
-
-/*
-function wireInsert(
-    button,
-    url,
-    idName,
-    dataAttribute,
-    nameKey,
-    promptText,
-    position,
-    extraPayload,
-    successCallback) {
-
-    const designer = $("#designerContainer");
-
-    designer
-        .off("click", button)
-        .on("click", button, function (e) {
-
-            console.count("wireInsert fired");
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            const btn = $(this);
-
-            //console.log(button, position);
-
-            const value = prompt(promptText);
-
-            if (!value)
-                return;
-
-            const payload = {
-                templateId: $("#TemplateId").val(),
-                position: position
-            };
-
-            payload[idName] = btn.data(dataAttribute);
-            payload[nameKey] = value;
-
-            if (extraPayload)
-                Object.assign(payload, extraPayload(btn));
-
-            $.post(url, payload)
-                .done(function (html) {
-
-                    if (successCallback)
-                        successCallback(btn, html);
-                    else
-                        reloadTemplate();
-
-                })
-                .fail(function () {
-                    alert("Unable to insert.");
-                });
-
-        });
-
-}
-
-
-function wireAccordion(
-    collapseSelector,
-    cardSelector,
-    summarySelector,
-    chevronSelector) {
-
-    const designer = $("#designerContainer");
-
-    designer
-        .off("show.bs.collapse", collapseSelector)
-        .on("show.bs.collapse", collapseSelector, function () {
-
-            const card = $(this).closest(cardSelector);
-
-            card.find(summarySelector).hide();
-
-            card.find(chevronSelector)
-                .removeClass("bi-chevron-right")
-                .addClass("bi-chevron-down");
-
-        })
-
-        .off("hide.bs.collapse", collapseSelector)
-        .on("hide.bs.collapse", collapseSelector, function () {
-
-            const card = $(this).closest(cardSelector);
-
-            card.find(summarySelector).show();
-
-            card.find(chevronSelector)
-                .removeClass("bi-chevron-down")
-                .addClass("bi-chevron-right");
-
-        });
-
-}*/
 
 $(".section-collapse").each(function () {
 

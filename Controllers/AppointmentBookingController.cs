@@ -64,21 +64,6 @@ namespace Controllers
         }
 
         [HttpGet]
-/*        public JsonResult GetSlots(int doctorId)
-        {
-            var slots = _appointment.GetSlots(doctorId);
-
-            return Json(slots.Select(x => new
-            {
-                slotId = x.SlotId,
-                title = x.StartDateTime.ToString("HH:mm"),
-                start = x.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss"),
-                end = x.EndDateTime.ToString("yyyy-MM-ddTHH:mm:ss"),
-                color = x.Color
-            }));
-        } */
-
-        [HttpGet]
         public JsonResult GetDailySlots(int doctorId, DateTime appointmentDate)
         {
             var slots = _appointment.GetSlots(doctorId, appointmentDate);
@@ -120,15 +105,16 @@ namespace Controllers
             if (!ModelState.IsValid)
                 return View(vm);
 
-            int appointmentId = _appointment.BookAppointment(vm);
+            var result = _appointment.BookAppointment(vm);
 
             return RedirectToAction(
-                                "Index",
-                                new
-                                {
-                                    departmentId = vm.DepartmentId,
-                                    doctorId = vm.DoctorId
-                                });
+                "Index",
+                new
+                {
+                    departmentId = vm.DepartmentId,
+                    doctorId = vm.DoctorId,
+                    appointmentDate = vm.AppointmentDate
+                });
         }
 
         [HttpPost]
@@ -137,12 +123,14 @@ namespace Controllers
             if (!ModelState.IsValid)
                 return View(vm);
 
-            int appointmentId = _appointment.BookAppointment(vm);
+            var result = _appointment.BookAppointment(vm);
 
             return Json(new
             {
                 success = true,
-                appointmentId = appointmentId
+                appointmentId = result.AppointmentId,
+                tokenNumber = result.TokenNumber,
+                queueNumber = result.QueueNumber
             });
         }
 
@@ -185,6 +173,17 @@ namespace Controllers
             {
                 success = true
             });
+        }
+
+        [HttpGet]
+        public IActionResult PrintToken(int appointmentId)
+        {
+            var appointment = _appointment.Get(appointmentId);
+
+            if (appointment == null)
+                return NotFound();
+
+            return View("PrintToken", appointment);
         }
     }
 }

@@ -194,7 +194,7 @@ namespace BLL
 
             try
             {
-                return _templateDAL.GetByDoctor(doctorId, conn);
+                return _templateDAL.GetByDoctor(doctorId, ClinicId, conn);
             }
             catch
             {

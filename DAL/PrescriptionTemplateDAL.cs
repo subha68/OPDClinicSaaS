@@ -104,6 +104,55 @@ namespace DAL
             return template;
         }
 
+        public PrescriptionTemplate GetByClinic(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
+        {
+            PrescriptionTemplate template = null;
+
+            // retrieve template
+
+            string templateQuery = @"SELECT t.* 
+                                    FROM PrescriptionTemplates t 
+                                    WHERE t.ClinicId = @ClinicId
+                                    AND (t.DepartmentId IS NULL OR t.DepartmentId = 0)
+                                    AND (t.DoctorId IS NULL OR t.DoctorId = 0)";
+
+            using SqlCommand templateCmd = new SqlCommand(templateQuery, conn);
+            if (tran != null)
+            {
+                templateCmd.Transaction = tran;
+            }
+
+            templateCmd.Parameters.AddWithValue("@ClinicId", clinicId);
+
+            using (var templateReader = templateCmd.ExecuteReader())
+            {
+
+                if (templateReader.Read())
+                {
+                    template = new PrescriptionTemplate
+                    {
+                        TemplateId = (int)templateReader["TemplateId"],
+                        ClinicId = templateReader["ClinicId"] != DBNull.Value ? (int)templateReader["ClinicId"] : 0,
+                        DepartmentId = templateReader["DepartmentId"] != DBNull.Value ? (int)templateReader["DepartmentId"] : 0,
+                        TemplateCode = templateReader["TemplateCode"].ToString(),
+                        TemplateName = templateReader["TemplateName"].ToString(),
+                        SourceTemplateId = templateReader["SourceTemplateId"] != DBNull.Value 
+                                                                                ? (int)templateReader["SourceTemplateId"] 
+                                                                                : 0,
+                        IsActive = (bool)templateReader["IsActive"]
+                    };
+                }
+            }
+
+            if (template == null)
+                return null; // Not found
+
+            // Now retrieve sections & fields
+            template.Sections = GetSectionsAndFields(template.TemplateId, conn, tran);
+
+            return template;
+        }
+
         public PrescriptionTemplate GetByDepartment(int departmentId, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             PrescriptionTemplate template = null;
@@ -114,7 +163,8 @@ namespace DAL
                                     FROM PrescriptionTemplates t
                                     INNER JOIN Departments d
                                         ON t.DepartmentId = d.DepartmentId 
-                                    WHERE t.DepartmentId = @DepartmentId";
+                                    WHERE t.DepartmentId = @DepartmentId
+                                    AND (t.DoctorId IS NULL OR t.DoctorId = 0)";
             if (clinicId == 0)
                 templateQuery += " AND t.ClinicId IS NULL";
             else
@@ -162,7 +212,7 @@ namespace DAL
             return template;
         }
 
-        public PrescriptionTemplate GetByDoctor(int doctorId, SqlConnection conn, SqlTransaction? tran = null)
+        public PrescriptionTemplate GetByDoctor(int doctorId, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             PrescriptionTemplate template = null;
 
@@ -172,7 +222,9 @@ namespace DAL
                                     FROM PrescriptionTemplates t
                                     INNER JOIN Departments d
                                         ON t.DepartmentId = d.DepartmentId 
-                                    WHERE DoctorId = @DoctorId";
+                                    WHERE t.DoctorId = @DoctorId
+                                    AND t.ClinicId = @ClinicId";
+
             using SqlCommand templateCmd = new SqlCommand(templateQuery, conn);
             if (tran != null)
             {
@@ -180,6 +232,7 @@ namespace DAL
             }
 
             templateCmd.Parameters.AddWithValue("@DoctorId", doctorId);
+            templateCmd.Parameters.AddWithValue("@ClinicId", clinicId);
 
             using (var templateReader = templateCmd.ExecuteReader())
             {

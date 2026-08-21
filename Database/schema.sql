@@ -191,6 +191,8 @@ CREATE TABLE Appointments (
     AppointmentDate DATE,
     SlotStartTime TIME,
     SlotEndTime TIME,
+    TokenNumber INT NOT NULL,
+    QueueNumber INT NOT NULL,
     Status NVARCHAR(20),
     CancellationReason NVARCHAR(250)
 
@@ -199,6 +201,12 @@ CREATE TABLE Appointments (
     FOREIGN KEY (PatientId) REFERENCES Patients(PatientId),
     FOREIGN KEY (VisitId) REFERENCES Visits(VisitId)   
 );
+
+CREATE INDEX IX_Appointments_ClinicDate_Token
+ON Appointments (ClinicId, AppointmentDate, TokenNumber);
+
+CREATE INDEX IX_Appointments_ClinicDoctorDate_Queue
+ON Appointments (ClinicId, DoctorId, AppointmentDate, QueueNumber);
 
 CREATE TABLE Vitals (
     VitalId INT IDENTITY PRIMARY KEY,
@@ -400,6 +408,9 @@ CREATE TABLE Payments (
 CREATE TABLE Refunds (
     RefundId INT IDENTITY PRIMARY KEY,
     BillId INT,
+    ClinicId INT NOT NULL,
+    RefundDate DATE NOT NULL,
+    Mode NVARCHAR(50),
     Amount DECIMAL(10,2),
     Reason NVARCHAR(200),
 
@@ -425,14 +436,20 @@ CREATE TABLE RoleFeatures (
 -- Menu (DB-driven)
 CREATE TABLE Menus (
     MenuId INT IDENTITY PRIMARY KEY,
-    Title NVARCHAR(100),
+    Title NVARCHAR(100) NOT NULL,
     Controller NVARCHAR(50),
     Action NVARCHAR(50),
     Icon NVARCHAR(50),
     FeatureCode NVARCHAR(100),
+    ReportCode NVARCHAR(100) NULL,
     ParentId INT NULL,
-    DisplayOrder INT
+    DisplayOrder INT NOT NULL,
+    IsActive BIT NOT NULL DEFAULT 1,
+    FOREIGN KEY (ParentId) REFERENCES Menus(MenuId)
 );
+
+CREATE INDEX IX_Menus_ParentId_DisplayOrder
+ON Menus (ParentId, DisplayOrder);
 
 CREATE TABLE DoctorSchedules (
     ScheduleId INT IDENTITY(1,1) PRIMARY KEY,
@@ -594,6 +611,7 @@ CREATE TABLE PharmacyBills
     PatientId INT,
     PharmacologyId INT,
     BillDate DATE,
+    ClinicId INT NOT NULL,
     GrossAmount DECIMAL(10,2) NOT NULL DEFAULT 0,
     Discount DECIMAL(10,2) NOT NULL DEFAULT 0,
     Tax DECIMAL(10,2) NOT NULL DEFAULT 0,

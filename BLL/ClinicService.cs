@@ -56,5 +56,26 @@ namespace BLL
 
         }
 
+        public int CloneDefaultTemplate()
+        {
+            using var conn = _db.GetConnection();
+            conn.Open();
+            using var tran = conn.BeginTransaction();
+
+            try
+            {
+                // copy default template for new Clinic
+                _templateDAL.CloneTemplate("DEFAULT", 0, ClinicId, 0, conn, tran);
+
+                tran.Commit();
+                return ClinicId;
+            }
+            catch
+            {
+                tran.Rollback();
+                throw;
+            }
+        }
+
     }
 }

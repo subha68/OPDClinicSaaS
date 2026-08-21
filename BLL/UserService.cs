@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using DAL;
 using Helpers;
 using Models;
+using ViewModels;
 using Microsoft.Data.SqlClient;
 
 namespace BLL
@@ -119,6 +120,75 @@ namespace BLL
             }
             catch
             {
+                throw;
+            }
+        }
+
+        public ChangePasswordResult ChangePassword(int userId, string currentPassword, string newPassword)
+        {
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            using var tran = conn.BeginTransaction();
+
+            try
+            {
+                var user = _userDAL.Get(userId, ClinicId, conn, tran);
+
+                if (user == null)
+                {
+                    return new ChangePasswordResult
+                    {
+                        Success = false,
+                        Message = "User account could not be found."
+                    };
+                }
+
+                if (!PasswordHelper.VerifyPassword(user.PasswordHash, currentPassword))
+                {
+                    return new ChangePasswordResult
+                    {
+                        Success = false,
+                        Message = "The current password is incorrect."
+                    };
+                }
+
+                if (PasswordHelper.VerifyPassword(user.PasswordHash, newPassword))
+                {
+                    return new ChangePasswordResult
+                    {
+                        Success = false,
+                        Message = "The new password must be different from the current password."
+                    };
+                }
+
+                user.PasswordHash = newPassword;
+                user.IsFirstLogin = false;
+
+                bool result = Update(user, conn, tran);
+
+                if (!result)
+                {
+                    tran.Rollback();
+
+                    return new ChangePasswordResult
+                    {
+                        Success = false,
+                        Message = "Unable to change the password."
+                    };
+                }
+
+                tran.Commit();
+
+                return new ChangePasswordResult
+                {
+                    Success = true,
+                    Message = "Your password has been changed successfully."
+                };
+            }
+            catch
+            {
+                tran.Rollback();
                 throw;
             }
         }

@@ -26,7 +26,7 @@ namespace DAL
                                 OR
                                 (
                                     r.RoleName IN ('ClinicAdmin','ClinicUser','Doctor','BillingUser','PharmacyUser', 'Nurse')
-                                    AND u.ClinicId = @ClinicId
+                                    AND (u.ClinicId IS NULL OR u.ClinicId = @ClinicId)
                                 )
                             )
                             AND u.IsActive = 1";
@@ -54,7 +54,8 @@ namespace DAL
                     FirstName = reader["FirstName"] != DBNull.Value ? reader["FirstName"].ToString() : null,
                     LastName = reader["LastName"] != DBNull.Value ? reader["LastName"].ToString() : null,
                     Email = reader["Email"] != DBNull.Value ? reader["Email"].ToString() : null,
-                    Phone = reader["Phone"] != DBNull.Value ? reader["Phone"].ToString() : null
+                    Phone = reader["Phone"] != DBNull.Value ? reader["Phone"].ToString() : null,
+                    IsFirstLogin = Convert.ToBoolean(reader["IsFirstLogin"])
                 };
             }
 
@@ -66,8 +67,8 @@ namespace DAL
             int userId = 0;
 
             string query = @"INSERT INTO Users 
-                            (Username, PasswordHash, RoleId, ClinicId, FirstName, LastName, Email, Phone)
-                            VALUES (@Username, @PasswordHash, @RoleId, @ClinicId, @FirstName, @LastName, @Email, @Phone);
+                            (Username, PasswordHash, RoleId, ClinicId, FirstName, LastName, Email, Phone, IsFirstLogin)
+                            VALUES (@Username, @PasswordHash, @RoleId, @ClinicId, @FirstName, @LastName, @Email, @Phone, 1);
                             SELECT SCOPE_IDENTITY();";
 
             SqlCommand cmd = new SqlCommand(query, conn, tran);
@@ -95,7 +96,8 @@ namespace DAL
                                 FirstName = @FirstName,
                                 LastName = @LastName,
                                 Email = @Email,
-                                Phone = @Phone
+                                Phone = @Phone,
+                                IsFirstLogin = @IsFirstLogin
                             WHERE UserId = @UserId";
 
             SqlCommand cmd = new SqlCommand(query, conn, tran);
@@ -108,6 +110,7 @@ namespace DAL
             cmd.Parameters.AddWithValue("@Email", user.Email ?? (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@Phone", user.Phone ?? (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@UserId", user.UserId);
+            cmd.Parameters.AddWithValue("@IsFirstLogin", user.IsFirstLogin ? 1 : 0);
 
             int rowsAffected = cmd.ExecuteNonQuery();
             return rowsAffected > 0;
@@ -152,10 +155,12 @@ namespace DAL
                     Username = reader["Username"] != DBNull.Value ? reader["Username"].ToString() : null,
                     FirstName = reader["FirstName"] != DBNull.Value ? reader["FirstName"].ToString() : null,
                     LastName = reader["LastName"] != DBNull.Value ? reader["LastName"].ToString() : null,
+                    PasswordHash = reader["PasswordHash"] != DBNull.Value ? reader["PasswordHash"].ToString() : null,
                     Email = reader["Email"] != DBNull.Value ? reader["Email"].ToString() : null,
                     Phone = reader["Phone"] != DBNull.Value ? reader["Phone"].ToString() : null,
                     ClinicName = reader["ClinicName"] != DBNull.Value ? reader["ClinicName"].ToString() : null,
-                    RoleName = reader["RoleName"] != DBNull.Value ? reader["RoleName"].ToString() : null
+                    RoleName = reader["RoleName"] != DBNull.Value ? reader["RoleName"].ToString() : null,
+                    IsFirstLogin = Convert.ToBoolean(reader["IsFirstLogin"])
                 };
             }
 

@@ -51,11 +51,33 @@
                     @if (field.Type == "password")
                     {
                         <div class="col-md-@field.Col mb-4">
-                            <label>@field.Label</label>
-                            <input type="password"
-                                name="@field.Name"
-                                class="form-control"
-                                placeholder="Enter password" />
+
+                            <label class="form-label">
+                                @field.Label
+                            </label>
+
+                            <div class="input-group">
+
+                                <input type="password"
+                                    name="@field.Name"
+                                    id="@field.Name"
+                                    class="form-control"
+                                    placeholder="Enter password"
+                                    autocomplete="new-password" />
+
+                                <button type="button"
+                                        class="btn btn-outline-secondary password-toggle"
+                                        data-target="@field.Name"
+                                        tabindex="-1"
+                                        title="Show password"
+                                        aria-label="Show password">
+
+                                    <i class="fa-solid fa-eye"></i>
+
+                                </button>
+
+                            </div>
+
                         </div>
                     }
 

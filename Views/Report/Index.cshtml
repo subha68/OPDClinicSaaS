@@ -1,0 +1,409 @@
+@model ViewModels.ReportVM
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    ViewData["Title"] = Model.Definition.Report.ReportName;
+
+    var dateFilters = Model.Definition.Filters
+        .Where(f => f.ControlType.Equals(
+            "date",
+            StringComparison.OrdinalIgnoreCase))
+        .OrderBy(f => f.DisplayOrder)
+        .ToList();
+
+    var hasDateFilters = dateFilters.Count > 0;
+    var hasDateRange = dateFilters.Count >= 2;
+}
+
+<div class="container-fluid">
+
+    <!-- =========================================================
+         REPORT HEADER
+         ========================================================= -->
+
+    <div class="row mb-3">
+        <div class="col">
+
+            <h2 class="page-title">
+                @Model.Definition.Report.ReportName
+            </h2>
+
+            @if (!string.IsNullOrWhiteSpace(Model.Definition.Report.Description))
+            {
+                <div class="page-subtitle">
+                    @Model.Definition.Report.Description
+                </div>
+            }
+
+        </div>
+    </div>
+
+
+    <!-- =========================================================
+         FILTERS
+         ========================================================= -->
+
+    <div class="card mb-4">
+
+        <div class="card-body">
+
+            <form id="reportForm">
+
+                <input type="hidden"
+                    id="reportId"
+                    name="reportId"
+                    value="@Model.Definition.Report.ReportId" />
+
+                <input type="hidden"
+                       id="reportCode"
+                       name="reportCode"
+                       value="@Model.Definition.Report.ReportCode" />
+
+                <!-- =================================================
+                     FILTER CONTROLS
+                     ================================================= -->
+
+                <div class="row">
+
+                    @foreach (var filter in Model.Definition.Filters
+                        .OrderBy(f => f.DisplayOrder))
+                    {
+                        var inputId = "filter_" + filter.FilterCode;
+
+                        <div class="col-md-3 mb-3">
+
+                            <label for="@inputId"
+                                   class="form-label">
+
+                                @filter.FilterLabel
+
+                                @if (filter.IsRequired)
+                                {
+                                    <span class="text-danger">*</span>
+                                }
+
+                            </label>
+
+
+                            @if (filter.ControlType.Equals(
+                                    "date",
+                                    StringComparison.OrdinalIgnoreCase))
+                            {
+                                <input type="date"
+                                       id="@inputId"
+                                       name="@filter.ParameterName"
+                                       class="form-control report-date-filter"
+                                       value="@filter.DefaultValue"
+                                       @(filter.IsRequired ? "required" : "") />
+
+                                <div class="invalid-feedback report-filter-error"></div>
+                            }
+                            else if (filter.ControlType.Equals(
+                                         "number",
+                                         StringComparison.OrdinalIgnoreCase))
+                            {
+                                <input type="number"
+                                       id="@inputId"
+                                       name="@filter.ParameterName"
+                                       class="form-control"
+                                       value="@filter.DefaultValue"
+                                       @(filter.IsRequired ? "required" : "") />
+
+                                <div class="invalid-feedback report-filter-error"></div>
+                            }
+                            else if (filter.ControlType.Equals(
+                                         "checkbox",
+                                         StringComparison.OrdinalIgnoreCase))
+                            {
+                                <div class="form-check mt-2">
+
+                                    <input type="checkbox"
+                                           id="@inputId"
+                                           name="@filter.ParameterName"
+                                           value="true"
+                                           class="form-check-input" />
+
+                                </div>
+
+                                <div class="invalid-feedback report-filter-error"></div>
+                            }
+                            else if (filter.ControlType.Equals(
+                                         "select",
+                                         StringComparison.OrdinalIgnoreCase))
+                            {
+                                <select id="@inputId"
+                                        name="@filter.ParameterName"
+                                        class="form-select">
+
+                                    <option value="">-- All --</option>
+
+                                    @if (!string.IsNullOrWhiteSpace(filter.LookupCode) &&
+                                         Model.Lookups.TryGetValue(
+                                             filter.LookupCode,
+                                             out var lookupItems))
+                                    {
+                                        foreach (var item in lookupItems)
+                                        {
+                                            <option value="@item.Value"
+                                                    selected="@(item.Value == filter.DefaultValue)">
+                                                @item.Text
+                                            </option>
+                                        }
+                                    }
+
+                                </select>
+
+                                <div class="invalid-feedback report-filter-error"></div>
+                            }
+                            else
+                            {
+                                <input type="text"
+                                       id="@inputId"
+                                       name="@filter.ParameterName"
+                                       class="form-control"
+                                       value="@filter.DefaultValue"
+                                       @(filter.IsRequired ? "required" : "") />
+
+                                <div class="invalid-feedback report-filter-error"></div>
+                            }
+
+                        </div>
+                    }
+
+                </div>
+
+                <!-- =================================================
+                   DATE PERIOD SELECTOR
+                   ================================================= -->
+
+                @if (hasDateFilters)
+                {
+                    <div class="report-date-shortcuts mt-4 mb-3">
+
+                        <div class="form-check form-check-inline">
+
+                            <input class="form-check-input report-period-radio"
+                                type="radio"
+                                name="reportDateShortcut"
+                                id="dateShortcutToday"
+                                value="today" />
+
+                            <label class="form-check-label"
+                                for="dateShortcutToday">
+                                Today
+                            </label>
+
+                        </div>
+
+                        @if (hasDateRange)
+                        {
+                            <div class="form-check form-check-inline">
+
+                                <input class="form-check-input report-period-radio"
+                                    type="radio"
+                                    name="reportDateShortcut"
+                                    id="dateShortcutCalendarYear"
+                                    value="calendar-year" />
+
+                                <label class="form-check-label"
+                                    for="dateShortcutCalendarYear">
+                                    Calendar Year
+                                </label>
+
+                            </div>
+
+                            <div class="form-check form-check-inline">
+
+                                <input class="form-check-input report-period-radio"
+                                    type="radio"
+                                    name="reportDateShortcut"
+                                    id="dateShortcutFinancialYear"
+                                    value="financial-year" />
+
+                                <label class="form-check-label"
+                                    for="dateShortcutFinancialYear">
+                                    Financial Year
+                                </label>
+
+                            </div>
+
+                            <div class="form-check form-check-inline">
+
+                                <input class="form-check-input report-period-radio"
+                                    type="radio"
+                                    name="reportDateShortcut"
+                                    id="dateShortcutThisMonth"
+                                    value="this-month" />
+
+                                <label class="form-check-label"
+                                    for="dateShortcutThisMonth">
+                                    This Month
+                                </label>
+
+                            </div>
+                        }
+
+                    </div>
+                }
+
+                <div class="report-filter-divider"></div>
+
+                <!-- =================================================
+                     BUTTONS
+                     ================================================= -->
+
+                <div class="row mt-3">
+
+                    <div class="col">
+
+                        <button type="submit"
+                                id="btnRunReport"
+                                class="btn btn-primary">
+
+                            <span id="runReportText">
+                                Run Report
+                            </span>
+
+                            <span id="runReportSpinner"
+                                  class="spinner-border spinner-border-sm ms-1"
+                                  role="status"
+                                  style="display:none;">
+                            </span>
+
+                        </button>
+
+                        <button type="button"
+                                id="btnClearFilters"
+                                class="btn btn-secondary ms-2">
+
+                            Clear
+
+                        </button>
+
+                        <button type="button"
+                            id="btnExportCsv"
+                            class="btn btn-success ms-2"
+                            style="display:none;">
+
+                            <span id="exportCsvText">
+                                Export CSV
+                            </span>
+
+                            <span id="exportCsvSpinner"
+                                class="spinner-border spinner-border-sm ms-1"
+                                role="status"
+                                style="display:none;">
+                            </span>
+
+                        </button>
+
+                        <button type="button"
+                                id="btnExportExcel"
+                                class="btn btn-success ms-2"
+                                style="display:none;">
+
+                            <span id="exportExcelText">
+                                Export Excel
+                            </span>
+
+                            <span id="exportExcelSpinner"
+                                class="spinner-border spinner-border-sm ms-1"
+                                role="status"
+                                style="display:none;">
+                            </span>
+
+                        </button>
+
+                        <button type="button"
+                                id="btnPrintReport"
+                                class="btn btn-outline-secondary ms-2"
+                                style="display:none;">
+
+                            <span id="printReportText">
+                                Print
+                            </span>
+
+                            <span id="printReportSpinner"
+                                class="spinner-border spinner-border-sm ms-1"
+                                role="status"
+                                style="display:none;">
+                            </span>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         REPORT MESSAGE
+         ========================================================= -->
+
+    <div id="reportMessage"
+         class="alert"
+         style="display:none;">
+    </div>
+
+
+    <!-- =========================================================
+         REPORT SUMMARY
+         ========================================================= -->
+
+    <div id="reportSummary"
+         class="card mb-4"
+         style="display:none;">
+
+        <div class="card-header">
+            <strong>Summary</strong>
+        </div>
+
+        <div class="card-body">
+
+            <div id="reportSummaryItems"
+                 class="row g-3">
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         REPORT RESULT
+         ========================================================= -->
+
+    <div id="reportResult">
+
+        <div class="text-muted">
+            Enter the filters and click
+            <strong>Run Report</strong>.
+        </div>
+
+    </div>
+
+</div>
+
+
+@section Scripts
+{
+    <script>
+
+        window.reportDefinition = @Html.Raw(
+            System.Text.Json.JsonSerializer.Serialize(
+                Model.Definition
+            )
+        );
+
+    </script>
+
+    <script src="~/js/report.js"
+            asp-append-version="true"></script>
+}

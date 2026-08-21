@@ -675,18 +675,29 @@ $("#btnConfirmBooking").click(function () {
             visitType: $("input[name='bookVisitType']:checked").val(),
             appointmentDateTime: $("#bookAppointmentDateTime").val()
         },
-        function() {
+        function (response) {
+
+            if (!response.success) {
+                alert(response.message || "Appointment booking failed.");
+                return;
+            }
 
             bootstrap.Modal
                 .getInstance(
-                    document.getElementById(
-                        'bookingModal'
-                    )
+                    document.getElementById('bookingModal')
                 )
                 .hide();
 
+            // Open token print
+            window.open(
+                '/AppointmentBooking/PrintToken/?appointmentId=' +
+                response.appointmentId,
+                '_blank'
+            );
+
             loadSlots();
-        });
+        }
+    );
 });
 
 function clearBookingModal()

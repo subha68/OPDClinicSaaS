@@ -62,7 +62,7 @@ namespace DAL
             rowsAffected_doctor = cmd.ExecuteNonQuery();
 
             // Also update the associated User record's name fields
-            int rowsAffected_user   = 0;
+ /*           int rowsAffected_user   = 0;
 
             string query2 = @"UPDATE Users
                             SET FirstName = @FirstName,
@@ -82,9 +82,9 @@ namespace DAL
             cmd2.Parameters.AddWithValue("@Email", model.Email ?? "");
             cmd2.Parameters.AddWithValue("@Phone", model.Phone ?? "");
 
-            rowsAffected_user = cmd2.ExecuteNonQuery();
+            rowsAffected_user = cmd2.ExecuteNonQuery(); */
 
-            return rowsAffected_doctor > 0 && rowsAffected_user > 0;
+            return rowsAffected_doctor > 0 /*&& rowsAffected_user > 0 */;
         }
 
         public bool Delete(int id, int clinicId, SqlConnection conn, SqlTransaction tran)
@@ -156,7 +156,7 @@ namespace DAL
 
         public Doctor Get(int doctorId, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
-            string query = @"SELECT d.*, u.*, dept.Name AS DepartmentName, c.Name AS ClinicName
+            string query = @"SELECT d.*, d.UserId as DoctorUserId, u.*, dept.Name AS DepartmentName, c.Name AS ClinicName
                             FROM Doctors d
                             INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
                             INNER JOIN Clinics c ON d.ClinicId = c.ClinicId
@@ -179,7 +179,7 @@ namespace DAL
                 {
                     DoctorId = Convert.ToInt32(dr["DoctorId"]),
                     ClinicId = Convert.ToInt32(dr["ClinicId"]),
-                    UserId = Convert.ToInt32(dr["UserId"]),
+                    UserId = Convert.ToInt32(dr["DoctorUserId"]),
                     DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
                     Salutation = dr["Salutation"].ToString(),
                     FirstName = dr["FirstName"].ToString(),
@@ -202,7 +202,7 @@ namespace DAL
         {
             List<Doctor> list = new List<Doctor>();
 
-            string query = @"SELECT d.*, u.*, dept.Name AS DepartmentName, c.Name AS ClinicName
+            string query = @"SELECT d.*, d.UserId as DoctorUserId, u.*, dept.Name AS DepartmentName, c.Name AS ClinicName
                             FROM Doctors d
                             INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
                             INNER JOIN Clinics c ON d.ClinicId = c.ClinicId
@@ -225,7 +225,7 @@ namespace DAL
                 {
                     DoctorId = Convert.ToInt32(dr["DoctorId"]),
                     ClinicId = Convert.ToInt32(dr["ClinicId"]),
-                    UserId = Convert.ToInt32(dr["UserId"]),
+                    UserId = Convert.ToInt32(dr["DoctorUserId"]),
                     Salutation = dr["Salutation"].ToString(),
                     FirstName = dr["FirstName"].ToString(),
                     LastName = dr["LastName"].ToString(),
@@ -246,7 +246,7 @@ namespace DAL
         {
             List<Doctor> list = new List<Doctor>();
 
-            string query = @"SELECT d.*, u.*, dept.Name AS DepartmentName, c.Name AS ClinicName
+            string query = @"SELECT d.*, d.UserId as DoctorUserId, u.*, dept.Name AS DepartmentName, c.Name AS ClinicName
                             FROM Doctors d
                             INNER JOIN Departments dept ON d.DepartmentId = dept.DepartmentId
                             INNER JOIN Clinics c ON d.ClinicId = c.ClinicId

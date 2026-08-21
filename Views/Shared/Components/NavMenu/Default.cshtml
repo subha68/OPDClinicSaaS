@@ -1,49 +1,41 @@
 @model List<Models.MenuItem>
 
-@{
-    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
-}
-
 <ul class="sidebar-menu">
 
-@foreach (var item in Model)
-{
-    var isActive =
-        item.Controller == currentController
-            ? "active"
-            : "";
+    @foreach (var item in Model.OrderBy(x => x.DisplayOrder))
+    {
+        @await Html.PartialAsync("_MenuItem", item)
+    }
 
-    <li>
-        <a class="@isActive"
-           asp-controller="@item.Controller"
-           asp-action="@item.Action">
+    @if (User.Identity?.IsAuthenticated ?? false)
+    {
+        <li class="mt-4">
+            <a href="#"
+               class="nav-link"
+               data-bs-toggle="modal"
+               data-bs-target="#changePasswordModal">
 
-            <i class="fa @item.Icon"></i>
+                <i class="fa-solid fa-key"></i>
+                <span>Change Password</span>
 
-            <span>@item.Title</span>
+            </a>
+        </li>
 
-        </a>
-    </li>
-}
+        <li class="mt-4">
+            <form asp-controller="Account"
+                  asp-action="Logout"
+                  method="post">
 
-@if (User.Identity?.IsAuthenticated ?? true)
-{
-    <li class="mt-4">
-        <form asp-controller="Account"
-              asp-action="Logout"
-              method="post">
+                <button type="submit"
+                        class="sidebar-logout">
 
-            <button type="submit"
-                    class="sidebar-logout">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Logout</span>
 
-                <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
 
-                <span>Logout</span>
-
-            </button>
-
-        </form>
-    </li>
-}
+            </form>
+        </li>
+    }
 
 </ul>

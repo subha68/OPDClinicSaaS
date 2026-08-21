@@ -14,11 +14,17 @@ public class NavMenuViewComponent : ViewComponent
 
     public IViewComponentResult Invoke()
     {
-        var features = _context.HttpContext.Session.GetString("Features");
-        var roleId = _context.HttpContext.Session.GetString("RoleId");
-        Console.WriteLine($"Features for Role Id - {roleId} = {features}");
-
+        var httpContext = _context.HttpContext;
+        var features = httpContext.Session.GetString("Features");
         var menu = _menuService.GetMenu(features ?? "");
+        var currentController = httpContext.Request.RouteValues["controller"]?.ToString();
+        var currentAction = httpContext.Request.RouteValues["action"]?.ToString();
+        var currentReportCode = httpContext.Request.RouteValues["reportCode"]?.ToString();
+
+        foreach (var item in menu)
+        {
+            item.SetActiveState(currentController, currentAction, currentReportCode);
+        }
 
         return View(menu);
     }

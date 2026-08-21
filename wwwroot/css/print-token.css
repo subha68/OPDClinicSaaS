@@ -1,0 +1,191 @@
+@page {
+    size: 80mm auto;
+    margin: 0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    background: #f5f5f5;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #000;
+}
+
+.print-page {
+    width: 80mm;
+    margin: 0 auto;
+    background: #fff;
+}
+
+.token {
+    width: 80mm;
+    padding: 5mm;
+    background: #fff;
+}
+
+/* -------------------------
+   CLINIC
+------------------------- */
+
+.clinic-name {
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 1.2;
+    margin-bottom: 2mm;
+}
+
+.clinic-subtitle {
+    text-align: center;
+    font-size: 11px;
+    line-height: 1.2;
+}
+
+/* -------------------------
+   DIVIDER
+------------------------- */
+
+.divider {
+    border-top: 1px dashed #000;
+    margin: 3mm 0;
+}
+
+/* -------------------------
+   TOKEN NUMBER
+------------------------- */
+
+.token-label {
+    text-align: center;
+    font-size: 13px;
+    font-weight: bold;
+    margin-top: 1mm;
+}
+
+.token-number {
+    text-align: center;
+    font-size: 52px;
+    font-weight: 900;
+    line-height: 1;
+    margin: 2mm 0 3mm 0;
+}
+
+/* -------------------------
+   APPOINTMENT DETAILS
+------------------------- */
+
+.appointment-details {
+    width: 100%;
+    text-align: left;
+    font-size: 11px;
+}
+
+.detail-row {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 2mm;
+    line-height: 1.2;
+}
+
+.detail-row .label {
+    flex: 0 0 25mm;
+    font-weight: bold;
+}
+
+.detail-row > span:last-child {
+    flex: 1;
+}
+
+/* -------------------------
+   QUEUE NUMBER
+------------------------- */
+
+.queue-row {
+    margin-top: 2mm;
+}
+
+.queue-number {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* -------------------------
+   FOOTER
+------------------------- */
+
+.footer {
+    text-align: center;
+    font-size: 9px;
+    margin-top: 3mm;
+}
+
+/* -------------------------
+   SCREEN BUTTONS
+------------------------- */
+
+.print-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    background: #f5f5f5;
+}
+
+.print-controls button {
+    border: none;
+    border-radius: 4px;
+    padding: 8px 18px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.btn-print {
+    background: #198754;
+    color: white;
+}
+
+.btn-back {
+    background: #6c757d;
+    color: white;
+}
+
+.print-controls button:hover {
+    opacity: 0.9;
+}
+
+/* -------------------------
+   PRINT
+------------------------- */
+
+@media print {
+
+    html,
+    body {
+        width: 80mm;
+        margin: 0;
+        padding: 0;
+        background: #fff;
+    }
+
+    .print-page {
+        width: 80mm;
+        margin: 0;
+    }
+
+    .token {
+        width: 80mm;
+        padding: 5mm;
+    }
+
+    .print-controls {
+        display: none;
+    }
+
+    .token {
+        page-break-inside: avoid;
+    }
+}

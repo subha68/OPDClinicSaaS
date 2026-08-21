@@ -91,6 +91,7 @@ namespace BLL
 
                 var user = new User
                 {
+                    UserId = model.UserId,
                     Username = model.Username,
                     PasswordHash = model.Password,
                     RoleId = doctorRoleId,   // Doctor Role

@@ -1,0 +1,47 @@
+@model Models.MenuItem
+
+<li class="sidebar-menu-item @(Model.IsCurrent ? "current" : "")">
+
+    @if (Model.Children.Any())
+    {
+        <a href="#"
+           class="nav-link menu-parent">
+
+            @if (!string.IsNullOrWhiteSpace(Model.Icon))
+            {
+                <i class="fa @Model.Icon"></i>
+            }
+
+            <span>@Model.Title</span>
+
+            <i class="fa fa-chevron-right menu-arrow"></i>
+
+        </a>
+
+        <ul class="submenu">
+
+            @foreach (var child in Model.Children.OrderBy(x => x.DisplayOrder))
+            {
+                @await Html.PartialAsync("_MenuItem", child)
+            }
+
+        </ul>
+    }
+    else
+    {
+        <a class="nav-link @(Model.IsCurrent ? "active" : "")"
+           asp-controller="@Model.Controller"
+           asp-action="@Model.Action"
+           asp-route-reportCode="@Model.ReportCode">
+
+            @if (!string.IsNullOrWhiteSpace(Model.Icon))
+            {
+                <i class="fa @Model.Icon"></i>
+            }
+
+            <span>@Model.Title</span>
+
+        </a>
+    }
+
+</li>

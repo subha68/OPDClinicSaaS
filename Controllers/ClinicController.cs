@@ -101,5 +101,13 @@ namespace Controllers
             _clinic.Remove(id);
             return RedirectToAction("Index");
         }
+
+        // use - https://localhost:7036/Clinic/CloneDefaultTemplate
+        public IActionResult CloneDefaultTemplate()
+        {
+            _clinic.CloneDefaultTemplate();
+            return RedirectToAction("Login", "Account");
+        }
+
     }
 }

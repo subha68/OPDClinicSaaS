@@ -26,6 +26,8 @@ namespace DAL
                     ClinicId,
                     PatientId,
                     VisitId,
+                    TokenNumber,
+                    QueueNumber,
                     AppointmentDate,
                     SlotStartTime,
                     SlotEndTime,
@@ -37,6 +39,8 @@ namespace DAL
                     @ClinicId,
                     @PatientId,
                     @VisitId,
+                    @TokenNumber,
+                    @QueueNumber,
                     @AppointmentDate,
                     @SlotStartTime,
                     @SlotEndTime,
@@ -51,6 +55,8 @@ namespace DAL
                 cmd.Parameters.AddWithValue("@ClinicId", model.ClinicId);
                 cmd.Parameters.AddWithValue("@PatientId", model.PatientId);
                 cmd.Parameters.AddWithValue("@VisitId", model.VisitId);
+                cmd.Parameters.AddWithValue("@TokenNumber", model.TokenNumber);
+                cmd.Parameters.AddWithValue("@QueueNumber", model.QueueNumber);
                 cmd.Parameters.AddWithValue("@AppointmentDate", model.AppointmentDate);
                 cmd.Parameters.AddWithValue("@SlotStartTime", model.SlotStartTime);
                 cmd.Parameters.AddWithValue("@SlotEndTime", model.SlotEndTime);
@@ -172,6 +178,8 @@ namespace DAL
                     a.SlotStartTime,
                     a.SlotEndTime,
                     v.VisitId,
+                    a.TokenNumber,
+                    a.QueueNumber,
                     a.Status,
                     p.FirstName + ' ' + p.LastName as PatientName,
                     d.Salutation + ' ' + d.FirstName + ' ' + d.LastName as DoctorName,
@@ -241,6 +249,8 @@ namespace DAL
                         DoctorName = dr["DoctorName"].ToString(),
                         ClinicName = dr["ClinicName"].ToString(),
                         VisitId = Convert.ToInt32(dr["VisitId"]),
+                        TokenNumber = dr["TokenNumber"] == DBNull.Value ? 0 : Convert.ToInt32(dr["TokenNumber"]),
+                        QueueNumber = dr["QueueNumber"] == DBNull.Value ? 0 : Convert.ToInt32(dr["QueueNumber"]),
                         DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
                         DepartmentName = dr["DepartmentName"].ToString(),
                         DoctorId = Convert.ToInt32(dr["DoctorId"])
@@ -263,6 +273,8 @@ namespace DAL
                     a.SlotStartTime,
                     a.SlotEndTime,
                     v.VisitId,
+                    a.TokenNumber,
+                    a.QueueNumber,
                     a.Status,
                     p.FirstName + ' ' + p.LastName as PatientName,
                     d.Salutation + ' ' + d.FirstName + ' ' + d.LastName as DoctorName,
@@ -308,6 +320,8 @@ namespace DAL
                     DoctorName = dr["DoctorName"].ToString(),
                     ClinicName = dr["ClinicName"].ToString(),
                     VisitId = Convert.ToInt32(dr["VisitId"]),
+                    TokenNumber = dr["TokenNumber"] == DBNull.Value ? 0 : Convert.ToInt32(dr["TokenNumber"]),
+                    QueueNumber = dr["QueueNumber"] == DBNull.Value ? 0 : Convert.ToInt32(dr["QueueNumber"]),
                     DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
                     DepartmentName = dr["DepartmentName"].ToString()
                 });
@@ -327,6 +341,8 @@ namespace DAL
                     a.VisitId,
                     a.SlotStartTime,
                     a.SlotEndTime,
+                    a.TokenNumber,
+                    a.QueueNumber,
                     a.Status,
                     a.CancellationReason,
                     p.PatientId,
@@ -395,7 +411,8 @@ namespace DAL
                     AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
                     AppointmentDate = appointmentDate,
                     SlotTime = (TimeSpan)dr["SlotStartTime"],
-                    //SlotEndTime = (TimeSpan)dr["SlotEndTime"],
+                    TokenNumber = dr["TokenNumber"] == DBNull.Value ? 0 : Convert.ToInt32(dr["TokenNumber"]),
+                    QueueNumber = dr["QueueNumber"] == DBNull.Value ? 0 : Convert.ToInt32(dr["QueueNumber"]),
                     Status = dr["Status"].ToString(),
                     CancellationReason = dr["CancellationReason"].ToString(),
                     PatientId = Convert.ToInt32(dr["PatientId"]),
@@ -484,6 +501,42 @@ namespace DAL
             cmd.Parameters.AddWithValue("@AppointmentId", appointmentId);
 
             cmd.ExecuteNonQuery();
+        }
+
+        public int GetNextTokenNumber(int clinicId, DateTime appointmentDate, SqlConnection conn, SqlTransaction tran)
+        {
+            string query = @"
+                SELECT ISNULL(MAX(TokenNumber), 0) + 1
+                FROM Appointments WITH (UPDLOCK, HOLDLOCK)
+                WHERE ClinicId = @ClinicId
+                AND AppointmentDate >= @AppointmentDate
+                AND AppointmentDate < DATEADD(DAY, 1, @AppointmentDate);";
+
+            using var cmd = new SqlCommand(query, conn, tran);
+
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+            cmd.Parameters.AddWithValue("@AppointmentDate", appointmentDate.Date);
+
+            return Convert.ToInt32(cmd.ExecuteScalar());
+        }
+
+        public int GetNextQueueNumber(int clinicId, int doctorId, DateTime appointmentDate, SqlConnection conn, SqlTransaction tran)
+        {
+            string query = @"
+                SELECT ISNULL(MAX(QueueNumber), 0) + 1
+                FROM Appointments WITH (UPDLOCK, HOLDLOCK)
+                WHERE ClinicId = @ClinicId
+                AND DoctorId = @DoctorId
+                AND AppointmentDate >= @AppointmentDate
+                AND AppointmentDate < DATEADD(DAY, 1, @AppointmentDate);";
+
+            using var cmd = new SqlCommand(query, conn, tran);
+
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+            cmd.Parameters.AddWithValue("@DoctorId", doctorId);
+            cmd.Parameters.AddWithValue("@AppointmentDate", appointmentDate.Date);
+
+            return Convert.ToInt32(cmd.ExecuteScalar());
         }
         
     }

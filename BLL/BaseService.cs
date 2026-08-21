@@ -26,6 +26,7 @@ namespace BLL
 
         public int ClinicId => Convert.ToInt32(_session.ClinicId);
         public int UserId => Convert.ToInt32(_session.UserId);
+        public int RoleId => Convert.ToInt32(_session.RoleId);
         public string RoleName => _session.RoleName;
 
         public virtual int Add(T model, SqlConnection conn, SqlTransaction tran)
@@ -75,14 +76,14 @@ namespace BLL
             
         }
 
-        public virtual T Get(int id, SqlConnection conn)
+        public virtual T Get(int id, SqlConnection conn, SqlTransaction tran=null)
         {
-            return _dal.Get(id, ClinicId, conn);
+            return _dal.Get(id, ClinicId, conn, tran);
         }
 
-        public virtual List<T> List(SqlConnection conn)
+        public virtual List<T> List(SqlConnection conn, SqlTransaction tran=null)
         {
-            return _dal.GetAll(ClinicId, conn);
+            return _dal.GetAll(ClinicId, conn, tran);
         }
 
         public virtual int Create(T model)

@@ -32,6 +32,8 @@ namespace Models
         }
 
         public string Status { get; set; }  // Booked, In Consultation, Completed, Cancelled, No Show 
+        public int TokenNumber { get; set; }    // per clinic per day
+        public int QueueNumber { get; set; }    // per doctor per clinic per day
         public string? CancellationReason { get; set; }
         public string? ClinicName { get; set; }
         public string? PatientName { get; set; }

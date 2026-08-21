@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http.Features;
 using BLL;
 using DAL;
 using Helpers;
+using Filters;
 
 QuestPDF.Settings.License = LicenseType.Community;
 
@@ -23,7 +24,10 @@ builder.Services
     });
     
 // MVC
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add<FirstLoginFilter>();
+});
 
 // Session config (IMPORTANT)
 builder.Services.AddDistributedMemoryCache();
@@ -79,6 +83,13 @@ builder.Services.AddScoped<MedicineDAL>();
 builder.Services.AddScoped<MedicineService>();
 builder.Services.AddScoped<PrescriptionTemplateDAL>();
 builder.Services.AddScoped<PrescriptionTemplateService>();
+
+builder.Services.AddScoped<ReportDAL>();
+builder.Services.AddScoped<CollectionSummaryReportDAL>();
+builder.Services.AddScoped<ReportService>();
+builder.Services.AddScoped<ReportLookupRegistry>();
+
+
 
 var app = builder.Build();
 

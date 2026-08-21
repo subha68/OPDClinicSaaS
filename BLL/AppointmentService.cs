@@ -137,12 +137,12 @@ namespace BLL
 
         }
 
-
-        public int BookAppointment(AppointmentCreateVM vm)
+        public AppointmentBookingResult BookAppointment(AppointmentCreateVM vm)
         {
             using var conn = _db.GetConnection();
             conn.Open();
-            using var tran = conn.BeginTransaction();
+
+            using var tran = conn.BeginTransaction(System.Data.IsolationLevel.Serializable);
 
             try
             {
@@ -165,30 +165,40 @@ namespace BLL
                     vm.VisitId = visit.VisitId;
                 }
 
+                int tokenNumber = _appointmentDAL.GetNextTokenNumber(ClinicId, vm.AppointmentDate.Date, conn, tran);
+                int queueNumber = _appointmentDAL.GetNextQueueNumber(ClinicId, vm.DoctorId, vm.AppointmentDate.Date, conn, tran);
+
                 var appointment = new Appointment
                 {
                     DoctorId = vm.DoctorId,
                     ClinicId = ClinicId,
                     PatientId = vm.PatientId,
                     VisitId = vm.VisitId,
+
+                    TokenNumber = tokenNumber,
+                    QueueNumber = queueNumber,
+
                     AppointmentDate = vm.AppointmentDate,
                     SlotTime = TimeSpan.Parse(vm.SlotTime),
-                    //SlotEndTime = vm.Slot.Add(TimeSpan.FromMinutes(15)), 
                     Status = "Booked"
                 };
 
-                int appointmentId = _appointmentDAL.Add(appointment, conn, tran);
+                int appointmentId = _dal.Add(appointment, conn, tran);
 
                 tran.Commit();
 
-                return appointmentId;
+                return new AppointmentBookingResult
+                {
+                    AppointmentId = appointmentId,
+                    TokenNumber = tokenNumber,
+                    QueueNumber = queueNumber
+                };
             }
             catch
             {
                 tran.Rollback();
                 throw;
-            }            
+            }
         }
-
     }
 }
