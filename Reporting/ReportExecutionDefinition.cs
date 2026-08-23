@@ -7,7 +7,7 @@ namespace BLL
         public string MethodName { get; set; } = "";
         public Type FilterType { get; set; } = null!;
         public Type RowType { get; set; } = null!;
-        public string SummaryMethodName { get; set; } = "";
+        public string? SummaryMethodName { get; set; }
 
 
         public ReportExecutionDefinition(string reportCode, Type dalType, string methodName, string summaryMethodName, Type filterType, Type rowType)

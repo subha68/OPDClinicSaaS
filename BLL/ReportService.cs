@@ -13,12 +13,14 @@ namespace BLL
     public class ReportService : BaseService<Report>
     {
         private readonly ReportDAL _reportDAL;
+        private readonly ReportLookupDAL _reportLookupDAL;
         private readonly IConfiguration _config;
 
         public ReportService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
                                 : base(config, httpContextAccessor)
         {
             _reportDAL = new ReportDAL(config);
+            _reportLookupDAL = new ReportLookupDAL(config);
             _config = config;
         }
 
@@ -49,7 +51,9 @@ namespace BLL
             {
                 Report = report,
                 Columns = columns,
-                Filters = filters
+                Filters = filters,
+                CanExport = HasReportPermission(report.ReportId, ReportPermissionCodes.Export, conn),
+                CanPrint = HasReportPermission(report.ReportId, ReportPermissionCodes.Print, conn)
             };
         }
 
@@ -98,13 +102,15 @@ namespace BLL
                         value = reportFilter.DefaultValue;
                     }
 
+                    object? displayValue = GetFilterDisplayValue(reportFilter, value, conn);
+
                     reportResult.Filters.Add(new ReportResultFilterVM
-                                                    {
-                                                        FilterCode = reportFilter.FilterCode,
-                                                        FilterLabel = reportFilter.FilterLabel,
-                                                        Value = value
-                                                    });
-                }                               
+                    {
+                        FilterCode = reportFilter.FilterCode,
+                        FilterLabel = reportFilter.FilterLabel,
+                        Value = displayValue
+                    });
+                }
 
                 // Populate report summary
                 if (!string.IsNullOrWhiteSpace(executionDefinition.SummaryMethodName))
@@ -130,6 +136,48 @@ namespace BLL
             {
                 throw;
             }
+        }
+
+        private object? GetFilterDisplayValue(ReportFilter filter, object? value, SqlConnection conn)
+        {
+            if (value == null || value == DBNull.Value)
+            {
+                return null;
+            }
+
+            if (IsEmptyValue(value))
+            {
+                return null;
+            }
+
+            string controlType = (filter.ControlType ?? "")
+                                    .Trim()
+                                    .ToLowerInvariant();
+
+            if (controlType == "lookup" && !string.IsNullOrWhiteSpace(filter.LookupCode))
+            {
+                switch (filter.LookupCode.Trim().ToUpperInvariant())
+                {
+                    case "DOCTOR":
+                        if (int.TryParse(value.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int doctorId))
+                        {
+                            return _reportLookupDAL.GetDoctorName(ClinicId, doctorId, conn);
+                        }
+                        break;
+
+                    case "PATIENT":
+                        if (int.TryParse(value.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int patientId))
+                        {
+                            return _reportLookupDAL.GetDoctorName(ClinicId, patientId, conn);
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+
+            return value;
         }
 
         private object? InvokeReportMethod(Type dalType, string methodName, object dal, object filter, SqlConnection conn)
@@ -186,6 +234,13 @@ namespace BLL
                 return Activator.CreateInstance(targetType);
             }
 
+            // Empty form values should be treated as null.
+            // This is important for optional filters such as DoctorId.
+            if (value is string textStr && string.IsNullOrWhiteSpace(textStr))
+            {
+                return null;
+            }
+
             Type actualType = Nullable.GetUnderlyingType(targetType) ?? targetType;
 
             // Already the correct type
@@ -201,65 +256,42 @@ namespace BLL
 
             if (actualType == typeof(DateTime))
             {
-                return Convert.ToDateTime(value, CultureInfo.InvariantCulture);
+                return FormatDateTime(value);
             }
 
             if (actualType == typeof(DateOnly))
             {
-                if (value is DateOnly dateOnly)
-                {
-                    return dateOnly;
-                }
+                return FormatDate(value);
+            }
 
-                if (value is DateTime dateTime)
-                {
-                    return DateOnly.FromDateTime(dateTime);
-                }
-
-                string text = value.ToString() ?? "";
-
-                if (DateOnly.TryParseExact(text, "yyyy-MM-dd",
-                                            CultureInfo.InvariantCulture,
-                                            DateTimeStyles.None,
-                                            out DateOnly parsedDate))
-                {
-                    return parsedDate;
-                }
-
-                if (DateOnly.TryParseExact(text, "dd-MM-yyyy",
-                                            CultureInfo.InvariantCulture,
-                                            DateTimeStyles.None,
-                                            out parsedDate))
-                {
-                    return parsedDate;
-                }
-
-                throw new ArgumentException($"'{text}' is not a valid date.");
+            if (actualType == typeof(TimeSpan))
+            {
+                return FormatTime(value);
             }
 
             if (actualType == typeof(decimal))
             {
-                return Convert.ToDecimal(value, CultureInfo.InvariantCulture);
+                return FormatDecimal(value);
             }
 
             if (actualType == typeof(int))
             {
-                return Convert.ToInt32(value);
+                return FormatInteger(value);
             }
 
             if (actualType == typeof(long))
             {
-                return Convert.ToInt64(value);
+                return FormatLong(value);
             }
 
             if (actualType == typeof(short))
             {
-                return Convert.ToInt16(value);
+                return FormatShort(value);
             }
 
             if (actualType == typeof(bool))
             {
-                return Convert.ToBoolean(value);
+                return FormatBoolean(value);
             }
 
             if (actualType.IsEnum)
@@ -316,12 +348,6 @@ namespace BLL
                 }
 
                 object? convertedValue = ConvertValue(value, property.PropertyType);
-
-Console.WriteLine(
-    $"FILTER: {parameterName} | " +
-    $"RAW=[{value}] TYPE=[{value?.GetType().FullName}] | " +
-    $"CONVERTED=[{convertedValue}] TYPE=[{convertedValue?.GetType().FullName}] | " +
-    $"RULE=[{reportFilter.ValidationRule}]");
 
                 // Validate according to the rule configured
                 // in reporting.report_filter.
@@ -421,7 +447,7 @@ Console.WriteLine(
 
                     object? value = property.GetValue(row);
 
-                    outputRow[column.ColumnCode] = value;
+                    outputRow[column.ColumnCode] = FormatReportValue(value, column.DataType, column.FormatPattern);
                 }
 
                 reportResult.Rows.Add(outputRow);
@@ -444,6 +470,11 @@ Console.WriteLine(
             }
 
             string rule = filter.ValidationRule?.Trim().ToLowerInvariant() ?? "";
+
+            if (string.IsNullOrEmpty(rule))
+            {
+                return;
+            }
 
             switch (rule)
             {
@@ -678,7 +709,7 @@ Console.WriteLine(
             }
         }
 
-        public bool HasReportPermission(long reportId, string permissionCode)
+        public bool HasReportPermission(long reportId, string permissionCode, SqlConnection conn)
         {
             if (reportId <= 0)
             {
@@ -690,33 +721,69 @@ Console.WriteLine(
                 return false;
             }
 
-            using var conn = _db.GetConnection();
-            conn.Open();
-
-            // User-specific permission
-            if (_reportDAL.GetPermission(reportId, "user", UserId, permissionCode, conn) != null)
+            if (_reportDAL.GetPermission(
+                    reportId,
+                    "user",
+                    UserId,
+                    permissionCode,
+                    conn) != null)
+            {
                 return true;
+            }
 
-            // Role permission
-            if (_reportDAL.GetPermission(reportId, "role", RoleId, permissionCode, conn) != null)
+            if (_reportDAL.GetPermission(
+                    reportId,
+                    "role",
+                    RoleId,
+                    permissionCode,
+                    conn) != null)
+            {
                 return true;
+            }
 
             return false;
         }
 
+        public bool HasReportPermission(long reportId, string permissionCode)
+        {
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            return HasReportPermission(reportId, permissionCode, conn);
+        }        
+
+        public bool CanExport(long reportId, SqlConnection conn)
+        {
+            return HasReportPermission(reportId, ReportPermissionCodes.Export, conn);
+        }
+
         public bool CanExport(long reportId)
         {
-            return HasReportPermission(reportId, ReportPermissionCodes.Export);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            return CanExport(reportId, conn);
+        }
+
+        public bool CanPrint(long reportId, SqlConnection conn)
+        {
+            return HasReportPermission(reportId, ReportPermissionCodes.Print, conn);
         }
 
         public bool CanPrint(long reportId)
         {
-            return HasReportPermission(reportId, ReportPermissionCodes.Print);
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            return CanPrint(reportId, conn);
         }
 
         public void EnsureExportPermission(long reportId)
         {
-            if (!CanExport(reportId))
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            if (!CanExport(reportId, conn))
             {
                 throw new UnauthorizedAccessException("You do not have permission to export this report.");
             }
@@ -765,15 +832,9 @@ Console.WriteLine(
             {
                 var values = columns.Select(column =>
                 {
-                    object? value =
-                        GetRowValue(
-                            row,
-                            column.ColumnCode);
+                    object? value = GetRowValue(row, column.ColumnCode);
 
-                    return EscapeCsv(
-                        FormatExportValue(
-                            value,
-                            column));
+                    return EscapeCsv(FormatReportValue(value, column.DataType, column.FormatPattern));
                 });
 
                 csv.AppendLine(
@@ -843,67 +904,6 @@ Console.WriteLine(
             return null;
         }
 
-        private string FormatExportValue(object? value, ReportResultColumn column)
-        {
-            if (value == null ||
-                value == DBNull.Value)
-            {
-                return "";
-            }
-
-            string dataType =
-                (column.DataType ?? "")
-                    .ToLowerInvariant();
-
-            if (dataType == "date" ||
-                dataType == "datetime")
-            {
-                if (value is DateTime date)
-                {
-                    return dataType == "date"
-                        ? date.ToString("yyyy-MM-dd")
-                        : date.ToString("yyyy-MM-dd HH:mm:ss");
-                }
-
-                if (DateTime.TryParse(
-                        value.ToString(),
-                        out DateTime parsedDate))
-                {
-                    return dataType == "date"
-                        ? parsedDate.ToString("yyyy-MM-dd")
-                        : parsedDate.ToString("yyyy-MM-dd HH:mm:ss");
-                }
-            }
-
-            if (dataType == "decimal" ||
-                dataType == "number")
-            {
-                if (decimal.TryParse(
-                        value.ToString(),
-                        out decimal decimalValue))
-                {
-                    return decimalValue.ToString(
-                        CultureInfo.InvariantCulture);
-                }
-            }
-
-            if (dataType == "integer")
-            {
-                return Convert.ToString(
-                    value,
-                    CultureInfo.InvariantCulture) ?? "";
-            }
-
-            if (dataType == "boolean")
-            {
-                return Convert.ToBoolean(value)
-                    ? "Yes"
-                    : "No";
-            }
-
-            return value.ToString() ?? "";
-        }
-
         public byte[] ExportExcel(long reportId, string reportCode, Dictionary<string, object?> parameters)
         {
             // ============================================================
@@ -967,7 +967,7 @@ Console.WriteLine(
                 {
                     worksheet.Cell(currentRow, 1).Value = filter.FilterLabel;
                     worksheet.Cell(currentRow, 1).Style.Font.Bold = true;
-                    worksheet.Cell(currentRow, 2).Value = FormatFilterValue(filter.Value);
+                    worksheet.Cell(currentRow, 2).Value = FormatReportValue(filter.Value);
 
                     currentRow++;
                 }
@@ -1092,34 +1092,39 @@ Console.WriteLine(
             return stream.ToArray();
         }
 
-        private string FormatFilterValue(object? value)
+        private string FormatReportValue(object? value, string? dataType = null, string? formatPattern = null)
         {
             if (value == null || value == DBNull.Value)
             {
                 return "";
             }
 
-            if (value is DateOnly dateOnly)
-            {
-                return dateOnly.ToString("dd-MMM-yyyy", CultureInfo.InvariantCulture);
-            }
+            string type = NormalizeDataType(dataType);
 
-            if (value is DateTime dateTime)
+            switch (type)
             {
-                return dateTime.ToString("dd-MMM-yyyy HH:mm", CultureInfo.InvariantCulture);
-            }
+                case "date":
+                    return FormatDate(value).ToString(formatPattern ?? "dd-MM-yyyy", CultureInfo.InvariantCulture);
 
-            if (value is bool boolean)
-            {
-                return boolean ? "Yes" : "No";
-            }
+                case "datetime":
+                    return FormatDateTime(value).ToString(formatPattern ?? "dd-MM-yyyy HH:mm", CultureInfo.InvariantCulture);
 
-            if (value is IEnumerable<string> stringValues)
-            {
-                return string.Join(", ", stringValues);
-            }
+                case "time":
+                    return FormatTime(value).ToString(formatPattern ?? @"hh\:mm", CultureInfo.InvariantCulture);
 
-            return value.ToString() ?? "";
+                case "decimal":
+                case "number":
+                    return FormatDecimal(value).ToString(CultureInfo.InvariantCulture);
+
+                case "integer":
+                    return FormatInteger(value).ToString(CultureInfo.InvariantCulture);
+
+                case "boolean":
+                    return FormatBoolean(value) ? "Yes" : "No";
+
+                default:
+                    return FormatGeneralValue(value, formatPattern);
+            }
         }
 
         private void SetExcelCellValue(IXLCell cell, object? value, ReportResultColumn column)
@@ -1130,79 +1135,55 @@ Console.WriteLine(
                 return;
             }
 
-            string dataType = (column.DataType ?? "")
-                                .Trim()
-                                .ToLowerInvariant();
+            string type = NormalizeDataType(column.DataType);
 
-            switch (dataType)
+            switch (type)
             {
                 case "date":
-                    if (value is DateOnly dateOnly)
-                    {
-                        cell.Value = dateOnly.ToDateTime(TimeOnly.MinValue);
-                        cell.Style.DateFormat.Format = "dd-MMM-yyyy";
-                        return;
-                    }
-
-                    if (value is DateTime date)
-                    {
-                        cell.Value = date;
-                        cell.Style.DateFormat.Format = "dd-MMM-yyyy";
-                        return;
-                    }
-
-                    break;
+                    cell.Value = FormatDate(value).ToDateTime(TimeOnly.MinValue);
+                    cell.Style.DateFormat.Format = string.IsNullOrWhiteSpace(column.FormatPattern)
+                                                                            ? "dd-MMM-yyyy"
+                                                                            : column.FormatPattern;
+                    return;
 
                 case "datetime":
-                    if (value is DateTime dateTime)
-                    {
-                        cell.Value = dateTime;
-                        cell.Style.DateFormat.Format = "dd-MMM-yyyy HH:mm:ss";
-                        return;
-                    }
+                    cell.Value = FormatDateTime(value);
+                    cell.Style.DateFormat.Format = string.IsNullOrWhiteSpace(column.FormatPattern)
+                                                                            ? "dd-MMM-yyyy HH:mm"
+                                                                            : column.FormatPattern;
+                    return;
 
-                    break;
+                case "time":
+                    cell.Value = FormatTime(value).TotalDays;
+                    cell.Style.NumberFormat.Format = string.IsNullOrWhiteSpace(column.FormatPattern)
+                                                                                ? "HH:mm"
+                                                                                : column.FormatPattern;
+                    return;
 
                 case "decimal":
                 case "number":
-                    if (decimal.TryParse(value.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, 
-                                        out decimal decimalValue))
-                    {
-                        cell.Value = decimalValue;
-                        cell.Style.NumberFormat.Format = "#,##0.00";
-                        return;
-                    }
-
-                    break;
+                    cell.Value = FormatDecimal(value);
+                    cell.Style.NumberFormat.Format = string.IsNullOrWhiteSpace(column.FormatPattern)
+                                                                                ? "#,##0.00"
+                                                                                : column.FormatPattern;                    
+                    return;
 
                 case "integer":
-                    if (long.TryParse(value.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture,
-                                    out long integerValue))
-                    {
-                        cell.Value = integerValue;
-                        cell.Style.NumberFormat.Format = "#,##0";
-                        return;
-                    }
-
-                    break;
+                    cell.Value = FormatInteger(value);
+                    cell.Style.NumberFormat.Format = string.IsNullOrWhiteSpace(column.FormatPattern)
+                                                                                ? "#,##0"
+                                                                                : column.FormatPattern;
+                    return;
 
                 case "boolean":
-                    if (value is bool boolean)
-                    {
-                        cell.Value = boolean ? "Yes" : "No";
-                        return;
-                    }
+                    cell.Value = FormatBoolean(value) ? "Yes" : "No";
+                    return;
 
-                    break;
-            }
-
-            // Fallback.
-            cell.Value = value.ToString() ?? "";
-
-            if (!string.IsNullOrWhiteSpace(column.FormatPattern))
-            {
-                cell.Style.NumberFormat.Format = column.FormatPattern;
+                default:
+                    cell.Value = FormatGeneralValue(value, column.FormatPattern);
+                    return;
             }
         }
+
     }
 }

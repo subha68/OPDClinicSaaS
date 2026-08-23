@@ -16,7 +16,9 @@
     var hasDateRange = dateFilters.Count >= 2;
 }
 
-<div class="container-fluid">
+@section Styles {
+    <link rel="stylesheet" href="~/css/report-print.css" asp-append-version="true" />
+}
 
     <!-- =========================================================
          REPORT HEADER
@@ -125,6 +127,23 @@
                                            class="form-check-input" />
 
                                 </div>
+
+                                <div class="invalid-feedback report-filter-error"></div>
+                            }
+                            else if (filter.ControlType.Equals(
+                                        "lookup",
+                                        StringComparison.OrdinalIgnoreCase))
+                            {
+                                <input type="text"
+                                    id="@inputId"
+                                    class="form-control report-lookup-input"
+                                    autocomplete="off"
+                                    value="" />
+
+                                <input type="hidden"
+                                    id="@(inputId)_value"
+                                    name="@filter.ParameterName"
+                                    value="" />
 
                                 <div class="invalid-feedback report-filter-error"></div>
                             }
@@ -394,14 +413,18 @@
 
 @section Scripts
 {
-    <script>
+    @using System.Text.Json
 
+    <script>
         window.reportDefinition = @Html.Raw(
-            System.Text.Json.JsonSerializer.Serialize(
-                Model.Definition
+            JsonSerializer.Serialize(
+                Model.Definition,
+                new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                }
             )
         );
-
     </script>
 
     <script src="~/js/report.js"

@@ -46,6 +46,13 @@ namespace Controllers
                     continue;
                 }
 
+                // Lookup controls such as autocomplete are loaded
+                // dynamically through JavaScript.
+                if (filter.ControlType.Equals("lookup", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+    
                 if (model.Lookups.ContainsKey(filter.LookupCode))
                 {
                     continue;
@@ -221,6 +228,31 @@ namespace Controllers
                     new
                     {
                         message = "Unable to determine report print permissions."
+                    });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult SearchLookup(string lookupCode, string? term)
+        {
+            try
+            {
+                var results = _lookupRegistry.Search(lookupCode, _report.ClinicId, term);
+                return Json(results);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new
+                    {
+                        message = "Unable to search lookup."
                     });
             }
         }

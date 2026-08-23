@@ -195,3 +195,38 @@ function wireTemplateAutocomplete(selector, appendToSelector) {
     );
 }
 
+function wireReportLookupAutocomplete(selector,
+                                        lookupCode,
+                                        onSelected,
+                                        appendToSelector)
+{
+    wireAutocomplete(
+
+        selector,
+
+        '/Report/SearchLookup?lookupCode=' +
+            encodeURIComponent(lookupCode),
+
+        function (item) {
+
+            return {
+                label: item.text,
+                value: item.text,
+                id: item.value
+            };
+        },
+
+        onSelected,
+
+        appendToSelector,
+
+        function () {
+
+            $(selector + "_value").val("");
+
+            clearResult();
+            hideMessage();
+        }
+    );
+}
+

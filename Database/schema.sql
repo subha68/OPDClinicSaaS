@@ -60,11 +60,11 @@ CREATE TABLE Departments (
 -- Doctors
 CREATE TABLE Doctors (
     DoctorId INT IDENTITY PRIMARY KEY,
-    ClinicId INT,
-    DepartmentId INT,
-    Salutation NVARCHAR(15),
-    FirstName NVARCHAR(100),
-    LastName NVARCHAR(100),
+    ClinicId INT NOT NULL,
+    DepartmentId INT NOT NULL,
+    Salutation NVARCHAR(15) NOT NULL,
+    FirstName NVARCHAR(100) NOT NULL,
+    LastName NVARCHAR(100) NOT NULL,
     RegistrationNo NVARCHAR(100),
     Qualification NVARCHAR(200),
     UserId INT NULL
@@ -164,7 +164,8 @@ CREATE TABLE Patients (
     IdNumber NVARCHAR(15),
     EmergencyContactName NVARCHAR(50),
     EmergencyRelationship NVARCHAR(50),
-    EmergencyPhone NVARCHAR(50),    
+    EmergencyPhone NVARCHAR(50),
+    CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
 
     UNIQUE (FirstName, LastName, Phone, DOB),
 

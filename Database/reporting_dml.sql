@@ -33,7 +33,7 @@ values
 insert into reporting.report_column
 (report_column_id, report_id, column_code, display_label, data_type, display_order, is_visible, format_pattern)
 values
-(100101, 1001, 'appointment_time', 'Time', 'datetime', 1, 1, 'HH:mm'),
+(100101, 1001, 'appointment_time', 'Time', 'time', 1, 1, null),
 (100102, 1001, 'patient_name', 'Patient', 'string', 2, 1, null),
 (100103, 1001, 'patient_number', 'Patient No.', 'string', 3, 1, null),
 (100104, 1001, 'doctor_name', 'Doctor', 'string', 4, 1, null),
@@ -62,7 +62,7 @@ values
 insert into reporting.report_column
 (report_column_id, report_id, column_code, display_label, data_type, display_order, is_visible, format_pattern)
 values
-(100301, 1003, 'registration_date', 'Date', 'date', 1, 1, 'yyyy-mm-dd'),
+(100301, 1003, 'registration_date', 'Date', 'date', 1, 1, null),
 (100302, 1003, 'registration_count', 'New Patients', 'integer', 2, 1, '#,##0');
 
 
@@ -73,7 +73,7 @@ values
 insert into reporting.report_column
 (report_column_id, report_id, column_code, display_label, data_type, display_order, is_visible, format_pattern)
 values
-(100401, 1004, 'collection_date',   'Date',         'date',    1, 1, 'yyyy-mm-dd'),
+(100401, 1004, 'collection_date',   'Date',         'date',    1, 1, null),
 (100402, 1004, 'payment_mode',      'Payment Mode', 'string',  2, 1, null),
 (100403, 1004, 'transaction_count', 'Transactions', 'integer', 3, 1, '#,##0'),
 (100404, 1004, 'collection_amount', 'Amount',        'decimal', 4, 1, '#,##0.00'),
@@ -91,7 +91,7 @@ values
 (100501, 1005, 'patient_number', 'Patient No.', 'string', 1, 1, null),
 (100502, 1005, 'patient_name', 'Patient', 'string', 2, 1, null),
 (100503, 1005, 'invoice_number', 'Invoice No.', 'string', 3, 1, null),
-(100504, 1005, 'invoice_date', 'Invoice Date', 'date', 4, 1, 'yyyy-mm-dd'),
+(100504, 1005, 'invoice_date', 'Invoice Date', 'date', 4, 1, null),
 (100505, 1005, 'invoice_amount', 'Invoice Amount', 'decimal', 5, 1, '#,##0.00'),
 (100506, 1005, 'paid_amount', 'Paid Amount', 'decimal', 6, 1, '#,##0.00'),
 (100507, 1005, 'outstanding_amount', 'Outstanding', 'decimal', 7, 1, '#,##0.00');
@@ -104,8 +104,8 @@ values
 insert into reporting.report_column
 (report_column_id, report_id, column_code, display_label, data_type, display_order, is_visible, format_pattern)
 values
-(100601, 1006, 'appointment_date', 'Date', 'date', 1, 1, 'yyyy-mm-dd'),
-(100602, 1006, 'appointment_time', 'Time', 'datetime', 2, 1, 'HH:mm'),
+(100601, 1006, 'appointment_date', 'Date', 'date', 1, 1, null),
+(100602, 1006, 'appointment_time', 'Time', 'time', 2, 1, null),
 (100603, 1006, 'patient_name', 'Patient', 'string', 3, 1, null),
 (100604, 1006, 'doctor_name', 'Doctor', 'string', 4, 1, null),
 (100605, 1006, 'appointment_status', 'Status', 'string', 5, 1, null),
@@ -133,7 +133,7 @@ values
 insert into reporting.report_column
 (report_column_id, report_id, column_code, display_label, data_type, display_order, is_visible, format_pattern)
 values
-(100801, 1008, 'visit_date', 'Visit Date', 'date', 1, 1, 'yyyy-mm-dd'),
+(100801, 1008, 'visit_date', 'Visit Date', 'date', 1, 1, null),
 (100802, 1008, 'doctor_name', 'Doctor', 'string', 2, 1, null),
 (100803, 1008, 'visit_type', 'Visit Type', 'string', 3, 1, null),
 (100804, 1008, 'diagnosis', 'Diagnosis', 'string', 4, 1, null),
@@ -153,7 +153,7 @@ insert into reporting.report_filter
 (report_filter_id, report_id, filter_code, filter_label, parameter_name, data_type, control_type, lookup_code, default_value, is_required, display_order, validation_rule, validation_value)
 values
 (100101, 1001, 'appointment_date', 'Appointment Date', 'appointment_date', 'date', 'date', null, null, 1, 1, 'date', NULL),
-(100102, 1001, 'doctor_id', 'Doctor', 'doctor_id', 'integer', 'lookup', null, null, 0, 2, NULL, NULL);
+(100102, 1001, 'doctor_id', 'Doctor', 'doctor_id', 'integer', 'lookup', 'DOCTOR', null, 0, 2, NULL, NULL);
 
 
 /* ------------------------------------------------------------
@@ -165,7 +165,7 @@ insert into reporting.report_filter
 values
 (100201, 1002, 'date_from', 'From Date', 'date_from', 'date', 'date', null, null, 1, 1, 'date_before_or_equal', 'date_to'),
 (100202, 1002, 'date_to', 'To Date', 'date_to', 'date', 'date', null, null, 1, 2, 'date', null),
-(100203, 1002, 'doctor_id', 'Doctor', 'doctor_id', 'integer', 'lookup', null, null, 0, 3, null, null);
+(100203, 1002, 'doctor_id', 'Doctor', 'doctor_id', 'integer', 'lookup', 'DOCTOR', null, 0, 3, null, null);
 
 
 /* ------------------------------------------------------------
@@ -199,7 +199,7 @@ insert into reporting.report_filter
 (report_filter_id, report_id, filter_code, filter_label, parameter_name, data_type, control_type, lookup_code, default_value, is_required, display_order, validation_rule, validation_value)
 values
 (100501, 1005, 'as_of_date', 'As of Date', 'as_of_date', 'date', 'date', null, null, 1, 1, 'date', null),
-(100502, 1005, 'patient_id', 'Patient', 'patient_id', 'integer', 'lookup', null, null, 0, 2, null, null);
+(100502, 1005, 'patient_id', 'Patient', 'patient_id', 'integer', 'lookup', 'PATIENT', null, 0, 2, null, null);
 
 
 /* ------------------------------------------------------------
@@ -211,8 +211,8 @@ insert into reporting.report_filter
 values
 (100601, 1006, 'date_from', 'From Date', 'date_from', 'date', 'date', null, null, 1, 1, 'date_before_or_equal', 'date_to'),
 (100602, 1006, 'date_to', 'To Date', 'date_to', 'date', 'date', null, null, 1, 2, 'date', null),
-(100603, 1006, 'doctor_id', 'Doctor', 'doctor_id', 'integer', 'lookup', null, null, 0, 3, null, null),
-(100604, 1006, 'appointment_status', 'Status', 'appointment_status', 'string', 'select', 'APPOINTMENT_STATUS', null, 0, 4, null, null);
+(100603, 1006, 'doctor_id', 'Doctor', 'doctor_id', 'integer', 'lookup', 'DOCTOR', null, 0, 3, null, null),
+(100604, 1006, 'appointment_status', 'Status', 'appointment_status', 'string', 'select', 'CANCEL_NOSHOW_APPOINTMENT_STATUS', null, 0, 4, null, null);
 
 
 /* ------------------------------------------------------------
@@ -224,7 +224,7 @@ insert into reporting.report_filter
 values
 (100701, 1007, 'date_from', 'From Date', 'date_from', 'date', 'date', null, null, 1, 1, 'date_before_or_equal', 'date_to'),
 (100702, 1007, 'date_to', 'To Date', 'date_to', 'date', 'date', null, null, 1, 2, 'date', null),
-(100703, 1007, 'doctor_id', 'Doctor', 'doctor_id', 'integer', 'lookup', null, null, 0, 3, null, null);
+(100703, 1007, 'doctor_id', 'Doctor', 'doctor_id', 'integer', 'lookup', 'DOCTOR', null, 0, 3, null, null);
 
 
 /* ------------------------------------------------------------
@@ -234,27 +234,141 @@ values
 insert into reporting.report_filter
 (report_filter_id, report_id, filter_code, filter_label, parameter_name, data_type, control_type, lookup_code, default_value, is_required, display_order, validation_rule, validation_value)
 values
-(100801, 1008, 'patient_id', 'Patient', 'patient_id', 'integer', 'lookup', null, null, 1, 1, null, null),
+(100801, 1008, 'patient_id', 'Patient', 'patient_id', 'integer', 'lookup', 'PATIENT', null, 1, 1, null, null),
 (100802, 1008, 'date_from', 'From Date', 'date_from', 'date', 'date', null, null, 0, 2, 'date_before_or_equal', 'date_to'),
 (100803, 1008, 'date_to', 'To Date', 'date_to', 'date', 'date', null, null, 0, 3, 'date', null);
 
 
 /* ============================================================
-   4. BASIC PERMISSIONS
+   REPORT PERMISSIONS
    ============================================================ */
 
-insert into reporting.report_permission
+
+/* ============================================================
+   CLINIC ADMIN (RoleId = 2)
+   All 8 reports
+   ============================================================ */
+
+INSERT INTO reporting.report_permission
 (report_permission_id, report_id, principal_type, principal_id, permission_code)
-values
-(1001001, 1001, 'role', 1, 'view'),
-(1001002, 1002, 'role', 1, 'view'),
-(1001003, 1003, 'role', 1, 'view'),
-(1001004, 1004, 'role', 5, 'export'),
-(1001005, 1004, 'role', 5, 'print'),
-(1001006, 1005, 'role', 1, 'view'),
-(1001007, 1006, 'role', 1, 'view'),
-(1001008, 1007, 'role', 1, 'view'),
-(1001009, 1008, 'role', 1, 'view');
+VALUES
+(1001, 1001, 'role', 2, 'export'),
+(1002, 1001, 'role', 2, 'print'),
+
+(1003, 1002, 'role', 2, 'export'),
+(1004, 1002, 'role', 2, 'print'),
+
+(1005, 1003, 'role', 2, 'export'),
+(1006, 1003, 'role', 2, 'print'),
+
+(1007, 1004, 'role', 2, 'export'),
+(1008, 1004, 'role', 2, 'print'),
+
+(1009, 1005, 'role', 2, 'export'),
+(1010, 1005, 'role', 2, 'print'),
+
+(1011, 1006, 'role', 2, 'export'),
+(1012, 1006, 'role', 2, 'print'),
+
+(1013, 1007, 'role', 2, 'export'),
+(1014, 1007, 'role', 2, 'print'),
+
+(1015, 1008, 'role', 2, 'export'),
+(1016, 1008, 'role', 2, 'print');
+
+
+/* ============================================================
+   CLINIC USER (RoleId = 3)
+   Reports:
+   1001, 1002, 1003, 1006, 1008
+   ============================================================ */
+
+INSERT INTO reporting.report_permission
+(report_permission_id, report_id, principal_type, principal_id, permission_code)
+VALUES
+(1017, 1001, 'role', 3, 'export'),
+(1018, 1001, 'role', 3, 'print'),
+
+(1019, 1002, 'role', 3, 'export'),
+(1020, 1002, 'role', 3, 'print'),
+
+(1021, 1003, 'role', 3, 'export'),
+(1022, 1003, 'role', 3, 'print'),
+
+(1023, 1006, 'role', 3, 'export'),
+(1024, 1006, 'role', 3, 'print'),
+
+(1025, 1008, 'role', 3, 'export'),
+(1026, 1008, 'role', 3, 'print');
+
+
+/* ============================================================
+   DOCTOR (RoleId = 4)
+   Reports:
+   1001, 1002, 1006, 1007, 1008
+   ============================================================ */
+
+INSERT INTO reporting.report_permission
+(report_permission_id, report_id, principal_type, principal_id, permission_code)
+VALUES
+(1027, 1001, 'role', 4, 'export'),
+(1028, 1001, 'role', 4, 'print'),
+
+(1029, 1002, 'role', 4, 'export'),
+(1030, 1002, 'role', 4, 'print'),
+
+(1031, 1006, 'role', 4, 'export'),
+(1032, 1006, 'role', 4, 'print'),
+
+(1033, 1007, 'role', 4, 'export'),
+(1034, 1007, 'role', 4, 'print'),
+
+(1035, 1008, 'role', 4, 'export'),
+(1036, 1008, 'role', 4, 'print');
+
+
+/* ============================================================
+   BILLING USER (RoleId = 5)
+   Reports:
+   1004, 1005, 1007
+   ============================================================ */
+
+INSERT INTO reporting.report_permission
+(report_permission_id, report_id, principal_type, principal_id, permission_code)
+VALUES
+(1037, 1004, 'role', 5, 'export'),
+(1038, 1004, 'role', 5, 'print'),
+
+(1039, 1005, 'role', 5, 'export'),
+(1040, 1005, 'role', 5, 'print'),
+
+(1041, 1007, 'role', 5, 'export'),
+(1042, 1007, 'role', 5, 'print');
+
+
+/* ============================================================
+   NURSE (RoleId = 7)
+   Reports:
+   1001, 1002, 1003, 1006, 1008
+   ============================================================ */
+
+INSERT INTO reporting.report_permission
+(report_permission_id, report_id, principal_type, principal_id, permission_code)
+VALUES
+(1043, 1001, 'role', 7, 'export'),
+(1044, 1001, 'role', 7, 'print'),
+
+(1045, 1002, 'role', 7, 'export'),
+(1046, 1002, 'role', 7, 'print'),
+
+(1047, 1003, 'role', 7, 'export'),
+(1048, 1003, 'role', 7, 'print'),
+
+(1049, 1006, 'role', 7, 'export'),
+(1050, 1006, 'role', 7, 'print'),
+
+(1051, 1008, 'role', 7, 'export'),
+(1052, 1008, 'role', 7, 'print');
 
 
 -- ============================================================

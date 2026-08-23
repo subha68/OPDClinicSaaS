@@ -13,14 +13,23 @@ namespace BLL
                             {
                                 ["PAYMENT_MODE"] = new ReportLookupDefinition("PAYMENT_MODE", 
                                                                                 typeof(ReportLookupDAL), 
-                                                                                "GetPaymentModes")
-                            };
+                                                                                "GetPaymentModes"),
+                                ["DOCTOR"] = new ReportLookupDefinition("DOCTOR",
+                                                                            typeof(ReportLookupDAL),
+                                                                            "SearchDoctors"),
+                                ["PATIENT"] = new ReportLookupDefinition("PATIENT",
+                                                                            typeof(ReportLookupDAL),
+                                                                            "SearchPatients"),
+                                ["CANCEL_NOSHOW_APPOINTMENT_STATUS"] = new ReportLookupDefinition("CANCEL_NOSHOW_APPOINTMENT_STATUS",
+                                                                            typeof(ReportLookupDAL),
+                                                                            "GetCancelledNoshowAppointmentStatus"),                            };
 
         public ReportLookupRegistry(IConfiguration config)
         {
             _config = config;
         }
 
+        // This is for dropdowns
         public List<ReportLookupItem> Get(string lookupCode, int clinicId)
         {
             if (string.IsNullOrWhiteSpace(lookupCode))
@@ -60,6 +69,55 @@ namespace BLL
 
             return result as List<ReportLookupItem>
                    ?? throw new InvalidOperationException($"Lookup '{lookupCode}' returned " + $"an invalid result.");
+        }
+
+        // These are for autocomplete
+        public List<ReportLookupItem> Search(string lookupCode, int clinicId, string? searchText)
+        {
+            if (string.IsNullOrWhiteSpace(lookupCode))
+            {
+                return new List<ReportLookupItem>();
+            }
+
+            if (string.IsNullOrWhiteSpace(searchText))
+            {
+                return new List<ReportLookupItem>();
+            }
+
+            if (!_lookups.TryGetValue(lookupCode, out ReportLookupDefinition? definition))
+            {
+                throw new InvalidOperationException($"Lookup '{lookupCode}' is not registered.");
+            }
+
+            object dal = Activator.CreateInstance(definition.DALType, _config)!
+                                        ?? throw new InvalidOperationException(
+                                            $"Unable to create lookup DAL " + $"'{definition.DALType.Name}'.");
+
+            var method = definition.DALType.GetMethod(definition.MethodName);
+
+            if (method == null)
+            {
+                throw new InvalidOperationException($"Lookup method '{definition.MethodName}' " +
+                                                    $"was not found on " + $"'{definition.DALType.Name}'.");
+            }
+
+            using var conn = new DbHelper(_config).GetConnection();
+
+            conn.Open();
+
+            object? result = method.Invoke(
+                    dal,
+                    new object?[]
+                    {
+                        clinicId,
+                        searchText.Trim(), 
+                        conn,
+                        null
+                    });
+
+            return result as List<ReportLookupItem>
+                ?? throw new InvalidOperationException(
+                    $"Lookup '{lookupCode}' returned " + $"an invalid result.");
         }
     }
 }

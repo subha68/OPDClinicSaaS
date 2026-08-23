@@ -85,11 +85,9 @@ builder.Services.AddScoped<PrescriptionTemplateDAL>();
 builder.Services.AddScoped<PrescriptionTemplateService>();
 
 builder.Services.AddScoped<ReportDAL>();
-builder.Services.AddScoped<CollectionSummaryReportDAL>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<ReportLookupRegistry>();
-
-
+builder.Services.AddScoped<ReportSpecificDAL>();
 
 var app = builder.Build();
 

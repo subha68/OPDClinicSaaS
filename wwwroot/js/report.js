@@ -79,6 +79,8 @@
 
         }
 
+        wireReportLookups();
+
     });
 
     // ============================================================
@@ -517,13 +519,7 @@
                             column.columnCode
                         );
 
-
-                    td.textContent =
-                        formatReportValue(
-                            value,
-                            column
-                        );
-
+                    td.textContent = value ?? ""; 
 
                     if (isNumericColumn(column)) {
 
@@ -584,136 +580,7 @@
 
             });
 
-        return key
-            ? row[key]
-            : null;
-    }
-
-    function formatReportValue(value, column) {
-
-        if (value === null || value === undefined) {
-
-            return "";
-        }
-
-
-        const dataType =
-            (column.dataType || "").toLowerCase();
-
-        const formatPattern =
-            column.formatPattern || "";
-
-
-        // ========================================================
-        // DATE / DATETIME
-        // ========================================================
-
-        if (dataType === "date" ||
-            dataType === "datetime") {
-
-            const date =
-                new Date(value);
-
-            if (isNaN(date.getTime())) {
-
-                return String(value);
-
-            }
-
-
-            // yyyy-mm-dd
-            if (formatPattern.toLowerCase() === "yyyy-mm-dd") {
-
-                return date.getFullYear() +
-                    "-" +
-                    String(date.getMonth() + 1)
-                        .padStart(2, "0") +
-                    "-" +
-                    String(date.getDate())
-                        .padStart(2, "0");
-            }
-
-
-            // No explicit pattern
-            if (!formatPattern) {
-
-                return dataType === "date"
-                    ? date.toLocaleDateString()
-                    : date.toLocaleString();
-
-            }
-
-
-            return date.toLocaleString();
-        }
-
-
-        // ========================================================
-        // DECIMAL / INTEGER
-        // ========================================================
-
-        if (dataType === "decimal" ||
-            dataType === "integer" ||
-            dataType === "number") {
-
-            const number =
-                Number(value);
-
-            if (isNaN(number)) {
-
-                return String(value);
-
-            }
-
-
-            // #,##0.00
-            if (formatPattern === "#,##0.00") {
-
-                return number.toLocaleString(
-                    undefined,
-                    {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    }
-                );
-            }
-
-
-            // #,##0
-            if (formatPattern === "#,##0") {
-
-                return number.toLocaleString(
-                    undefined,
-                    {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0
-                    }
-                );
-            }
-
-
-            // No explicit pattern
-            return number.toLocaleString();
-        }
-
-
-        // ========================================================
-        // BOOLEAN
-        // ========================================================
-
-        if (dataType === "boolean") {
-
-            return value
-                ? "Yes"
-                : "No";
-        }
-
-
-        // ========================================================
-        // DEFAULT / STRING
-        // ========================================================
-
-        return String(value);
+        return key ? row[key] : null;
     }
 
     // ============================================================
@@ -1111,28 +978,23 @@
 
     function showExportButtons() {
 
-        const button = document.getElementById("btnExportCsv");
+        const canExport = window.reportDefinition?.canExport === true;
+        const canPrint = window.reportDefinition?.canPrint === true;
 
-        if (button) {
-
-            button.style.display = "inline-block";
-
-        }
-
+        const exportCsvButton = document.getElementById("btnExportCsv");
         const exportExcelButton = document.getElementById("btnExportExcel");
-
-        if (exportExcelButton) {
-
-            exportExcelButton.style.display = "inline-block";
-
-        }
-
         const printButton = document.getElementById("btnPrintReport");
 
+        if (exportCsvButton) {
+            exportCsvButton.style.display = canExport ? "inline-block" : "none";
+        }
+
+        if (exportExcelButton) {
+            exportExcelButton.style.display = canExport ? "inline-block" : "none";
+        }
+
         if (printButton) {
-
-            printButton.style.display = "inline-block";
-
+            printButton.style.display = canPrint ? "inline-block" : "none";
         }
     }
 
@@ -1435,69 +1297,121 @@
         }
     }
 
-    async function printReport() {
+async function printReport() {
 
-        if (!currentReportResult) {
+    if (!currentReportResult) {
 
-            showMessage("Please run the report before printing.", "warning");
-            return;
-        }
+        showMessage(
+            "Please run the report before printing.",
+            "warning"
+        );
 
-        const button = document.getElementById("btnPrintReport");
-        const spinner = document.getElementById("printReportSpinner");
-        const buttonText = document.getElementById("printReportText");
+        return;
+    }
+
+    const button =
+        document.getElementById("btnPrintReport");
+
+    const spinner =
+        document.getElementById("printReportSpinner");
+
+    const buttonText =
+        document.getElementById("printReportText");
+
+
+    if (button) {
+        button.disabled = true;
+    }
+
+    if (spinner) {
+        spinner.style.display = "inline-block";
+    }
+
+    if (buttonText) {
+        buttonText.textContent = "Preparing...";
+    }
+
+
+    try {
+
+        preparePrintLayout();
+
+
+        // --------------------------------------------------------
+        // Clean up after the browser finishes the print operation.
+        //
+        // This fires whether the user:
+        //   - actually prints
+        //   - cancels the print dialog
+        // --------------------------------------------------------
+
+        window.addEventListener(
+            "afterprint",
+            cleanupPrintLayout,
+            { once: true }
+        );
+
+
+        // Give the browser time to render the print DOM.
+        await new Promise(function (resolve) {
+
+            setTimeout(resolve, 100);
+
+        });
+
+
+        window.print();
+
+    }
+    catch (error) {
+
+        console.error(
+            "Print failed:",
+            error
+        );
+
+        cleanupPrintLayout();
+
+        showMessage(
+            error.message ||
+            "Unable to print the report.",
+            "danger"
+        );
+
+    }
+    finally {
 
         if (button) {
-            button.disabled = true;
+            button.disabled = false;
         }
 
         if (spinner) {
-            spinner.style.display = "inline-block";
+            spinner.style.display = "none";
         }
 
         if (buttonText) {
-            buttonText.textContent = "Preparing...";
+            buttonText.textContent = "Print";
         }
 
-        try {
-            preparePrintLayout();
+    }
+}
 
-            // Give the browser a moment to render
-            // the print layout before opening the dialog.
-            await new Promise(function (resolve) {
-                setTimeout(resolve, 100);
-            });
+function cleanupPrintLayout() {
 
-            window.print();
-        }
-        catch (error) {
+    const printHeader =
+        document.getElementById("reportPrintHeader");
 
-            console.error("Print failed:", error);
-            showMessage(error.message || "Unable to print the report.", "danger");
-
-        }
-        finally {
-
-            if (button) {
-                button.disabled = false;
-            }
-
-            if (spinner) {
-                spinner.style.display = "none";
-            }
-
-            if (buttonText) {
-                buttonText.textContent = "Print";
-            }
-
-        }
+    if (printHeader) {
+        printHeader.remove();
     }
 
-    function preparePrintLayout() {
+}
 
-        if (!currentReportResult) {
-            return;
-        }
+function preparePrintLayout() {
+
+    if (!currentReportResult) {
+        return;
+    }
 
         const resultContainer = document.getElementById("reportResult");
 
@@ -1506,7 +1420,6 @@
         }
 
         // Remove an existing print header
-        // if one happens to be present.
         const existingHeader = document.getElementById("reportPrintHeader");
 
         if (existingHeader) {
@@ -1514,20 +1427,46 @@
         }
 
         const header = document.createElement("div");
+
         header.id = "reportPrintHeader";
         header.className = "report-print-header";
 
         // ============================================================
-        // REPORT TITLE
+        // REPORT TITLE - not required as screen has Report Title
         // ============================================================
 
-        const title = document.createElement("h2");
+    /*    const title =
+            document.createElement("h2");
 
-        title.textContent = currentReportResult.reportTitle || 
-                            window.reportDefinition?.report?.reportName ||
-                            "Report";
+        title.textContent =
+            currentReportResult.reportTitle ||
+            window.reportDefinition?.report?.reportName ||
+            "Report";
 
-        header.appendChild(title);
+        header.appendChild(title); */
+
+
+        // ============================================================
+        // DESCRIPTION - not required as screen has Report description
+        // ============================================================
+
+    /*    const description =
+            window.reportDefinition?.report?.description;
+
+        if (description) {
+
+            const descriptionElement =
+                document.createElement("div");
+
+            descriptionElement.className =
+                "report-print-description";
+
+            descriptionElement.textContent =
+                description;
+
+            header.appendChild(descriptionElement);
+        } */
+
 
         // ============================================================
         // GENERATED DATE
@@ -1535,40 +1474,67 @@
 
         if (currentReportResult.generatedOn) {
 
-            const generated = document.createElement("div");
+            const generated =
+                document.createElement("div");
 
-            generated.className = "report-print-generated";
-            generated.textContent = "Generated On: " +
-                                    formatGeneratedDate(
-                                        currentReportResult.generatedOn
-                                    );
+            generated.className =
+                "report-print-generated";
+
+            generated.textContent =
+                "Generated On: " +
+                formatGeneratedDate(
+                    currentReportResult.generatedOn
+                );
 
             header.appendChild(generated);
         }
+
 
         // ============================================================
         // FILTERS
         // ============================================================
 
-        const filters = currentReportResult.filters || [];
+        const filters =
+            currentReportResult.filters || [];
 
         if (filters.length > 0) {
 
-            const filterTitle = document.createElement("h5");
-            filterTitle.textContent = "Filters";
-            filterTitle.className = "mt-3";
+            const filterTitle =
+                document.createElement("h5");
+
+            filterTitle.textContent =
+                "Filters";
+
+            filterTitle.className =
+                "report-print-section-title";
+
             header.appendChild(filterTitle);
 
-            const filterTable = document.createElement("table");
-            filterTable.className = "table table-sm table-bordered report-print-filters";
+
+            const filterTable =
+                document.createElement("table");
+
+            filterTable.className =
+                "table table-sm table-bordered report-print-filters";
+
 
             filters.forEach(function (filter) {
 
-                const row = document.createElement("tr");
-                const labelCell = document.createElement("th");
-                labelCell.textContent = filter.filterLabel || filter.filterCode;
-                const valueCell = document.createElement("td");
-                valueCell.textContent = formatFilterValue(filter.value);
+                const row =
+                    document.createElement("tr");
+
+                const labelCell =
+                    document.createElement("th");
+
+                labelCell.textContent =
+                    filter.filterLabel ||
+                    filter.filterCode;
+
+                const valueCell =
+                    document.createElement("td");
+
+                valueCell.textContent =
+                    formatFilterValue(filter.value);
 
                 row.appendChild(labelCell);
                 row.appendChild(valueCell);
@@ -1576,8 +1542,86 @@
                 filterTable.appendChild(row);
             });
 
+
             header.appendChild(filterTable);
         }
+
+
+        // ============================================================
+        // SUMMARY
+        // ============================================================
+
+        const summary =
+            currentReportResult.summary || [];
+
+        if (summary.length > 0) {
+
+            const summaryTitle =
+                document.createElement("h5");
+
+            summaryTitle.textContent =
+                "Summary";
+
+            summaryTitle.className =
+                "report-print-section-title";
+
+            header.appendChild(summaryTitle);
+
+
+            const summaryTable =
+                document.createElement("table");
+
+            summaryTable.className =
+                "report-print-summary";
+
+
+            summary.forEach(function (item) {
+
+                const row =
+                    document.createElement("tr");
+
+
+                const labelCell =
+                    document.createElement("td");
+
+                labelCell.className =
+                    "report-print-summary-label";
+
+                labelCell.textContent =
+                    item.label || "";
+
+
+                const separatorCell =
+                    document.createElement("td");
+
+                separatorCell.className =
+                    "report-print-summary-separator";
+
+                separatorCell.textContent =
+                    ":";
+
+
+                const valueCell =
+                    document.createElement("td");
+
+                valueCell.className =
+                    "report-print-summary-value";
+
+                valueCell.textContent =
+                    item.value ?? "";
+
+
+                row.appendChild(labelCell);
+                row.appendChild(separatorCell);
+                row.appendChild(valueCell);
+
+                summaryTable.appendChild(row);
+            });
+
+
+            header.appendChild(summaryTable);
+        }
+
 
         // Put the print header before the actual report.
         resultContainer.prepend(header);
@@ -1641,5 +1685,43 @@
 
         return String(value);
     }
+
+    function wireReportLookups() {
+
+        const filters = window.reportDefinition?.filters || [];
+
+        filters.forEach(function (filter) {
+
+            if ((filter.controlType || "").toLowerCase() !== "lookup") {
+                return;
+            }
+
+            if (!filter.lookupCode) {
+                return;
+            }
+
+            const inputId = "#filter_" + filter.filterCode;
+            const hiddenId = inputId + "_value";
+
+            if (!document.querySelector(inputId)) {
+                return;
+            }
+
+            wireReportLookupAutocomplete(inputId,
+                                            filter.lookupCode,
+                                            function (item)
+                {
+
+                    $(hiddenId).val(item.id);
+
+                    clearResult();
+                    hideMessage();
+
+                },
+                "#reportForm"
+            );
+
+        });
+    }    
 
 })();   
