@@ -2,13 +2,7 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-
-    ViewBag.PageTitle = "Patient Bills";
-
-    ViewBag.CustomHeaderActions = new []
-    {
-        new { Label="+ Add New Bill", Controller = "Billing", Action = "Create" }
-    };
+    ViewData["Title"] = "Patient Bills";
 
     ViewBag.KeyField = "BillId";
 

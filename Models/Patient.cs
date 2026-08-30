@@ -8,10 +8,11 @@ namespace Models
         public string Title { get; set; }
 
         [Required]
-        public string? FirstName { get; set; }
+        public string FirstName { get; set; }
     
         [Required]
-        public string? LastName { get; set; }
+        public string LastName { get; set; }
+        public string FullName => FirstName + ' ' + LastName; 
 
         [Required]
         public DateTime? DOB { get; set; }
@@ -53,6 +54,9 @@ namespace Models
             }
         }
 
+        public int DisplayAge { get; set; }
+
+        public int? LastVisitId { get; set; }
         public DateTime? LastVisitDate { get; set; }
 
     }

@@ -1,10 +1,9 @@
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Book Appointment";
 }
 
 @model ViewModels.AppointmentCreateVM
-
-<h3>Book Appointment</h3>
 
 <form asp-action="Book" method="post">
     <input type="hidden" asp-for="DepartmentId" />

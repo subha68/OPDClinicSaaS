@@ -165,64 +165,6 @@ namespace Controllers
             
             return View(vm);
         }
-      
-        public IActionResult SelectPatient(
-            string patientId,
-            string returnTo,
-            int? departmentId,
-            int? doctorId,
-            DateTime? appointmentDateTime,
-            int? visitId)
-        {
-            switch (returnTo)
-            {
-                case "AppointmentBooking":
-
-                    return RedirectToAction(
-                        "Book",
-                        "AppointmentBooking",
-                        new
-                        {
-                            departmentId,
-                            doctorId,
-                            appointmentDateTime,
-                            patientId
-                        });
-
-            /*    case "Consultation":
-
-                    return RedirectToAction(
-                        "PatientVisits",
-                        "Consultation",
-                        new
-                        {
-                            patientId
-                        }); */
-
-                case "Billing":
-
-                    return RedirectToAction(
-                        "SearchByPatient",
-                        "Billing",
-                        new
-                        {
-                            patientId
-                        });
-
-                case "PatientHistory":
-
-                    return RedirectToAction(
-                        "History",
-                        "Patient",
-                        new
-                        {
-                            patientId
-                        });
-
-                default:
-                    return RedirectToAction("Index", "Patient");
-            }
-        }
 
         [HttpGet]
         public JsonResult SearchPatient(string term)
@@ -243,6 +185,68 @@ namespace Controllers
 
             return Json(patients);
         }
+
+        [HttpGet]
+        public IActionResult GetSelectedPatient()
+        {
+            PatientSelectionVM p = _patient.GetCache();
+
+            if (p == null || p.PatientId <= 0)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Please select a patient first."
+                });
+            }
+
+            return Json(new
+            {
+                success = true,
+                patient = new
+                {
+                    id = p.PatientId,
+                    patientId = p.PatientId,
+                    patientName = p.FullName,
+                    fullName = p.FullName,
+                    gender = p.Gender,
+                    age = p.Age,
+                    phone = p.Phone
+                }
+            });
+
+        }
+
+        [HttpPost]
+        public IActionResult SetSelectedPatient([FromBody] PatientSelectionVM patient)
+        {
+            if (patient == null || patient.PatientId <= 0)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Invalid patient."
+                });
+            }
+
+        //    var patient = _patient.Get(patientId);
+
+            var response = _patient.SetCache(patient);
+
+            return Json(new
+            {
+                success = true,
+                patient = new
+                {
+                    id = patient.PatientId,
+                    patientName = patient.FullName,
+                    gender = patient.Gender,
+                    age = patient.Age,
+                    phone = patient.Phone
+                }
+            });
+        }
+    
     }
 
 }

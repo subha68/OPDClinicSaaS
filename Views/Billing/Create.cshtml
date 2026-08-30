@@ -1,45 +1,95 @@
-@model Models.Bill
+@model ViewModels.BillingCreateVM
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Create Bill";
 }
 
-<h3>Create Bill</h3>
+<form asp-action="Create" 
+        method="post" 
+        id="billForm"
+        data-get-billing-context-url="@Url.Action("GetBillingContext", "Billing")"
+        data-get-previous-bills-url="@Url.Action("GetPreviousBills", "Billing")" >
 
-<form asp-action="Create" method="post">
-
-    <input type="hidden" name="BillType" value="Service" />
+    <input type="hidden" asp-for="Bill.BillType" value="Service" />
+    <input type="hidden" asp-for="Bill.PatientId" id="PatientId" />
+    <input type="hidden" asp-for="Bill.VisitId" id="VisitId" />
+    <input type="hidden" asp-for="Bill.AppointmentId" id="AppointmentId" />
 
     <div class="row mb-3">
 
         <div class="col-md-3">
-            <label>Date</label>
-            <input asp-for="BillDate" type="date" class="form-control" />
+            <label asp-for="Bill.BillDate" class="form-label">
+                Date
+            </label>
+
+            <input asp-for="Bill.BillDate"
+                   type="date"
+                   class="form-control"
+                   id="BillDate" />
         </div>
 
-        <div class="col-md-9">
-            <label>Patient</label>
+        <div class="col-md-5">
+            <label class="form-label">
+                Patient
+            </label>
 
-            <input type="text" id="PatientSearch" class="form-control"
-                                placeholder="Search patient by name, mobile or UHID" />
+            <input type="text"
+                   id="PatientSearch"
+                   class="form-control"
+                   placeholder="Search patient by name, mobile or UHID"
+                   autocomplete="off"
+                   value="@Model.Bill.PatientName" />
+        </div>
 
-            <input type="hidden" asp-for="PatientId" id="PatientId" />
+        <div class="col-md-4">
+
+            <div id="doctorContainer"
+                style="display:none;"
+                data-appointment-id="@Model.Bill.AppointmentId"
+                data-doctor-id="@Model.Bill.DoctorId"
+                data-doctor-name="@(
+                    Model.Bill.Doctor != null
+                        ? $"{Model.Bill.Doctor.FirstName} {Model.Bill.Doctor.LastName}".Trim()
+                        : ""
+                )">
+
+                <label class="form-label">
+                    Doctor
+                </label>
+
+                <!-- Used when there is exactly one appointment -->
+                <input type="text"
+                    id="DoctorDisplay"
+                    class="form-control"
+                    readonly
+                    style="display:none;" />
+
+                <!-- Used when there are multiple appointments -->
+                <select id="DoctorId"
+                        class="form-select"
+                        style="display:none;">
+                    <option value="">-- select doctor --</option>
+                </select>
+
+            </div>
+
         </div>
 
     </div>
 
-    <div class="mb-3">
-        <label>Visit</label>
-        <select asp-for="VisitId"
-                class="form-control"
-                id="VisitId">
-            <option value="">--select--</option>
-        </select>
+
+    <div id="billingContextMessage"
+         class="text-muted small mb-3"
+         style="display:none;">
     </div>
+
 
     <hr />
 
+
     <table class="table" id="billTable">
+
         <thead>
             <tr>
                 <th>Charge</th>
@@ -50,190 +100,114 @@
                 <th></th>
             </tr>
         </thead>
+
         <tbody>
         </tbody>
+
     </table>
 
+
     <button type="button"
-        class="btn btn-primary"
-        id="addLine">
+            class="btn btn-primary"
+            id="addLine">
         Add Charge
     </button>
 
 
     <hr />
 
+
     <div class="mb-3">
-        <label>Total</label>
-        <input id="Total" class="form-control" readonly />
+
+        <label class="form-label">
+            Total
+        </label>
+
+        <input id="Total"
+               class="form-control"
+               readonly />
+
     </div>
 
-    <button class="btn btn-success">
-        Save Bill
-    </button>
+
+    <div class="d-flex gap-2">
+
+        <button type="submit"
+                class="btn btn-success"
+                id="saveBill">
+            Save Bill
+        </button>
+
+        <button type="button"
+                class="btn btn-outline-secondary"
+                id="previousBillsButton"
+                data-bs-toggle="modal"
+                data-bs-target="#previousBillsModal"
+                style="display:none;">
+
+            Previous Bills
+
+            <span class="badge bg-secondary ms-1"
+                id="previousBillsCount">
+                0
+            </span>
+
+        </button>
+
+    </div>
+
 
 </form>
 
-@section Scripts{
-    <script>
 
-    let lineIndex = 0;
+<div class="modal fade"
+        id="previousBillsModal"
+        tabindex="-1"
+        aria-hidden="true">
 
-    $(document).ready(function () {
+    <div class="modal-dialog modal-lg modal-dialog-centered">
 
-        $("#PatientId").change(function () {
+        <div class="modal-content">
 
-            let patientId = $(this).val();
-            let billDate = $("#BillDate").val();
+            <div class="modal-header">
 
-            if (!patientId || !billDate)
-                return;
+                <h5 class="modal-title">
+                    Previous Bills
+                </h5>
 
-            $.get('@Url.Action("GetVisits","Billing")',
-                {
-                    patientId: patientId,
-                    billDate: billDate
-                },
-                function (res) {
-
-                    $("#VisitId").empty();
-                    $("#VisitId").append('<option value="">--select--</option>');
-
-                    $.each(res.visits, function (i, v) {
-                        $("#VisitId").append(
-                            `<option value="${v.visitId}">${v.text}</option>`
-                        );
-                    });
-
-                    if (res.selectedVisitId) {
-                        $("#VisitId").val(res.selectedVisitId);
-                    }
-                });
-        });
-
-    });
-
-    $("#addLine").click(function(){
-
-        let row = `
-        <tr>
-            <td>
-                <input type="text"
-                    class="form-control chargeSearch"
-                    placeholder="Search charge..." />
-
-                <input type="hidden"
-                    name="BillLines[${lineIndex}].ReferenceId"
-                    class="chargeId" />
-            </td>
-
-            <td>
-                <input name="BillLines[${lineIndex}].Rate"
-                    class="form-control rate" />
-            </td>
-
-            <td>
-                <input name="BillLines[${lineIndex}].Quantity"
-                    value="1"
-                    class="form-control qty" />
-            </td>
-
-            <td>
-                <input name="BillLines[${lineIndex}].DiscountPercent"
-                    value="0"
-                    class="form-control disc" />
-            </td>
-
-            <td>
-                <input name="BillLines[${lineIndex}].LineAmount"
-                    class="form-control lineAmount"
-                    readonly />
-            </td>
-
-            <td>
                 <button type="button"
-                        class="btn btn-danger remove">
-                    X
+                        class="btn-close"
+                        data-bs-dismiss="modal">
                 </button>
-            </td>
-        </tr>`;
 
-        $("#billTable tbody").append(row);
+            </div>
 
-        initializeChargeAutocomplete($("#billTable tbody tr:last"));
+            <div class="modal-body">
 
-        lineIndex++;
-    });
+                <div id="previousBillsLoading"
+                        class="text-center py-4">
 
-    $(document).on("keyup change", 
-        ".rate,.qty,.disc",
-        function(){
-            let row = $(this).closest("tr");
-            calculateRow(row);
-        });
+                    <div class="spinner-border spinner-border-sm me-2">
+                    </div>
 
-    function calculateRow(row){
+                    Loading bills...
 
-        let rate = parseFloat(row.find(".rate").val()) || 0;
-        let qty  = parseFloat(row.find(".qty").val()) || 0;
-        let disc = parseFloat(row.find(".disc").val()) || 0;
+                </div>
 
-        let net = rate * qty * (1 - disc/100);
+                <div id="previousBillsContent">
+                </div>
 
-        row.find(".lineAmount").val(net.toFixed(2));
+            </div>
 
-        calculateTotal();
-    }
+        </div>
+
+    </div>
+
+</div>
 
 
-    function calculateTotal(){
+@section Scripts {
 
-        let total = 0;
+    <script src="~/js/billing/create-bill.js" asp-append-version="true"></script>
 
-        $(".lineAmount").each(function(){
-            total += parseFloat($(this).val()) || 0;
-        });
-
-        $("#Total").val(total.toFixed(2));
-    }
-
-
-    $(document).on("click",".remove",function(){
-        $(this).closest("tr").remove();
-        calculateTotal();
-    });
-
-    $(function () {
-
-        wirePatientAutocomplete(
-            "#PatientSearch",
-            function (patient) {
-
-                $("#PatientId").val(patient.id);
-
-                setTimeout(function () {
-
-                    $("#PatientId").trigger("change");
-
-                }, 100);
-            });
-    });
-
-    function initializeChargeAutocomplete(row)
-    {
-        wireChargeAutocomplete(
-
-            row.find(".chargeSearch"),
-
-            function (charge) {
-
-                row.find(".chargeId").val(charge.id);
-
-                row.find(".rate").val(charge.rate);
-
-                calculateRow(row);
-            });
-    }
-
-    </script>   
 }

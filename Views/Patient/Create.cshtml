@@ -2,28 +2,13 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-}
-
-@{
-    ViewData["Title"] = "Patient Registration";
-
     bool isEdit = Model != null && Model.PatientId > 0;
-
-    ViewBag.PageTitle = isEdit ? "Edit Patient" : "Create Patient";
-
+    ViewData["Title"] = isEdit ? "Edit Patient" : "Create Patient";
 }
 
 <form asp-action=@(isEdit ? "Edit" : "Create")>
 
 <div class="page-card">
-
-    <div class="page-card-header">
-
-        <h4 class="page-card-title">
-            Patient Registration
-        </h4>
-
-    </div>
 
     <div class="page-card-body">
 

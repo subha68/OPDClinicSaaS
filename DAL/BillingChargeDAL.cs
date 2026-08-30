@@ -106,7 +106,10 @@ namespace DAL
         {
             var list = new List<BillingCharge>();
 
-            var cmd = new SqlCommand("SELECT ChargeId, ClinicId, ChargeCode, ChargeName, Description, ServiceType, Rate, IsActive FROM BillingCharges", conn);
+            var cmd = new SqlCommand(@"SELECT ChargeId, ClinicId, ChargeCode, ChargeName, Description, 
+                                        ServiceType, Rate, IsActive 
+                                        FROM BillingCharges
+                                        AND ChargeCode <> 'CONSULT'", conn);
             if (tran != null)
             {
                 cmd.Transaction = tran;
@@ -137,7 +140,9 @@ namespace DAL
             var list = new List<BillingCharge>();
 
             var cmd = new SqlCommand(@"SELECT ChargeId, ClinicId, ChargeCode, ChargeName, Description, ServiceType, Rate, IsActive 
-                                    FROM BillingCharges WHERE ClinicId = @clinicId", conn);
+                                    FROM BillingCharges 
+                                    WHERE ClinicId = @clinicId
+                                    AND ChargeCode <> 'CONSULT'", conn);
             if (tran != null)
             {
                 cmd.Transaction = tran;
@@ -164,6 +169,39 @@ namespace DAL
             return list;
         }
 
+        public BillingCharge? GetByCode(string chargeCode, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
+        {
+            var cmd = new SqlCommand(@"SELECT ChargeId, ClinicId, ChargeCode, ChargeName, Description, ServiceType, Rate, IsActive 
+                                    FROM BillingCharges 
+                                    WHERE ClinicId = @ClinicId
+                                    AND ChargeCode = @ChargeCode", conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
+
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+            cmd.Parameters.AddWithValue("@ChargeCode", chargeCode);
+            using var reader = cmd.ExecuteReader();
+
+            if (reader.Read())
+            {
+                return new BillingCharge
+                {
+                    ChargeId = Convert.ToInt32(reader["ChargeId"]),
+                    ClinicId = Convert.ToInt32(reader["ClinicId"]),
+                    ChargeCode = reader["ChargeCode"].ToString(),
+                    ChargeName = reader["ChargeName"].ToString(),
+                    Description = reader["Description"].ToString(),
+                    ServiceType = reader["ServiceType"].ToString(),
+                    Rate = Convert.ToDecimal(reader["Rate"]),
+                    IsActive = (bool)reader["IsActive"]
+                };
+            }
+
+            return null;
+        }
+
         public List<BillingCharge> Search(int clinicId, string term, SqlConnection conn, SqlTransaction? tran = null)
         {
             var list = new List<BillingCharge>();
@@ -179,7 +217,8 @@ namespace DAL
                                     FROM BillingCharges 
                                     WHERE (ChargeCode LIKE '%' + @term + '%'
                                     OR ChargeName LIKE '%' + @term + '%')
-                                    AND ClinicId = @clinicId", conn);
+                                    AND ClinicId = @clinicId
+                                    AND ChargeCode <> 'CONSULT'", conn);
 
             if (tran != null)
             {

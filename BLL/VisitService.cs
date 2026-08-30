@@ -1,5 +1,6 @@
 using DAL;
 using Models;
+using Microsoft.Data.SqlClient;
 
 namespace BLL
 {
@@ -14,6 +15,23 @@ namespace BLL
             _dal = _visitDAL;
         }
 
+        public override Visit Get(int id)
+        {
+            Visit model = base.Get(id);
+            SetCache(model);
+
+            return model;
+        }
+
+        public override int Create(Visit model)
+        {
+            int id = base.Create(model);
+            model.VisitId = id;
+            SetCache(model);
+            
+            return id;
+        }
+
         public List<Visit> GetVisitByPatient(int patientId)
         {
             using var conn = _db.GetConnection();
@@ -21,9 +39,10 @@ namespace BLL
 
             try
             {
-                var visits = _visitDAL.GetVisitsByPatient(patientId, conn);
-                if (visits == null)
-                    throw new Exception($"Visit with ID '{patientId}' not found.");
+                var visits = GetVisitByPatient(patientId, conn);
+
+                if (visits != null)
+                   SetCache(visits.FirstOrDefault());
 
                 return visits;
             }
@@ -33,6 +52,18 @@ namespace BLL
             }
         }
 
+        public List<Visit> GetVisitByPatient(int patientId, SqlConnection conn, SqlTransaction? tran = null)
+        {
+            var visits = _visitDAL.GetVisitsByPatient(patientId, conn);
+            if (visits == null)
+                throw new Exception($"Visit with ID '{patientId}' not found.");
+
+            SetCache(visits.FirstOrDefault());
+
+            return visits;
+        }
+
+
         public Visit GetByPatientAndDate(int patientId, DateTime date)
         {
             using var conn = _db.GetConnection();
@@ -40,7 +71,7 @@ namespace BLL
 
             try
             {
-                return _visitDAL.GetByPatientAndDate(patientId, date, conn);
+                return GetByPatientAndDate(patientId, date, conn);
             }
             catch
             {
@@ -48,5 +79,15 @@ namespace BLL
             }
         }
 
+        public Visit GetByPatientAndDate(int patientId, DateTime date, SqlConnection conn, SqlTransaction? tran = null)
+        {
+            return _visitDAL.GetByPatientAndDate(patientId, date, conn, tran);
+        }
+
+        private void SetCache(Visit v)
+        {
+            LastVisitId = v.VisitId;
+            LastVisitDate = FormatDate(v.VisitDate);
+        }
     }
 }

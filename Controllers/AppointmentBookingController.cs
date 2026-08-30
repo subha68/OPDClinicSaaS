@@ -121,18 +121,28 @@ namespace Controllers
         public IActionResult BookAjax(AppointmentCreateVM vm)
         {
             if (!ModelState.IsValid)
-                return View(vm);
+            {
+                var errors = ModelState
+                    .Where(x => x.Value != null)
+                    .SelectMany(x => x.Value!.Errors)
+                    .Select(x => x.ErrorMessage)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .ToList();
+
+                return Json(new
+                {
+                    success = false,
+                    message = errors.Count > 0
+                        ? string.Join("\n", errors)
+                        : "Invalid booking details."
+                });
+            }
 
             var result = _appointment.BookAppointment(vm);
 
-            return Json(new
-            {
-                success = true,
-                appointmentId = result.AppointmentId,
-                tokenNumber = result.TokenNumber,
-                queueNumber = result.QueueNumber
-            });
+            return Json(result);
         }
+
 
         [HttpGet]
         public IActionResult SearchPatient(int departmentId, int doctorId, DateTime appointmentDateTime)

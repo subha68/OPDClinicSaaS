@@ -13,6 +13,9 @@ namespace ViewModels
         public string AppointmentStatus { get; set; }
         public string BillingStatus { get; set; }
         public string PaymentStatus { get; set; }
+        public string SlotStatus { get; set; }
+        public int? TokenNumber { get; set; }
+        public int? QueueNumber { get; set; }        
 
         public List<Appointment> CancelledAppointments { get; set; } = new();
     }

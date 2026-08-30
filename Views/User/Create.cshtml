@@ -7,7 +7,7 @@
         Model != null &&
         Model.UserId > 0;
 
-    ViewBag.PageTitle = isEdit ? "Edit User" : "Create User";
+    ViewData["Title"] = isEdit ? "Edit User" : "Create User";
 
     ViewBag.Fields = new[]
     {

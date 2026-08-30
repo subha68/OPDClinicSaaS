@@ -61,3 +61,7 @@
 .table-future tbody tr:hover {
     background: #f4f9ff;
 }
+
+#crudTable tbody td {
+    vertical-align: middle;
+}

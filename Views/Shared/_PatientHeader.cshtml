@@ -1,0 +1,47 @@
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+
+@{
+    var session = HttpContextAccessor.HttpContext?.Session;
+
+    var patientId = session?.GetString("PatientId");
+    var patientDisplayName = session?.GetString("PatientDisplayName") ?? "";
+    var patientAge = session?.GetString("PatientAge") ?? "";
+    var patientGender = session?.GetString("PatientGender") ?? "";
+    var patientPhone = session?.GetString("PatientPhone") ?? "";
+
+    bool hasPatient =
+        int.TryParse(patientId, out var id) && id > 0;
+}
+
+<div class="patient-header @(hasPatient ? "" : "d-none")"
+     data-patient-header>
+
+    <span class="patient-label">
+        Patient :
+    </span>
+
+    <strong class="patient-name"
+            data-patient-header-name>
+        @patientDisplayName
+    </strong>
+
+    <span class="patient-id"
+          data-patient-header-id>
+        @(hasPatient ? $"(ID: {patientId})" : "")
+    </span>
+
+    <span class="patient-demographics"
+          data-patient-header-demographics>
+        @(hasPatient
+            ? $"{patientGender} / {patientAge}"
+            : "")
+    </span>
+
+    <a href="#"
+       class="patient-phone"
+       data-patient-header-phone>
+        @(hasPatient ? patientPhone : "")
+    </a>
+
+</div>

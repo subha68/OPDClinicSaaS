@@ -1,8 +1,8 @@
 @model Models.Consultation
 
 @{
-    ViewData["Title"] = "Consultation";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Patient Consultation";
 }
 
 <form asp-action="Consult" method="post"
@@ -18,12 +18,6 @@
     <!-- ====================================================== -->
 
     <div class="card consultation-card patient-summary">
-
-        <div class="card-header bg-primary text-white">
-
-            <strong>Patient Consultation</strong>
-
-        </div>
 
         <div class="card-body">
 

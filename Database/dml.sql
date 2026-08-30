@@ -75,20 +75,22 @@ INSERT INTO Features (Name, Code) VALUES
 ('Patient History', 'PATIENT_HISTORY'),
 ('Billing Charges', 'BILLING_CHARGES'),
 ('Medicine Management', 'MEDICINE_MANAGEMENT'),
-('Prescription Templates', 'PRESCRIPTION_TEMPLATE');
+('Prescription Templates', 'PRESCRIPTION_TEMPLATE'),
+('Vital Definition', 'VITAL_DEFINITION'),
+('Vital', 'VITAL');
 
 -- Role Mapping
 INSERT INTO RoleFeatures (RoleId, FeatureId)
-SELECT 1, FeatureId FROM Features WHERE Code IN ('CLINIC_VIEW', 'USER_VIEW', 'ROLE_VIEW');
+SELECT 1, FeatureId FROM Features WHERE Code IN ('CLINIC_VIEW', 'USER_VIEW', 'ROLE_VIEW', 'VITAL_DEFINITION');
 
 INSERT INTO RoleFeatures (RoleId, FeatureId)
-SELECT 2, FeatureId FROM Features WHERE Code IN ('DEPT_VIEW','DOC_VIEW','USER_VIEW','DOCTOR_SCHEDULE', 'PRESCRIPTION_TEMPLATE');
+SELECT 2, FeatureId FROM Features WHERE Code IN ('DEPT_VIEW','DOC_VIEW','USER_VIEW','DOCTOR_SCHEDULE', 'PRESCRIPTION_TEMPLATE', 'VITAL_DEFINITION');
 
 INSERT INTO RoleFeatures (RoleId, FeatureId)
-SELECT 3, FeatureId FROM Features WHERE Code IN ('APPOINTMENT_BOOKING', 'PATIENT_HISTORY');
+SELECT 3, FeatureId FROM Features WHERE Code IN ('APPOINTMENT_BOOKING', 'PATIENT_HISTORY', 'VITAL');
 
 INSERT INTO RoleFeatures (RoleId, FeatureId)
-SELECT 4, FeatureId FROM Features WHERE Code IN ('CONSULTATION_MANAGEMENT', 'PATIENT_HISTORY');
+SELECT 4, FeatureId FROM Features WHERE Code IN ('CONSULTATION_MANAGEMENT', 'PATIENT_HISTORY', 'VITAL');
 
 INSERT INTO RoleFeatures (RoleId, FeatureId)
 SELECT 5, FeatureId FROM Features WHERE Code IN ('BILLING_CHARGES', 'PATIENT_HISTORY', 'BILLING_MANAGEMENT'),
@@ -115,7 +117,20 @@ VALUES
 ('Billing','Billing','Index','fa-file-invoice-dollar','BILLING_MANAGEMENT', 10),
 ('Billing Charges', 'BillingCharge', 'Index', 'fa fa-money-bill', 'BILLING_CHARGES', 11),
 ('Medicines', 'Medicine', 'Index', 'fa fa-pills', 'MEDICINE_MANAGEMENT', 12),
-('Prescription Templates', 'PrescriptionTemplate', 'Index', 'fa-file-medical', 'PRESCRIPTION_TEMPLATE', 13);
+('Prescription Templates', 'PrescriptionTemplate', 'Index', 'fa-file-medical', 'PRESCRIPTION_TEMPLATE', 13),
+('Vital Definition', 'VitalDefinition', 'Index', 'fa-heartbeat', 'VITAL_DEFINITION', 14),
+('Vitals', null, null, 'fa-heartbeat', 'VITAL', 15);
+
+-- Mandatory line
+INSERT INTO BillingCharges
+(ClinicId, ChargeCode, ChargeName, Description, ServiceType, Rate, IsActive)
+VALUES
+(0, 'CONSULT', 'Consultation', 'Doctor consultation fee', 'Consultation', 0.00, 1);
+
+INSERT INTO BillNoGenerators
+(ClinicId, BillNoPrefix, BillNoFY, BillNo)
+VALUES
+(1, 'B', 2026, 100);
 
 -- Change ClinicId before running below script
 SET IDENTITY_INSERT AccountGroups ON;
@@ -323,4 +338,25 @@ VALUES
 
 ('MOXI','Moxifloxacin Eye Drop','Moxifloxacin','30049099','5 ml','Drops','Bottle',12.00,'Cipla','H',20,1),
 ('CMC','Carboxymethylcellulose','CMC','30049099','10 ml','Drops','Bottle',12.00,'Sun Pharma','OTC',20,1);
+
+-- Vital Definitions
+
+INSERT INTO VitalDefinitions
+(ClinicId, VitalLabel, VitalCode, VitalType, DataType, VitalUnit, IsDerived, DeriveFormula, DisplayComposition,
+    IsStandard, IsActive)
+VALUES
+(NULL, 'Height', 'HEIGHT', 'Item', 'Decimal', 'cm', 0, NULL, NULL, 1, 1),
+(NULL, 'Weight', 'WEIGHT', 'Item', 'Decimal', 'kg', 0, NULL, NULL, 1, 1),
+(NULL, 'Systolic Blood Pressure', 'SBP', 'CompositionItem', 'Number', 'mmHg', 0, NULL, NULL, 1, 1),
+(NULL, 'Diastolic Blood Pressure', 'DBP', 'CompositionItem', 'Number', 'mmHg', 0, NULL, NULL, 1, 1),
+(NULL, 'Pulse', 'PULSE', 'Item', 'Number', 'bpm', 0, NULL, NULL, 1, 1),
+(NULL, 'SpO2', 'SPO2', 'Item', 'Number', '%', 0, NULL, NULL, 1, 1),
+(NULL, 'Respiratory Rate', 'RESP_RATE', 'Item', 'Number', '/min', 0, NULL, NULL, 1, 1),
+(NULL, 'Temperature', 'TEMPERATURE', 'Item', 'Decimal', '°F', 0, NULL, NULL, 1, 1),
+(NULL, 'Pain Score', 'PAIN_SCORE', 'Item', 'Number', '/10', 0, NULL, NULL, 1, 1),
+(NULL, 'Blood Glucose', 'BLOOD_GLUCOSE', 'Item', 'Decimal', 'mg/dL', 0, NULL, NULL, 1, 1),
+(NULL, 'Blood Pressure', 'BP', 'Composition', 'Text', 'mmHg', 0, NULL, 'SBP / DBP', 1, 1),
+(NULL, 'Body Mass Index', 'BMI', 'Derived', 'Decimal', 'kg/m²', 1, 'WEIGHT / ((HEIGHT / 100) * (HEIGHT / 100))', NULL, 1, 1),
+(NULL, 'Mean Arterial Pressure', 'MAP', 'Derived', 'Decimal', 'mmHg', 1, '(SBP + (2 * DBP)) / 3', NULL, 1, 1),
+(NULL, 'Body Surface Area', 'BSA', 'Derived', 'Decimal', 'm²', 1, 'SQRT((HEIGHT * WEIGHT) / 3600)', NULL, 1, 1);
 

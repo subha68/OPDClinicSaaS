@@ -1,6 +1,7 @@
 using DAL;
 using Models;
 using ViewModels;
+using Helpers;
 
 namespace BLL
 {    
@@ -63,6 +64,24 @@ namespace BLL
             }
         }
 
+        public override int Create(Patient model)
+        {
+            int id = base.Create(model);
+            model.PatientId = id;
+            SetCache(new PatientSelectionVM(model));
+            
+            return id;
+        }
+
+        public override Patient Get(int id)
+        {
+            Patient p = base.Get(id);
+
+            if (p != null)
+                SetCache(new PatientSelectionVM(p));
+            return p;
+        }
+
         public override List<Patient> List()
         {
             using var conn = _db.GetConnection();
@@ -94,6 +113,7 @@ namespace BLL
             else
             {
                 p = patients[0];
+                SetCache(new PatientSelectionVM(p));
             }
 
             return p;
@@ -107,6 +127,8 @@ namespace BLL
             try
             {
                 var patient = _dal.Get(patientId, ClinicId, conn);
+
+                SetCache(new PatientSelectionVM(patient));
 
                 if (patient == null)
                     return new PatientHistoryVM();
@@ -178,6 +200,39 @@ namespace BLL
             {
                 throw;
             }
+        }
+
+        public bool SetCache(PatientSelectionVM p)
+        {
+            if (p == null)
+                return false;
+
+            PatientId = p.PatientId;
+            PatientDisplayName = p.FullName;
+            PatientGender = p.Gender ?? "";
+            PatientAge = p.Age;
+            PatientPhone = p.Phone;
+            // Clear last visit details of previously selected patient
+            LastVisitId = 0;
+            LastVisitDate = null;
+
+            return true;
+        }
+
+        public PatientSelectionVM GetCache()
+        {
+            PatientSelectionVM p = new PatientSelectionVM();
+
+            p.PatientId = PatientId;
+            p.FullName = PatientDisplayName;
+            p.Gender = PatientGender !=  "" ? PatientGender : null;
+            p.Age = PatientAge;
+            p.Phone = PatientPhone;
+            // Clear last visit details of previously selected patient
+            p.LastVisitId = LastVisitId;
+            p.LastVisitDate = LastVisitDate != null ? FormatDateTime(LastVisitDate) : null;
+
+            return p;
         }
 
     }

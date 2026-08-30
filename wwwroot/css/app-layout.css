@@ -836,6 +836,81 @@ textarea.form-control[readonly] {
     font-weight: 600;
 }
 
+.patient-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0;
+
+    padding: 10px 16px;
+    margin-bottom: 15px;
+
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+
+    font-size: 0.95rem;
+    min-height: 48px;
+}
+
+
+.patient-label {
+    font-weight: 600;
+    color: #495057;
+    margin-right: 6px;
+}
+
+.patient-name {
+    color: #212529;
+}
+
+.patient-id {
+    color: #6c757d;
+    margin-left: 6px;
+}
+
+.patient-demographics {
+    color: #495057;
+    margin-left: 32px;
+    font-weight: 500;
+}
+
+.patient-phone {
+    margin-left: 32px;
+
+    color: #2563eb;
+    font-weight: 600;
+
+    text-decoration: none;
+
+    transition:
+        color .2s ease,
+        background .2s ease;
+}
+
+.patient-phone:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+
+.patient-phone::before {
+    content: "\f095";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    font-size: 0.75rem;
+    color: #2563eb;
+}
+
+.vital-patient-context {
+    width: 96%;
+    margin: 0 auto 1rem auto;
+}
+
+.vital-patient-context .form-control {
+    background-color: #f8f9fa;
+}
+
+
 /* =========================
    MOBILE
 ========================= */

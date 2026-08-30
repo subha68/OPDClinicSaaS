@@ -1,3 +1,32 @@
+document.addEventListener("DOMContentLoaded", function () {
+
+    const modalElement =
+        document.getElementById("changePasswordModal");
+
+    if (!modalElement) {
+        return;
+    }
+
+    const isFirstLogin =
+        modalElement.dataset.firstLogin === "true";
+
+    const modal =
+        bootstrap.Modal.getOrCreateInstance(modalElement);
+
+    /*
+    * First Login
+    *
+    * Automatically open the Change Password modal.
+    *
+    * The modal itself is configured as non-dismissible
+    * when this is a first login.
+    */
+    if (isFirstLogin) {
+        modal.show();
+    }
+
+});
+
 (function () {
 
     function initializeChangePasswordModal() {

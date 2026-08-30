@@ -17,9 +17,9 @@ namespace DAL
         public int Add(Doctor model, SqlConnection conn, SqlTransaction tran)
         {
             string query = @"INSERT INTO Doctors 
-                            (ClinicId, DepartmentId, Salutation, FirstName, LastName, RegistrationNo, Qualification, UserId)
+                            (ClinicId, DepartmentId, Salutation, FirstName, LastName, RegistrationNo, Qualification, Fee, UserId)
                             VALUES
-                            (@ClinicId, @DepartmentId, @Salutation, @FirstName, @LastName, @RegNo, @Qualification, @UserId);
+                            (@ClinicId, @DepartmentId, @Salutation, @FirstName, @LastName, @RegNo, @Qualification, @Fee, @UserId);
                             SELECT SCOPE_IDENTITY();";
 
             SqlCommand cmd = new SqlCommand(query, conn, tran);
@@ -31,6 +31,7 @@ namespace DAL
             cmd.Parameters.AddWithValue("@LastName", model.LastName ?? "");
             cmd.Parameters.AddWithValue("@RegNo", model.RegistrationNo ?? "");
             cmd.Parameters.AddWithValue("@Qualification", model.Qualification ?? "");
+            cmd.Parameters.AddWithValue("@Fee", model.Fee);
             cmd.Parameters.AddWithValue("@UserId", model.UserId);
     
             return Convert.ToInt32(cmd.ExecuteScalar());
@@ -46,7 +47,8 @@ namespace DAL
                                 FirstName = @FirstName,
                                 LastName = @LastName,
                                 RegistrationNo = @RegNo,
-                                Qualification = @Qualification
+                                Qualification = @Qualification,
+                                Fee = @Fee
                             WHERE DoctorId = @DoctorId";
 
             SqlCommand cmd = new SqlCommand(query, conn, tran);
@@ -57,6 +59,7 @@ namespace DAL
             cmd.Parameters.AddWithValue("@LastName", model.LastName ?? "");
             cmd.Parameters.AddWithValue("@RegNo", model.RegistrationNo ?? "");
             cmd.Parameters.AddWithValue("@Qualification", model.Qualification ?? "");
+            cmd.Parameters.AddWithValue("@Fee", model.Fee);
             cmd.Parameters.AddWithValue("@DoctorId", model.DoctorId);
 
             rowsAffected_doctor = cmd.ExecuteNonQuery();
@@ -147,7 +150,8 @@ namespace DAL
                     Username = dr["Username"].ToString(),
                     Password = dr["PasswordHash"].ToString(),
                     Email = dr["Email"].ToString(),
-                    Phone = dr["Phone"].ToString()
+                    Phone = dr["Phone"].ToString(),
+                    Fee = Convert.ToDecimal(dr["Fee"])
                 });
             }
 
@@ -191,7 +195,8 @@ namespace DAL
                     Username = dr["Username"].ToString(),
                     Password = dr["PasswordHash"].ToString(),
                     Email = dr["Email"].ToString(),
-                    Phone = dr["Phone"].ToString()
+                    Phone = dr["Phone"].ToString(),
+                    Fee = Convert.ToDecimal(dr["Fee"])
                 };
             }
 
@@ -235,7 +240,8 @@ namespace DAL
                     Username = dr["Username"].ToString(),
                     Password = dr["PasswordHash"].ToString(),
                     Email = dr["Email"].ToString(),
-                    Phone = dr["Phone"].ToString()
+                    Phone = dr["Phone"].ToString(),
+                    Fee = Convert.ToDecimal(dr["Fee"])
                 });
             }
 
@@ -279,7 +285,8 @@ namespace DAL
                     Username = dr["Username"].ToString(),
                     Password = dr["PasswordHash"].ToString(),
                     Email = dr["Email"].ToString(),
-                    Phone = dr["Phone"].ToString()
+                    Phone = dr["Phone"].ToString(),
+                    Fee = Convert.ToDecimal(dr["Fee"])
                 });
             }
 

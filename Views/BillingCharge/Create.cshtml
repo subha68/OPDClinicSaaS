@@ -3,11 +3,9 @@
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
 
-    bool isEdit =
-        Model != null &&
-        Model.ChargeId > 0;
+    bool isEdit = Model != null && Model.ChargeId > 0;
 
-    ViewBag.PageTitle = isEdit ? "Edit Billing Charge" : "Create Billing Charge";
+    ViewData["Title"] = isEdit ? "Edit Billing Charge" : "Create Billing Charge";
 
     ViewBag.Fields = new[]
     {

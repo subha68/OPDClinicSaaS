@@ -67,6 +67,7 @@ CREATE TABLE Doctors (
     LastName NVARCHAR(100) NOT NULL,
     RegistrationNo NVARCHAR(100),
     Qualification NVARCHAR(200),
+    Fee DECIMAL NOT NULL,
     UserId INT NULL
 
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
@@ -209,18 +210,42 @@ ON Appointments (ClinicId, AppointmentDate, TokenNumber);
 CREATE INDEX IX_Appointments_ClinicDoctorDate_Queue
 ON Appointments (ClinicId, DoctorId, AppointmentDate, QueueNumber);
 
+CREATE TABLE VitalDefinitions (
+    VitalDefId INT IDENTITY PRIMARY KEY,
+    ClinicId INT,
+    VitalLabel NVARCHAR(100) NOT NULL,
+    VitalCode NVARCHAR(25) NOT NULL,
+    VitalType NVARCHAR(25) NOT NULL, -- Item, Derived, Composition Item (e.g. BP), Composition
+    DataType NVARCHAR(25) NOT NULL, -- Text, Number, Decimal
+    VitalUnit NVARCHAR(20),
+    IsDerived BIT NOT NULL DEFAULT(0),
+    DeriveFormula NVARCHAR(100), -- Use VitalCodes and Operator of constituting Vitals (e.g. WEIGHT / (HEIGHT * HEIGHT))
+    DisplayComposition NVARCHAR(100), -- Use VitalCodes and other symbols (e.g. SBP / DBP) - here / is a symbol, not operator
+    IsStandard BIT NOT NULL DEFAULT(1),
+    IsActive BIT NOT NULL DEFAULT(1)
+);
+
 CREATE TABLE Vitals (
     VitalId INT IDENTITY PRIMARY KEY,
+    VitalDefId INT,
+    ClinicId INT NOT NULL,
     VisitId INT NOT NULL,
-    BP NVARCHAR(20),
-    Height FLOAT,
-    Weight FLOAT,
-    SPO2 INT,
-    Pulse INT,
-    BMI AS (Weight / (Height * Height)) PERSISTED,  // Could not be created
+    VitalLabel NVARCHAR(100) NOT NULL,
+    VitalCode NVARCHAR(25) NOT NULL,
+    VitalType NVARCHAR(25) NOT NULL,
+    DataType NVARCHAR(25) NOT NULL,
+    VitalUnit NVARCHAR(20),
+    VitalValue NVARCHAR(100),
+    IsDerived BIT NOT NULL DEFAULT(0),
+    DeriveFormula NVARCHAR(100),
+    DisplayComposition NVARCHAR(100),
 
     FOREIGN KEY (VisitId) REFERENCES Visits(VisitId)
 );
+
+ALTER TABLE Vitals
+ADD CONSTRAINT UQ_Vitals_Clinic_Visit_VitalDef
+UNIQUE (ClinicId, VisitId, VitalDefId);
 
 CREATE TABLE MedicalHistories (
     HistoryId INT IDENTITY PRIMARY KEY,
@@ -353,11 +378,19 @@ CREATE TABLE BillingCharges (
     IsActive BIT DEFAULT 1
 );
 
+CREATE TABLE BillNoGenerators (
+    ClinicId INT NOT NULL,
+    BillNoPrefix NVARCHAR(20) NOT NULL DEFAULT 'B',
+    BillNoFY INT NOT NULL,
+    BillNo BIGINT NOT NULL
+);
+
 CREATE TABLE Bills (
     BillId INT IDENTITY PRIMARY KEY,
     BillNo NVARCHAR(20) NOT NULL,
     BillDate DATE NOT NULL,
     VisitId INT NOT NULL,
+    AppointmentId INT NULL,
     ClinicId INT NOT NULL,
     BillType NVARCHAR(20),
     GrossAmount DECIMAL(10,2),
@@ -366,10 +399,13 @@ CREATE TABLE Bills (
     NetAmount DECIMAL(10,2),
     PaidAmount DECIMAL(10,2),
     PaymentStatus NVARCHAR(20),
-    Remarks NVARCHAR(100)
+    Remarks NVARCHAR(100),
+    CreatedBy INT NOT NULL, 
+    CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
 
     FOREIGN KEY (VisitId) REFERENCES Visits(VisitId),
-    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
+    FOREIGN KEY (AppointmentId) REFERENCES Appointments(AppointmentId)
 );
 
 CREATE TABLE BillLines (

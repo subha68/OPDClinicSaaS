@@ -10,25 +10,119 @@ namespace BLL
     {
         public IDAL<T> _dal;
 
+        protected readonly CalculationEngine _calculationEngine;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly SessionHelper _session;
         public readonly DbHelper _db;
 
         protected BaseService()
         {
+            _calculationEngine = new CalculationEngine();
         }
 
         protected BaseService(IConfiguration config, IHttpContextAccessor httpContextAccessor)
         {
+            _calculationEngine = new CalculationEngine();
             _httpContextAccessor = httpContextAccessor;
             _session = new SessionHelper(_httpContextAccessor);
             _db = new DbHelper(config);
         }
 
-        public int ClinicId => Convert.ToInt32(_session.ClinicId);
-        public int UserId => Convert.ToInt32(_session.UserId);
-        public int RoleId => Convert.ToInt32(_session.RoleId);
-        public string RoleName => _session.RoleName;
+        public int ClinicId
+        {
+            get => _session.ClinicId; 
+            set => _session.ClinicId = value; 
+        }
+        
+        public int RoleId
+        {
+            get => Convert.ToInt32(_session.RoleId);
+            set => _session.RoleId = value;
+        }
+
+        public string RoleName
+        {
+            get => _session.RoleName;
+            set => _session.RoleName = value;
+        }
+
+        public int UserId
+        {
+            get => Convert.ToInt32(_session.UserId);
+            set => _session.UserId = value;
+        }
+
+        public string UserFirstName
+        {
+            get => _session.UserFirstName;
+            set => _session.UserFirstName = value;
+        }
+
+        public string UserLastName
+        {
+            get => _session.UserLastName;
+            set => _session.UserLastName = value;
+        }
+
+        public string UserDisplayName
+        {
+            get => _session.UserDisplayName;
+            set => _session.UserDisplayName = value;
+        }
+
+        public int PatientId
+        {
+            get => Convert.ToInt32(_session.PatientId);
+            set => _session.PatientId = value;
+        }
+
+        public string PatientFirstName
+        {
+            get => _session.PatientFirstName;
+            set => _session.PatientFirstName = value;
+        }
+
+        public string PatientLastName
+        {
+            get => _session.PatientLastName;
+            set => _session.PatientLastName = value;
+        }
+
+        public string PatientDisplayName
+        {
+            get => _session.PatientDisplayName;
+            set => _session.PatientDisplayName = value;
+        }
+
+        public string PatientGender
+        {
+            get => _session.PatientGender;
+            set => _session.PatientGender = value;
+        }
+
+        public int PatientAge
+        {
+            get => Convert.ToInt32(_session.PatientAge);
+            set => _session.PatientAge = value;
+        }
+
+        public string PatientPhone
+        {
+            get => _session.PatientPhone;
+            set => _session.PatientPhone = value;
+        }
+
+        public int LastVisitId
+        {
+            get => Convert.ToInt32(_session.LastVisitId);
+            set => _session.LastVisitId = value;
+        }
+
+        public DateOnly? LastVisitDate
+        {
+            get => _session.LastVisitDate;
+            set => _session.LastVisitDate = value;
+        }
 
         public virtual int Add(T model, SqlConnection conn, SqlTransaction tran)
         {
@@ -284,5 +378,12 @@ namespace BLL
             return value.ToString() ?? "";
         }
 
+        protected decimal? Calculate(string formula, IDictionary<string, decimal> values)
+        {
+            return _calculationEngine.Calculate(formula, values);
+        }
+
     }
+
+
 }

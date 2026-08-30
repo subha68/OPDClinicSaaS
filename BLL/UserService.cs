@@ -52,7 +52,7 @@ namespace BLL
         public User ValidateUser(string username, string password)
         {
             using var conn = _db.GetConnection();
-            conn.Open();
+                conn.Open();
 
             try
             {

@@ -17,8 +17,14 @@ namespace Models
         public Visit? Visit { get; set; }
         public DateTime? VisitDate { get; set; }
 
+        public int? AppointmentId { get; set; }
+        public Appointment? Appointment { get; set; }
+
         public int ClinicId { get; set; }
         public Clinic? Clinic { get; set; }
+        public int? DoctorId { get; set; }
+        public Doctor? Doctor { get; set; }
+
         public string BillType { get; set;}
 
         public decimal GrossAmount { get; set; } = 0;
@@ -36,6 +42,7 @@ namespace Models
                         }
                     }
         public string? Remarks { get; set; }
+        public int CreatedBy { get; set; }
 
         public List<BillLine>? BillLines { get; set; } = new List<BillLine>();
 

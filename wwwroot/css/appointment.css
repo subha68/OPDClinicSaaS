@@ -5,7 +5,7 @@
 }
 
 .slot-card {
-    position: absolute;
+    position: relative;
     left: 0;
     top: 0;
     width: 180px;
@@ -37,9 +37,23 @@
     background: #e8f5e9;
 }
 
+.queue-number {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+
+    color: #333;
+    z-index: 2;
+}
+
 .slot-time {
     text-align: center;
     margin-bottom: 6px;
+
     font-size: 24px;
     font-weight: 700;
     color: #333;
@@ -67,51 +81,42 @@
     justify-content: center;
 }
 
-.billing-badge,
-.payment-badge {
-    padding: 4px 8px;
-    border-radius: 20px;
-    font-size: 11px;
+.status-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 32px;
+    margin-bottom: 8px;
+}
+
+.bill-pay-link {
+    color: #0d6efd;
     font-weight: 600;
-    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
 }
 
-/* Billing */
-
-.billing-billed {
-    background: #dbeafe;
-    color: #1e40af;
+.bill-pay-link:hover {
+    text-decoration: underline;
 }
 
-.billing-unbilled {
-    background: #f3f4f6;
-    color: #374151;
-}
-
-/* Payment */
-
-.payment-paid {
-    background: #dcfce7;
-    color: #166534;
-}
-
-.payment-partial {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.payment-due {
-    background: #fee2e2;
-    color: #991b1b;
+.status-booked-paid {
+    background-color: #198754;
+    color: #fff;
 }
 
 .slot-status {
     text-align: center;
-    font-size: 15px;
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 1px;
-    margin: 4px 0 8px 0;
+    white-space: nowrap;
+    margin: 0;
 }
+
 
 .status-booked {
     background: #1e3a8a;
@@ -135,48 +140,6 @@
 
 .status-available {
     background: #166534;
-    color: white;
-}
-
-.status-row {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 8px;
-}
-
-.slot-status {
-    padding: 4px 10px;
-    border-radius: 16px;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.financial-status {
-    padding: 4px 10px;
-    border-radius: 16px;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.financial-paid {
-    background: #166534;
-    color: white;
-}
-
-.financial-partial {
-    background: #92400e;
-    color: white;
-}
-
-.financial-due {
-    background: #991b1b;
-    color: white;
-}
-
-.financial-unbilled {
-    background: #4b5563;
     color: white;
 }
 

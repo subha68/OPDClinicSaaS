@@ -38,6 +38,7 @@ namespace Models
         public string? ClinicName { get; set; }
         public string? PatientName { get; set; }
         public string? DoctorName { get; set; }
+        public decimal? Fee { get; set; }
         public string? DepartmentName { get; set; }
 
         public string BillingStatus { get; set; } = "Unbilled";  // Billed, Unbilled

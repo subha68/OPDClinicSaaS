@@ -29,19 +29,42 @@
     }
     else
     {
-        <a class="nav-link @(Model.IsCurrent ? "active" : "")"
-           asp-controller="@Model.Controller"
-           asp-action="@Model.Action"
-           asp-route-reportCode="@Model.ReportCode">
+        @if (string.IsNullOrWhiteSpace(Model.Controller) &&
+             string.IsNullOrWhiteSpace(Model.Action))
+        {
+            <!-- CLIENT-SIDE MENU -->
 
-            @if (!string.IsNullOrWhiteSpace(Model.Icon))
-            {
-                <i class="fa @Model.Icon"></i>
-            }
+            <a href="#"
+               class="nav-link @(Model.IsCurrent ? "active" : "")"
+               data-menu-action="@Model.FeatureCode?.ToUpperInvariant()">
 
-            <span>@Model.Title</span>
+                @if (!string.IsNullOrWhiteSpace(Model.Icon))
+                {
+                    <i class="fa @Model.Icon"></i>
+                }
 
-        </a>
+                <span>@Model.Title</span>
+
+            </a>
+        }
+        else
+        {
+            <!-- NORMAL MVC MENU -->
+
+            <a class="nav-link @(Model.IsCurrent ? "active" : "")"
+               asp-controller="@Model.Controller"
+               asp-action="@Model.Action"
+               asp-route-reportCode="@Model.ReportCode">
+
+                @if (!string.IsNullOrWhiteSpace(Model.Icon))
+                {
+                    <i class="fa @Model.Icon"></i>
+                }
+
+                <span>@Model.Title</span>
+
+            </a>
+        }
     }
 
 </li>

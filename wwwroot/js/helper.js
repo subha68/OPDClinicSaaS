@@ -19,9 +19,8 @@ function wireAutocomplete(
                 { term: request.term },
                 function (data) {
 
-                    response(
-                        $.map(data, mapper)
-                    );
+                    const mapped = $.map(data, mapper);
+                    response(mapped);                
                 }
             );
         },

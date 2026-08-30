@@ -4,18 +4,15 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Doctor Management";
 
-    ViewBag.PageTitle = "Doctor Management";
-
     ViewBag.Fields = new []
     {
         new { Name="DoctorName", Label="Name", Type="text", Color="" },
-        //new { Name="LastName", Label="Last Name", Type="text", Color="" },
         new { Name="DepartmentName", Label="Department", Type="text", Color="" },
         new { Name="RegistrationNo", Label="Registration No", Type="text", Color="" },
         new { Name="Qualification", Label="Qualification", Type="text", Color="" },
         new { Name="Phone", Label="Phone", Type="text", Color="" },
         new { Name="Email", Label="Email", Type="text", Color="" },
-        new { Name="ClinicName", Label="Clinic", Type="text", Color="" }
+        new { Name="Fee", Label="Fee (Rs.)", Type="text", Color="" }
     };
 
     ViewBag.SearchFields = new[]

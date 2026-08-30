@@ -1,0 +1,121 @@
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+
+@{
+    var session = HttpContextAccessor.HttpContext?.Session;
+
+    var patientId = session?.GetString("PatientId");
+    var patientDisplayName = session?.GetString("PatientDisplayName") ?? "";
+    var patientAge = session?.GetInt32("PatientAge") ?? 0;
+    var patientGender = session?.GetString("PatientGender") ?? "";
+    var patientPhone = session?.GetString("PatientPhone") ?? "";
+
+    bool hasPatient =
+        int.TryParse(patientId, out var id) && id > 0;
+}
+
+<div class="modal fade"
+     id="vitalModal"
+     tabindex="-1"
+     aria-labelledby="vitalModalLabel"
+     aria-hidden="true"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <!-- HEADER -->
+
+            <div class="modal-header">
+
+                <h5 class="modal-title"
+                    id="vitalModalLabel">
+
+                    <i class="fa-solid fa-heart-pulse me-2"></i>
+                    Vitals
+
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+
+            </div>
+
+            <!-- PATIENT SECTION -->
+
+            @await Html.PartialAsync(
+                    "_PatientHorizontalModal"
+                )
+
+            <!-- BODY -->
+
+            <div class="modal-body">
+
+                <!-- Loading placeholder -->
+                <div id="vitalLoading"
+                     class="text-center d-none">
+
+                    <div class="spinner-border text-primary"
+                         role="status"
+                         aria-hidden="true">
+                    </div>
+
+                    <div class="mt-2">
+                        Loading vitals...
+                    </div>
+
+                </div>
+
+
+                <!-- Error placeholder -->
+                <div id="vitalError"
+                    class="alert alert-danger d-none"
+                    role="alert">
+                </div>
+
+                <div id="vitalSuccess"
+                    class="alert alert-success d-none"
+                    role="alert">
+                </div>
+
+                <!-- Dynamic vital fields are rendered here by vital.js -->
+                <div id="vitalFields"
+                     class="row g-3">
+                </div>
+
+            </div>
+
+
+            <!-- FOOTER -->
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+
+                    Cancel
+
+                </button>
+
+                <button type="button"
+                        id="btnSaveVitals"
+                        class="btn btn-primary">
+
+                    <i class="fa-solid fa-save me-1"></i>
+                    Save
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

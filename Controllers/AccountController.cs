@@ -97,9 +97,9 @@ namespace Controllers
                 HttpContext.Session.SetString("UserId", user.UserId.ToString());
                 HttpContext.Session.SetString("Username", username);
                 HttpContext.Session.SetString("RoleName", rolename);
-                HttpContext.Session.SetString("FirstName", user.FirstName ?? "");
-                HttpContext.Session.SetString("LastName", user.LastName ?? "");
-                HttpContext.Session.SetString("DisplayName", (user.FirstName ?? "") + " " + (user.LastName ?? ""));
+                HttpContext.Session.SetString("UserFirstName", user.FirstName ?? "");
+                HttpContext.Session.SetString("UserLastName", user.LastName ?? "");
+                HttpContext.Session.SetString("UserDisplayName", (user.FirstName ?? "") + " " + (user.LastName ?? ""));
                 HttpContext.Session.SetString("Features", _user.GetUserFeaturesAsString(user));
                 HttpContext.Session.SetString("IsFirstLogin", user.IsFirstLogin.ToString());
 

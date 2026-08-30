@@ -7,7 +7,7 @@
         Model != null &&
         Model.ClinicId > 0;
 
-    ViewBag.PageTitle = isEdit ? "Edit Clinic" : "Create Clinic";
+    ViewData["Title"] = isEdit ? "Edit Clinic" : "Create Clinic";
 
     ViewBag.Fields = new[]
     {

@@ -67,6 +67,17 @@
                                 </td>
                             </tr>
 
+                            @if (Model.Doctor != null &&
+                                !string.IsNullOrWhiteSpace(Model.Doctor.DoctorName))
+                            {
+                                <tr>
+                                    <th>Doctor</th>
+                                    <td>
+                                        @Model.Doctor.DoctorName
+                                    </td>
+                                </tr>
+                            }
+
                         </table>
                     </div>
 
@@ -76,7 +87,7 @@
                         <table class="table table-borderless table-sm">
                             <tr>
                                 <th>Bill No</th>
-                                <td>@Model.BillId</td>
+                                <td>@Model.BillNo</td>
                             </tr>
 
                             <tr>

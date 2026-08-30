@@ -114,12 +114,13 @@ namespace DAL
                 SELECT
                     a.AppointmentId,
                     a.AppointmentDate,
-                    v.VisitId,
+                    a.VisitId,
                     a.SlotStartTime,
                     a.SlotEndTime,
                     a.Status,
                     p.FirstName + ' ' + p.LastName as PatientName,
                     d.Salutation + ' ' + d.FirstName + ' ' + d.LastName as DoctorName,
+                    d.Fee,
                     c.Name as ClinicName,
                     d.DepartmentId,
                     t.Name as DepartmentName
@@ -132,14 +133,15 @@ namespace DAL
                     ON a.ClinicId = c.ClinicId
                 INNER JOIN Departments t
                     ON d.DepartmentId = t.DepartmentId
-                INNER JOIN Visits v
-                    ON a.VisitId = v.VisitId";
+                WHERE a.ClinicId = @ClinicId";
 
             SqlCommand cmd = new SqlCommand(query, conn);
             if (tran != null)
             {
                 cmd.Transaction = tran;
             }
+
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
 
             using (SqlDataReader dr = cmd.ExecuteReader())
             {
@@ -154,6 +156,7 @@ namespace DAL
                         Status = dr["Status"].ToString(),
                         PatientName = dr["PatientName"].ToString(),
                         DoctorName = dr["DoctorName"].ToString(),
+                        Fee = dr["Fee"] != DBNull.Value ? Convert.ToDecimal(dr["Fee"]) : null,
                         ClinicName = dr["ClinicName"].ToString(),
                         VisitId = Convert.ToInt32(dr["VisitId"]),
                         DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
@@ -165,24 +168,172 @@ namespace DAL
             return list;
         }
 
-        public Appointment Get(int appointmentId, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
+        public List<Appointment> GetAll(int patientId, int visitId, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
-            Appointment appointment = null;
+            var list = new List<Appointment>();
 
             string query = @"
                 SELECT
                     a.AppointmentId,
                     a.AppointmentDate,
+                    a.VisitId,
+                    a.SlotStartTime,
+                    a.SlotEndTime,
+                    a.Status,
+                    p.FirstName + ' ' + p.LastName as PatientName,
+                    d.Salutation + ' ' + d.FirstName + ' ' + d.LastName as DoctorName,
+                    d.Fee,
+                    c.Name as ClinicName,
+                    d.DepartmentId,
+                    t.Name as DepartmentName
+                FROM Appointments a
+                INNER JOIN Patients p
+                    ON a.PatientId = p.PatientId
+                INNER JOIN Doctors d
+                    ON a.DoctorId = d.DoctorId
+                INNER JOIN Clinics c
+                    ON a.ClinicId = c.ClinicId
+                INNER JOIN Departments t
+                    ON d.DepartmentId = t.DepartmentId
+                WHERE a.PatientId = @PatientId
+                AND a.VisitId = @VisitId
+                AND a.ClinicId = @ClinicId";
+
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
+
+            cmd.Parameters.AddWithValue("@PatientId", patientId);
+            cmd.Parameters.AddWithValue("@VisitId", visitId);
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+
+            using (SqlDataReader dr = cmd.ExecuteReader())
+            {
+                while (dr.Read())
+                {
+                    list.Add(new Appointment
+                    {
+                        AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
+                        AppointmentDate = Convert.ToDateTime(dr["AppointmentDate"]),
+                        SlotTime = (TimeSpan)dr["SlotStartTime"],
+                        //SlotEndTime = (TimeSpan)dr["SlotEndTime"],
+                        Status = dr["Status"].ToString(),
+                        PatientName = dr["PatientName"].ToString(),
+                        DoctorName = dr["DoctorName"].ToString(),
+                        Fee = dr["Fee"] != DBNull.Value ? Convert.ToDecimal(dr["Fee"]) : null,
+                        ClinicName = dr["ClinicName"].ToString(),
+                        VisitId = Convert.ToInt32(dr["VisitId"]),
+                        DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
+                        DepartmentName = dr["DepartmentName"].ToString()
+                    });
+                }
+            }
+
+            return list;
+        }
+
+        public List<Appointment> GetByPatientAndDate(int patientId, DateTime appointmentDate, int clinicId,
+                                                        SqlConnection conn, SqlTransaction? tran = null)
+        {
+            var list = new List<Appointment>();
+
+            string sql = @"
+                SELECT
+                    a.AppointmentId,
+                    a.AppointmentDate,
+                    a.PatientId,
+                    a.DoctorId,
+                    a.VisitId,
+                    a.SlotStartTime,
+                    a.SlotEndTime,
+                    a.Status,
+
+                    p.FirstName + ' ' + p.LastName AS PatientName,
+
+                    d.Salutation + ' ' + d.FirstName + ' ' + d.LastName AS DoctorName,
+                    d.Fee,
+
+                    d.DepartmentId,
+                    t.Name AS DepartmentName
+
+                FROM Appointments a
+
+                INNER JOIN Patients p
+                    ON a.PatientId = p.PatientId
+
+                INNER JOIN Doctors d
+                    ON a.DoctorId = d.DoctorId
+
+                INNER JOIN Departments t
+                    ON d.DepartmentId = t.DepartmentId
+
+                WHERE a.PatientId = @PatientId
+                AND a.ClinicId = @ClinicId
+                AND a.AppointmentDate >= @AppointmentDate
+                AND a.AppointmentDate < DATEADD(DAY, 1, @AppointmentDate)
+
+                ORDER BY a.SlotStartTime";
+
+            using var cmd = new SqlCommand(sql, conn);
+
+            if (tran != null)
+                cmd.Transaction = tran;
+
+            cmd.Parameters.AddWithValue("@PatientId", patientId);
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+            cmd.Parameters.AddWithValue("@AppointmentDate", appointmentDate.Date);
+
+            using var dr = cmd.ExecuteReader();
+
+            while (dr.Read())
+            {
+                list.Add(new Appointment
+                {
+                    AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
+                    AppointmentDate = Convert.ToDateTime(dr["AppointmentDate"]),
+                    PatientId = Convert.ToInt32(dr["PatientId"]),
+                    DoctorId = Convert.ToInt32(dr["DoctorId"]),
+                    VisitId = Convert.ToInt32(dr["VisitId"]),
+
+                    SlotTime = (TimeSpan)dr["SlotStartTime"],
+
+                    Status = dr["Status"].ToString(),
+
+                    PatientName = dr["PatientName"].ToString(),
+                    DoctorName = dr["DoctorName"].ToString(),
+                    Fee = dr["Fee"] != DBNull.Value ? Convert.ToDecimal(dr["Fee"]) : null,
+                        
+                    DepartmentId = Convert.ToInt32(dr["DepartmentId"]),
+                    DepartmentName = dr["DepartmentName"].ToString()
+                });
+            }
+
+            return list;
+        }
+
+
+        public Appointment Get(int appointmentId, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
+        {
+            Appointment appointment = null;
+
+            string query = @"
+                 SELECT
+                    a.AppointmentId,
+                    a.AppointmentDate,
+                    a.ClinicId,
                     a.PatientId,
                     a.DoctorId,
                     a.SlotStartTime,
                     a.SlotEndTime,
-                    v.VisitId,
+                    a.VisitId,
                     a.TokenNumber,
                     a.QueueNumber,
                     a.Status,
                     p.FirstName + ' ' + p.LastName as PatientName,
                     d.Salutation + ' ' + d.FirstName + ' ' + d.LastName as DoctorName,
+                    d.Fee,
                     c.Name as ClinicName,
                     d.DepartmentId,
                     t.Name as DepartmentName,
@@ -205,23 +356,20 @@ namespace DAL
                     ON a.DoctorId = d.DoctorId
                 INNER JOIN Clinics c
                     ON a.ClinicId = c.ClinicId
-                INNER JOIN Visits v
-                    ON a.VisitId = v.VisitId
                 INNER JOIN Departments t
                     ON d.DepartmentId = t.DepartmentId
                 LEFT JOIN
-                (
-                    SELECT
-                        VisitId,
+                (SELECT AppointmentId,
                         COUNT(*) AS BillCount,
                         SUM(NetAmount) AS TotalNetAmount,
                         SUM(NetAmount - PaidAmount) AS TotalBalance,
                         SUM(PaidAmount) AS TotalPaidAmount
                     FROM Bills
-                    GROUP BY VisitId
-                ) b
-                    ON a.VisitId = b.VisitId
-                WHERE a.AppointmentId = @AppointmentId";
+                    WHERE AppointmentId IS NOT NULL
+                    GROUP BY AppointmentId ) b
+                    ON a.AppointmentId = b.AppointmentId
+                WHERE a.AppointmentId = @AppointmentId
+                AND a.ClinicId = @ClinicId";
 
             SqlCommand cmd = new SqlCommand(query, conn);
             if (tran != null)
@@ -230,6 +378,7 @@ namespace DAL
             }
 
             cmd.Parameters.AddWithValue("@AppointmentId", appointmentId);
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
 
             using (SqlDataReader dr = cmd.ExecuteReader())
             {
@@ -239,6 +388,7 @@ namespace DAL
                     {
                         AppointmentId = Convert.ToInt32(dr["AppointmentId"]),
                         AppointmentDate = Convert.ToDateTime(dr["AppointmentDate"]),
+                        ClinicId = Convert.ToInt32(dr["ClinicId"]),
                         PatientId = Convert.ToInt32(dr["PatientId"]),
                         SlotTime = (TimeSpan)dr["SlotStartTime"],
                         //SlotEndTime = (TimeSpan)dr["SlotEndTime"],
@@ -247,6 +397,7 @@ namespace DAL
                         PaymentStatus = dr["PaymentStatus"].ToString(),
                         PatientName = dr["PatientName"].ToString(),
                         DoctorName = dr["DoctorName"].ToString(),
+                        Fee = dr["Fee"] != DBNull.Value ? Convert.ToDecimal(dr["Fee"]) : null,
                         ClinicName = dr["ClinicName"].ToString(),
                         VisitId = Convert.ToInt32(dr["VisitId"]),
                         TokenNumber = dr["TokenNumber"] == DBNull.Value ? 0 : Convert.ToInt32(dr["TokenNumber"]),
@@ -278,6 +429,7 @@ namespace DAL
                     a.Status,
                     p.FirstName + ' ' + p.LastName as PatientName,
                     d.Salutation + ' ' + d.FirstName + ' ' + d.LastName as DoctorName,
+                    d.Fee,
                     c.Name as ClinicName,
                     d.DepartmentId,
                     t.Name as DepartmentName
@@ -318,6 +470,7 @@ namespace DAL
                     Status = dr["Status"].ToString(),
                     PatientName = dr["PatientName"].ToString(),
                     DoctorName = dr["DoctorName"].ToString(),
+                    Fee = dr["Fee"] != DBNull.Value ? Convert.ToDecimal(dr["Fee"]) : null,
                     ClinicName = dr["ClinicName"].ToString(),
                     VisitId = Convert.ToInt32(dr["VisitId"]),
                     TokenNumber = dr["TokenNumber"] == DBNull.Value ? 0 : Convert.ToInt32(dr["TokenNumber"]),
@@ -347,11 +500,12 @@ namespace DAL
                     a.CancellationReason,
                     p.PatientId,
                     p.FirstName + ' ' + p.LastName AS PatientName,
+                    d.Fee,
 
                     CASE
                         WHEN b.BillCount > 0 THEN 'Billed'
                         ELSE 'Unbilled'
-                    END AS BillStatus,
+                    END AS BillingStatus,
 
                     CASE
                         WHEN b.TotalNetAmount > 0 AND b.TotalPaidAmount = 0 THEN 'Due'
@@ -377,15 +531,16 @@ namespace DAL
                 LEFT JOIN
                 (
                     SELECT
-                        VisitId,
+                        AppointmentId,
                         COUNT(*) AS BillCount,
                         SUM(NetAmount) AS TotalNetAmount,
                         SUM(NetAmount - PaidAmount) AS TotalBalance,
                         SUM(PaidAmount) AS TotalPaidAmount
                     FROM Bills
-                    GROUP BY VisitId
+                    WHERE AppointmentId IS NOT NULL
+                    GROUP BY AppointmentId
                 ) b
-                    ON a.VisitId = b.VisitId
+                    ON a.AppointmentId  = b.AppointmentId
 
                 WHERE a.DoctorId = @DoctorId
                 AND a.ClinicId = @ClinicId
@@ -417,7 +572,8 @@ namespace DAL
                     CancellationReason = dr["CancellationReason"].ToString(),
                     PatientId = Convert.ToInt32(dr["PatientId"]),
                     PatientName = dr["PatientName"].ToString(),
-                    BillingStatus = dr["BillStatus"].ToString(),
+                    Fee = dr["Fee"] != DBNull.Value ? Convert.ToDecimal(dr["Fee"]) : null,
+                    BillingStatus = dr["BillingStatus"].ToString(),
                     PaymentStatus = dr["PaymentStatus"].ToString()
                 });
             }
@@ -438,6 +594,7 @@ namespace DAL
                     a.Status,
                     p.FirstName + ' ' + p.LastName as PatientName,
                     d.Salutation + ' ' + d.FirstName + ' ' + d.LastName as DoctorName,
+                    d.Fee,
                     c.Name as ClinicName,
                     v.VisitId,
                     d.DepartmentId,
@@ -477,6 +634,7 @@ namespace DAL
                     Status = dr["Status"].ToString(),
                     PatientName = dr["PatientName"].ToString(),
                     DoctorName = dr["DoctorName"].ToString(),
+                    Fee = dr["Fee"] != DBNull.Value ? Convert.ToDecimal(dr["Fee"]) : null,
                     ClinicName = dr["ClinicName"].ToString(),
                     VisitId = Convert.ToInt32(dr["VisitId"]),
                     DepartmentId = Convert.ToInt32(dr["DepartmentId"]),

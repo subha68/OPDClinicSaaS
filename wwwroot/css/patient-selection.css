@@ -1,0 +1,7 @@
+[data-patient-selection-context] {
+    position: relative;
+}
+
+[data-patient-selection-context] .ui-autocomplete {
+    z-index: 999999 !important;
+}

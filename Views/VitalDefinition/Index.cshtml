@@ -1,0 +1,43 @@
+@model IEnumerable<Models.VitalDefinition>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Vital Definitions";
+
+    ViewBag.Fields = new []
+    {
+        //new { Name="VitalCode", Label="Code", Type="text", Color="" },
+        new { Name="VitalLabel", Label="Vital", Type="text", Color="" },
+        new { Name="VitalType", Label="Type", Type="text", Color="" },
+        new { Name="DataType", Label="Data Type", Type="text", Color="" },
+        new { Name="VitalUnit", Label="Unit", Type="text", Color="" },
+        new { Name="IsDerived", Label="Derived", Type="checkbox", Color="" },
+        new { Name="IsStandard", Label="Standard", Type="checkbox", Color="" },
+        new { Name="IsActive", Label="Active", Type="checkbox", Color="" }
+    };
+
+    ViewBag.SearchFields = new[]
+    {
+        "VitalCode",
+        "VitalLabel",
+        "VitalType",
+        "DataType",
+        "VitalUnit"
+    };
+
+    ViewBag.KeyField = "VitalDefId";
+
+    ViewBag.CustomHeaderActions = new[]
+    {
+        new
+        {
+            Controller = "VitalDefinition",
+            Action = "CloneDefaults",
+            Label = "Clone Defaults",
+            condition = "CanCloneDefaults"
+        }
+    };
+
+}
+
+@await Html.PartialAsync("_CrudList", Model)

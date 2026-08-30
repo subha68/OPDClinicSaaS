@@ -7,7 +7,7 @@
         Model != null &&
         Model.RoleId > 0;
 
-    ViewBag.PageTitle = isEdit ? "Edit Role" : "Create Role";
+    ViewData["Title"] = isEdit ? "Edit Role" : "Create Role";
 
     ViewBag.Fields = new[]
     {

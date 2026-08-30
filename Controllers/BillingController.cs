@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using BLL;
 using Models;
 using ViewModels;
@@ -14,13 +13,15 @@ public class BillingController : Controller
     private readonly PatientService _patient;
     private readonly ClinicService _clinic;
     private readonly PaymentService _payment;
+    private readonly AppointmentService _appointment;
 
-    public BillingController(BillService bill, 
-                             VisitService visit, 
-                             BillingChargeService billingCharge, 
-                             PatientService patient, 
-                             ClinicService clinic, 
-                             PaymentService payment)
+    public BillingController(BillService bill,
+                                VisitService visit,
+                                BillingChargeService billingCharge,
+                                PatientService patient,
+                                ClinicService clinic,
+                                PaymentService payment,
+                                AppointmentService appointment)
     {
         _bill = bill;
         _visit = visit;
@@ -28,11 +29,13 @@ public class BillingController : Controller
         _patient = patient;
         _clinic = clinic;
         _payment = payment;
+        _appointment = appointment;
     }
 
     public IActionResult Index()
     {
         var bills = _bill.List();
+
         return View(bills);
     }
 
@@ -40,99 +43,113 @@ public class BillingController : Controller
     public IActionResult SearchPatient()
     {
         return RedirectToAction(
-                    "Search",
-                    "Patient",
-                    new
-                    {
-                        returnTo = "Billing"
-                    }); 
+            "Search",
+            "Patient",
+            new
+            {
+                returnTo = "Billing"
+            });
     }
 
     [HttpGet]
     public IActionResult SearchByPatient(int patientId)
     {
         var bills = _bill.ListByPatient(patientId);
+
         ViewBag.Patient = _patient.Get(patientId);
 
         return View("Index", bills);
     }
 
-    //----------------------------------------
+
+    // -------------------------------------------------
     // GET: Billing/Create
-    //----------------------------------------
+    // -------------------------------------------------
+
     [HttpGet]
-    public IActionResult Create()
+    public IActionResult Create(int? appointmentId)
     {
-        var model = new Bill
-        {
-            BillDate = DateTime.Today
-        };
-
-        ViewBag.Patients = GetPatients();
-
-        ViewBag.BillingCharges = GetBillingCharges();
+        var model = _bill.GetNewBillByAppointment(appointmentId);
 
         return View(model);
     }
 
-    //----------------------------------------
+
+    // -------------------------------------------------
     // POST: Billing/Create
-    //----------------------------------------
+    // -------------------------------------------------
+
     [HttpPost]
-    public IActionResult Create(Bill model)
+    public IActionResult Create(BillingCreateVM model)
     {
-        /* if (!ModelState.IsValid)
-        {
-            foreach (var key in ModelState.Keys)
+        int billId = _bill.Create(model.Bill);
+
+        return RedirectToAction(
+            "Print",
+            new
             {
-                var errors = ModelState[key].Errors;
-                foreach (var err in errors)
-                {
-                    Console.WriteLine($"Field: {key} → Error: {err.ErrorMessage}");
-                }
-            }
-
-            ViewBag.Patients = GetPatients();
-            ViewBag.BillingCharges = GetBillingCharges();
-            return View(model);
-        } */
-
-        int billId = _bill.Create(model);
-
-        return RedirectToAction("Print", new { id = billId });
+                id = billId
+            });
     }
 
-    //----------------------------------------
-    // AJAX: Get Visits by Patient
-    //----------------------------------------
-    [HttpGet]
-    public IActionResult GetVisits(int patientId, DateTime billDate)
-    {
-        var visits = _visit.GetVisitByPatient(patientId)
-            .Select(x => new
-            {
-                x.VisitId,
-                VisitDate = x.VisitDate
-            })
-            .ToList();
 
-        var sameDateVisit = visits
-            .FirstOrDefault(x => x.VisitDate.Date == billDate.Date);
+    // -------------------------------------------------
+    // AJAX: Get billing context
+    //
+    // Called whenever PatientId becomes known/changes.
+    //
+    // Returns:
+    //     Patient
+    //     Visit for patient + bill date
+    //     Appointments/doctors for that visit/date
+    // -------------------------------------------------
+
+    [HttpGet]
+    public IActionResult GetBillingContext(int patientId, DateTime billDate, int? appointmentId)
+    {
+        var vm = _bill.GetBillingContext(patientId, billDate, appointmentId);
+
+        if (vm.Bill.Patient == null)
+        {
+            return Json(new
+            {
+                success = false,
+                message = "Patient not found."
+            });
+        }
 
         return Json(new
         {
-            selectedVisitId = sameDateVisit?.VisitId,
-            visits = visits.Select(x => new
+            success = true,
+
+            patient = new
             {
-                x.VisitId,
-                text = x.VisitDate.ToString("dd-MMM-yyyy")
-            })
+                patientId = vm.Bill.PatientId,
+                patientName = vm.Bill.PatientName
+            },
+
+            hasVisit = vm.Bill.VisitId > 0,
+
+            visitId = vm.Bill.VisitId > 0 ? vm.Bill.VisitId : (int?)null,
+
+            previousBillCount = vm.PreviousBillCount,
+
+            consultationChargeId = vm.ConsultationChargeId,
+
+            appointments = vm.Appointments.Select(x => new
+                {
+                    appointmentId = x.AppointmentId,
+                    doctorId = x.DoctorId,
+                    doctorName = x.DoctorName,
+                    fee = x.Fee
+                })
         });
     }
 
-    //----------------------------------------
-    // AJAX: Get Billing Charge Rate
-    //----------------------------------------
+    // -------------------------------------------------
+    // AJAX: Billing charge rate
+    // -------------------------------------------------
+
     [HttpGet]
     public IActionResult GetChargeRate(int id)
     {
@@ -141,9 +158,12 @@ public class BillingController : Controller
         return Json(rate);
     }
 
-    //----------------------------------------
+
+    // -------------------------------------------------
     // Print
-    //----------------------------------------
+    // -------------------------------------------------
+
+    [HttpGet]
     public IActionResult Print(int id)
     {
         var bill = _bill.Get(id);
@@ -151,25 +171,32 @@ public class BillingController : Controller
         return View(bill);
     }
 
-    private List<SelectListItem> GetPatients()
+
+    // -------------------------------------------------
+    // AJAX: Previous bills for a VISIT
+    //
+    // Important:
+    // This is intentionally VisitId, not AppointmentId.
+    //
+    // A visit can have multiple doctors/appointments,
+    // and we want all bills belonging to the visit.
+    // -------------------------------------------------
+
+    [HttpGet]
+    public IActionResult GetPreviousBills(int visitId)
     {
-        return _patient.List()
-            .Select(x => new SelectListItem
+        var bills = _bill.ListByVisit(visitId);
+
+        return Json(
+            bills.Select(x => new
             {
-                Value = x.PatientId.ToString(),
-                Text = x.FirstName + " " + x.LastName
-            }).ToList();
+                billId = x.BillId,
+                billNo = x.BillNo,
+                billDate = x.BillDate.ToString("dd-MMM-yyyy"),
+                amount = x.NetAmount,
+                paid = x.TotalPaidAmount,
+                status = x.PaymentStatus
+            })
+        );
     }
-
-    private List<SelectListItem> GetBillingCharges()
-    {
-            return _billingCharge.List()
-                .Where(x => x.IsActive)
-                .Select(x => new SelectListItem
-                {
-                    Value = x.ChargeId.ToString(),
-                    Text = x.ChargeName
-                }).ToList();
-    }
-
 }

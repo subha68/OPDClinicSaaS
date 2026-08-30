@@ -83,6 +83,11 @@ builder.Services.AddScoped<MedicineDAL>();
 builder.Services.AddScoped<MedicineService>();
 builder.Services.AddScoped<PrescriptionTemplateDAL>();
 builder.Services.AddScoped<PrescriptionTemplateService>();
+builder.Services.AddScoped<VitalDefinitionDAL>();
+builder.Services.AddScoped<VitalDefinitionService>();
+builder.Services.AddScoped<VitalDAL>();
+builder.Services.AddScoped<VitalService>();
+builder.Services.AddSingleton<CalculationEngine>();
 
 builder.Services.AddScoped<ReportDAL>();
 builder.Services.AddScoped<ReportService>();

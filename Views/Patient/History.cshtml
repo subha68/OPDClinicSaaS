@@ -2,15 +2,11 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewBag.PageTitle = "Patient History";
+    ViewData["Title"] = "Patient History";
 }
 
 <div class="card mb-3">
     <div class="card-body">
-
-        <h4>
-            @Model.FirstName @Model.LastName
-        </h4>
 
         <div class="row">
 

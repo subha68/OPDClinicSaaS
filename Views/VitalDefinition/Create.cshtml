@@ -1,0 +1,47 @@
+@model Models.VitalDefinition
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    bool isEdit =
+        Model != null &&
+        Model.VitalDefId > 0;
+
+    ViewData["Title"] = isEdit ? "Edit Vital Definition" : "Add Vital Definition";
+
+    ViewBag.Fields = new[]
+    {
+        new { Name="VitalCode", Label="Code", Type="text", Col="2"},
+        new { Name="VitalLabel", Label="Name", Type="text", Col="4"},
+        new { Name="VitalType", Label="Vital Type", Type="dropdown", Col="3"},
+        new { Name="DataType", Label="Data Type", Type="dropdown", Col="3"},
+        new { Name="VitalUnit", Label="Unit", Type="text", Col="3"},
+        new { Name="IsDerived", Label="Derived", Type="checkbox", Col="3"},
+        new { Name="IsStandard", Label="Standard", Type="checkbox", Col="3"},
+        new { Name="IsActive", Label="Active", Type="checkbox", Col="3"},
+        new { Name="DeriveFormula", Label="Formula", Type="text", Col="6"},
+        new { Name="DisplayComposition", Label="Composition", Type="text", Col="6"},
+    };
+
+    ViewBag.VitalTypes = new SelectList(
+        new List<string>
+        {                                                                                                                                                                                                                                                                                                                                                                                                                                           
+            "Item", "Composition Item", "Composition", "Derived"
+        });
+
+    ViewBag.DataTypes = new SelectList(
+        new List<string>
+        {
+            "Number", "Decimal", "Text"
+        });
+
+    ViewBag.Dropdowns = new Dictionary<string, object>()
+    {
+        { "VitalType", ViewBag.VitalTypes },
+        { "DataType", ViewBag.DataTypes }
+    };
+
+    ViewBag.KeyField = "VitalDefId";
+}
+
+@await Html.PartialAsync("_CrudForm", Model)

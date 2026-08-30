@@ -9,8 +9,8 @@
         controller == "Account" &&
         action == "Login";
 
-    var isFirstLogin =
-        Context.Session.GetString("IsFirstLogin") == "True";
+    var pageTitle =
+        ViewData["Title"]?.ToString() ?? "ClinicsRUs";
 }
 
 <!DOCTYPE html>
@@ -58,6 +58,9 @@
 
         <link href="~/css/consultation.css"
             rel="stylesheet" />
+
+        <link href="~/css/patient-selection.css"
+            rel="stylesheet" />      
 
         @RenderSection("Styles", required: false)
     </head>
@@ -152,7 +155,15 @@
             <div class="main-area">
 
                 <main class="page-body">
+                    
+                    <div class="page-title">
+                        @pageTitle
+                    </div>
+                    
+                    @await Html.PartialAsync("_PatientHeader")
+
                     @RenderBody()
+
                 </main>
 
             </div>
@@ -166,6 +177,14 @@
             on every authenticated page, not just Home/Index.
         -->
         <partial name="_ChangePasswordModal" />
+
+        <!--
+            Vitals Modal
+
+            Only the modal shell/placeholders are rendered here.
+            Vital definitions and values are loaded by vital.js.
+        -->
+        <partial name="_VitalModal" />        
     }
     else
     {
@@ -199,42 +218,12 @@
 
     <script src="~/js/password-toggle.js"></script>
 
-    <script src="~/js/change-password.js" asp-append-version="true"></script>
+    <script src="~/js/manage-patient-cache.js"> </script> 
 
     @if (!isLoginPage)
-    {
-        <script>
-
-            document.addEventListener("DOMContentLoaded", function () {
-
-                const modalElement =
-                    document.getElementById("changePasswordModal");
-
-                if (!modalElement) {
-                    return;
-                }
-
-                const isFirstLogin =
-                    modalElement.dataset.firstLogin === "true";
-
-                const modal =
-                    bootstrap.Modal.getOrCreateInstance(modalElement);
-
-                /*
-                * First Login
-                *
-                * Automatically open the Change Password modal.
-                *
-                * The modal itself is configured as non-dismissible
-                * when this is a first login.
-                */
-                if (isFirstLogin) {
-                    modal.show();
-                }
-
-            });
-
-        </script>
+    {    
+        <script src="~/js/change-password.js" asp-append-version="true"></script>
+        <script src="~/js/vital.js" asp-append-version="true"></script>
     }
 
     @await RenderSectionAsync("Scripts", required: false)

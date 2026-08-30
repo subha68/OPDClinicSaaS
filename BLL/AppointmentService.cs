@@ -12,6 +12,7 @@ namespace BLL
         private readonly AppointmentDAL _appointmentDAL;
         private readonly VisitDAL _visitDAL;
         private readonly DoctorScheduleDAL _scheduleDAL;
+        private readonly PatientDAL _patientDAL;
 
         public AppointmentService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
                                 : base(config, httpContextAccessor)
@@ -19,6 +20,7 @@ namespace BLL
             _appointmentDAL = new AppointmentDAL(config);
             _visitDAL = new VisitDAL(config);
             _scheduleDAL = new DoctorScheduleDAL(config);
+            _patientDAL = new PatientDAL(config);
             _dal = _appointmentDAL;
         }
 
@@ -37,6 +39,21 @@ namespace BLL
             }           
         }
 
+        public List<Appointment> ListByPatientAndDate(int patientId, DateTime appointmentDate)
+        {
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _appointmentDAL.GetByPatientAndDate(patientId, appointmentDate, ClinicId, conn);
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
         public List<Appointment> ListByPatient(int patientId)
         {
             using var conn = _db.GetConnection();
@@ -51,8 +68,21 @@ namespace BLL
                 throw;
             }
         }
+
+        public List<Appointment> ListActiveByPatientAndDate(int patientId, DateTime appointmentDate)
+        {
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            var appointments = _appointmentDAL.GetByPatientAndDate(patientId, appointmentDate, ClinicId, conn);
+
+            return appointments
+                .Where(x => x.Status != "Cancelled")
+                .ToList();
+        }
+
         
-        public void UpdateStatus(int appointmentId, string status, string cancellationReason = null)
+        public void UpdateStatus(int appointmentId, string status, string? cancellationReason = null)
         {
             using var conn = _db.GetConnection();
             conn.Open();
@@ -107,6 +137,9 @@ namespace BLL
                                                         .ToList();
 
                         bool isBooked = activeAppointment != null;
+                        var appointmentStatus = activeAppointment?.Status ?? "Available";
+                        var billingStatus = activeAppointment?.BillingStatus ?? "Unbilled";
+                        var paymentStatus = activeAppointment?.PaymentStatus ?? "";
 
                         slots.Add(
                             new AppointmentSlotVM
@@ -116,9 +149,13 @@ namespace BLL
                                 AppointmentId = activeAppointment?.AppointmentId,
                                 PatientId = activeAppointment?.PatientId,
                                 PatientName = activeAppointment?.PatientName,
-                                AppointmentStatus = activeAppointment?.Status ?? "Available",
-                                BillingStatus = activeAppointment?.BillingStatus ?? "Unbilled",
-                                PaymentStatus = activeAppointment?.PaymentStatus ?? "",
+                                AppointmentStatus = appointmentStatus,
+                                BillingStatus = billingStatus,
+                                PaymentStatus = paymentStatus,
+                              //  SlotStatus = StatusMap(appointmentStatus, billingStatus, paymentStatus),
+
+                                TokenNumber = activeAppointment?.TokenNumber,
+                                QueueNumber = activeAppointment?.QueueNumber,
 
                                 CancelledAppointments = cancelledAppointments
                             });
@@ -136,6 +173,7 @@ namespace BLL
             }
 
         }
+
 
         public AppointmentBookingResult BookAppointment(AppointmentCreateVM vm)
         {
@@ -185,13 +223,26 @@ namespace BLL
 
                 int appointmentId = _dal.Add(appointment, conn, tran);
 
+                Patient patient = _patientDAL.Get(vm.PatientId, ClinicId, conn, tran);
+
+                if (patient != null)
+                {
+                    PatientId = patient.PatientId;
+                    PatientDisplayName = patient.FullName;
+                    PatientGender = patient.Gender;
+                    PatientAge = patient.Age;
+                    PatientPhone = patient.Phone;
+                }                
+
                 tran.Commit();
 
                 return new AppointmentBookingResult
                 {
+                    success = true,
                     AppointmentId = appointmentId,
                     TokenNumber = tokenNumber,
-                    QueueNumber = queueNumber
+                    QueueNumber = queueNumber,
+                    Patient = patient
                 };
             }
             catch

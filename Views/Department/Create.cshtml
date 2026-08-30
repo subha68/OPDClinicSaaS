@@ -7,7 +7,7 @@
         Model != null &&
         Model.DepartmentId > 0;
 
-    ViewBag.PageTitle = isEdit ? "Edit Department" : "Create Department";
+    ViewData["Title"] = isEdit ? "Edit Department" : "Create Department";
 
     ViewBag.Fields = new[]
     {

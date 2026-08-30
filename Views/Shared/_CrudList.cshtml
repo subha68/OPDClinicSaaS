@@ -5,8 +5,6 @@
 
         <!-- Header -->
         <div class="d-flex justify-content-between mb-3">
-            <h2 class="page-title">@ViewBag.PageTitle</h2>
-
             <div class="d-flex align-items-center gap-2">
                 @if (ViewBag.SearchFields != null)
                 {
@@ -17,11 +15,38 @@
                         placeholder="Search..." />
                 }
 
+                <a asp-action="Create"
+                class="btn btn-future">
+                    + Add New
+                </a>
+                
                 @if (ViewBag.CustomHeaderActions != null)
                 {
-                    <div>
+                    <div class="d-flex align-items-center gap-2">
                         @foreach (var action in ViewBag.CustomHeaderActions)
                         {
+                            bool canShow = true;
+
+                            if (!string.IsNullOrWhiteSpace(action.condition))
+                            {
+                                if (ViewBag.CheckConditions != null)
+                                {
+                                    var conditions =
+                                        ViewBag.CheckConditions as Dictionary<string, bool>;
+
+                                    if (conditions != null &&
+                                        conditions.ContainsKey(action.condition))
+                                    {
+                                        canShow = conditions[action.condition];
+                                    }
+                                }
+                            }
+
+                            if (!canShow)
+                            {
+                                continue;
+                            }
+
                             <a asp-controller="@action.Controller"
                             asp-action="@action.Action"
                             class="btn btn-sm btn-primary">
@@ -30,14 +55,6 @@
                         }
                     </div>
                 }
-                else
-                {
-                    <a asp-action="Create"
-                    class="btn btn-future">
-                        + Add New
-                    </a>
-                }
-
             </div>
         </div>
 
@@ -61,7 +78,9 @@
                 <tr>
                     @foreach (var field in ViewBag.Fields)
                     {
-                        <th>@field.Label</th>
+                        <th  class="@(field.Type == "checkbox" ? "text-center" : "")">
+                            @field.Label
+                        </th>
                     }
 
                     <th class="text-center">Action</th>
@@ -91,7 +110,8 @@
                     <tr data-search="@searchText.ToLower()">
                         @foreach (var field in ViewBag.Fields)
                         {
-                            <td>
+                            <td class="@(field.Type == "checkbox" ? "text-center" : "")">
+
                                 @{
                                     var property = row.GetType().GetProperty(field.Name);
                                     var value = property?.GetValue(row, null);
@@ -115,6 +135,19 @@
                                         {
                                             DateTime dt = (DateTime)value;
                                             @dt.ToString("dd/MM/yyyy")
+                                        }
+                                        else if (field.Type == "checkbox")
+                                        {
+                                            var isChecked = Convert.ToBoolean(value ?? false);
+
+                                            if (isChecked)
+                                            {
+                                                <i class="fa-solid fa-square-check text-success"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fa-regular fa-square text-secondary"></i>
+                                            }
                                         }
                                         else
                                         {
