@@ -2,7 +2,7 @@ CREATE DATABASE OPDClinicDB;
 GO
 
 USE OPDClinicDB;
-GO
+GO  
 
 -- Field Types
 CREATE TABLE FieldTypes
@@ -246,6 +246,106 @@ CREATE TABLE Vitals (
 ALTER TABLE Vitals
 ADD CONSTRAINT UQ_Vitals_Clinic_Visit_VitalDef
 UNIQUE (ClinicId, VisitId, VitalDefId);
+
+CREATE TABLE TestPanels
+(
+    TestPanelId INT IDENTITY PRIMARY KEY,
+    ClinicId INT NULL,
+    Code NVARCHAR(50) NOT NULL,
+    Name NVARCHAR(200) NOT NULL,
+    Description NVARCHAR(500) NULL,
+    DepartmentName NVARCHAR(100) NULL,
+    IsActive BIT NOT NULL,
+    DisplayOrder INT NOT NULL,
+    CreatedDate DATETIME2 NOT NULL DEFAULT (GETDATE()),
+
+    CONSTRAINT UQ_TestPanel_Clinic_Code
+        UNIQUE (ClinicId, Code)
+);
+
+CREATE TABLE TestParameters
+(
+    TestParameterId INT IDENTITY PRIMARY KEY,
+    ClinicId INT NULL,
+    Code NVARCHAR(50) NOT NULL,
+    Name NVARCHAR(200) NOT NULL,
+    Description NVARCHAR(500) NULL,
+    DataType NVARCHAR(30) NOT NULL,
+    Unit NVARCHAR(50) NULL,
+    NormalRange NVARCHAR(100) NULL,
+    NormalMin DECIMAL(18,4) NULL,
+    NormalMax DECIMAL(18,4) NULL,
+    TestMethod NVARCHAR(200) NULL,
+    IsActive BIT NOT NULL,
+    CreatedDate DATETIME2 NOT NULL DEFAULT (GETDATE()),
+    CONSTRAINT UQ_TestParameter_Clinic_Code
+        UNIQUE (ClinicId, Code)
+);
+
+CREATE TABLE TestPanelParameters
+(
+    TestPanelParameterId INT IDENTITY PRIMARY KEY,
+    ClinicId INT NULL,
+    TestPanelId INT NOT NULL,
+    TestParameterId INT NOT NULL,
+    DisplayOrder INT NOT NULL,
+    IsActive BIT NOT NULL,
+
+    CONSTRAINT UQ_TestPanelParameter
+        UNIQUE (TestPanelId, TestParameterId)
+);
+
+CREATE TABLE TestResultGroups
+(
+    TestResultGroupId INT IDENTITY PRIMARY KEY,
+    ClinicId INT NOT NULL,
+    PatientId INT NOT NULL,
+    VisitId INT NULL,
+    TestDate DATE NOT NULL,
+    ResultDate DATE NULL,
+    LabName NVARCHAR(200) NULL,
+    ReportNo NVARCHAR(100) NULL,
+    Remarks NVARCHAR(500) NULL,
+    CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
+    FOREIGN KEY (PatientId) REFERENCES Patients(PatientId),
+    FOREIGN KEY (VisitId) REFERENCES Visits(VisitId)
+);
+
+CREATE TABLE TestResults
+(
+    TestResultId INT IDENTITY(1,1) PRIMARY KEY,
+    TestResultGroupId INT NOT NULL,
+    ClinicId INT NOT NULL,
+    TestPanelId INT NOT NULL,
+    TestPanelCode NVARCHAR(50) NOT NULL,
+    TestPanelName NVARCHAR(200) NOT NULL,
+    TestParameterId INT NOT NULL,
+    TestParameterCode NVARCHAR(50) NOT NULL,
+    TestParameterName NVARCHAR(200) NOT NULL,
+    PanelDisplayOrder INT NOT NULL,
+    ParameterDisplayOrder INT NOT NULL,
+    NormalRange NVARCHAR(100) NULL,
+    NormalMin DECIMAL(18,4) NULL,
+    NormalMax DECIMAL(18,4) NULL,
+    TestMethod NVARCHAR(200) NULL,
+    DataType NVARCHAR(30) NOT NULL,
+    Value NVARCHAR(200) NULL,
+    Unit NVARCHAR(50) NULL,
+    ResultFlag NVARCHAR(20) NULL,
+
+    FOREIGN KEY (TestResultGroupId) REFERENCES TestResultGroups(TestResultGroupId),
+);
+
+CREATE INDEX IX_TestResultGroups_PatientId_TestDate
+ON TestResultGroups (PatientId, TestDate DESC);
+
+CREATE INDEX IX_TestResults_TestParameterId
+ON TestResults (TestParameterId);
+
+CREATE INDEX IX_TestResults_TestPanelId
+ON TestResults (TestPanelId);
 
 CREATE TABLE MedicalHistories (
     HistoryId INT IDENTITY PRIMARY KEY,

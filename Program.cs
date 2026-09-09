@@ -88,6 +88,10 @@ builder.Services.AddScoped<VitalDefinitionService>();
 builder.Services.AddScoped<VitalDAL>();
 builder.Services.AddScoped<VitalService>();
 builder.Services.AddSingleton<CalculationEngine>();
+builder.Services.AddScoped<TestDefinitionDAL>();
+builder.Services.AddScoped<TestDefinitionService>();
+builder.Services.AddScoped<TestResultDAL>();
+builder.Services.AddScoped<TestResultService>();
 
 builder.Services.AddScoped<ReportDAL>();
 builder.Services.AddScoped<ReportService>();

@@ -185,6 +185,31 @@
                 Save
             </button>
 
+            @if (ViewBag.CustomActions != null)
+            {
+                foreach (var action in ViewBag.CustomActions)
+                {
+                    @if (action.SubmitForm)
+                    {                       
+                        <button type="submit"
+                                formaction="@action.Url"
+                                formmethod="post"
+                                class="@action.CssClass crud-action"
+                                data-spinner-text="@action.SpinnerText">
+                            @action.Label
+                        </button>
+                    }
+                    else
+                    {
+                        <a href="@action.Url"
+                        class="@action.CssClass crud-action"
+                        data-spinner-text="@action.SpinnerText">
+                            @action.Label
+                        </a>
+                    }
+                }
+            }
+            
             <a asp-action="Index"
                class="btn btn-outline-secondary ms-2">
                Cancel

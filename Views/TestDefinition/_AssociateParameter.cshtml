@@ -1,0 +1,68 @@
+@model ViewModels.AssociateParameterVM
+
+<div class="associate-parameter-container border rounded bg-white mb-2 parameter-editor">
+
+    <div class="p-2">
+
+        @Html.AntiForgeryToken()
+
+        <input type="hidden"
+            id="Associate_TestPanelId"
+            value="@Model.TestPanelId" />
+
+        <div class="row g-2">
+
+            <div class="col-md-8">
+
+                <label class="form-label">
+                    Parameter
+                </label>
+
+                <input type="hidden"
+                    id="Associate_TestParameterId" />
+
+                <input type="text"
+                    id="Associate_ParameterName"
+                    class="form-control parameter-lookup"
+                    placeholder="Search parameter..." />
+
+            </div>
+
+            <div class="col-md-2">
+
+                <label class="form-label">
+                    Order
+                </label>
+
+                <input type="number"
+                    id="Associate_DisplayOrder"
+                    class="form-control"
+                    min="1"
+                    value="@Model.DisplayOrder" />
+
+            </div>
+
+            <div class="col-md-2 d-flex align-items-end">
+
+                <button type="button"
+                        class="btn btn-success btn-save-associated-parameter">
+
+                    <i class="fa fa-save"></i>
+                    Save
+
+                </button>
+
+                <button type="button"
+                        class="btn btn-secondary btn-cancel-associate-parameter">
+
+                    <i class="fa fa-times me-1"></i>
+                    Cancel
+
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>

@@ -62,7 +62,7 @@ namespace BLL
             }            
         }
 
-        public int CloneDefaults()
+        public int CloneDefaults(int? clinicId = null)
         {
             int rowAffected = 0;
 
@@ -72,13 +72,10 @@ namespace BLL
 
             try
             {
-                List<VitalDefinition> defaults = _vitalDefDAL.GetAllDefault(conn, tran);
-
-                foreach (var def in defaults)
-                {
-                    def.ClinicId = ClinicId;
-                    rowAffected += _vitalDefDAL.Add(def, conn, tran);
-                }
+                if (clinicId.HasValue && clinicId.Value > 0)
+                    rowAffected = _vitalDefDAL.CloneVitalDefinitions(clinicId.Value, conn, tran);
+                else
+                    rowAffected = _vitalDefDAL.CloneVitalDefinitions(ClinicId, conn, tran);
 
                 tran.Commit();
                 return rowAffected;

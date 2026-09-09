@@ -22,6 +22,33 @@
     {
     };
 
+    ViewBag.CustomActions = new[]
+    {
+        new
+        {
+            Label = "Clone Tests",
+            Url = Url.Action(
+                "CloneTestDefinitions",
+                "TestDefinition",
+                new { id = Model.ClinicId }),
+            CssClass = "btn btn-outline-primary",
+            SpinnerText = "Cloning Test Definitions...",
+            SubmitForm = true
+        },
+
+        new
+        {
+            Label = "Clone Vitals",
+            Url = Url.Action(
+                "CloneVitalDefinitions",
+                "VitalDefinition",
+                new { id = Model.ClinicId }),
+            CssClass = "btn btn-outline-primary",
+            SpinnerText = "Cloning Vital Definitions...",
+            SubmitForm = true
+        }        
+    };
+
     ViewBag.KeyField = "ClinicId";
 }
 

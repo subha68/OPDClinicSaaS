@@ -1,0 +1,74 @@
+<div class="modal fade"
+     id="testResultModal"
+     tabindex="-1"
+     aria-labelledby="testResultModalLabel"
+     aria-hidden="true"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false">
+
+    <div class="modal-dialog modal-xl modal-dialog-centered test-result-modal">
+
+        <div class="modal-content">
+
+            <!-- HEADER -->
+
+            <div class="modal-header">
+
+                <h5 class="modal-title"
+                    id="testResultModalLabel">
+
+                    <i class="fa-solid fa-flask me-2"></i>
+                    Test Results
+
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+
+            </div>
+
+            <!-- PATIENT SECTION -->
+
+            @await Html.PartialAsync("_PatientHorizontalModal")
+
+            <!-- BODY -->
+
+            <div class="modal-body">
+
+                <div id="testResultLoading"
+                     class="text-center d-none">
+
+                    <div class="spinner-border text-primary"
+                         role="status"
+                         aria-hidden="true">
+                    </div>
+
+                    <div class="mt-2">
+                        Loading reports...
+                    </div>
+
+                </div>
+
+                <div id="testResultError"
+                     class="alert alert-danger d-none"
+                     role="alert">
+                </div>
+
+                <div id="testResultSuccess"
+                     class="alert alert-success d-none"
+                     role="alert">
+                </div>
+
+                <div id="testResultContent">
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

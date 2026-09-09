@@ -1,0 +1,161 @@
+.test-panel {
+    border: 1px solid #dbe3ef;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all .2s ease;
+    background: #f4f7fb;
+    margin-bottom: 1rem;
+}
+
+.test-panel:hover {
+    box-shadow: 0 .25rem .75rem rgba(0,0,0,.08);
+}
+
+.test-panel .card-body {
+    padding: 0;
+}
+
+.panel-display {
+    padding: 1rem;
+    cursor: pointer;
+    background: #eef3f9;
+}
+
+.panel-meta-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.panel-code,
+.panel-name,
+.panel-department,
+.panel-active {
+    margin-right: 2rem;
+}
+
+.panel-code {
+    font-weight: 700;
+    color: #0d6efd;
+}
+
+.panel-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #212529;
+    min-width: 220px;
+}
+
+.panel-department {
+    color: #6c757d;
+    min-width: 120px;
+}
+
+.panel-description {
+    max-width: 900px;
+}
+
+.drag-handle {
+    cursor: move;
+    color: #adb5bd;
+}
+
+.drag-handle:hover {
+    color: #6c757d;
+}
+
+.badge.border {
+    font-weight: 500;
+}
+
+.panel-display .btn {
+    white-space: nowrap;
+}
+
+.panel-parameters {
+    background: #f8fafc;
+    border-top: 1px solid #dbe3ef;
+}
+
+.parameter-content {
+    padding: 1rem;
+}
+
+.panel-expand-icon {
+    transition: transform .2s ease;
+}
+
+.test-panel.expanded .panel-expand-icon {
+    transform: rotate(90deg);
+}
+
+.panel-display .btn {
+    min-width: 34px;
+}
+
+.designer-add-card {
+    border: 2px dashed #ced4da;
+    border-radius: 10px;
+    background: #fff;
+    transition: all .2s ease;
+}
+
+.designer-add-card:hover {
+    border-color: #0d6efd;
+    background: #f8fbff;
+}
+
+.parameter-card,
+.test-parameter {
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    transition: all .2s ease;
+}
+
+.test-parameter:hover {
+    background: #fafbfd;
+}
+
+.parameter-meta-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.parameter-code {
+    color: #0d6efd;
+    font-weight: 700;
+    margin-right: 1.5rem;
+}
+
+.parameter-name {
+    font-weight: 600;
+    min-width: 220px;
+    margin-right: 2rem;
+}
+
+.parameter-data-type,
+.parameter-unit,
+.parameter-active {
+    color: #6c757d;
+    margin-right: 1.5rem;
+}
+
+.parameter-description {
+    margin-left: 66px;
+    color: #6c757d;
+    font-size: .875rem;
+}
+
+.parameter-attributes {
+    margin-left: 66px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    font-size: .875rem;
+}
+
+.attribute-item {
+    color: #6c757d;
+}

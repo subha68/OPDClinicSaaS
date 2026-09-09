@@ -77,27 +77,38 @@ INSERT INTO Features (Name, Code) VALUES
 ('Medicine Management', 'MEDICINE_MANAGEMENT'),
 ('Prescription Templates', 'PRESCRIPTION_TEMPLATE'),
 ('Vital Definition', 'VITAL_DEFINITION'),
-('Vital', 'VITAL');
+('Vital', 'VITAL'),
+('Test Definition', 'TEST_DEFINITION'),
+('Test Result', 'TEST_RESULT');
 
 -- Role Mapping
-INSERT INTO RoleFeatures (RoleId, FeatureId)
-SELECT 1, FeatureId FROM Features WHERE Code IN ('CLINIC_VIEW', 'USER_VIEW', 'ROLE_VIEW', 'VITAL_DEFINITION');
 
+-- SuperAdmin
 INSERT INTO RoleFeatures (RoleId, FeatureId)
-SELECT 2, FeatureId FROM Features WHERE Code IN ('DEPT_VIEW','DOC_VIEW','USER_VIEW','DOCTOR_SCHEDULE', 'PRESCRIPTION_TEMPLATE', 'VITAL_DEFINITION');
+SELECT 1, FeatureId FROM Features WHERE Code IN ('CLINIC_VIEW', 'USER_VIEW', 'ROLE_VIEW', 'VITAL_DEFINITION', 'TEST_DEFINITION');
 
+-- ClinicAdmin
 INSERT INTO RoleFeatures (RoleId, FeatureId)
-SELECT 3, FeatureId FROM Features WHERE Code IN ('APPOINTMENT_BOOKING', 'PATIENT_HISTORY', 'VITAL');
-
+SELECT 2, FeatureId FROM Features WHERE Code IN ('DEPT_VIEW','DOC_VIEW','USER_VIEW','DOCTOR_SCHEDULE', 'PRESCRIPTION_TEMPLATE', 
+                                                    'VITAL_DEFINITION', 'TEST_DEFINITION');
+-- ClinicUser
 INSERT INTO RoleFeatures (RoleId, FeatureId)
-SELECT 4, FeatureId FROM Features WHERE Code IN ('CONSULTATION_MANAGEMENT', 'PATIENT_HISTORY', 'VITAL');
+SELECT 3, FeatureId FROM Features WHERE Code IN ('APPOINTMENT_BOOKING', 'PATIENT_HISTORY', 'VITAL', 'TEST_DEFINITION',
+                                                'TEST_RESULT');
 
+-- Doctor
+INSERT INTO RoleFeatures (RoleId, FeatureId)
+SELECT 4, FeatureId FROM Features WHERE Code IN ('CONSULTATION_MANAGEMENT', 'PATIENT_HISTORY', 'VITAL', 'TEST_RESULT');
+
+-- BillingUser
 INSERT INTO RoleFeatures (RoleId, FeatureId)
 SELECT 5, FeatureId FROM Features WHERE Code IN ('BILLING_CHARGES', 'PATIENT_HISTORY', 'BILLING_MANAGEMENT'),
 
+-- PharmacyUser
 INSERT INTO RoleFeatures (RoleId, FeatureId)
 SELECT 6, FeatureId FROM Features WHERE Code IN ('MEDICINE_MANAGEMENT');
 
+-- Nurse
 INSERT INTO RoleFeatures (RoleId, FeatureId)
 SELECT 7, FeatureId FROM Features WHERE Code IN ('APPOINTMENT_BOOKING', 'PATIENT_HISTORY', 'BILLING_CHARGES', 'BILLING_MANAGEMENT');
 
@@ -119,7 +130,9 @@ VALUES
 ('Medicines', 'Medicine', 'Index', 'fa fa-pills', 'MEDICINE_MANAGEMENT', 12),
 ('Prescription Templates', 'PrescriptionTemplate', 'Index', 'fa-file-medical', 'PRESCRIPTION_TEMPLATE', 13),
 ('Vital Definition', 'VitalDefinition', 'Index', 'fa-heartbeat', 'VITAL_DEFINITION', 14),
-('Vitals', null, null, 'fa-heartbeat', 'VITAL', 15);
+('Vitals', null, null, 'fa-heartbeat', 'VITAL', 15),
+('Test Definition', 'TestDefinition', 'Index', 'fa-flask', 'TEST_DEFINITION', 16),
+('Test Results', NULL, NULL, 'fa-flask', 'TEST_RESULT', 16);
 
 -- Mandatory line
 INSERT INTO BillingCharges
@@ -360,3 +373,851 @@ VALUES
 (NULL, 'Mean Arterial Pressure', 'MAP', 'Derived', 'Decimal', 'mmHg', 1, '(SBP + (2 * DBP)) / 3', NULL, 1, 1),
 (NULL, 'Body Surface Area', 'BSA', 'Derived', 'Decimal', 'm²', 1, 'SQRT((HEIGHT * WEIGHT) / 3600)', NULL, 1, 1);
 
+/* ============================================================
+   TEST PANELS
+   Global definitions: ClinicId = NULL
+   ============================================================ */
+
+INSERT INTO TestPanels
+(ClinicId, Code, Name, Description, DepartmentName, IsActive, DisplayOrder)
+VALUES
+(NULL, 'CBC', 'Complete Blood Count', 'Complete blood count including red blood cells, white blood cells, hemoglobin and platelets.', NULL, 1, 1),
+(NULL, 'LFT', 'Liver Function Test', 'Assessment of liver enzymes, bilirubin, proteins and related liver function parameters.', NULL, 1, 2),
+(NULL, 'RFT', 'Renal Function Test', 'Assessment of kidney function including urea, creatinine and electrolytes.', NULL, 1, 3),
+(NULL, 'LIPID', 'Lipid Profile', 'Assessment of total cholesterol, triglycerides, HDL, LDL and related lipid parameters.', NULL, 1, 4),
+(NULL, 'TFT', 'Thyroid Function Test', 'Assessment of thyroid function using TSH, T3 and T4 measurements.', NULL, 1, 5),
+(NULL, 'DIABETES', 'Diabetes Profile', 'Assessment of blood glucose control including fasting glucose and HbA1c.', NULL, 1, 6),
+(NULL, 'ELECTROLYTES', 'Serum Electrolytes', 'Measurement of major serum electrolytes including sodium, potassium and chloride.', NULL, 1, 7),
+(NULL, 'URINE_ROUTINE', 'Urine Routine Examination', 'Routine physical, chemical and microscopic examination of urine.', NULL, 1, 8),
+(NULL, 'IRON', 'Iron Profile', 'Assessment of iron status including serum iron, TIBC, transferrin saturation and ferritin.', NULL, 1, 9),
+(NULL, 'VITAMIN', 'Vitamin Profile', 'Assessment of commonly measured vitamin levels including vitamin B12 and vitamin D.', NULL, 1, 10);
+
+/* ============================================================
+   TEST PARAMETERS
+   Global definitions: ClinicId = NULL
+   ============================================================ */
+
+INSERT INTO TestParameters
+(ClinicId, Code, Name, Description, DataType, Unit, NormalRange, NormalMin, NormalMax, TestMethod, IsActive)
+VALUES
+
+/* ============================================================
+   CBC
+   ============================================================ */
+
+(NULL, 'HB',
+ 'Hemoglobin',
+ 'Concentration of hemoglobin in blood.',
+ 'Numeric',
+ 'g/dL',
+ 'Male: 13-17; Female: 12-15',
+ NULL,
+ NULL,
+ 'Photometric / Cyanmethemoglobin',
+ 1),
+(NULL, 'RBC',
+ 'Red Blood Cell Count',
+ 'Number of red blood cells in blood.',
+ 'Numeric',
+ 'million/µL',
+ 'Male: 4.5-5.9; Female: 4.1-5.1',
+ NULL,
+ NULL,
+ 'Automated hematology analyzer',
+ 1),
+(NULL, 'WBC',
+ 'White Blood Cell Count',
+ 'Total white blood cell count.',
+ 'Numeric',
+ '10^3/µL',
+ '4.0-11.0',
+ 4.0000,
+ 11.0000,
+ 'Automated hematology analyzer',
+ 1),
+(NULL, 'PLT',
+ 'Platelet Count',
+ 'Number of platelets in blood.',
+ 'Numeric',
+ '10^3/µL',
+ '150-450',
+ 150.0000,
+ 450.0000,
+ 'Automated hematology analyzer',
+ 1),
+(NULL, 'HCT',
+ 'Hematocrit',
+ 'Percentage of blood volume occupied by red blood cells.',
+ 'Numeric',
+ '%',
+ 'Male: 40-52; Female: 36-48',
+ NULL,
+ NULL,
+ 'Calculated / Automated hematology analyzer',
+ 1),
+(NULL, 'MCV',
+ 'Mean Corpuscular Volume',
+ 'Average volume of red blood cells.',
+ 'Numeric',
+ 'fL',
+ '80-100',
+ 80.0000,
+ 100.0000,
+ 'Calculated by hematology analyzer',
+ 1),
+(NULL, 'MCH',
+ 'Mean Corpuscular Hemoglobin',
+ 'Average amount of hemoglobin per red blood cell.',
+ 'Numeric',
+ 'pg',
+ '27-33',
+ 27.0000,
+ 33.0000,
+ 'Calculated by hematology analyzer',
+ 1),
+(NULL, 'MCHC',
+ 'Mean Corpuscular Hemoglobin Concentration',
+ 'Average hemoglobin concentration within red blood cells.',
+ 'Numeric',
+ 'g/dL',
+ '32-36',
+ 32.0000,
+ 36.0000,
+ 'Calculated by hematology analyzer',
+ 1),
+(NULL, 'RDW',
+ 'Red Cell Distribution Width',
+ 'Measure of variation in red blood cell size.',
+ 'Numeric',
+ '%',
+ '11.5-14.5',
+ 11.5000,
+ 14.5000,
+ 'Automated hematology analyzer',
+ 1),
+(NULL, 'NEUT',
+ 'Neutrophils',
+ 'Percentage of white blood cells that are neutrophils.',
+ 'Numeric',
+ '%',
+ '40-75',
+ 40.0000,
+ 75.0000,
+ 'Automated differential count',
+ 1),
+(NULL, 'LYMPH',
+ 'Lymphocytes',
+ 'Percentage of white blood cells that are lymphocytes.',
+ 'Numeric',
+ '%',
+ '20-45',
+ 20.0000,
+ 45.0000,
+ 'Automated differential count',
+ 1),
+(NULL, 'EOS',
+ 'Eosinophils',
+ 'Percentage of white blood cells that are eosinophils.',
+ 'Numeric',
+ '%',
+ '1-6',
+ 1.0000,
+ 6.0000,
+ 'Automated differential count',
+ 1),
+
+/* ============================================================
+   LIVER FUNCTION
+   ============================================================ */
+
+(NULL, 'BIL_T',
+ 'Total Bilirubin',
+ 'Total serum bilirubin concentration.',
+ 'Numeric',
+ 'mg/dL',
+ '0.3-1.2',
+ 0.3000,
+ 1.2000,
+ 'Diazo / Colorimetric',
+ 1),
+(NULL, 'BIL_D',
+ 'Direct Bilirubin',
+ 'Conjugated/direct serum bilirubin concentration.',
+ 'Numeric',
+ 'mg/dL',
+ '0.0-0.3',
+ 0.0000,
+ 0.3000,
+ 'Diazo / Colorimetric',
+ 1),
+(NULL, 'BIL_I',
+ 'Indirect Bilirubin',
+ 'Unconjugated/indirect serum bilirubin concentration.',
+ 'Numeric',
+ 'mg/dL',
+ '0.2-0.9',
+ 0.2000,
+ 0.9000,
+ 'Calculated',
+ 1),
+(NULL, 'ALT',
+ 'Alanine Aminotransferase',
+ 'Liver enzyme used in assessment of hepatocellular injury.',
+ 'Numeric',
+ 'U/L',
+ '7-56',
+ 7.0000,
+ 56.0000,
+ 'IFCC / Kinetic',
+ 1),
+(NULL, 'AST',
+ 'Aspartate Aminotransferase',
+ 'Enzyme used in assessment of liver and other tissue injury.',
+ 'Numeric',
+ 'U/L',
+ '10-40',
+ 10.0000,
+ 40.0000,
+ 'IFCC / Kinetic',
+ 1),
+(NULL, 'ALP',
+ 'Alkaline Phosphatase',
+ 'Enzyme associated with liver, bile ducts and bone.',
+ 'Numeric',
+ 'U/L',
+ '44-147',
+ 44.0000,
+ 147.0000,
+ 'IFCC / Colorimetric',
+ 1),
+(NULL, 'GGT',
+ 'Gamma Glutamyl Transferase',
+ 'Enzyme useful in assessment of hepatobiliary disease.',
+ 'Numeric',
+ 'U/L',
+ '9-48',
+ 9.0000,
+ 48.0000,
+ 'IFCC / Kinetic',
+ 1),
+(NULL, 'TP',
+ 'Total Protein',
+ 'Total concentration of proteins in serum.',
+ 'Numeric',
+ 'g/dL',
+ '6.0-8.3',
+ 6.0000,
+ 8.3000,
+ 'Biuret',
+ 1),
+(NULL, 'ALB',
+ 'Albumin',
+ 'Major serum protein produced by the liver.',
+ 'Numeric',
+ 'g/dL',
+ '3.5-5.0',
+ 3.5000,
+ 5.0000,
+ 'BCG / Colorimetric',
+ 1),
+
+/* ============================================================
+   RENAL FUNCTION
+   ============================================================ */
+
+(NULL, 'UREA',
+ 'Blood Urea',
+ 'Serum blood urea concentration.',
+ 'Numeric',
+ 'mg/dL',
+ '15-45',
+ 15.0000,
+ 45.0000,
+ 'Urease / GLDH',
+ 1),
+(NULL, 'CREAT',
+ 'Creatinine',
+ 'Serum creatinine concentration used to assess kidney function.',
+ 'Numeric',
+ 'mg/dL',
+ 'Male: 0.74-1.35; Female: 0.59-1.04',
+ NULL,
+ NULL,
+ 'Jaffe / Enzymatic',
+ 1),
+(NULL, 'URIC',
+ 'Uric Acid',
+ 'Serum uric acid concentration.',
+ 'Numeric',
+ 'mg/dL',
+ 'Male: 3.4-7.0; Female: 2.4-6.0',
+ NULL,
+ NULL,
+ 'Uricase / Colorimetric',
+ 1),
+(NULL, 'EGFR',
+ 'Estimated Glomerular Filtration Rate',
+ 'Estimated kidney filtration rate calculated from serum creatinine and demographic factors.',
+ 'Numeric',
+ 'mL/min/1.73m²',
+ '>= 90',
+ 90.0000,
+ NULL,
+ 'Calculated',
+ 1),
+
+/* ============================================================
+   LIPID PROFILE
+   ============================================================ */
+
+(NULL, 'CHOL',
+ 'Total Cholesterol',
+ 'Total cholesterol concentration in serum.',
+ 'Numeric',
+ 'mg/dL',
+ '< 200',
+ NULL,
+ 200.0000,
+ 'Enzymatic Colorimetric',
+ 1),
+(NULL, 'HDL',
+ 'HDL Cholesterol',
+ 'High-density lipoprotein cholesterol.',
+ 'Numeric',
+ 'mg/dL',
+ '>= 40',
+ 40.0000,
+ NULL,
+ 'Enzymatic Colorimetric',
+ 1),
+(NULL, 'LDL',
+ 'LDL Cholesterol',
+ 'Low-density lipoprotein cholesterol.',
+ 'Numeric',
+ 'mg/dL',
+ '< 100',
+ NULL,
+ 100.0000,
+ 'Direct / Calculated',
+ 1),
+(NULL, 'TG',
+ 'Triglycerides',
+ 'Serum triglyceride concentration.',
+ 'Numeric',
+ 'mg/dL',
+ '< 150',
+ NULL,
+ 150.0000,
+ 'GPO-PAP / Enzymatic',
+ 1),
+(NULL, 'VLDL',
+ 'VLDL Cholesterol',
+ 'Very-low-density lipoprotein cholesterol.',
+ 'Numeric',
+ 'mg/dL',
+ '5-40',
+ 5.0000,
+ 40.0000,
+ 'Calculated',
+ 1),
+
+/* ============================================================
+   THYROID
+   ============================================================ */
+
+(NULL, 'TSH',
+ 'Thyroid Stimulating Hormone',
+ 'Hormone produced by the pituitary gland that regulates thyroid function.',
+ 'Numeric',
+ 'µIU/mL',
+ '0.4-4.0',
+ 0.4000,
+ 4.0000,
+ 'CLIA / ECLIA',
+ 1),
+(NULL, 'FT3',
+ 'Free Triiodothyronine',
+ 'Unbound active form of the thyroid hormone T3.',
+ 'Numeric',
+ 'pg/mL',
+ '2.0-4.4',
+ 2.0000,
+ 4.4000,
+ 'CLIA / ECLIA',
+ 1),
+(NULL, 'FT4',
+ 'Free Thyroxine',
+ 'Unbound thyroxine available for biological activity.',
+ 'Numeric',
+ 'ng/dL',
+ '0.8-1.8',
+ 0.8000,
+ 1.8000,
+ 'CLIA / ECLIA',
+ 1),
+
+/* ============================================================
+   DIABETES
+   ============================================================ */
+
+(NULL, 'FBS',
+ 'Fasting Blood Glucose',
+ 'Blood glucose measured after an appropriate fasting period.',
+ 'Numeric',
+ 'mg/dL',
+ '70-99',
+ 70.0000,
+ 99.0000,
+ 'Hexokinase / Glucose Oxidase',
+ 1),
+(NULL, 'PPBS',
+ 'Postprandial Blood Glucose',
+ 'Blood glucose measured after a meal.',
+ 'Numeric',
+ 'mg/dL',
+ '< 140',
+ NULL,
+ 140.0000,
+ 'Hexokinase / Glucose Oxidase',
+ 1),
+(NULL, 'HBA1C',
+ 'Glycated Hemoglobin',
+ 'Percentage of hemoglobin glycated over approximately the previous 2-3 months.',
+ 'Numeric',
+ '%',
+ '< 5.7',
+ NULL,
+ 5.7000,
+ 'HPLC / Immunoturbidimetric',
+ 1),
+
+/* ============================================================
+   ELECTROLYTES
+   ============================================================ */
+
+(NULL, 'NA',
+ 'Sodium',
+ 'Serum sodium concentration.',
+ 'Numeric',
+ 'mmol/L',
+ '135-145',
+ 135.0000,
+ 145.0000,
+ 'Ion Selective Electrode',
+ 1),
+(NULL, 'K',
+ 'Potassium',
+ 'Serum potassium concentration.',
+ 'Numeric',
+ 'mmol/L',
+ '3.5-5.1',
+ 3.5000,
+ 5.1000,
+ 'Ion Selective Electrode',
+ 1),
+(NULL, 'CL',
+ 'Chloride',
+ 'Serum chloride concentration.',
+ 'Numeric',
+ 'mmol/L',
+ '98-107',
+ 98.0000,
+ 107.0000,
+ 'Ion Selective Electrode',
+ 1),
+(NULL, 'CA',
+ 'Calcium',
+ 'Total serum calcium concentration.',
+ 'Numeric',
+ 'mg/dL',
+ '8.5-10.5',
+ 8.5000,
+ 10.5000,
+ 'Colorimetric',
+ 1),
+
+/* ============================================================
+   IRON PROFILE
+   ============================================================ */
+
+(NULL, 'IRON',
+ 'Serum Iron',
+ 'Concentration of circulating iron in serum.',
+ 'Numeric',
+ 'µg/dL',
+ 'Male: 65-175; Female: 50-170',
+ NULL,
+ NULL,
+ 'Ferrozine / Colorimetric',
+ 1),
+(NULL, 'TIBC',
+ 'Total Iron Binding Capacity',
+ 'Measurement of the blood capacity to bind iron.',
+ 'Numeric',
+ 'µg/dL',
+ '250-450',
+ 250.0000,
+ 450.0000,
+ 'Colorimetric',
+ 1),
+(NULL, 'FERRITIN',
+ 'Ferritin',
+ 'Serum ferritin concentration reflecting body iron stores.',
+ 'Numeric',
+ 'ng/mL',
+ 'Male: 24-336; Female: 11-307',
+ NULL,
+ NULL,
+ 'CLIA / ECLIA',
+ 1),
+
+/* ============================================================
+   VITAMINS
+   ============================================================ */
+
+(NULL, 'B12',
+ 'Vitamin B12',
+ 'Serum vitamin B12 concentration.',
+ 'Numeric',
+ 'pg/mL',
+ '200-900',
+ 200.0000,
+ 900.0000,
+ 'CLIA / ECLIA',
+ 1),
+(NULL, 'VITD',
+ 'Vitamin D - 25 Hydroxy',
+ 'Serum 25-hydroxy vitamin D concentration.',
+ 'Numeric',
+ 'ng/mL',
+ '30-100',
+ 30.0000,
+ 100.0000,
+ 'CLIA / ECLIA',
+ 1);
+
+/* ============================================================
+   CBC
+   ============================================================ */
+
+INSERT INTO TestPanelParameters
+(
+    ClinicId,
+    TestPanelId,
+    TestParameterId,
+    DisplayOrder,
+    IsActive
+)
+SELECT
+    NULL,
+    p.TestPanelId,
+    tp.TestParameterId,
+    v.DisplayOrder,
+    1
+FROM TestPanels p
+CROSS APPLY
+(
+    VALUES
+    ('HB',   1),
+    ('RBC',  2),
+    ('WBC',  3),
+    ('PLT',  4),
+    ('HCT',  5),
+    ('MCV',  6),
+    ('MCH',  7),
+    ('MCHC', 8),
+    ('RDW',  9),
+    ('NEUT', 10),
+    ('LYMPH', 11),
+    ('EOS', 12)
+) v(Code, DisplayOrder)
+INNER JOIN TestParameters tp
+    ON tp.Code = v.Code
+   AND tp.ClinicId IS NULL
+WHERE p.Code = 'CBC'
+  AND p.ClinicId IS NULL;
+
+
+/* ============================================================
+   LFT
+   ============================================================ */
+
+INSERT INTO TestPanelParameters
+(
+    ClinicId,
+    TestPanelId,
+    TestParameterId,
+    DisplayOrder,
+    IsActive
+)
+SELECT
+    NULL,
+    p.TestPanelId,
+    tp.TestParameterId,
+    v.DisplayOrder,
+    1
+FROM TestPanels p
+CROSS APPLY
+(
+    VALUES
+    ('BIL_T', 1),
+    ('BIL_D', 2),
+    ('BIL_I', 3),
+    ('ALT',   4),
+    ('AST',   5),
+    ('ALP',   6),
+    ('GGT',   7),
+    ('TP',    8),
+    ('ALB',   9)
+) v(Code, DisplayOrder)
+INNER JOIN TestParameters tp
+    ON tp.Code = v.Code
+   AND tp.ClinicId IS NULL
+WHERE p.Code = 'LFT'
+  AND p.ClinicId IS NULL;
+
+
+/* ============================================================
+   RFT
+   ============================================================ */
+
+INSERT INTO TestPanelParameters
+(
+    ClinicId,
+    TestPanelId,
+    TestParameterId,
+    DisplayOrder,
+    IsActive
+)
+SELECT
+    NULL,
+    p.TestPanelId,
+    tp.TestParameterId,
+    v.DisplayOrder,
+    1
+FROM TestPanels p
+CROSS APPLY
+(
+    VALUES
+    ('UREA',  1),
+    ('CREAT', 2),
+    ('URIC',  3),
+    ('EGFR',  4),
+    ('NA',    5),
+    ('K',     6),
+    ('CL',    7),
+    ('CA',    8)
+) v(Code, DisplayOrder)
+INNER JOIN TestParameters tp
+    ON tp.Code = v.Code
+   AND tp.ClinicId IS NULL
+WHERE p.Code = 'RFT'
+  AND p.ClinicId IS NULL;
+
+
+/* ============================================================
+   LIPID PROFILE
+   ============================================================ */
+
+INSERT INTO TestPanelParameters
+(
+    ClinicId,
+    TestPanelId,
+    TestParameterId,
+    DisplayOrder,
+    IsActive
+)
+SELECT
+    NULL,
+    p.TestPanelId,
+    tp.TestParameterId,
+    v.DisplayOrder,
+    1
+FROM TestPanels p
+CROSS APPLY
+(
+    VALUES
+    ('CHOL', 1),
+    ('HDL',  2),
+    ('LDL',  3),
+    ('TG',   4),
+    ('VLDL', 5)
+) v(Code, DisplayOrder)
+INNER JOIN TestParameters tp
+    ON tp.Code = v.Code
+   AND tp.ClinicId IS NULL
+WHERE p.Code = 'LIPID'
+  AND p.ClinicId IS NULL;
+
+
+/* ============================================================
+   THYROID PROFILE
+   ============================================================ */
+
+INSERT INTO TestPanelParameters
+(
+    ClinicId,
+    TestPanelId,
+    TestParameterId,
+    DisplayOrder,
+    IsActive
+)
+SELECT
+    NULL,
+    p.TestPanelId,
+    tp.TestParameterId,
+    v.DisplayOrder,
+    1
+FROM TestPanels p
+CROSS APPLY
+(
+    VALUES
+    ('TSH',  1),
+    ('FT3',  2),
+    ('FT4',  3)
+) v(Code, DisplayOrder)
+INNER JOIN TestParameters tp
+    ON tp.Code = v.Code
+   AND tp.ClinicId IS NULL
+WHERE p.Code = 'TFT'
+  AND p.ClinicId IS NULL;
+
+
+/* ============================================================
+   DIABETES PROFILE
+   ============================================================ */
+
+INSERT INTO TestPanelParameters
+(
+    ClinicId,
+    TestPanelId,
+    TestParameterId,
+    DisplayOrder,
+    IsActive
+)
+SELECT
+    NULL,
+    p.TestPanelId,
+    tp.TestParameterId,
+    v.DisplayOrder,
+    1
+FROM TestPanels p
+CROSS APPLY
+(
+    VALUES
+    ('FBS',   1),
+    ('PPBS',  2),
+    ('HBA1C', 3)
+) v(Code, DisplayOrder)
+INNER JOIN TestParameters tp
+    ON tp.Code = v.Code
+   AND tp.ClinicId IS NULL
+WHERE p.Code = 'DIABETES'
+  AND p.ClinicId IS NULL;
+
+
+/* ============================================================
+   ELECTROLYTES
+   ============================================================ */
+
+INSERT INTO TestPanelParameters
+(
+    ClinicId,
+    TestPanelId,
+    TestParameterId,
+    DisplayOrder,
+    IsActive
+)
+SELECT
+    NULL,
+    p.TestPanelId,
+    tp.TestParameterId,
+    v.DisplayOrder,
+    1
+FROM TestPanels p
+CROSS APPLY
+(
+    VALUES
+    ('NA', 1),
+    ('K',  2),
+    ('CL', 3),
+    ('CA', 4)
+) v(Code, DisplayOrder)
+INNER JOIN TestParameters tp
+    ON tp.Code = v.Code
+   AND tp.ClinicId IS NULL
+WHERE p.Code = 'ELECTROLYTES'
+  AND p.ClinicId IS NULL;
+
+
+/* ============================================================
+   IRON PROFILE
+   ============================================================ */
+
+INSERT INTO TestPanelParameters
+(
+    ClinicId,
+    TestPanelId,
+    TestParameterId,
+    DisplayOrder,
+    IsActive
+)
+SELECT
+    NULL,
+    p.TestPanelId,
+    tp.TestParameterId,
+    v.DisplayOrder,
+    1
+FROM TestPanels p
+CROSS APPLY
+(
+    VALUES
+    ('IRON',    1),
+    ('TIBC',    2),
+    ('FERRITIN', 3)
+) v(Code, DisplayOrder)
+INNER JOIN TestParameters tp
+    ON tp.Code = v.Code
+   AND tp.ClinicId IS NULL
+WHERE p.Code = 'IRON'
+  AND p.ClinicId IS NULL;
+
+
+/* ============================================================
+   VITAMIN PROFILE
+   ============================================================ */
+
+INSERT INTO TestPanelParameters
+(
+    ClinicId,
+    TestPanelId,
+    TestParameterId,
+    DisplayOrder,
+    IsActive
+)
+SELECT
+    NULL,
+    p.TestPanelId,
+    tp.TestParameterId,
+    v.DisplayOrder,
+    1
+FROM TestPanels p
+CROSS APPLY
+(
+    VALUES
+    ('B12',  1),
+    ('VITD', 2)
+) v(Code, DisplayOrder)
+INNER JOIN TestParameters tp
+    ON tp.Code = v.Code
+   AND tp.ClinicId IS NULL
+WHERE p.Code = 'VITAMIN'
+  AND p.ClinicId IS NULL;
+
+
+/* ============================================================
+   URINE ROUTINE
+   ============================================================
+   These parameters are intentionally omitted from the initial
+   parameter seed above. See note below.
+   ============================================================ */

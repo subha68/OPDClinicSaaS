@@ -124,6 +124,11 @@ namespace BLL
             set => _session.LastVisitDate = value;
         }
 
+        public int? GetClinicId()
+        {
+            return RoleName == "SuperAdmin" ? null : ClinicId;
+        }
+
         public virtual int Add(T model, SqlConnection conn, SqlTransaction tran)
         {
             return _dal.Add(model, conn, tran); 

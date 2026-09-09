@@ -275,5 +275,30 @@ namespace DAL
 
             return list;
         }
+
+        public int CloneVitalDefinitions(int clinicId, SqlConnection conn, SqlTransaction tran)
+        {
+            string query = @"INSERT INTO VitalDefinitions
+                            (ClinicId, VitalLabel, VitalCode, VitalType, DataType, VitalUnit, IsDerived,
+                                DeriveFormula, DisplayComposition, IsStandard, IsActive)
+                            SELECT
+                                @ClinicId, V.VitalLabel, V.VitalCode, V.VitalType, V.DataType, V.VitalUnit, V.IsDerived,
+                                V.DeriveFormula, V.DisplayComposition, V.IsStandard, V.IsActive
+                            FROM VitalDefinitions V
+                            WHERE V.ClinicId IS NULL
+                            AND NOT EXISTS
+                            (SELECT 1
+                                FROM VitalDefinitions C
+                                WHERE C.ClinicId = @ClinicId
+                                AND C.VitalCode = V.VitalCode);
+                                
+                            SELECT @@ROWCOUNT;";
+
+            SqlCommand cmd = new SqlCommand(query, conn, tran);
+
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+
+            return Convert.ToInt32(cmd.ExecuteScalar());;
+        }
     }
 }

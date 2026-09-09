@@ -1,0 +1,241 @@
+@model ViewModels.TestResultVM
+
+@{
+    int index = Convert.ToInt32(ViewData["Index"] ?? 0);
+}
+
+<tr class="result-row">
+
+    <!-- ===================================================== -->
+    <!-- HIDDEN FIELDS -->
+    <!-- ===================================================== -->
+
+    <input type="hidden"
+           name="Results[@index].TestResultId"
+           value="@Model.TestResultId" />
+
+    <input type="hidden"
+           name="Results[@index].TestPanelId"
+           value="@Model.TestPanelId"
+           class="test-panel-id" />
+
+    <input type="hidden"
+           name="Results[@index].TestPanelCode"
+           value="@Model.TestPanelCode"
+           class="test-panel-code" />
+
+    <input type="hidden"
+           name="Results[@index].TestPanelName"
+           value="@Model.TestPanelName"
+           class="test-panel-name" />
+
+    <input type="hidden"
+           name="Results[@index].TestParameterId"
+           value="@Model.TestParameterId"
+           class="test-parameter-id" />
+
+    <input type="hidden"
+           name="Results[@index].TestParameterCode"
+           value="@Model.TestParameterCode"
+           class="test-parameter-code" />
+
+    <input type="hidden"
+           name="Results[@index].TestParameterName"
+           value="@Model.TestParameterName"
+           class="test-parameter-name" />
+
+    <input type="hidden"
+           name="Results[@index].NormalMin"
+           value="@Model.NormalMin"
+           class="normal-min" />
+
+    <input type="hidden"
+           name="Results[@index].NormalMax"
+           value="@Model.NormalMax"
+           class="normal-max" />
+
+    <input type="hidden"
+           name="Results[@index].DataType"
+           value="@Model.DataType"
+           class="data-type" />
+
+    <input type="hidden"
+           name="Results[@index].PanelDisplayOrder"
+           value="@Model.PanelDisplayOrder" />
+
+    <input type="hidden"
+           name="Results[@index].ParameterDisplayOrder"
+           value="@Model.ParameterDisplayOrder" />
+
+    <input type="hidden"
+           name="Results[@index].TestMethod"
+           value="@Model.TestMethod" />
+
+    <!-- ===================================================== -->
+    <!-- PARAMETER -->
+    <!-- ===================================================== -->
+
+    <td>
+
+        <input type="text"
+               class="form-control parameter-search"
+               placeholder="Search Parameter..."
+               value="@Model.TestParameterCode" />
+
+        <small class="text-muted parameter-name">
+
+            @Model.TestParameterName
+
+        </small>
+
+    </td>
+
+    <!-- ===================================================== -->
+    <!-- PANEL -->
+    <!-- ===================================================== -->
+
+    <td>
+
+        <div class="panel-container">
+
+            <select class="form-select panel-select"
+                    name="Results[@index].TestPanelId" >
+
+                @if (Model.AvailablePanels.Any())
+                {
+                    foreach (var panel in Model.AvailablePanels)
+                    {
+                        <option value="@panel.Id"
+                                data-code="@panel.Code"
+                                data-name="@panel.Name"
+                                selected="@(panel.Id == Model.TestPanelId)">
+                            @panel.Code - @panel.Name
+                        </option>
+                    }
+                }
+                else
+                {
+                    <option value="@Model.TestPanelId">
+                        @Model.TestPanelName
+                    </option>
+                }
+
+            </select>
+
+        </div>
+
+    </td>
+
+    <!-- ===================================================== -->
+    <!-- NORMAL RANGE -->
+    <!-- ===================================================== -->
+
+    <td>
+
+        <span class="normal-range-display">
+
+            @Model.NormalRange
+
+        </span>
+
+        <input type="hidden"
+               name="Results[@index].NormalRange"
+               value="@Model.NormalRange"
+               class="normal-range" />
+
+    </td>
+
+    <!-- ===================================================== -->
+    <!-- VALUE -->
+    <!-- ===================================================== -->
+
+    <td>
+
+        <input type="text"
+               class="form-control result-value"
+               name="Results[@index].Value"
+               value="@Model.Value" />
+
+    </td>
+
+    <!-- ===================================================== -->
+    <!-- PREVIOUS VALUE -->
+    <!-- ===================================================== -->
+
+    <td>
+
+        <span class="previous-result text-muted">
+
+            @if (!string.IsNullOrWhiteSpace(Model.PreviousValue))
+            {
+                @($"{Model.PreviousValue} ({Model.PreviousResultDate:dd-MM-yyyy})")
+            }
+
+        </span>
+
+    </td>
+
+    <!-- ===================================================== -->
+    <!-- UNIT -->
+    <!-- ===================================================== -->
+
+    <td>
+
+        <span class="unit-display">
+
+            @Model.Unit
+
+        </span>
+
+        <input type="hidden"
+               name="Results[@index].Unit"
+               value="@Model.Unit"
+               class="unit" />
+
+    </td>
+
+    <!-- ===================================================== -->
+    <!-- RESULT FLAG -->
+    <!-- ===================================================== -->
+
+    <td>
+
+        <select class="form-select"
+                name="Results[@index].ResultFlag" >
+
+            <option value="">
+                --
+            </option>
+
+            @foreach (var flag in Model.ResultFlags)
+            {
+                <option value="@flag.Code"
+                        selected="@(flag.Code == Model.ResultFlag)">
+                    @flag.Name
+                </option>
+            }
+
+        </select>
+
+    </td>
+
+    <!-- ===================================================== -->
+    <!-- DELETE -->
+    <!-- ===================================================== -->
+
+    <td class="text-center">
+
+        <input type="hidden"
+            name="Results[@index].IsOutOfRange"
+            value="false" />
+
+        <button type="button"
+            class="btn btn-sm btn-outline-danger btn-delete-row">
+
+            <i class="fa-solid fa-trash"></i>
+
+        </button>
+
+    </td>
+
+</tr>

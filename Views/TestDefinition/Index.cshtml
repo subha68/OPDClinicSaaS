@@ -1,0 +1,270 @@
+@model List<Models.TestPanel>
+
+@{
+Layout = "~/Views/Shared/_Layout.cshtml";
+ViewData["Title"] = "Test & Investigations Definition";
+}
+
+@section Styles
+{
+    <link rel="stylesheet"
+          href="~/css/test-definition.css" />
+}
+
+<div class="container-fluid">
+
+<!-- ============================================================
+     SUCCESS MESSAGE
+     ============================================================ -->
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show"
+         role="alert">
+
+        @TempData["SuccessMessage"]
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+
+    </div>
+}
+
+
+<!-- ============================================================
+     PANEL LIST
+     ============================================================ -->
+
+<div id="testPanelContainer">
+
+    <div class="designer-add-card p-3 mb-3 text-center">
+
+        <button type="button"
+                class="btn btn-outline-primary btn-add-panel">
+
+            <i class="fa fa-plus"></i>
+            Add Test Panel
+
+        </button>
+
+    </div>
+
+    <div id="panelEditorHost"></div>
+            
+    @if (Model == null || !Model.Any())
+    {
+        <div class="card shadow-sm">
+
+            <div class="card-body text-center text-muted py-5">
+
+                <i class="fa fa-flask fa-2x mb-3"></i>
+
+                <div>
+                    No test panels have been defined.
+                </div>
+
+                <button type="button"
+                        class="btn btn-primary btn-sm mt-3 btn-add-panel">
+
+                    <i class="fa fa-plus"></i>
+                    Add Panel
+
+                </button>
+            </div>
+
+        </div>
+    }
+    else
+    {
+        foreach (var panel in Model
+            .OrderBy(x => x.DisplayOrder)
+            .ThenBy(x => x.Name))
+        {
+            <div class="card shadow-sm mb-2 test-panel"
+                 data-panel-id="@panel.TestPanelId">
+
+                <!-- =================================================
+                     PANEL BODY
+                     ================================================= -->
+
+                <div class="card-body py-2">
+
+                    <!-- =================================================
+                         PANEL DISPLAY MODE
+                         ================================================= -->
+
+                    <div class="panel-display">
+
+                        <div class="d-flex align-items-start">
+
+                            <span class="drag-handle me-2 mt-1">
+                                <i class="fa fa-grip-vertical"></i>
+                            </span>
+
+                            <button type="button"
+                                    class="btn btn-sm btn-link text-dark p-0 me-2 mt-1 btn-expand-panel"
+                                    aria-expanded="false">
+
+                                <i class="fa fa-chevron-right panel-expand-icon"></i>
+
+                            </button>
+
+                            <span class="badge bg-dark me-4">
+                                #@panel.DisplayOrder
+                            </span>
+
+                            <div class="flex-grow-1">
+
+                                <div class="d-flex flex-wrap align-items-center">
+
+                                    <div class="panel-meta-row">
+                                        <span class="panel-code me-4">
+                                            @panel.Code
+                                        </span>
+
+                                        <span class="panel-name me-3">
+                                            @panel.Name
+                                        </span>
+
+                                        @if (!string.IsNullOrWhiteSpace(panel.DepartmentName))
+                                        {
+                                            <span class="text-muted me-3">
+                                                @panel.DepartmentName
+                                            </span>
+                                        }
+
+                                        <span class="text-muted">
+
+                                            @if (panel.IsActive)
+                                            {
+                                                <i class="fa fa-check-square text-success"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fa fa-square-o"></i>
+                                            }
+
+                                            Active
+
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(panel.Description))
+                                {
+                                    <div class="panel-description text-muted small mt-1">
+
+                                        @panel.Description
+
+                                    </div>
+                                }
+
+                            </div>
+
+                            <div class="d-flex align-items-center ms-3 gap-1">
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary btn-edit-panel">
+
+                                    <i class="fa fa-edit"></i>
+                                    Edit
+
+                                </button>
+
+                                <form asp-action="DeletePanel"
+                                    method="post"
+                                    class="d-inline form-delete-panel">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden"
+                                        name="id"
+                                        value="@panel.TestPanelId" />
+
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-danger">
+
+                                        <i class="fa fa-trash"></i>
+                                        Delete
+
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- =================================================
+                     PARAMETERS
+                     ================================================= -->
+
+                <div class="panel-parameters d-none">
+
+                    <div class="border-top bg-light">
+
+                        <div class="p-3">
+
+                            <!-- =================================================
+                                 PARAMETER CONTENT
+
+                                 _TestParameters.cshtml is responsible for
+                                 the Parameters heading and action buttons.
+                                 ================================================= -->
+
+                            <div class="parameter-content">
+
+                                <div class="text-center text-muted py-3">
+
+                                    <span class="spinner-border spinner-border-sm me-1">
+                                    </span>
+
+                                    Loading parameters...
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        }
+    }
+
+</div>
+
+</div>
+@section Scripts
+{
+<script>
+    window.testDefinitionConfig = {
+    addPanelUrl: '@Url.Action("AddPanel", "TestDefinition")',
+    updatePanelUrl: '@Url.Action("EditPanel", "TestDefinition")',
+    editPanelUrl: '@Url.Action("EditPanel", "TestDefinition")',
+    listParameterUrl: '@Url.Action("ListParameter", "TestDefinition")',
+    addParameterUrl: '@Url.Action("AddParameter", "TestDefinition")',
+    editParameterUrl: '@Url.Action("EditParameter", "TestDefinition")',
+    associateParameterFormUrl: '@Url.Action("AssociateParameter", "TestDefinition")',
+    associateParameterUrl: '@Url.Action("AssociateParameter", "TestDefinition")',
+    dissociateParameterUrl: '@Url.Action("DissociateParameter", "TestDefinition")',
+    reorderPanelUrl: '@Url.Action("ReorderPanel","TestDefinition")',
+    reorderParameterUrl: '@Url.Action("ReorderParameter","TestDefinition")',
+    searchUnassociatedParameterUrl: '@Url.Action("SearchUnassociatedParameter", "TestDefinition")'
+};
+</script>
+
+<script src="~/js/test/test-definition.js"></script>
+
+}

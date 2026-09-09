@@ -1,0 +1,263 @@
+@model ViewModels.TestResultGroupVM
+
+@{
+    var panelGroups = Model.Results
+            .OrderBy(r => r.PanelDisplayOrder)
+            .ThenBy(r => r.ParameterDisplayOrder)
+            .GroupBy(r => new
+            {
+                r.TestPanelId,
+                r.TestPanelCode,
+                r.TestPanelName
+                });
+}
+
+<div class="card shadow-sm">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+
+        <div>
+
+            <h5 class="mb-1">
+                Test Result Report
+            </h5>
+
+            <small class="text-muted">
+                Report No: @(Model.ReportNo ?? "-")
+            </small>
+
+        </div>
+
+        <button type="button"
+                id="btnBackToReports"
+                class="btn btn-outline-secondary btn-sm">
+
+            <i class="fa-solid fa-arrow-left me-1"></i>
+
+            Back
+
+        </button>
+
+    </div>
+
+    <div class="card-body">
+
+        <!-- Report Information -->
+
+        <div class="row g-3 mb-4">
+
+            <div class="col-md-3">
+
+                <label class="text-muted small">
+                    Test Date
+                </label>
+
+                <div class="fw-semibold">
+                    @Model.TestDate.ToString("dd-MM-yyyy")
+                </div>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <label class="text-muted small">
+                    Result Date
+                </label>
+
+                <div class="fw-semibold">
+                    @(Model.ResultDate?.ToString("dd-MM-yyyy") ?? "-")
+                </div>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <label class="text-muted small">
+                    Laboratory
+                </label>
+
+                <div class="fw-semibold">
+                    @(Model.LabName ?? "-")
+                </div>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <label class="text-muted small">
+                    Visit Date
+                </label>
+
+                <div class="fw-semibold">
+                    @(
+                        Model.VisitDate != null
+                                    ? Model.VisitDate?.ToString("dd-MM-yyyy")
+                                    : "-"
+                    )
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Results -->
+
+        @foreach (var panel in panelGroups)
+        {
+            <div class="card mb-4">
+
+                <div class="card-header">
+
+                    <strong>
+
+                        @(
+                            string.IsNullOrWhiteSpace(panel.Key.TestPanelCode)
+                                ? panel.Key.TestPanelName
+                                : $"{panel.Key.TestPanelCode} - {panel.Key.TestPanelName}"
+                        )
+
+                    </strong>
+
+                </div>
+
+                <div class="table-responsive">
+
+                    <table class="table table-sm table-hover mb-0 align-middle">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th style="width:30%">
+                                    Test Parameter
+                                </th>
+
+                                <th style="width:15%">
+                                    Result
+                                </th>
+
+                                <th style="width:15%">
+                                    Unit
+                                </th>
+
+                                <th style="width:20%">
+                                    Normal Range
+                                </th>
+
+                                <th style="width:10%">
+                                    Previous Result
+                                </th>
+
+                                <th style="width:10%">
+                                    Flag
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var result in panel)
+                            {
+                                <tr>
+                                    <td>
+
+                                        <div class="fw-semibold">
+
+                                            @if (!string.IsNullOrWhiteSpace(result.TestParameterCode))
+                                            {
+                                                @($"{result.TestParameterCode} ({result.TestParameterName})")
+                                            }
+                                            else
+                                            {
+                                                @result.TestParameterName
+                                            }
+
+                                        </div>
+
+                                        @if (!string.IsNullOrWhiteSpace(result.TestMethod))
+                                        {
+                                            <div>
+
+                                                <small class="text-muted">
+                                                    @result.TestMethod
+                                                </small>
+
+                                            </div>
+                                        }
+
+                                    </td>
+
+                                    <td>
+
+                                        <strong>
+                                            @result.Value
+                                        </strong>
+
+                                    </td>
+
+                                    <td>
+                                        @result.Unit
+                                    </td>
+
+                                    <td>
+                                        @result.NormalRange
+                                    </td>
+
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(result.PreviousValue))
+                                        {
+                                            <span>
+                                                @($"{result.PreviousValue} ({result.PreviousResultDate:dd-MM-yyyy})")
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td>
+
+                                        @if (!string.IsNullOrWhiteSpace(result.ResultFlag))
+                                        {
+                                            <span class="badge bg-warning text-dark">
+                                                @result.ResultFlag
+                                            </span>
+                                        }
+
+                                    </td>
+
+                                </tr>
+
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.Remarks))
+        {
+            <div class="card border-secondary">
+
+                <div class="card-header">
+
+                    <strong>
+                        Report Remarks
+                    </strong>
+
+                </div>
+
+                <div class="card-body">
+
+                    @Model.Remarks
+
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+</div>

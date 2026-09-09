@@ -1,0 +1,163 @@
+@model List<ViewModels.TestResultGroupVM>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+
+    <div>
+
+        <h6 class="mb-0">
+            Previous Reports
+        </h6>
+
+        <small class="text-muted">
+
+            @Model.Count Report(s) Found
+
+        </small>
+
+    </div>
+
+    <button type="button"
+            id="btnAddTestReport"
+            class="btn btn-primary">
+
+        <i class="fa-solid fa-plus me-1"></i>
+
+        Add Report
+
+    </button>
+
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info mb-0">
+
+        <i class="fa-solid fa-circle-info me-2"></i>
+
+        No test reports found for the selected patient.
+
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+
+        <table class="table table-sm table-hover align-middle">
+
+            <thead class="table-light">
+
+                <tr>
+
+                    <th style="width:140px;">
+                        Test Date
+                    </th>
+
+                    <th style="width:140px;">
+                        Result Date
+                    </th>
+
+                    <th>
+                        Lab Name
+                    </th>
+
+                    <th style="width:150px;">
+                        Report No
+                    </th>
+
+                    <th>
+                        Remarks
+                    </th>
+
+                    <th class="text-end"
+                        style="width:140px;">
+                        Actions
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @foreach (var report in Model
+                    .OrderByDescending(x => x.TestDate))
+                {
+                    <tr>
+
+                        <td>
+
+                            @report.TestDate.ToString(
+                                "dd-MMM-yyyy")
+
+                        </td>
+
+                        <td>
+
+                            @(report.ResultDate?.ToString(
+                                "dd-MMM-yyyy") ?? "-")
+
+                        </td>
+
+                        <td>
+                            <div>
+                                @(string.IsNullOrWhiteSpace(
+                                report.LabName)
+                                ? "-"
+                                : report.LabName)
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(report.ParameterSummary))
+                            {
+                                <small class="text-muted">
+                                    @report.ParameterSummary
+                                </small>
+                            }
+                        </td>
+
+                        <td>
+
+                            @(string.IsNullOrWhiteSpace(
+                                report.ReportNo)
+                                ? "-"
+                                : report.ReportNo)
+
+                        </td>
+
+                        <td>
+
+                            @(string.IsNullOrWhiteSpace(
+                                report.Remarks)
+                                ? "-"
+                                : report.Remarks)
+
+                        </td>
+
+                        <td class="text-end">
+
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-info me-1 btn-view-report"
+                                    data-report-id="@report.TestResultGroupId">
+
+                                <i class="fa-solid fa-eye"></i>
+
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary btn-edit-report"
+                                    data-report-id="@report.TestResultGroupId">
+
+                                <i class="fa-solid fa-pen"></i>
+
+                            </button>
+
+                        </td>
+
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+}

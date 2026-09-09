@@ -1,0 +1,219 @@
+@model List<Models.TestParameter>
+
+@{
+    var panel = ViewBag.Panel as Models.TestPanel;
+}
+
+<div class="test-parameters">
+
+    <div class="parameter-list"
+         data-panel-id="@panel?.TestPanelId">
+
+        <!-- ============================================================
+            PARAMETER ACTIONS
+            ============================================================ -->
+
+        <div class="d-flex justify-content-end align-items-center mb-2 parameter-toolbar">
+
+            <div class="d-flex gap-2">
+
+                <button type="button"
+                        class="btn btn-sm btn-outline-primary btn-associate-parameter">
+
+                    <i class="fa fa-link me-1"></i>
+                    Associate Existing
+
+                </button>
+
+                <button type="button"
+                        class="btn btn-sm btn-primary btn-add-parameter">
+
+                    <i class="fa fa-plus me-1"></i>
+                    Add Parameter
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="associate-parameter-host"></div>
+
+        <!-- ============================================================
+            PARAMETER LIST
+            ============================================================ -->
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="text-center py-4 text-muted">
+
+                <i class="fa fa-flask fa-2x mb-2"></i>
+
+                <div>No parameters added yet.</div>
+
+            </div>
+
+        }
+        else
+        {
+            foreach (var parameter in Model
+                .OrderBy(x => x.DisplayOrder)
+                .ThenBy(x => x.Name))
+            {
+                <div class="border rounded bg-white mb-2 test-parameter"
+                    data-parameter-id="@parameter.TestParameterId"
+                    data-panel-id="@panel?.TestPanelId">
+
+                    <div class="p-2">
+
+                        <!-- ====================================================
+                            FIRST LINE
+                            ==================================================== -->
+
+                        <div class="d-flex align-items-start">
+
+                            <span class="drag-handle me-2 mt-1">
+                                <i class="fa fa-grip-vertical"></i>
+                            </span>
+
+                            <span class="badge bg-dark me-3 mt-1">
+                                #@parameter.DisplayOrder
+                            </span>
+
+                            <div class="flex-grow-1">
+
+                                <div class="parameter-meta-row">
+
+                                    <span class="parameter-code">
+                                        @parameter.Code
+                                    </span>
+
+                                    <span class="parameter-name">
+                                        @parameter.Name
+                                    </span>
+
+                                    <span class="parameter-data-type">
+                                        @parameter.DataType
+                                    </span>
+
+                                    <span class="parameter-unit">
+                                        @(string.IsNullOrWhiteSpace(parameter.Unit)
+                                            ? "-"
+                                            : parameter.Unit)
+                                    </span>
+
+                                    <span class="parameter-active">
+
+                                        @if (parameter.IsActive)
+                                        {
+                                            <i class="fa fa-check-square text-success"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fa fa-square-o"></i>
+                                        }
+
+                                        Active
+
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                            <div class="d-flex gap-1">
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary btn-edit-parameter"
+                                        data-panel-id="@panel?.TestPanelId"
+                                        data-parameter-id="@parameter.TestParameterId">
+
+                                    <i class="fa fa-edit"></i>
+                                    Edit
+
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger btn-dissociate-parameter"
+                                        data-panel-id="@panel?.TestPanelId"
+                                        data-parameter-id="@parameter.TestParameterId">
+
+                                    <i class="fa fa-unlink"></i>
+                                    Dissociate
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ====================================================
+                            SECOND LINE - DESCRIPTION
+                            ==================================================== -->
+
+                            @if (!string.IsNullOrWhiteSpace(parameter.Description))
+                            {
+                                <div class="parameter-description mt-1">
+
+                                    <i class="fa fa-info-circle me-1"></i>
+
+                                    @parameter.Description
+
+                                </div>
+                            }
+
+
+                        <!-- ====================================================
+                            THIRD LINE - ADDITIONAL ATTRIBUTES
+                            ==================================================== -->
+
+                        <div class="parameter-attributes mt-2">
+
+                            <span class="attribute-item">
+
+                                <strong>Range:</strong>
+
+                                @(string.IsNullOrWhiteSpace(parameter.NormalRange)
+                                    ? "-"
+                                    : parameter.NormalRange)
+
+                            </span>
+
+                            <span class="attribute-item">
+
+                                <strong>Min:</strong>
+
+                                @(parameter.NormalMin?.ToString() ?? "-")
+
+                            </span>
+
+                            <span class="attribute-item">
+
+                                <strong>Max:</strong>
+
+                                @(parameter.NormalMax?.ToString() ?? "-")
+
+                            </span>
+
+                            <span class="attribute-item">
+
+                                <strong>Method:</strong>
+
+                                @(string.IsNullOrWhiteSpace(parameter.TestMethod)
+                                    ? "-"
+                                    : parameter.TestMethod)
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+        }
+        
+    </div>
+
+</div>

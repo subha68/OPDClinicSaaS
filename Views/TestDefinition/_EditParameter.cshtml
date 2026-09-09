@@ -1,0 +1,315 @@
+@model ViewModels.TestParameterVM
+
+@{
+var isEdit = Model.Parameter.TestParameterId > 0;
+var formAction = isEdit ? "EditParameter" : "AddParameter";
+}
+
+<form asp-controller="TestDefinition" asp-action="@formAction" method="post" id="testParameterForm">
+@Html.AntiForgeryToken()
+
+<!-- ============================================================
+     HIDDEN FIELDS
+     ============================================================ -->
+
+<input type="hidden"
+       asp-for="Parameter.TestParameterId" />
+
+<input type="hidden"
+       asp-for="Parameter.ClinicId" />
+
+<input type="hidden"
+       asp-for="Association.TestPanelParameterId" />
+
+<input type="hidden"
+       asp-for="Association.ClinicId" />
+
+<input type="hidden"
+       asp-for="Association.TestPanelId" />
+
+<input type="hidden"
+       asp-for="Association.TestParameterId" />
+
+
+<!-- ============================================================
+     VALIDATION
+     ============================================================ -->
+
+<div asp-validation-summary="ModelOnly"
+     class="text-danger small mb-2">
+</div>
+
+
+<!-- ============================================================
+     PARAMETER EDITOR
+     ============================================================ -->
+
+<div class="border rounded bg-white mb-2 parameter-editor">
+
+    <div class="p-2">
+
+        <!-- ====================================================
+             FIRST LINE
+             ==================================================== -->
+
+        <div class="row align-items-end g-2">
+
+            <!-- CODE -->
+
+            <div class="col-md-1">
+
+                <label asp-for="Parameter.Code"
+                    class="form-label small mb-1">
+                    Code
+                </label>
+
+                <input asp-for="Parameter.Code"
+                    class="form-control form-control-sm"
+                    maxlength="50" />
+
+                <span asp-validation-for="Parameter.Code"
+                    class="text-danger small">
+                </span>
+
+            </div>
+
+
+            <!-- PARAMETER NAME -->
+
+            <div class="col-md-3">
+
+                <label asp-for="Parameter.Name"
+                    class="form-label small mb-1">
+                    Parameter
+                </label>
+
+                <input asp-for="Parameter.Name"
+                    class="form-control form-control-sm"
+                    maxlength="200" />
+
+                <span asp-validation-for="Parameter.Name"
+                    class="text-danger small">
+                </span>
+
+            </div>
+
+
+            <!-- UNIT -->
+
+            <div class="col-md-2">
+
+                <label asp-for="Parameter.Unit"
+                    class="form-label small mb-1">
+                    Unit
+                </label>
+
+                <input asp-for="Parameter.Unit"
+                    class="form-control form-control-sm"
+                    maxlength="50"
+                    placeholder="mg/dL" />
+
+                <span asp-validation-for="Parameter.Unit"
+                    class="text-danger small">
+                </span>
+
+            </div>
+
+
+            <!-- DATA TYPE -->
+
+            <div class="col-md-2">
+
+                <label asp-for="Parameter.DataType"
+                    class="form-label small mb-1">
+                    Data Type
+                </label>
+
+                <select asp-for="Parameter.DataType"
+                        class="form-select form-select-sm">
+
+                    <option value="Numeric">Numeric</option>
+                    <option value="Text">Text</option>
+                    <option value="Boolean">Boolean</option>
+                    <option value="Date">Date</option>
+
+                </select>
+
+                <span asp-validation-for="Parameter.DataType"
+                    class="text-danger small">
+                </span>
+
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small mb-1">
+                    Order
+                </label>
+
+                <input asp-for="Association.DisplayOrder"
+                    type="number"
+                    class="form-control form-control-sm"
+                    min="1" />
+            </div>
+
+            <!-- ACTIVE -->
+
+            <div class="form-check col-md-1 text-center">
+
+                <input asp-for="Parameter.IsActive"
+                    class="form-check-input" />
+
+                <label asp-for="Parameter.IsActive"
+                    class="form-check-label small">
+                    Active
+                </label>
+
+            </div>
+
+            <div class="col-md-2 text-end">
+
+                <button type="submit"
+                        class="btn btn-sm btn-success">
+
+                    <i class="fa fa-save"></i>
+
+                    Save
+
+                </button>
+
+                <button type="button"
+                        class="btn btn-sm btn-secondary btn-cancel-parameter-edit">
+
+                    <i class="fa fa-times"></i>
+                    Cancel
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- ====================================================
+             SECOND LINE - DESCRIPTION
+             ==================================================== -->
+
+        <div class="row mt-2">
+
+            <div class="col-auto"
+                 style="width: 32px;">
+            </div>
+
+            <div class="col">
+
+                <label asp-for="Parameter.Description"
+                       class="form-label small mb-1">
+                    Description
+                </label>
+
+                <input asp-for="Parameter.Description"
+                       class="form-control form-control-sm"
+                       maxlength="500"
+                       placeholder="Enter parameter description" />
+
+                <span asp-validation-for="Parameter.Description"
+                      class="text-danger small">
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- ====================================================
+             ADDITIONAL PARAMETER ATTRIBUTES
+             ==================================================== -->
+
+        <div class="row mt-2 g-2">
+
+            <!-- NORMAL RANGE -->
+
+            <div class="col-md-2">
+
+                <label asp-for="Parameter.NormalRange"
+                       class="form-label small mb-1">
+                    Normal Range
+                </label>
+
+                <input asp-for="Parameter.NormalRange"
+                       class="form-control form-control-sm"
+                       maxlength="100"
+                       placeholder="70 - 100" />
+
+                <span asp-validation-for="Parameter.NormalRange"
+                      class="text-danger small">
+                </span>
+
+            </div>
+
+            <!-- NORMAL MIN -->
+
+            <div class="col-md-2">
+
+                <label asp-for="Parameter.NormalMin"
+                       class="form-label small mb-1">
+                    Normal Min
+                </label>
+
+                <input asp-for="Parameter.NormalMin"
+                       type="number"
+                       step="any"
+                       class="form-control form-control-sm" />
+
+                <span asp-validation-for="Parameter.NormalMin"
+                      class="text-danger small">
+                </span>
+
+            </div>
+
+
+            <!-- NORMAL MAX -->
+
+            <div class="col-md-2">
+
+                <label asp-for="Parameter.NormalMax"
+                       class="form-label small mb-1">
+                    Normal Max
+                </label>
+
+                <input asp-for="Parameter.NormalMax"
+                       type="number"
+                       step="any"
+                       class="form-control form-control-sm" />
+
+                <span asp-validation-for="Parameter.NormalMax"
+                      class="text-danger small">
+                </span>
+
+            </div>
+
+
+            <!-- TEST METHOD -->
+
+            <div class="col-md-6">
+
+                <label asp-for="Parameter.TestMethod"
+                       class="form-label small mb-1">
+                    Test Method
+                </label>
+
+                <input asp-for="Parameter.TestMethod"
+                       class="form-control form-control-sm"
+                       maxlength="200" />
+
+                <span asp-validation-for="Parameter.TestMethod"
+                      class="text-danger small">
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+</form>

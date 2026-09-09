@@ -43,24 +43,19 @@
         <link rel="stylesheet"
             href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
-        <link href="~/css/app-layout.css"
-            rel="stylesheet"
-            asp-append-version="true" />
+        <link href="~/css/app-layout.css" rel="stylesheet" asp-append-version="true" />
 
-        <link href="~/css/crud.css"
-            rel="stylesheet" />
+        <link href="~/css/crud.css" rel="stylesheet" />
 
-        <link href="~/css/schedule.css"
-            rel="stylesheet" />
+        <link href="~/css/schedule.css" rel="stylesheet" />
 
-        <link href="~/css/appointment.css"
-            rel="stylesheet" />
+        <link href="~/css/appointment.css" rel="stylesheet" />
 
-        <link href="~/css/consultation.css"
-            rel="stylesheet" />
+        <link href="~/css/consultation.css" rel="stylesheet" />
 
-        <link href="~/css/patient-selection.css"
-            rel="stylesheet" />      
+        <link href="~/css/patient-selection.css" rel="stylesheet" />      
+
+        <link href="~/css/test-result.css" rel="stylesheet" />      
 
         @RenderSection("Styles", required: false)
     </head>
@@ -160,6 +155,11 @@
                         @pageTitle
                     </div>
                     
+                    <div id="appMessage"
+                        class="alert d-none"
+                        role="alert">
+                    </div>
+
                     @await Html.PartialAsync("_PatientHeader")
 
                     @RenderBody()
@@ -170,21 +170,14 @@
 
         </div>
 
-        <!--
-            Change Password Modal
-
-            This is included from the shared layout so that it exists
-            on every authenticated page, not just Home/Index.
-        -->
+        <!-- Shared Change Password Modal -->
         <partial name="_ChangePasswordModal" />
 
-        <!--
-            Vitals Modal
+        <!-- Shared Vitals Modal -->
+        <partial name="_VitalModal" /> 
 
-            Only the modal shell/placeholders are rendered here.
-            Vital definitions and values are loaded by vital.js.
-        -->
-        <partial name="_VitalModal" />        
+        <!-- Shared Test Results Modal -->
+        <partial name="_TestResultModal" />       
     }
     else
     {
@@ -210,6 +203,8 @@
 
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
     <script src="~/js/crudlist.js"></script>
 
     <script src="~/js/consult.js"></script>
@@ -224,7 +219,34 @@
     {    
         <script src="~/js/change-password.js" asp-append-version="true"></script>
         <script src="~/js/vital.js" asp-append-version="true"></script>
+        <script src="~/js/test-result.js" asp-append-version="true"></script>
     }
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const message = '@Html.Raw(TempData["Message"] ?? "")';
+        const type = '@Html.Raw(TempData["MessageType"] ?? "")';
+
+        if (message) {
+
+            const alert = $("#appMessage");
+
+            alert
+                .removeClass("d-none alert-success alert-danger alert-warning alert-info")
+                .addClass(`alert-${type}`)
+                .html(message);
+
+            setTimeout(function () {
+                alert
+                    .fadeOut(500, function () {
+                        $(this).addClass("d-none").show();
+                    });
+            }, 4000);
+        }
+
+    });
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 

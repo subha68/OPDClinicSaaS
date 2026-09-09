@@ -4,7 +4,8 @@ function wireAutocomplete(
     mapper,
     onSelected,
     appendToSelector,
-    onCleared)
+    onCleared,
+    additionalData)
 {
     $(selector).autocomplete({
 
@@ -14,15 +15,37 @@ function wireAutocomplete(
 
         source: function (request, response) {
 
+            let data = {
+                term: request.term
+            };
+
+            if (additionalData) {
+
+                if (typeof additionalData === "function") {
+
+                    data = {
+                        ...data,
+                        ...additionalData()
+                    };
+                }
+                else {
+
+                    data = {
+                        ...data,
+                        ...additionalData
+                    };
+                }
+            }
+
             $.getJSON(
                 url,
-                { term: request.term },
-                function (data) {
+                data,
+                function (result) {
 
-                    const mapped = $.map(data, mapper);
-                    response(mapped);                
-                }
-            );
+                    const mapped = $.map(result, mapper);
+
+                    response(mapped);
+                });
         },
 
         select: function (event, ui) {
@@ -227,5 +250,22 @@ function wireReportLookupAutocomplete(selector,
             hideMessage();
         }
     );
+}
+
+function showMessage(message, type = "success") {
+
+    const alert = $("#appMessage");
+
+    alert
+        .removeClass(
+            "d-none alert-success alert-danger alert-warning alert-info"
+        )
+        .addClass(`alert-${type}`)
+        .html(message)
+        .show();
+
+    setTimeout(function () {
+        alert.fadeOut();
+    }, 4000);
 }
 

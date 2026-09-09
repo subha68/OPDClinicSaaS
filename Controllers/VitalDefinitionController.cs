@@ -73,7 +73,9 @@ namespace Controllers
 
             _vitalDef.Create(model);
 
-            TempData["SuccessMessage"] = "Vital definition created successfully.";
+            TempData["Message"] = "Vital definition created successfully.";
+            TempData["MessageType"] = "success";                
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -115,7 +117,8 @@ namespace Controllers
                 return NotFound();
             }
 
-            TempData["SuccessMessage"] = "Vital definition updated successfully.";
+            TempData["Message"] = "Vital definition updated successfully.";
+            TempData["MessageType"] = "success";                
 
             return View("Create", model);
             //return RedirectToAction(nameof(Index));
@@ -136,14 +139,15 @@ namespace Controllers
                 return NotFound();
             }
 
-            TempData["SuccessMessage"] = "Vital definition deleted successfully.";
+            TempData["Message"] = "Vital definition deleted successfully.";
+            TempData["MessageType"] = "success";                
 
             return RedirectToAction(nameof(Index));
         }
 
 
         // ============================================================
-        // CLONE DEFAULT VITALS
+        // CLONE DEFAULT VITALS - called by ClinicAdmin from Vital Definition page
         // ============================================================
 
         [HttpGet]
@@ -156,14 +160,45 @@ namespace Controllers
 
             int count = _vitalDef.CloneDefaults();
 
-            TempData["SuccessMessage"] =
-                count == 0
-                    ? "All default vital definitions already exist for this clinic."
-                    : $"{count} default vital definition(s) cloned successfully.";
+            if (count == 0)
+            {
+                TempData["Message"] = "All default vital definitions already exist for this clinic.";
+                TempData["MessageType"] = "warning";
+            }
+            else
+            {
+                TempData["Message"] = $"{count} default vital definition(s) cloned successfully.";
+                TempData["MessageType"] = "success";                
+            }
 
             return RedirectToAction(nameof(Index));
         }
 
+        // ============================================================
+        // CLONE DEFAULT VITALS - called by SuperAdmin from Edit Clinic page
+        // ============================================================
+
+        [HttpPost]
+        public IActionResult CloneVitalDefinitions(int clinicId)
+        {
+            int count = _vitalDef.CloneDefaults(clinicId);
+
+            if (count == 0)
+            {
+                TempData["Message"] = "All default vital definitions already exist for this clinic.";
+                TempData["MessageType"] = "warning";
+            }
+            else
+            {
+                TempData["Message"] = $"{count} default vital definition(s) cloned successfully.";
+                TempData["MessageType"] = "success";                
+            }
+
+            return RedirectToAction("Edit",
+                                    "Clinic",
+                                    new { id = clinicId });
+        }
+        
         [HttpGet]
         public IActionResult GetActiveDefinitions()
         {
