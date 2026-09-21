@@ -1,0 +1,36 @@
+@model Models.ConsultationTestResult
+
+<input asp-for="ConsultationTestResultId" type="hidden" />
+<input asp-for="ClinicId" type="hidden" />
+<input asp-for="TestResultId" type="hidden" />
+<input asp-for="TestResultGroupId" type="hidden" />
+<input asp-for="TestPanelId" type="hidden" />
+<input asp-for="TestPanelCode" type="hidden" />
+<input asp-for="TestPanelName" type="hidden" />
+<input asp-for="TestParameterId" type="hidden" />
+<input asp-for="TestParameterCode" type="hidden" />
+<input asp-for="TestParameterName" type="hidden" />
+<input asp-for="Value" type="hidden" />
+<input asp-for="Unit" type="hidden" />
+<input asp-for="PanelDisplayOrder" type="hidden" />
+<input asp-for="ParameterDisplayOrder" type="hidden" />
+<input asp-for="NormalRange" type="hidden" />
+<input asp-for="NormalMin" type="hidden" />
+<input asp-for="NormalMax" type="hidden" />
+<input asp-for="DataType" type="hidden" />
+<input asp-for="ResultFlag" type="hidden" />
+
+<span class="test-code">
+    @Model.TestParameterCode
+</span>
+
+<span class="test-value">
+    @Model.Value
+</span>
+
+@if (!string.IsNullOrWhiteSpace(Model.Unit))
+{
+    <span class="test-unit">
+        @Model.Unit
+    </span>
+}

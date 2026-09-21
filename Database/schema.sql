@@ -102,6 +102,8 @@ CREATE TABLE PrescriptionTemplateSections
     IsActive BIT NOT NULL DEFAULT 1,
     Multiline BIT NOT NULL DEFAULT 0,
     IsPharmacologyAdvice BIT NOT NULL DEFAULT 0,
+    IsVital BIT NOT NULL DEFAULT 0,
+    IsTestResult BIT NOT NULL DEFAULT 0,
 
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
     FOREIGN KEY (TemplateId) REFERENCES PrescriptionTemplates(TemplateId)
@@ -218,10 +220,10 @@ CREATE TABLE VitalDefinitions (
     VitalType NVARCHAR(25) NOT NULL, -- Item, Derived, Composition Item (e.g. BP), Composition
     DataType NVARCHAR(25) NOT NULL, -- Text, Number, Decimal
     VitalUnit NVARCHAR(20),
-    IsDerived BIT NOT NULL DEFAULT(0),
     DeriveFormula NVARCHAR(100), -- Use VitalCodes and Operator of constituting Vitals (e.g. WEIGHT / (HEIGHT * HEIGHT))
     DisplayComposition NVARCHAR(100), -- Use VitalCodes and other symbols (e.g. SBP / DBP) - here / is a symbol, not operator
     IsStandard BIT NOT NULL DEFAULT(1),
+    DisplayOrder INT,
     IsActive BIT NOT NULL DEFAULT(1)
 );
 
@@ -236,9 +238,9 @@ CREATE TABLE Vitals (
     DataType NVARCHAR(25) NOT NULL,
     VitalUnit NVARCHAR(20),
     VitalValue NVARCHAR(100),
-    IsDerived BIT NOT NULL DEFAULT(0),
     DeriveFormula NVARCHAR(100),
     DisplayComposition NVARCHAR(100),
+    DisplayOrder INT,
 
     FOREIGN KEY (VisitId) REFERENCES Visits(VisitId)
 );
@@ -399,6 +401,8 @@ CREATE TABLE ConsultationSections
     IsVisible  BIT NOT NULL DEFAULT(1),
     Multiline BIT NOT NULL DEFAULT(0),
     IsPharmacologyAdvice BIT NOT NULL DEFAULT(0),
+    IsVital BIT NOT NULL DEFAULT 0,
+    IsTestResult BIT NOT NULL DEFAULT 0,
 
     FOREIGN KEY (ConsultationId) REFERENCES Consultations(ConsultationId),
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
@@ -419,6 +423,76 @@ CREATE TABLE ConsultationRows
 --    FOREIGN KEY (ConsultationId) REFERENCES Consultations(ConsultationId),
     FOREIGN KEY (SectionId) REFERENCES ConsultationSections(SectionId),
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
+);
+
+CREATE TABLE ConsultationVitals
+(
+    ConsultationVitalId INT IDENTITY PRIMARY KEY,
+    ClinicId INT NOT NULL,
+    RowId INT NOT NULL,
+    VitalId INT NOT NULL,
+    VitalDefId INT,
+    VisitId INT NOT NULL,
+    VisitDate DATE NOT NULL,
+    VitalLabel NVARCHAR(100) NOT NULL,
+    VitalCode NVARCHAR(25) NOT NULL,
+    VitalType NVARCHAR(25) NOT NULL,
+    DataType NVARCHAR(25) NOT NULL,
+    VitalUnit NVARCHAR(20),
+    VitalValue NVARCHAR(100),
+    DeriveFormula NVARCHAR(100),
+    DisplayComposition NVARCHAR(100),
+    DisplayOrder INT,
+
+    FOREIGN KEY (RowId) REFERENCES ConsultationRows(RowId),
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
+    FOREIGN KEY (VitalId) REFERENCES Vitals(VitalId)
+);
+
+ALTER TABLE ConsultationRowVitals
+ADD CONSTRAINT UQ_ConsultationRowVitals UNIQUE(RowId, VitalId);
+
+CREATE TABLE ConsultationTestResultGroups
+(
+    ConsultationTestResultGroupId INT IDENTITY PRIMARY KEY,
+    ClinicId INT NOT NULL,
+    PatientId INT NOT NULL,
+    VisitId INT NULL,
+    RowId INT NOT NULL,
+    TestDate DATE NOT NULL,
+
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
+    FOREIGN KEY (PatientId) REFERENCES Patients(PatientId),
+    FOREIGN KEY (VisitId) REFERENCES Visits(VisitId),
+    FOREIGN KEY (RowId) REFERENCES ConsultationRows(RowId)
+);
+
+CREATE TABLE ConsultationTestResults
+(
+    ConsultationTestResultId INT IDENTITY PRIMARY KEY,
+    ConsultationTestResultGroupId INT NOT NULL,
+    ClinicId INT NOT NULL,
+    TestResultId INT NOT NULL,
+    TestResultGroupId INT NOT NULL,
+    TestPanelId INT NOT NULL,
+    TestPanelCode NVARCHAR(50) NOT NULL,
+    TestPanelName NVARCHAR(200) NOT NULL,
+    TestParameterId INT NOT NULL,
+    TestParameterCode NVARCHAR(50) NOT NULL,
+    TestParameterName NVARCHAR(200) NOT NULL,
+    PanelDisplayOrder INT NOT NULL,
+    ParameterDisplayOrder INT NOT NULL,
+    NormalRange NVARCHAR(100) NULL,
+    NormalMin DECIMAL(18,4) NULL,
+    NormalMax DECIMAL(18,4) NULL,
+    TestMethod NVARCHAR(200) NULL,
+    DataType NVARCHAR(30) NOT NULL,
+    Value NVARCHAR(200) NULL,
+    Unit NVARCHAR(50) NULL,
+    ResultFlag NVARCHAR(20) NULL,
+
+    FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
+    FOREIGN KEY (ConsultationTestResultGroupId) REFERENCES ConsultationTestResultGroups(ConsultationTestResultGroupId)
 );
 
 CREATE TABLE ConsultationFields

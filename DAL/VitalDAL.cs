@@ -19,7 +19,7 @@ namespace DAL
                     
             string query = @"
                 INSERT INTO Vitals
-                (VitalDefId,
+                (VitalDefId, 
                     ClinicId,
                     VisitId,
                     VitalLabel,
@@ -28,9 +28,9 @@ namespace DAL
                     DataType,
                     VitalUnit,
                     VitalValue,
-                    IsDerived,
                     DeriveFormula,
-                    DisplayComposition)
+                    DisplayComposition,
+                    DisplayOrder)
                 VALUES
                 (@VitalDefId,
                     @ClinicId,
@@ -41,9 +41,9 @@ namespace DAL
                     @DataType,
                     @VitalUnit,
                     @VitalValue,
-                    @IsDerived,
                     @DeriveFormula,
-                    @DisplayComposition);
+                    @DisplayComposition,
+                    @DisplayOrder);
 
                 SELECT SCOPE_IDENTITY();";
 
@@ -58,9 +58,9 @@ namespace DAL
             cmd.Parameters.AddWithValue("@DataType", model.DataType ?? string.Empty);
             cmd.Parameters.AddWithValue("@VitalUnit", string.IsNullOrWhiteSpace(model.VitalUnit) ? DBNull.Value : model.VitalUnit);
             cmd.Parameters.AddWithValue("@VitalValue", string.IsNullOrWhiteSpace(model.VitalValue) ? DBNull.Value : model.VitalValue);
-            cmd.Parameters.AddWithValue("@IsDerived", model.IsDerived ? 1 : 0);
             cmd.Parameters.AddWithValue("@DeriveFormula", string.IsNullOrWhiteSpace(model.DeriveFormula) ? DBNull.Value : model.DeriveFormula);
             cmd.Parameters.AddWithValue("@DisplayComposition", string.IsNullOrWhiteSpace(model.DisplayComposition) ? DBNull.Value : model.DisplayComposition);
+            cmd.Parameters.AddWithValue("@DisplayOrder", model.DisplayOrder == null ? DBNull.Value : model.DisplayOrder);
 
             vitalId = Convert.ToInt32(cmd.ExecuteScalar());
             return vitalId;
@@ -122,9 +122,9 @@ namespace DAL
                     DataType,
                     VitalUnit,
                     VitalValue,
-                    IsDerived,
                     DeriveFormula,
-                    DisplayComposition
+                    DisplayComposition,
+                    DisplayOrder
                 FROM Vitals
                 WHERE VitalId = @VitalId
                   AND ClinicId = @ClinicId";
@@ -159,24 +159,13 @@ namespace DAL
             var list = new List<Vital>();
 
             string query = @"
-                SELECT
-                    VitalId,
-                    VitalDefId,
-                    ClinicId,
-                    VisitId,
-                    VitalLabel,
-                    VitalCode,
-                    VitalType,
-                    DataType,
-                    VitalUnit,
-                    VitalValue,
-                    IsDerived,
-                    DeriveFormula,
-                    DisplayComposition
+                SELECT VitalId, VitalDefId, ClinicId, VisitId, VitalLabel, VitalCode, VitalType, DataType, VitalUnit,
+                        VitalValue, DeriveFormula, DisplayComposition, DisplayOrder
                 FROM Vitals
                 WHERE ClinicId = @ClinicId
                   AND VisitId = @VisitId
-                ORDER BY VitalDefId";
+                ORDER BY DisplayOrder,
+                        VitalDefId";
 
             using SqlCommand cmd = new SqlCommand(query, conn);
 
@@ -186,6 +175,44 @@ namespace DAL
             }
 
             cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+            cmd.Parameters.AddWithValue("@VisitId", visitId);
+
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                list.Add(MapVital(reader));
+            }
+
+            return list;
+        }
+
+        public List<Vital> GetAll(int clinicId, int patientId, int visitId, SqlConnection conn, SqlTransaction? tran = null)
+        {
+            var list = new List<Vital>();
+
+            string query = @"
+                SELECT vt.VitalId, vt.VitalDefId, vt.ClinicId, vt.VisitId, vt.VitalLabel, vt.VitalCode, vt.VitalType, 
+                        vt.DataType, vt.VitalUnit, vt.VitalValue, vt.DeriveFormula, vt.DisplayComposition, 
+                        vt.DisplayOrder
+                FROM Vitals vt
+                INNER JOIN Visits vs
+                    ON vt.VisitId = vs.VisitId
+                WHERE vt.ClinicId = @ClinicId
+                    AND vs.PatientId = @PatientId
+                    AND vt.VisitId = @VisitId
+                ORDER BY DisplayOrder,
+                        VitalDefId";
+
+            using SqlCommand cmd = new SqlCommand(query, conn);
+
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
+
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+            cmd.Parameters.AddWithValue("@PatientId", patientId);
             cmd.Parameters.AddWithValue("@VisitId", visitId);
 
             using var reader = cmd.ExecuteReader();
@@ -212,9 +239,9 @@ namespace DAL
                 DataType = reader["DataType"]?.ToString() ?? string.Empty,
                 VitalUnit = reader["VitalUnit"] != DBNull.Value ? reader["VitalUnit"].ToString() : null,
                 VitalValue = reader["VitalValue"] != DBNull.Value ? reader["VitalValue"].ToString() : string.Empty,
-                IsDerived = Convert.ToBoolean(reader["IsDerived"]),
                 DeriveFormula = reader["DeriveFormula"] != DBNull.Value ? reader["DeriveFormula"].ToString() : string.Empty,
-                DisplayComposition = reader["DisplayComposition"] != DBNull.Value ? reader["DisplayComposition"].ToString() : string.Empty
+                DisplayComposition = reader["DisplayComposition"] != DBNull.Value ? reader["DisplayComposition"].ToString() : string.Empty,
+                DisplayOrder = reader["DisplayOrder"] != DBNull.Value ? Convert.ToInt32(reader["DisplayOrder"]) : null
             };
         }
     }

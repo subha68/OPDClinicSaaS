@@ -5,13 +5,13 @@ namespace Models
     public class Patient
     {
         public int PatientId { get; set; }
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
 
         [Required]
-        public string FirstName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
     
         [Required]
-        public string LastName { get; set; }
+        public string LastName { get; set; } = string.Empty;
         public string FullName => FirstName + ' ' + LastName; 
 
         [Required]

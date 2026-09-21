@@ -356,22 +356,22 @@ VALUES
 
 INSERT INTO VitalDefinitions
 (ClinicId, VitalLabel, VitalCode, VitalType, DataType, VitalUnit, IsDerived, DeriveFormula, DisplayComposition,
-    IsStandard, IsActive)
+    IsStandard, IsActive, DisplayOrder)
 VALUES
-(NULL, 'Height', 'HEIGHT', 'Item', 'Decimal', 'cm', 0, NULL, NULL, 1, 1),
-(NULL, 'Weight', 'WEIGHT', 'Item', 'Decimal', 'kg', 0, NULL, NULL, 1, 1),
-(NULL, 'Systolic Blood Pressure', 'SBP', 'CompositionItem', 'Number', 'mmHg', 0, NULL, NULL, 1, 1),
-(NULL, 'Diastolic Blood Pressure', 'DBP', 'CompositionItem', 'Number', 'mmHg', 0, NULL, NULL, 1, 1),
-(NULL, 'Pulse', 'PULSE', 'Item', 'Number', 'bpm', 0, NULL, NULL, 1, 1),
-(NULL, 'SpO2', 'SPO2', 'Item', 'Number', '%', 0, NULL, NULL, 1, 1),
-(NULL, 'Respiratory Rate', 'RESP_RATE', 'Item', 'Number', '/min', 0, NULL, NULL, 1, 1),
-(NULL, 'Temperature', 'TEMPERATURE', 'Item', 'Decimal', '°F', 0, NULL, NULL, 1, 1),
-(NULL, 'Pain Score', 'PAIN_SCORE', 'Item', 'Number', '/10', 0, NULL, NULL, 1, 1),
-(NULL, 'Blood Glucose', 'BLOOD_GLUCOSE', 'Item', 'Decimal', 'mg/dL', 0, NULL, NULL, 1, 1),
-(NULL, 'Blood Pressure', 'BP', 'Composition', 'Text', 'mmHg', 0, NULL, 'SBP / DBP', 1, 1),
-(NULL, 'Body Mass Index', 'BMI', 'Derived', 'Decimal', 'kg/m²', 1, 'WEIGHT / ((HEIGHT / 100) * (HEIGHT / 100))', NULL, 1, 1),
-(NULL, 'Mean Arterial Pressure', 'MAP', 'Derived', 'Decimal', 'mmHg', 1, '(SBP + (2 * DBP)) / 3', NULL, 1, 1),
-(NULL, 'Body Surface Area', 'BSA', 'Derived', 'Decimal', 'm²', 1, 'SQRT((HEIGHT * WEIGHT) / 3600)', NULL, 1, 1);
+(NULL, 'Height', 'HEIGHT', 'Item', 'Decimal', 'cm', NULL, NULL, 1, 1, 1),
+(NULL, 'Weight', 'WEIGHT', 'Item', 'Decimal', 'kg', NULL, NULL, 1, 1, 2),
+(NULL, 'Systolic Blood Pressure', 'SBP', 'CompositionItem', 'Number', 'mmHg', NULL, NULL, 1, 1, null),
+(NULL, 'Diastolic Blood Pressure', 'DBP', 'CompositionItem', 'Number', 'mmHg', NULL, NULL, 1, 1, null),
+(NULL, 'Blood Pressure', 'BP', 'Composition', 'Text', 'mmHg', NULL, 'SBP / DBP', 1, 1, 3),
+(NULL, 'Pulse', 'PULSE', 'Item', 'Number', 'bpm', NULL, NULL, 1, 1, 4),
+(NULL, 'SpO2', 'SPO2', 'Item', 'Number', '%', NULL, NULL, 1, 1, 5),
+(NULL, 'Respiratory Rate', 'RESP_RATE', 'Item', 'Number', '/min', NULL, NULL, 1, 1, 6),
+(NULL, 'Temperature', 'TEMPERATURE', 'Item', 'Decimal', '°F', NULL, NULL, 1, 1, 7),
+(NULL, 'Pain Score', 'PAIN_SCORE', 'Item', 'Number', '/10', NULL, NULL, 1, 1, 8),
+(NULL, 'Blood Glucose', 'BLOOD_GLUCOSE', 'Item', 'Decimal', 'mg/dL', NULL, NULL, 1, 1, 9),
+(NULL, 'Body Mass Index', 'BMI', 'Derived', 'Decimal', 'kg/m²', 'WEIGHT / ((HEIGHT / 100) * (HEIGHT / 100))', NULL, 1, 1, 10),
+(NULL, 'Mean Arterial Pressure', 'MAP', 'Derived', 'Decimal', 'mmHg', '(SBP + (2 * DBP)) / 3', NULL, 1, 1, 11),
+(NULL, 'Body Surface Area', 'BSA', 'Derived', 'Decimal', 'm²', 'SQRT((HEIGHT * WEIGHT) / 3600)', NULL, 1, 1, 12);
 
 /* ============================================================
    TEST PANELS

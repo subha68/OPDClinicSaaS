@@ -13,5 +13,9 @@ namespace ViewModels
 
         public List<PrescriptionFieldVM> Fields { get; set; }
             = new List<PrescriptionFieldVM>();
+        public List<PrescriptionVitalVM> Vitals { get; set; }
+            = new List<PrescriptionVitalVM>();
+        public List<PrescriptionTestResultVM> TestResults { get; set; }
+            = new List<PrescriptionTestResultVM>();
     }
 }

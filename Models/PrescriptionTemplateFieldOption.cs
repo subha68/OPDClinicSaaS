@@ -8,8 +8,8 @@ namespace Models
         public int FieldId { get; set; }
         public int ClinicId { get; set; }
 
-        public string OptionText { get; set; }
-        public string OptionValue { get; set; }
+        public string OptionText { get; set; } = string.Empty;
+        public string OptionValue { get; set; } = string.Empty;
         public bool IsActive { get; set; }
         public bool IsArchived { get; set; }
         public int DisplayOrder { get; set; }

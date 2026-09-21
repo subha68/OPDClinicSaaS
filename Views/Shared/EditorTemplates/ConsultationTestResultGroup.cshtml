@@ -1,0 +1,20 @@
+@model Models.ConsultationTestResultGroup
+
+<input asp-for="ConsultationTestResultGroupId" type="hidden" />
+<input asp-for="ClinicId" type="hidden" />
+<input asp-for="RowId" type="hidden" />
+<input asp-for="VisitId" type="hidden" />
+<input asp-for="VisitDate" type="hidden" />
+<input asp-for="TestDate" type="hidden" />
+
+<div class="test-card">
+
+    <span class="test-date">
+        @Model.TestDate.ToString("dd/MM/yyyy")
+    </span>
+
+    <span>
+        @Html.EditorFor(m => m.TestResults)
+    </span>
+
+</div>

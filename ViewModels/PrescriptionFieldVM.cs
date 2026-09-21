@@ -9,8 +9,8 @@ namespace ViewModels
         public int FieldId { get; set; }
         public int RowId { get; set; }
 
-        public string FieldLabel { get; set; }
-        public string FieldValue { get; set; }
+        public string FieldLabel { get; set; } = string.Empty;
+        public string FieldValue { get; set; } = string.Empty;
         public int DisplayOrder { get; set; }
 
         public List<PrescriptionOptionVM> Options { get; set; }

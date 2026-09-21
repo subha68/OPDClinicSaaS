@@ -383,11 +383,15 @@ namespace BLL
             return value.ToString() ?? "";
         }
 
+        protected List<string> ExtractVariables(string formula)
+        {
+            return _calculationEngine.ExtractVariables(formula);
+        }
+
         protected decimal? Calculate(string formula, IDictionary<string, decimal> values)
         {
             return _calculationEngine.Calculate(formula, values);
         }
-
     }
 
 

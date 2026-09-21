@@ -7,6 +7,6 @@ namespace Models
         public int RoleId { get; set; }
 
         [Required]
-        public string RoleName { get; set; }
+        public string RoleName { get; set; } = string.Empty;
     }
 }

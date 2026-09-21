@@ -10,11 +10,11 @@ namespace ViewModels
 
         public DateTime VisitDate { get; set; }
 
-        public string DoctorName { get; set; }
+        public string DoctorName { get; set; } = string.Empty;
 
         public int PatientId { get; set; }
 
-        public string PatientName { get; set; }
+        public string PatientName { get; set; } = string.Empty;
 
         public DateTime BillDate { get; set; }
 
@@ -22,6 +22,6 @@ namespace ViewModels
 
         public decimal PaidAmount { get; set; }
 
-        public string Status { get; set; }   // Paid / Due
+        public string Status { get; set; } = string.Empty;   // Paid / Due
     }
 }

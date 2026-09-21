@@ -668,7 +668,7 @@ namespace BLL
 
         }
 
-        public bool SaveSectionOptions(int templateId, int sectionId, bool isMultiline, bool isRx)
+        public bool SaveSectionOptions(int templateId, int sectionId, bool isMultiline, bool isRx, bool isVital, bool isTestResult)
         {
             if (templateId == 0 || sectionId == 0)
                 return false;
@@ -682,7 +682,7 @@ namespace BLL
                 if (isRx)
                     isMultiline = true;
 
-                _templateDAL.SaveSectionOptions(templateId, sectionId, isMultiline, isRx, conn, tran);
+                _templateDAL.SaveSectionOptions(templateId, sectionId, isMultiline, isRx, isVital, isTestResult, conn, tran);
 
                 PrescriptionTemplateSection section = _templateDAL.GetSectionAndAllFields(templateId, sectionId, conn, tran);
 
@@ -706,104 +706,14 @@ namespace BLL
                 };
 
                 if (isRx)
-                {
-                    bool isArchived = true;
-                    _templateDAL.UpdateFieldsArchival(templateId, sectionId, isArchived, conn, tran);
-                    _templateDAL.UpdateOptionsArchival(templateId, sectionId, isArchived, conn, tran);
-
-                    List <PrescriptionTemplateField> rxNewFields = new List <PrescriptionTemplateField>();
-                    List <PrescriptionTemplateField> rxModifiedFields = new List <PrescriptionTemplateField>();
-
-                    PrescriptionTemplateField field = null;
-                    bool optionFound = false;
-
-                    string fieldLabel;
-                    string fieldTypeCode;
-                    string fieldCode;
-                    int displayOrder;
-                    string fieldSource;
-
-                    foreach (var rxField in rxFields)
-                    {
-                        // Fieldabel, FieldTypeCode, DisplayOrder, FieldCode, FieldSource
-                        fieldLabel = (string)rxField[0];
-                        fieldTypeCode = (string)rxField[1];
-                        displayOrder = (int)rxField[2];
-                        fieldCode = (string)rxField[3];
-                        fieldSource = rxField[4] != null ? (string)rxField[4] : null;
-
-                        optionFound = false;
-                        foreach(var rxOption in rxOptions)
-                        {
-                            if ((string)rxField[0] == rxOption.Key)
-                            {
-                                // section, rxNewFields, rxModifiedFields, 
-                                // fieldLabel, fieldTypeCode, fieldCode, displayOrder, fieldSource, options
-
-                                FindField(section, rxNewFields, rxModifiedFields, 
-                                            fieldLabel, fieldTypeCode, fieldCode, displayOrder, null, 
-                                                                (IEnumerable<string>)rxOption.Value);
-                                optionFound = true;                                               
-                            }
-                        }
-
-                        if (!optionFound)
-                        {
-                            if (fieldSource == null)
-                                FindField(section, rxNewFields, rxModifiedFields, 
-                                            fieldLabel, fieldTypeCode, fieldCode, displayOrder, null, null);
-                            else
-                                FindField(section, rxNewFields, rxModifiedFields, 
-                                            fieldLabel, fieldTypeCode, fieldCode, displayOrder, fieldSource, null);
-                        }
-                    }
-
-                    if (rxNewFields.Count > 0)
-                    {
-                        _templateDAL.AddFields(rxNewFields, conn, tran);
-                        foreach (var aField in rxNewFields)
-                        {
-                            foreach (var anOption in aField.Options)
-                            {
-                                anOption.FieldId = aField.FieldId;
-                            }
-
-                            if (aField.Options.Count > 0)
-                                _templateDAL.AddOptions(aField.Options, conn, tran);
-                        }
-                    }
-
-                    if (rxModifiedFields.Count > 0)
-                    {
-                        _templateDAL.UpdateFields(rxModifiedFields, conn, tran);
-                        foreach (var aField in rxModifiedFields)
-                        {
-                            if (aField.Options.Count > 0)
-                            {
-                                _templateDAL.UpdateOptions(aField.Options, conn, tran);
-                            }
-                        }
-                    }
-                }
+                    EnableRxFields(templateId, section, rxFields, rxOptions, conn, tran);
                 else
-                {
-                    bool isArchived = false;
-                    _templateDAL.UpdateFieldsArchival(templateId, sectionId, isArchived, conn, tran);
-                    _templateDAL.UpdateOptionsArchival(templateId, sectionId, isArchived, conn, tran);
+                    ArchiveRxFields(section, rxFields, conn, tran);
 
-                    List <PrescriptionTemplateField> fields = new List <PrescriptionTemplateField>();
+                bool archiveStandardFields = isRx || isVital || isTestResult;
 
-                    foreach (var rxField in rxFields)
-                    {
-                        fields.Add(Archive(section, (string)rxField[0]));
-                    }
-
-                    _templateDAL.UpdateFields(fields, conn, tran);
-                    foreach (var field in fields)
-                    {
-                        _templateDAL.UpdateOptions(field.Options, conn, tran);
-                    }
-                }
+                _templateDAL.UpdateFieldsArchival(templateId, sectionId, archiveStandardFields, conn, tran);
+                _templateDAL.UpdateOptionsArchival(templateId, sectionId, archiveStandardFields, conn, tran);
 
                 tran.Commit();
                 return true;
@@ -812,6 +722,118 @@ namespace BLL
             {
                 tran.Rollback();
                 throw;
+            }
+        }
+
+        private void EnableRxFields(int templateId, PrescriptionTemplateSection section, 
+                                    List<List<object>> rxFields, Dictionary<string, List<string>> rxOptions,
+                                    SqlConnection conn, SqlTransaction tran)
+        {
+            List <PrescriptionTemplateField> rxNewFields = new List <PrescriptionTemplateField>();
+            List <PrescriptionTemplateField> rxModifiedFields = new List <PrescriptionTemplateField>();
+
+            PrescriptionTemplateField field = null;
+            bool optionFound = false;
+
+            string fieldLabel;
+            string fieldTypeCode;
+            string fieldCode;
+            int displayOrder;
+            string fieldSource;
+
+            foreach (var rxField in rxFields)
+            {
+                // Fieldabel, FieldTypeCode, DisplayOrder, FieldCode, FieldSource
+                fieldLabel = (string)rxField[0];
+                fieldTypeCode = (string)rxField[1];
+                displayOrder = (int)rxField[2];
+                fieldCode = (string)rxField[3];
+                fieldSource = rxField[4] != null ? (string)rxField[4] : null;
+
+                optionFound = false;
+                foreach(var rxOption in rxOptions)
+                {
+                    if ((string)rxField[0] == rxOption.Key)
+                    {
+                        // section, rxNewFields, rxModifiedFields, 
+                        // fieldLabel, fieldTypeCode, fieldCode, displayOrder, fieldSource, options
+
+                        FindField(section, rxNewFields, rxModifiedFields, 
+                                    fieldLabel, fieldTypeCode, fieldCode, displayOrder, null, 
+                                                        (IEnumerable<string>)rxOption.Value);
+                        optionFound = true;                                               
+                    }
+                }
+
+                if (!optionFound)
+                {
+                    if (fieldSource == null)
+                        FindField(section, rxNewFields, rxModifiedFields, 
+                                    fieldLabel, fieldTypeCode, fieldCode, displayOrder, null, null);
+                    else
+                        FindField(section, rxNewFields, rxModifiedFields, 
+                                    fieldLabel, fieldTypeCode, fieldCode, displayOrder, fieldSource, null);
+                }
+            }
+
+            if (rxNewFields.Count > 0)
+            {
+                _templateDAL.AddFields(rxNewFields, conn, tran);
+                foreach (var aField in rxNewFields)
+                {
+                    foreach (var anOption in aField.Options)
+                    {
+                        anOption.FieldId = aField.FieldId;
+                    }
+
+                    if (aField.Options.Count > 0)
+                        _templateDAL.AddOptions(aField.Options, conn, tran);
+                }
+            }
+
+            if (rxModifiedFields.Count > 0)
+            {
+                _templateDAL.UpdateFields(rxModifiedFields, conn, tran);
+                foreach (var aField in rxModifiedFields)
+                {
+                    if (aField.Options.Count > 0)
+                    {
+                        _templateDAL.UpdateOptions(aField.Options, conn, tran);
+                    }
+                }
+            }
+
+        }
+
+        private void ArchiveRxFields(PrescriptionTemplateSection section, List<List<object>> rxFields,
+                                        SqlConnection conn, SqlTransaction tran)
+        {
+            List<PrescriptionTemplateField> fields = new();
+            PrescriptionTemplateField f;
+
+            foreach (var rxField in rxFields)
+            {
+                f = Archive(section, (string)rxField[0]);
+
+                if (f != null)
+                {
+                    f.TemplateId = section.TemplateId;
+                    f.SectionId = section.SectionId;
+                    fields.Add(f);
+                }
+            }
+
+            if (fields.Count > 0)
+            {
+                _templateDAL.UpdateFields(fields, conn, tran);
+
+                foreach (var field in fields)
+                {
+                    if (field.Options.Count > 0)
+                    {
+                        _templateDAL.UpdateOptions(field.Options, conn, tran);
+                    }
+                }
             }
         }
 

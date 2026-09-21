@@ -105,7 +105,6 @@ namespace BLL
                 return false;
             }
 
-
             using var conn = _db.GetConnection();
             conn.Open();
 
@@ -143,15 +142,12 @@ namespace BLL
                 foreach (var model in models)
                 {
                     /*
-                    * Derived and Composition values are not directly saved.
+                    * will save Derived and Composition values also
                     */
-                    if (
-                        model.IsDerived ||
-                        model.VitalType == "Composition"
-                    )
+                /*    if (model.IsDerived || model.VitalType == "Composition")
                     {
                         continue;
-                    }
+                    } */
 
 
                     /*
@@ -180,7 +176,6 @@ namespace BLL
                         model.VitalType = vitalDef.VitalType;
                         model.DataType = vitalDef.DataType;
                         model.VitalUnit = vitalDef.VitalUnit;
-                        model.IsDerived = vitalDef.IsDerived;
                         model.DeriveFormula = vitalDef.DeriveFormula;
                         model.DisplayComposition = vitalDef.DisplayComposition;
                     }
@@ -196,11 +191,7 @@ namespace BLL
                     {
                         newVitals.Add(model);
                     }
-                    else if (
-                        string.IsNullOrWhiteSpace(
-                            model.VitalValue
-                        )
-                    )
+                    else if (string.IsNullOrWhiteSpace(model.VitalValue))
                     {
                         deletedVitals.Add(model);
                     }
@@ -268,6 +259,28 @@ namespace BLL
             }
         }
 
+        public List<Vital> GetVitalsByVisit(int patientId, int visitId, int clinicId,
+                                                SqlConnection conn, SqlTransaction? tran = null)
+        {
+            List<Vital> vitals = new List<Vital>();
+
+            try
+            {
+                vitals = _vitalDAL.GetAll(clinicId, visitId, conn, tran);
+
+                // Do not need empty vitals from definition.
+
+                return vitals;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        // Pass VitalCode, VitalValue pair for all Vitals in dictionary
+        // Returns only the calculated values of derived vitals
+        // need to be sorted by DisplayOrder buy calling method
         public List<Vital> CalculateDerivedVitals(Dictionary<string, string> values)
         {
             var result = new List<Vital>();
@@ -303,7 +316,7 @@ namespace BLL
             }
 
             /*
-            * Calculate every derived vital.
+            * Calculate every derived vital
             */
             foreach (var vitalDef in vitalDefs)
             {
@@ -325,17 +338,20 @@ namespace BLL
                 if (!calculatedValue.HasValue)
                     continue;
 
-                var vital = new Vital(vitalDef, ClinicId, LastVisitId);
-
-                vital.VitalValue = calculatedValue.Value.ToString("0.##",
+                string vitalValue = calculatedValue.Value.ToString("0.##",
                                                         System.Globalization.CultureInfo.InvariantCulture);
 
+                if (string.IsNullOrWhiteSpace(vitalValue))
+                    continue;
+
+                var vital = new Vital(vitalDef, ClinicId, LastVisitId);
+                vital.VitalValue = vitalValue;
                 result.Add(vital);
             }
 
             return result;
         }
-
+        
     }
 
 }

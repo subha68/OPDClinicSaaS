@@ -17,7 +17,9 @@ namespace Models
         public RowState RowState { get; set; } = RowState.Unchanged;
         public ConsultationSection? Section { get; set; }
 
-        public List<ConsultationField> Fields { get; set; } = new();
+        public List<ConsultationField> Fields { get; set; } = [];
+        public List<ConsultationVital>? Vitals { get; set; } = [];
+        public List<ConsultationTestResultGroup>? TestResultGroups { get; set; } = [];
         public int FieldCount => Fields.Count;
 
         public bool IsAdded => RowState == RowState.Added;

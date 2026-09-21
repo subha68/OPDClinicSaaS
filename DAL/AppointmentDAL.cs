@@ -645,7 +645,7 @@ namespace DAL
             return list;
         }
 
-        public void UpdateStatus(int appointmentId, string status, string cancellationReason, SqlConnection conn, SqlTransaction tran)
+        public void UpdateStatus(int appointmentId, string status, string? cancellationReason, SqlConnection conn, SqlTransaction tran)
         {
 
             string sql = @"UPDATE Appointments 

@@ -8,7 +8,7 @@ namespace ViewModels
     {
         public int OptionId { get; set; }
         public int FieldId { get; set; }
-        public string OptionText { get; set; }
+        public string OptionText { get; set; } = string.Empty;
         public int DisplayOrder { get; set; }
     }
 }

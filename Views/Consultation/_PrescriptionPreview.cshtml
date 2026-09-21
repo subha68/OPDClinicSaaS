@@ -95,6 +95,86 @@
 
                 <h5>@consultationSection.SectionName</h5>
 
+                @if (consultationSection.IsVital &&
+                    consultationSection.Rows?.Any() == true &&
+                    consultationSection.Rows[0].Vitals?.Any() == true)
+                {
+                    <div class="prescription-vitals">
+
+                        @for (int i = 0; i < consultationSection.Rows[0].Vitals.Count; i++)
+                        {
+                            var vital = consultationSection.Rows[0].Vitals[i];
+
+                            if (!vital.IsCompositionItem)
+                            {
+                                <span>
+                                    @vital.VitalCode:
+                                    @vital.VitalValue
+
+                                    @if (!string.IsNullOrWhiteSpace(vital.VitalUnit))
+                                    {
+                                        @($" {vital.VitalUnit}")
+                                    }
+                                </span>
+
+                                @if (i < consultationSection.Rows[0].Vitals.Count - 1)
+                                {
+                                    <span> , </span>
+                                }
+                            }
+                        }
+
+                    </div>
+                }
+
+                @if (consultationSection.IsTestResult &&
+                    consultationSection.Rows?.Any() == true &&
+                    consultationSection.Rows[0].TestResults?.Any() == true)
+                {
+                    var groupedResults = consultationSection.Rows[0].TestResults
+                        .OrderByDescending(x => x.TestDate)
+                        .GroupBy(x => x.TestDate.Date);
+
+                    <div class="prescription-test-results">
+
+                        @foreach (var testDateGroup in groupedResults)
+                        {
+                            <div class="test-result-line">
+
+                                <span class="test-date">
+                                    @testDateGroup.Key.ToString("dd/MM/yyyy")
+                                </span>
+
+                                <span> : </span>
+
+                                @for (int i = 0; i < testDateGroup.Count(); i++)
+                                {
+                                    var result = testDateGroup.ElementAt(i);
+
+                                    <span>
+                                        @result.TestParameterCode
+                                        @(" ")
+                                        @result.Value
+
+                                        @if (!string.IsNullOrWhiteSpace(result.Unit))
+                                        {
+                                            @(" ")
+                                            @result.Unit
+                                        }
+                                    </span>
+
+                                    @if (i < testDateGroup.Count() - 1)
+                                    {
+                                        <span> , </span>
+                                    }
+                                }
+
+                            </div>
+                        }
+
+                    </div>
+                }               
+
                 @if (consultationSection.Multiline)
                 {
                     <!-- ========================= -->

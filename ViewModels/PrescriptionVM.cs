@@ -7,21 +7,22 @@ namespace ViewModels
     public class PrescriptionVM
     {
         public int AppointmentId { get; set; }
-        public string DoctorName { get; set; }
-        public string Qualification { get; set; }
-        public string RegistrationNumber { get; set; }
+        public string DoctorName { get; set; } = string.Empty;
+        public string Qualification { get; set; } = string.Empty;
+        public string RegistrationNumber { get; set; } = string.Empty;
 
-        public string ClinicName { get; set; }
-        public string ClinicAddress { get; set; }
-        public string ClinicLogo { get; set; }
-        public string ClinicPhoneNo { get; set; }
+        public string ClinicName { get; set; } = string.Empty;
+        public string ClinicAddress { get; set; } = string.Empty;
+        public string ClinicLogo { get; set; } = string.Empty;
+        public string ClinicPhoneNo { get; set; } = string.Empty;
 
         public int PatientId { get; set; }
-        public string PatientName { get; set; }
+        public string PatientName { get; set; } = string.Empty;
         public int Age { get; set; }
-        public string Gender { get; set; }
-        public string PatientPhoneNo { get; set; }
-
+        public string Gender { get; set; } = string.Empty;
+        public string PatientPhoneNo { get; set; } = string.Empty;
+        public int VisitId { get; set; }
+        public DateTime VisitDate { get; set; }
         public DateTime VisitDateTime { get; set; }
         public int ConsultationId { get; set; }
 

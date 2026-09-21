@@ -8,6 +8,8 @@
     <input asp-for="IsVisible" type="hidden" />
     <input asp-for="Multiline" type="hidden" />
     <input asp-for="IsPharmacologyAdvice" type="hidden" />
+    <input asp-for="IsVital" type="hidden" />
+    <input asp-for="IsTestResult" type="hidden" />
     <input asp-for="DisplayOrder" type="hidden" />    
 
     <div class="card-header bg-light">
@@ -22,7 +24,11 @@
         }
         else if (Model.Rows.Any())
         {
-            @Html.EditorFor(m => m.Rows)
+            @Html.EditorFor(m => m.Rows,
+                                new
+                                {
+                                    SectionType = Model.SectionType
+                                })
         }
 
     </div>

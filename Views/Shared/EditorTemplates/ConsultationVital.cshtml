@@ -1,0 +1,40 @@
+@model Models.ConsultationVital
+
+<input asp-for="ConsultationVitalId" type="hidden" />
+<input asp-for="ClinicId" type="hidden" />
+<input asp-for="RowId" type="hidden" />
+<input asp-for="VitalId" type="hidden" />
+<input asp-for="VitalDefId" type="hidden" />
+<input asp-for="VisitId" type="hidden" />
+<input asp-for="VisitDate" type="hidden" />
+<input asp-for="VitalLabel" type="hidden" />
+<input asp-for="VitalCode" type="hidden" />
+<input asp-for="VitalType" type="hidden" />
+<input asp-for="DataType" type="hidden" />
+<input asp-for="VitalValue" type="hidden" />
+<input asp-for="VitalUnit" type="hidden" />
+<input asp-for="DeriveFormula" type="hidden" />
+<input asp-for="DisplayComposition" type="hidden" />
+<input asp-for="DisplayOrder" type="hidden" />
+
+@if (Model.VitalType != "CompositionItem")
+{
+    <div class="vital-card">
+
+        <span class="vital-code">
+            @Model.VitalCode
+        </span>
+
+        <span class="vital-value">
+            @Model.VitalValue
+        </span>
+
+        @if (!string.IsNullOrWhiteSpace(Model.VitalUnit))
+        {
+            <span class="vital-unit">
+                @Model.VitalUnit
+            </span>
+        }
+
+    </div>
+}

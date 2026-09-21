@@ -10,13 +10,13 @@ namespace ViewModels
             BadRequest, NotFound, ConfirmationRequired, Success
         }
         public bool Success { get; set; }
-        public string Value { get; set; }
-        public string Text { get; set; }
+        public string Value { get; set; } = string.Empty;
+        public string Text { get; set; } = string.Empty;
         public bool SupportsOptions { get; set; }
         public bool RequiresConfirmation { get; set; }
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
         public int OptionCount { get; set; }
-        public string ResponseType { get; set; }
+        public string ResponseType { get; set; } = string.Empty;
 
         public FieldTypeChangeVM()
         {

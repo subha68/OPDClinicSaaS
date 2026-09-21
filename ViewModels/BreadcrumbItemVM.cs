@@ -6,11 +6,11 @@ namespace ViewModels
 {
     public class BreadcrumbItemVM
     {
-        public string Text { get; set; }
+        public string Text { get; set; } = string.Empty;
 
-        public string Controller { get; set; }
+        public string Controller { get; set; } = string.Empty;
 
-        public string Action { get; set; }
+        public string Action { get; set; } = string.Empty;
 
         public int? Id { get; set; }
 

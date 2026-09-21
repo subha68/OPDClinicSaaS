@@ -440,7 +440,9 @@ namespace DAL
                         DisplayOrder = (int)sectionReader["DisplayOrder"],
                         IsActive = (bool)sectionReader["IsActive"],
                         Multiline = (bool)sectionReader["Multiline"],
-                        IsPharmacologyAdvice = (bool)sectionReader["IsPharmacologyAdvice"]
+                        IsPharmacologyAdvice = (bool)sectionReader["IsPharmacologyAdvice"],
+                        IsVital = (bool)sectionReader["IsVital"],
+                        IsTestResult = (bool)sectionReader["IsTestResult"]
                     });
                 }
             }
@@ -726,9 +728,11 @@ namespace DAL
             foreach (var section in sections)
             {
                 string sectionQuery = @"INSERT INTO PrescriptionTemplateSections
-                             (TemplateId, ClinicId, SectionName, DisplayOrder, IsActive, Multiline, IsPharmacologyAdvice) 
+                             (TemplateId, ClinicId, SectionName, DisplayOrder, IsActive, Multiline, IsPharmacologyAdvice,
+                             IsVital, IsTestResult) 
                              VALUES 
-                             (@TemplateId, @ClinicId, @SectionName, @DisplayOrder, @IsActive, @Multiline, @IsPharmacologyAdvice);
+                             (@TemplateId, @ClinicId, @SectionName, @DisplayOrder, @IsActive, @Multiline, @IsPharmacologyAdvice,
+                             @IsVital, @IsTestResult);
                                 SELECT SCOPE_IDENTITY();";
                 using SqlCommand sectionCmd = new SqlCommand(sectionQuery, conn, tran);
 
@@ -736,9 +740,11 @@ namespace DAL
                 sectionCmd.Parameters.AddWithValue("@ClinicId", section.ClinicId);
                 sectionCmd.Parameters.AddWithValue("@SectionName", section.SectionName);
                 sectionCmd.Parameters.AddWithValue("@DisplayOrder", section.DisplayOrder);
-                sectionCmd.Parameters.AddWithValue("@IsActive", section.IsActive);
-                sectionCmd.Parameters.AddWithValue("@Multiline", section.Multiline);
-                sectionCmd.Parameters.AddWithValue("@IsPharmacologyAdvice", section.IsPharmacologyAdvice);
+                sectionCmd.Parameters.AddWithValue("@IsActive", section.IsActive ? 1 : 0);
+                sectionCmd.Parameters.AddWithValue("@Multiline", section.Multiline ? 1 : 0);
+                sectionCmd.Parameters.AddWithValue("@IsPharmacologyAdvice", section.IsPharmacologyAdvice ? 1 : 0);
+                sectionCmd.Parameters.AddWithValue("@IsVital", section.IsVital ? 1 : 0);
+                sectionCmd.Parameters.AddWithValue("@IsTestResult", section.IsTestResult ? 1 : 0);
 
                 sectionId = Convert.ToInt32(sectionCmd.ExecuteScalar());
 
@@ -846,7 +852,9 @@ namespace DAL
                                                 DisplayOrder = @DisplayOrder,
                                                 IsActive = @IsActive,
                                                 Multiline = @Multiline,
-                                                IsPharmacologyAdvice = @IsPharmacologyAdvice
+                                                IsPharmacologyAdvice = @IsPharmacologyAdvice,
+                                                IsVital = @IsVital,
+                                                IsTestResult = @IsTestResult
                                             WHERE SectionId = @SectionId";
                 using SqlCommand sectionCmd = new SqlCommand(sectionQuery, conn, tran);
 
@@ -855,9 +863,11 @@ namespace DAL
                 sectionCmd.Parameters.AddWithValue("@SectionName", section.SectionName);
                 sectionCmd.Parameters.AddWithValue("@DisplayOrder", section.DisplayOrder);
                 sectionCmd.Parameters.AddWithValue("@SectionId", section.SectionId);
-                sectionCmd.Parameters.AddWithValue("@IsActive", section.IsActive);
-                sectionCmd.Parameters.AddWithValue("@Multiline", section.Multiline);
-                sectionCmd.Parameters.AddWithValue("@IsPharmacologyAdvice", section.IsPharmacologyAdvice);
+                sectionCmd.Parameters.AddWithValue("@IsActive", section.IsActive ? 1 : 0);
+                sectionCmd.Parameters.AddWithValue("@Multiline", section.Multiline ? 1 : 0);
+                sectionCmd.Parameters.AddWithValue("@IsPharmacologyAdvice", section.IsPharmacologyAdvice ? 1 : 0);
+                sectionCmd.Parameters.AddWithValue("@IsVital", section.IsVital ? 1 : 0);
+                sectionCmd.Parameters.AddWithValue("@IsTestResult", section.IsTestResult ? 1 : 0);            
 
                 sectionRowsAffected += sectionCmd.ExecuteNonQuery();
             }
@@ -1240,7 +1250,9 @@ namespace DAL
                         DisplayOrder = (int)sectionReader["DisplayOrder"],
                         IsActive = (bool)sectionReader["IsActive"],
                         Multiline = (bool)sectionReader["Multiline"],
-                        IsPharmacologyAdvice = (bool)sectionReader["IsPharmacologyAdvice"] 
+                        IsPharmacologyAdvice = (bool)sectionReader["IsPharmacologyAdvice"],
+                        IsVital = (bool)sectionReader["IsVital"],
+                        IsTestResult = (bool)sectionReader["IsTestResult"] 
                     };
                 }
             }
@@ -1388,9 +1400,10 @@ namespace DAL
             updateRowsAffected = updateCmd.ExecuteNonQuery();
 
             string insertQuery = @"INSERT INTO PrescriptionTemplateSections
-                                    (TemplateId, ClinicId, SectionName, DisplayOrder, IsActive, Multiline, IsPharmacologyAdvice)
+                                    (TemplateId, ClinicId, SectionName, DisplayOrder, IsActive, Multiline, IsPharmacologyAdvice
+                                    IsVital, IsTestResult)
                                     VALUES
-                                    (@TemplateId, @ClinicId, @SectionName, @CurrentOrder, 1, 0, 0);
+                                    (@TemplateId, @ClinicId, @SectionName, @CurrentOrder, 1, 0, 0, 0, 0);
                                     SELECT SCOPE_IDENTITY();";
             using SqlCommand insertCmd = new SqlCommand(insertQuery, conn, tran);
 
@@ -1421,9 +1434,10 @@ namespace DAL
             updateRowsAffected = updateCmd.ExecuteNonQuery();
 
             string insertQuery = @"INSERT INTO PrescriptionTemplateSections
-                                    (TemplateId, ClinicId, SectionName, DisplayOrder, IsActive, Multiline, IsPharmacologyAdvice)
+                                    (TemplateId, ClinicId, SectionName, DisplayOrder, IsActive, Multiline, IsPharmacologyAdvice,
+                                    IsVital, IsTestResult)
                                     VALUES
-                                    (@TemplateId, @ClinicId, @SectionName, @CurrentOrder + 1, 1, 0, 0);
+                                    (@TemplateId, @ClinicId, @SectionName, @CurrentOrder + 1, 1, 0, 0, 0, 0);
                                     SELECT SCOPE_IDENTITY();";
             using SqlCommand insertCmd = new SqlCommand(insertQuery, conn, tran);
 
@@ -1787,21 +1801,26 @@ namespace DAL
             return list;
         }
 
-        public bool SaveSectionOptions(int templateId, int sectionId, bool isMultiline, bool isRx, SqlConnection conn, SqlTransaction tran)
+        public bool SaveSectionOptions(int templateId, int sectionId, bool isMultiline, bool isRx, 
+                                            bool isVital, bool isTestResult, SqlConnection conn, SqlTransaction tran)
         {
             int rowsAffected = 0;
 
             string query = @"UPDATE PrescriptionTemplateSections
                                         SET Multiline = @IsMultiline,
-                                            IsPharmacologyAdvice = @IsRx
+                                            IsPharmacologyAdvice = @IsRx,
+                                            IsVital = @IsVital,
+                                            IsTestResult = @IsTestResult
                                         WHERE TemplateId = @TemplateId
                                         AND SectionId = @SectionId;";
             using SqlCommand cmd = new SqlCommand(query, conn, tran);
 
             cmd.Parameters.AddWithValue("@TemplateId", templateId);
             cmd.Parameters.AddWithValue("@SectionId", sectionId);
-            cmd.Parameters.AddWithValue("@IsMultiline", isMultiline);
-            cmd.Parameters.AddWithValue("@IsRx", isRx);
+            cmd.Parameters.AddWithValue("@IsMultiline", isMultiline ? 1 : 0);
+            cmd.Parameters.AddWithValue("@IsRx", isRx ? 1 : 0);
+            cmd.Parameters.AddWithValue("@IsVital", isVital ? 1 : 0);
+            cmd.Parameters.AddWithValue("@IsTestResult", isTestResult ? 1 : 0);
 
             rowsAffected = cmd.ExecuteNonQuery();
 

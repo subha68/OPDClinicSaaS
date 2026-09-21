@@ -112,7 +112,7 @@ namespace DAL
                 SELECT R.TestResultId, R.TestResultGroupId, R.ClinicId, R.TestPanelId, R.TestPanelCode, R.TestPanelName,
                     R.TestParameterId, R.TestParameterCode, R.TestParameterName, R.PanelDisplayOrder, R.ParameterDisplayOrder,
                     R.NormalRange, R.NormalMin, R.NormalMax, R.TestMethod, R.DataType, R.Value, R.Unit,
-                    R.ResultFlag, G.VisitDate, G.TestDate
+                    R.ResultFlag, G.VisitId, G.VisitDate, G.TestDate
                 FROM TestResults R
                 INNER JOIN TestResultGroups G
                   ON R.TestResultGroupId = G.TestResultGroupId
@@ -143,7 +143,7 @@ namespace DAL
                 SELECT R.TestResultId, R.TestResultGroupId, R.ClinicId, R.TestPanelId, R.TestPanelCode, R.TestPanelName,
                     R.TestParameterId, R.TestParameterCode, R.TestParameterName, R.PanelDisplayOrder, R.ParameterDisplayOrder,
                     R.NormalRange, R.NormalMin, R.NormalMax, R.TestMethod, R.DataType, R.Value, R.Unit,
-                    R.ResultFlag, G.VisitDate, G.TestDate
+                    R.ResultFlag, G.VisitId, G.VisitDate, G.TestDate
                 FROM TestResults R
                 INNER JOIN TestResultGroups G
                   ON R.TestResultGroupId = G.TestResultGroupId
@@ -179,7 +179,7 @@ namespace DAL
                 SELECT R.TestResultId, R.TestResultGroupId, R.ClinicId, R.TestPanelId, R.TestPanelCode, R.TestPanelName,
                     R.TestParameterId, R.TestParameterCode, R.TestParameterName, R.PanelDisplayOrder, R.ParameterDisplayOrder,
                     R.NormalRange, R.NormalMin, R.NormalMax, R.TestMethod, R.DataType, R.Value, R.Unit,
-                    R.ResultFlag, V.VisitDate, G.TestDate
+                    R.ResultFlag, G.VisitId, V.VisitDate, G.TestDate
                 FROM TestResults R
                 INNER JOIN TestResultGroups G
                   ON R.TestResultGroupId = G.TestResultGroupId
@@ -438,7 +438,7 @@ namespace DAL
                 SELECT R.TestResultId, R.TestResultGroupId, R.ClinicId, R.TestPanelId, R.TestPanelCode, R.TestPanelName,
                     R.TestParameterId, R.TestParameterCode, R.TestParameterName, R.PanelDisplayOrder, R.ParameterDisplayOrder,
                     R.NormalRange, R.NormalMin, R.NormalMax, R.TestMethod, R.DataType, R.Value, R.Unit,
-                    R.ResultFlag, V.VisitDate, G.TestDate
+                    R.ResultFlag, G.VisitId, V.VisitDate, G.TestDate
                 FROM TestResults R
                 INNER JOIN TestResultGroups G
                   ON R.TestResultGroupId = G.TestResultGroupId
@@ -479,7 +479,7 @@ namespace DAL
                 SELECT R.TestResultId, R.TestResultGroupId, R.ClinicId, R.TestPanelId, R.TestPanelCode, R.TestPanelName,
                     R.TestParameterId, R.TestParameterCode, R.TestParameterName, R.PanelDisplayOrder, R.ParameterDisplayOrder,
                     R.NormalRange, R.NormalMin, R.NormalMax, R.TestMethod, R.DataType, R.Value, R.Unit,
-                    R.ResultFlag, V.VisitDate, G.TestDate
+                    R.ResultFlag, G.VisitId, V.VisitDate, G.TestDate
                 FROM TestResults R
                 INNER JOIN TestResultGroups G
                   ON R.TestResultGroupId = G.TestResultGroupId
@@ -522,7 +522,7 @@ namespace DAL
                 SELECT R.TestResultId, R.TestResultGroupId, R.ClinicId, R.TestPanelId, R.TestPanelCode, R.TestPanelName,
                     R.TestParameterId, R.TestParameterCode, R.TestParameterName, R.PanelDisplayOrder, R.ParameterDisplayOrder,
                     R.NormalRange, R.NormalMin, R.NormalMax, R.TestMethod, R.DataType, R.Value, R.Unit,
-                    R.ResultFlag, V.VisitDate, G.TestDate
+                    R.ResultFlag, G.VisitId, V.VisitDate, G.TestDate
                 FROM TestResults R
                 INNER JOIN TestResultGroups G
                   ON R.TestResultGroupId = G.TestResultGroupId
@@ -565,7 +565,7 @@ namespace DAL
                 SELECT R.TestResultId, R.TestResultGroupId, R.ClinicId, R.TestPanelId, R.TestPanelCode, R.TestPanelName,
                     R.TestParameterId, R.TestParameterCode, R.TestParameterName, R.PanelDisplayOrder, R.ParameterDisplayOrder,
                     R.NormalRange, R.NormalMin, R.NormalMax, R.TestMethod, R.DataType, R.Value, R.Unit,
-                    R.ResultFlag, V.VisitDate, G.TestDate
+                    R.ResultFlag, G.VisitId, V.VisitDate, G.TestDate
                 FROM TestResults R
                 INNER JOIN TestResultGroups G
                   ON R.TestResultGroupId = G.TestResultGroupId
@@ -609,7 +609,7 @@ namespace DAL
                     R.TestResultId, R.TestResultGroupId, R.ClinicId, R.TestPanelId, R.TestPanelCode, R.TestPanelName,
                     R.TestParameterId, R.TestParameterCode, R.TestParameterName, R.PanelDisplayOrder, R.ParameterDisplayOrder,
                     R.NormalRange, R.NormalMin, R.NormalMax, R.TestMethod, R.DataType, R.Value, R.Unit,
-                    R.ResultFlag, V.VisitDate, G.TestDate
+                    R.ResultFlag, G.VisitId, V.VisitDate, G.TestDate
                 FROM TestResults R
                 INNER JOIN TestResultGroups G
                   ON R.TestResultGroupId = G.TestResultGroupId
@@ -641,6 +641,59 @@ namespace DAL
             }
 
             return null;
+        }
+
+        public List<TestResult> GetLatestResultsByParameter(int patientId, int clinicId,
+                                                            SqlConnection conn, SqlTransaction? tran = null)
+        {
+            List<TestResult> results = new List<TestResult>();
+
+            const string query = @"
+                    WITH LatestResults AS
+                    (
+                        SELECT tg.TestDate, tg.VisitId, V.VisitDate, tr.*,
+
+                            ROW_NUMBER() OVER
+                            (
+                                PARTITION BY tr.TestParameterId
+                                ORDER BY
+                                    tg.TestDate DESC,
+                                    tr.TestResultId DESC
+                            ) AS RN
+
+                        FROM TestResults tr
+                        INNER JOIN TestResultGroups tg
+                            ON tr.TestResultGroupId = tg.TestResultGroupId
+                        LEFT JOIN Visits V
+                            ON tg.VisitId = V.VisitId
+
+                        WHERE tg.PatientId = 4
+                        AND tr.ClinicId = 1
+                    )
+
+                    SELECT *
+                    FROM LatestResults
+                    WHERE RN = 1
+                    ORDER BY
+                        PanelDisplayOrder,
+                        ParameterDisplayOrder;";
+
+            using SqlCommand cmd = new(query, conn);
+
+            if (tran != null)
+                cmd.Transaction = tran;
+
+            cmd.Parameters.AddWithValue("@PatientId", patientId);
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+
+            using SqlDataReader reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                 results.Add(MapTestResult(reader));
+            }
+
+            return results;
         }
 
         private TestResultGroup MapTestResultGroup(SqlDataReader reader)
@@ -683,6 +736,7 @@ namespace DAL
                 Value = reader["Value"] == DBNull.Value ? null : reader["Value"].ToString(),
                 Unit = reader["Unit"] == DBNull.Value ? null : reader["Unit"].ToString(),
                 ResultFlag = reader["ResultFlag"] == DBNull.Value ? null : reader["ResultFlag"].ToString(),
+                VisitId = Convert.ToInt32(reader["VisitId"]),
                 VisitDate = Convert.ToDateTime(reader["VisitDate"]),
                 TestDate = Convert.ToDateTime(reader["TestDate"])
             };

@@ -219,6 +219,8 @@ namespace YourProject.Controllers
         [HttpGet]
         public IActionResult ListReports(int patientId)
         {
+            ViewBag.PatientId = patientId;
+            
             var reports = _testResult.ListReports(patientId)
                                         .Select(x => new TestResultGroupVM(x))
                                         .ToList();

@@ -208,20 +208,18 @@ function initializeSectionCheckboxes() {
         .on("change", ".section-multiline", function () {
 
             const chk = $(this);
+            const sectioncontent = chk.closest(".section-content");
 
-            $.post(
-                "/PrescriptionTemplate/SaveSectionOptions",
-                {
-                    templateId: $("#TemplateId").val(),
-                    sectionId: chk.data("section-id"),
-                    isMultiline: chk.is(":checked"),
-                    isRx: chk.closest(".section-content")
-                             .find(".section-rx")
-                             .is(":checked")
-                })
+            saveSectionOptions(sectioncontent)
                 .fail(function () {
+
                     alert("Unable to save.");
-                    chk.prop("checked", !chk.prop("checked"));
+
+                    chk.prop(
+                        "checked",
+                        !chk.is(":checked")
+                    );
+
                 });
 
         });
@@ -231,24 +229,27 @@ function initializeSectionCheckboxes() {
         .on("change", ".section-rx", function () {
 
             const chk = $(this);
+            const sectioncontent = chk.closest(".section-content");
+            const multiline = sectioncontent.find(".section-multiline");
+
             const isRx = chk.is(":checked");
 
-            const multiline = chk.closest(".section-content")
-                                .find(".section-multiline");
-
-            // Rx always implies Multiline
+            // Rx implies Multiline
             multiline
                 .prop("checked", isRx)
                 .prop("disabled", isRx);
 
-            $.post(
-                "/PrescriptionTemplate/SaveSectionOptions",
-                {
-                    templateId: $("#TemplateId").val(),
-                    sectionId: chk.data("section-id"),
-                    isMultiline: isRx,
-                    isRx: isRx
-                })
+            // Rx excludes Vital/Test Result
+            if (isRx) {
+
+                sectioncontent.find(".section-vital")
+                    .prop("checked", false);
+
+                sectioncontent.find(".section-testresult")
+                    .prop("checked", false);
+            }
+
+            saveSectionOptions(sectioncontent)
                 .done(function () {
 
                     reloadTemplate();
@@ -258,8 +259,10 @@ function initializeSectionCheckboxes() {
 
                     alert("Unable to save.");
 
-                    // Restore previous state
-                    chk.prop("checked", !isRx);
+                    chk.prop(
+                        "checked",
+                        !isRx
+                    );
 
                     multiline
                         .prop("checked", !isRx)
@@ -269,6 +272,110 @@ function initializeSectionCheckboxes() {
 
         });
 
+    designer
+        .off("change", ".section-vital")
+        .on("change", ".section-vital", function () {
+
+            const chk = $(this);
+            const sectioncontent = chk.closest(".section-content");
+
+            const isVital = chk.is(":checked");
+
+            if (isVital) {
+
+                sectioncontent.find(".section-multiline")
+                    .prop("checked", false)
+                    .prop("disabled", false);
+
+                sectioncontent.find(".section-rx")
+                    .prop("checked", false);
+
+                sectioncontent.find(".section-testresult")
+                    .prop("checked", false);
+            }
+
+            saveSectionOptions(sectioncontent)
+                .done(function () {
+
+                    reloadTemplate();
+
+                })
+                .fail(function () {
+
+                    alert("Unable to save.");
+
+                    chk.prop(
+                        "checked",
+                        !isVital
+                    );
+
+                });
+
+        });
+
+    designer
+        .off("change", ".section-testresult")
+        .on("change", ".section-testresult", function () {
+
+console.log("Test Results changed");
+
+            const chk = $(this);
+            const sectioncontent = chk.closest(".section-content");
+
+            const isTestResult = chk.is(":checked");
+
+            if (isTestResult) {
+
+                sectioncontent.find(".section-multiline")
+                    .prop("checked", false)
+                    .prop("disabled", false);
+
+                sectioncontent.find(".section-rx")
+                    .prop("checked", false);
+
+                sectioncontent.find(".section-vital")
+                    .prop("checked", false);
+            }
+
+            saveSectionOptions(sectioncontent)
+                .done(function () {
+
+                    reloadTemplate();
+
+                })
+                .fail(function () {
+
+                    alert("Unable to save.");
+
+                    chk.prop(
+                        "checked",
+                        !isTestResult
+                    );
+
+                });
+
+        });
+
+}
+
+function saveSectionOptions(sectioncontent) {
+
+    const sectionId = sectioncontent.data("section-id");
+
+    return $.post(
+        "/PrescriptionTemplate/SaveSectionOptions",
+        {
+            templateId: $("#TemplateId").val(),
+            sectionId: sectioncontent
+                .find(".section-multiline,.section-rx,.section-vital,.section-testresult")
+                .first()
+                .data("section-id"),
+
+            isMultiline: sectioncontent.find(".section-multiline").is(":checked"),
+            isRx: sectioncontent.find(".section-rx").is(":checked"),
+            isVital: sectioncontent.find(".section-vital").is(":checked"),
+            isTestResult: sectioncontent.find(".section-testresult").is(":checked")
+        });
 }
 
 function wireToggle(config) {

@@ -49,8 +49,7 @@ namespace Controllers
         {
             try
             {
-                var result =
-                    _vital.CalculateDerivedVitals(values);
+                var result = _vital.CalculateDerivedVitals(values);
 
                 return Json(new
                 {

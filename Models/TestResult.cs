@@ -5,6 +5,7 @@ namespace Models
         public int TestResultId { get; set; }
         public int TestResultGroupId { get; set; }
         public int ClinicId { get; set; }
+        public int VisitId { get; set; }
         public DateTime VisitDate { get; set; }
         public DateTime TestDate { get; set; }
         public int TestPanelId { get; set; }
@@ -38,6 +39,7 @@ namespace Models
             TestResultId = model.TestResultId;
             TestResultGroupId = model.TestResultGroupId;
             ClinicId = model.ClinicId;
+            VisitId = model.VisitId;
             VisitDate = model.VisitDate;
             TestDate = model.TestDate;
             TestPanelId = model.TestPanelId;

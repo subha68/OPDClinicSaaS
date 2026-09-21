@@ -6,7 +6,7 @@ namespace ViewModels
     {
         public int VisitId { get; set; }
         public DateTime VisitDate { get; set; }
-        public string VisitType { get; set; }
+        public string VisitType { get; set; } = string.Empty;
 
         public List<AppointmentHistoryVM> Appointments { get; set; } = new List<AppointmentHistoryVM>();
         public List<Bill> Bills { get; set; } = new List<Bill>();

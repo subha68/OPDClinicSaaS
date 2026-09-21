@@ -6,8 +6,8 @@ namespace ViewModels
 {
     public class BackButtonVM
     {
-        public string Controller { get; set; }
-        public string Action { get; set; }
+        public string Controller { get; set; } = string.Empty;
+        public string Action { get; set; } = string.Empty;
 
         public int? Id { get; set; }
         public int? PatientId { get; set; }

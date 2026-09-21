@@ -92,6 +92,8 @@ builder.Services.AddScoped<TestDefinitionDAL>();
 builder.Services.AddScoped<TestDefinitionService>();
 builder.Services.AddScoped<TestResultDAL>();
 builder.Services.AddScoped<TestResultService>();
+builder.Services.AddScoped<ConsultationVitalDAL>();
+builder.Services.AddScoped<ConsultationTestResultDAL>();
 
 builder.Services.AddScoped<ReportDAL>();
 builder.Services.AddScoped<ReportService>();

@@ -5,6 +5,10 @@
     ViewData["Title"] = "Patient Consultation";
 }
 
+@section Styles{
+    <link rel="stylesheet" href="~/css/consultation.css" asp-append-version="true" />
+}
+
 <form asp-action="Consult" method="post"
       class="consultation-form">
 
@@ -12,6 +16,7 @@
     <input asp-for="AppointmentId" type="hidden" />
     <input asp-for="TemplateId" type="hidden" />
     <input asp-for="TemplateName" type="hidden" />
+    <input asp-for="PatientId" type="hidden" />
 
     <!-- ====================================================== -->
     <!-- Patient Header -->

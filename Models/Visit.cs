@@ -6,7 +6,7 @@ namespace Models
     {
         public int VisitId { get; set; }
         public DateTime VisitDate { get; set; }
-        public string VisitType { get; set; }
+        public string VisitType { get; set; } = string.Empty;
         public int ClinicId { get; set; }
         public int PatientId { get; set; }
     }

@@ -2,8 +2,32 @@ namespace Helpers
 {
     public class CalculationEngine
     {
+        private static readonly HashSet<string> SupportedFunctions =
+                        new(StringComparer.OrdinalIgnoreCase)
+                        {
+                            "SQRT",
+                            "ABS",
+                            "ROUND",
+                            "MIN",
+                            "MAX"
+                        };
 
         // supports: * , + , - , * , / , parentheses , SQRT() 
+
+        public List<string> ExtractVariables(string formula)
+        {
+            if (string.IsNullOrWhiteSpace(formula))
+                return new List<string>();
+
+            return System.Text.RegularExpressions.Regex
+                .Matches(formula, @"\b[A-Za-z_][A-Za-z0-9_]*\b")
+                .Cast<System.Text.RegularExpressions.Match>()
+                .Select(m => m.Value.ToUpperInvariant())
+                .Where(v => !SupportedFunctions.Contains(v))
+                .Distinct()
+                .OrderBy(v => v)
+                .ToList();
+        }        
         
         public decimal? Calculate(string formula, IDictionary<string, decimal> values)
         {

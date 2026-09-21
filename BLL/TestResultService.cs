@@ -339,7 +339,9 @@ namespace BLL
         public List<TestResultGroup> ListReports(int patientId)
         {
             if (patientId <= 0)
-                throw new ArgumentException("Invalid PatientId.");
+            {
+                return new List<TestResultGroup>();
+            }
 
             using var conn = _db.GetConnection();
             conn.Open();
@@ -380,6 +382,45 @@ namespace BLL
         {
             return _testResultDAL.GetResultGroupsByPatient(patientId, ClinicId, conn, tran);
         }
+
+        public List<TestResultGroup> GetLatestByParameter(int patientId, int clinicId, 
+                                                        SqlConnection conn, SqlTransaction? tran = null)
+        {
+            List<TestResultGroup> groups = new List<TestResultGroup>();
+            List<TestResult> results = _testResultDAL.GetLatestResultsByParameter(patientId, clinicId, conn, tran);
+
+            if (results != null && results.Count > 0)
+            {
+                groups = results
+                    .GroupBy(r => new
+                    {
+                        r.TestDate,
+                        r.VisitId,
+                        r.VisitDate
+                    })
+                    .Select(g => new TestResultGroup
+                    {
+                        PatientId = patientId,
+                        TestDate = g.Key.TestDate,
+                        VisitId = g.Key.VisitId,
+                        VisitDate = g.Key.VisitDate
+                    })
+                    .ToList();
+
+
+                foreach (var group in groups)
+                {
+                    group.Results = results
+                        .Where(r =>
+                            r.TestDate == group.TestDate &&
+                            r.VisitId == group.VisitId)
+                        .ToList();
+                }
+            }
+
+            return groups;
+        }
+        
 
         // ============================================================
         // VALIDATION

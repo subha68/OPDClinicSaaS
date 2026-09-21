@@ -426,13 +426,11 @@ namespace Controllers
             int templateId,
             int sectionId,
             bool isMultiline,
-            bool isRx)
+            bool isRx,
+            bool isVital,
+            bool isTestResult)
         {
-            _template.SaveSectionOptions(
-                templateId,
-                sectionId,
-                isMultiline,
-                isRx);
+            _template.SaveSectionOptions(templateId, sectionId, isMultiline, isRx, isVital, isTestResult);
 
             return Json(new
             {

@@ -68,12 +68,7 @@
 
                     clearMessages();
 
-                    const patient =
-                        await PatientCache.refresh(
-                            modalElement.querySelector(
-                                "[data-patient-selection-context]"
-                            )
-                        );
+                    const patient = refreshSelectedPatient();
 
                     if (!patient) {
 
@@ -121,10 +116,13 @@
             "#btnAddTestReport",
             async function () {
 
-                const patient =
-                    await refreshSelectedPatient();
+                const patient = getSelectedTestResultPatient();
 
                 if (!patient) {
+                    showError(
+                        "Please select a patient first."
+                    );
+
                     return;
                 }
 
@@ -222,12 +220,7 @@
 
                 try {
 
-                    const patient =
-                        await PatientCache.refresh(
-                            modalElement.querySelector(
-                                "[data-patient-selection-context]"
-                            )
-                        );
+                    const patient = getSelectedTestResultPatient();
 
                     if (!patient) {
                         return;
@@ -306,16 +299,9 @@
 
                     if (response.success) {
 
-                        const patient =
-                            await PatientCache.refresh(
-                                modalElement.querySelector(
-                                    "[data-patient-selection-context]"
-                                )
-                            );
+                        const patient = getSelectedTestResultPatient();
 
-                        await loadTestResults(
-                            patient.patientId
-                        );
+                        await loadTestResults(patient.patientId);
 
                     }
                     else {
@@ -807,6 +793,28 @@
 
         return patient;
 
+    }
+
+    function getSelectedTestResultPatient() {
+
+        if (testResultPatient) {
+            return testResultPatient;
+        }
+
+        const patientId =
+            modalElement
+                .querySelector(
+                    "[data-patient-id]"
+                )
+                ?.value;
+
+        if (!patientId) {
+            return null;
+        }
+
+        return {
+            patientId: patientId
+        };
     }
 
     function renumberRows() 

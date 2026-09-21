@@ -14,9 +14,9 @@ namespace Models
 
         public decimal Amount { get; set; }
 
-        public string Mode { get; set; }
+        public string Mode { get; set; } = string.Empty;
 
-        public string ReferenceNo { get; set; }
+        public string ReferenceNo { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; }
 

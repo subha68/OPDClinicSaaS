@@ -48,9 +48,11 @@ namespace DAL
 
             string querySection = @"
                 INSERT INTO ConsultationSections
-                (ConsultationId, ClinicId, SectionName, DisplayOrder, IsVisible, Multiline, IsPharmacologyAdvice)
+                (ConsultationId, ClinicId, SectionName, DisplayOrder, IsVisible, Multiline, IsPharmacologyAdvice,
+                IsVital, IsTestResult)
                 VALUES
-                (@ConsultationId, @ClinicId, @SectionName, @DisplayOrder, @IsVisible, @Multiline, @IsPharmacologyAdvice);
+                (@ConsultationId, @ClinicId, @SectionName, @DisplayOrder, @IsVisible, @Multiline, @IsPharmacologyAdvice,
+                @IsVital, @IsTestResult);
 
                 SELECT SCOPE_IDENTITY();";
 
@@ -63,9 +65,11 @@ namespace DAL
                 cmdSection.Parameters.AddWithValue("@ClinicId", section.ClinicId);
                 cmdSection.Parameters.AddWithValue("@SectionName", section.SectionName);
                 cmdSection.Parameters.AddWithValue("@DisplayOrder", section.DisplayOrder);
-                cmdSection.Parameters.AddWithValue("@IsVisible", section.IsVisible);
-                cmdSection.Parameters.AddWithValue("@Multiline", section.Multiline);
-                cmdSection.Parameters.AddWithValue("@IsPharmacologyAdvice", section.IsPharmacologyAdvice);
+                cmdSection.Parameters.AddWithValue("@IsVisible", section.IsVisible ? 1 : 0);
+                cmdSection.Parameters.AddWithValue("@Multiline", section.Multiline ? 1 : 0);
+                cmdSection.Parameters.AddWithValue("@IsPharmacologyAdvice", section.IsPharmacologyAdvice ? 1 : 0);
+                cmdSection.Parameters.AddWithValue("@IsVital", section.IsVital ? 1 : 0);
+                cmdSection.Parameters.AddWithValue("@IsTestResult", section.IsTestResult ? 1 : 0);
 
                 sectionId = Convert.ToInt32(cmdSection.ExecuteScalar());
 
@@ -233,6 +237,8 @@ namespace DAL
 
             foreach (var row in rows)
             {
+                cmd.Parameters.Clear();
+
                 cmd.Parameters.AddWithValue("@ClinicId", row.ClinicId);
                 //cmd.Parameters.AddWithValue("@SectionId", row.SectionId);
                 cmd.Parameters.AddWithValue("@RowId", row.RowId);
@@ -325,6 +331,47 @@ namespace DAL
             cmdField.Parameters.AddWithValue("@ClinicId", clinicId);
             int rowsFieldAffected = cmdField.ExecuteNonQuery();
 
+            string queryVital = @"DELETE CV
+                                    FROM ConsultationVitals CV
+                                    INNER JOIN ConsultationRows CR
+                                        ON CR.RowId = CV.RowId
+                                    INNER JOIN ConsultationSections CS
+                                        ON CS.SectionId = CR.SectionId
+                                    WHERE CS.ConsultationId = @ConsultationId
+                                    AND CV.ClinicId = @ClinicId;";
+            SqlCommand cmdVital = new SqlCommand(queryVital, conn, tran);
+            cmdVital.Parameters.AddWithValue("@ConsultationId", consultationId);
+            cmdVital.Parameters.AddWithValue("@ClinicId", clinicId);
+            int rowsVitalAffected = cmdVital.ExecuteNonQuery();
+
+            string queryTestResult = @"DELETE CT
+                                    FROM ConsultationTestResults CT
+                                    INNER JOIN ConsultationTestResultGroups CG
+                                        ON CT.ConsultationTestResultGroupId = CG.ConsultationTestResultGroupId
+                                    INNER JOIN ConsultationRows CR
+                                        ON CR.RowId = CG.RowId
+                                    INNER JOIN ConsultationSections CS
+                                        ON CS.SectionId = CR.SectionId
+                                    WHERE CS.ConsultationId = @ConsultationId
+                                    AND CT.ClinicId = @ClinicId;";
+            SqlCommand cmdTestResult = new SqlCommand(queryTestResult, conn, tran);
+            cmdTestResult.Parameters.AddWithValue("@ConsultationId", consultationId);
+            cmdTestResult.Parameters.AddWithValue("@ClinicId", clinicId);
+            int rowsTestResultAffected = cmdTestResult.ExecuteNonQuery();
+
+            string queryTestResultGroup = @"DELETE CG
+                                    FROM ConsultationTestResultGroups CG
+                                    INNER JOIN ConsultationRows CR
+                                        ON CR.RowId = CG.RowId
+                                    INNER JOIN ConsultationSections CS
+                                        ON CS.SectionId = CR.SectionId
+                                    WHERE CS.ConsultationId = @ConsultationId
+                                    AND CT.ClinicId = @ClinicId;";
+            SqlCommand cmdTestResultGroup = new SqlCommand(queryTestResultGroup, conn, tran);
+            cmdTestResultGroup.Parameters.AddWithValue("@ConsultationId", consultationId);
+            cmdTestResultGroup.Parameters.AddWithValue("@ClinicId", clinicId);
+            int rowsTestResultGroupAffected = cmdTestResultGroup.ExecuteNonQuery();
+
             string queryRow = @"DELETE CR
                                     FROM ConsultationRows CR
                                     INNER JOIN ConsultationSections CS
@@ -359,6 +406,8 @@ namespace DAL
         {
             int rowsOptionAffected = 0;
             int rowsFieldAffected = 0;
+            int rowsVitalAffected = 0;
+            int rowsTestResultAffected = 0;
             int rowsRowAffected = 0;
 
             string queryOption = @"DELETE CFO
@@ -373,6 +422,24 @@ namespace DAL
                                     WHERE RowId = @RowId
                                     AND ClinicId = @ClinicId";
             SqlCommand cmdField = new SqlCommand(queryField, conn, tran);
+
+            string queryVital = @"DELETE FROM ConsultationVitals
+                                    WHERE RowId = @RowId
+                                    AND ClinicId = @ClinicId";
+            SqlCommand cmdVital = new SqlCommand(queryVital, conn, tran);
+
+            string queryTestResult = @"DELETE CT 
+                                    FROM ConsultationTestResults CT
+                                    INNER JOIN ConsultationTestResultGroups CG
+                                        ON CT.ConsultationTestResultGroupId = CG.ConsultationTestResultGroupId
+                                    WHERE CG.RowId = @RowId
+                                    AND CT.ClinicId = @ClinicId";
+            SqlCommand cmdTestResult = new SqlCommand(queryTestResult, conn, tran);
+
+            string queryTestResultGroup = @"DELETE FROM ConsultationTestResultGroups
+                                           WHERE RowId = @RowId
+                                            AND ClinicId = @ClinicId";
+            SqlCommand cmdTestResultGroup = new SqlCommand(queryTestResultGroup, conn, tran);
 
             string queryRow = @"DELETE FROM ConsultationRows 
                                     WHERE RowId = @RowId
@@ -390,6 +457,16 @@ namespace DAL
                 cmdField.Parameters.AddWithValue("@RowId", row.RowId);
                 cmdField.Parameters.AddWithValue("@ClinicId", row.ClinicId);
                 rowsFieldAffected += cmdField.ExecuteNonQuery();
+
+                cmdVital.Parameters.Clear();
+                cmdVital.Parameters.AddWithValue("@RowId", row.RowId);
+                cmdVital.Parameters.AddWithValue("@ClinicId", row.ClinicId);
+                rowsVitalAffected += cmdVital.ExecuteNonQuery();
+
+                cmdTestResult.Parameters.Clear();
+                cmdTestResult.Parameters.AddWithValue("@RowId", row.RowId);
+                cmdTestResult.Parameters.AddWithValue("@ClinicId", row.ClinicId);
+                rowsTestResultAffected += cmdTestResult.ExecuteNonQuery();
 
                 cmdRow.Parameters.Clear();
                 cmdRow.Parameters.AddWithValue("@RowId", row.RowId);
@@ -620,7 +697,7 @@ namespace DAL
 
             string query = @"
                         SELECT SectionId, ConsultationId, SectionName, DisplayOrder, IsVisible,
-                                Multiline, IsPharmacologyAdvice 
+                                Multiline, IsPharmacologyAdvice, IsVital, IsTestResult 
                         FROM ConsultationSections 
                         WHERE ConsultationId = @ConsultationId
                         AND ClinicId = @ClinicId";
@@ -644,7 +721,9 @@ namespace DAL
                         DisplayOrder = Convert.ToInt32(drSection["DisplayOrder"]),
                         IsVisible = Convert.ToBoolean(drSection["IsVisible"]),
                         Multiline = Convert.ToBoolean(drSection["Multiline"]),
-                        IsPharmacologyAdvice = Convert.ToBoolean(drSection["IsPharmacologyAdvice"])
+                        IsPharmacologyAdvice = Convert.ToBoolean(drSection["IsPharmacologyAdvice"]),
+                        IsVital = Convert.ToBoolean(drSection["IsVital"]),
+                        IsTestResult = Convert.ToBoolean(drSection["IsTestResult"])
                     };
 
                     sections.Add(section);
@@ -955,12 +1034,15 @@ namespace DAL
                 p.Gender,
                 a.AppointmentDate,
                 a.SlotStartTime,
+                a.VisitId,
+                v.VisitDate,
                 con.ConsultationId
             FROM Appointments a
             JOIN Consultations con ON a.AppointmentId=con.AppointmentId
             JOIN Patients p ON a.PatientId=p.PatientId
             JOIN Doctors d ON a.DoctorId=d.DoctorId
             JOIN Clinics c ON a.ClinicId=c.ClinicId
+            JOIN Visits v ON a.VisitId = v.VisitId
             WHERE a.AppointmentId=@AppointmentId";
 
             SqlCommand cmd = new(sql, conn);
@@ -993,6 +1075,8 @@ namespace DAL
                     vm.VisitDateTime = Convert.ToDateTime(rdr["AppointmentDate"]).Add((TimeSpan)rdr["SlotStartTime"]);
 
                     vm.ConsultationId = Convert.ToInt32(rdr["ConsultationId"]);
+                    vm.VisitId = Convert.ToInt32(rdr["VisitId"]);
+                    vm.VisitDate = Convert.ToDateTime(rdr["VisitDate"]);
                     vm.AppointmentId = Convert.ToInt32(appointmentId);
                 }
             }
@@ -1005,34 +1089,32 @@ namespace DAL
             List<PrescriptionSectionVM> vms = new List<PrescriptionSectionVM> ();
 
             string sql = @"
-                SELECT
-                    cs.SectionId,
-                    cs.ConsultationId,
-                    cs.SectionName,
-                    cs.DisplayOrder,
-                    cs.IsVisible,
-                    cs.Multiline,
-                    cs.IsPharmacologyAdvice
+                SELECT cs.SectionId, cs.ConsultationId, cs.SectionName, cs.DisplayOrder, cs.IsVisible,
+                    cs.Multiline, cs.IsPharmacologyAdvice, cs.IsVital, cs.IsTestResult
                 FROM ConsultationSections cs
+                INNER JOIN ConsultationRows cr
+                    ON cr.SectionId = cs.SectionId
                 WHERE cs.ConsultationId = @ConsultationId
-                AND EXISTS
-                (
-                    SELECT 1
-                    FROM ConsultationRows cr
-                    INNER JOIN ConsultationFields cf
-                        ON cf.RowId = cr.RowId
-                    WHERE cr.SectionId = cs.SectionId
-                    AND
-                    (
-                        cf.FieldValue IS NOT NULL
-                        OR EXISTS
-                        (
-                            SELECT 1
-                            FROM ConsultationFieldOptions cfo
-                            WHERE cfo.FieldId = cf.FieldId
-                                AND cfo.IsSelected = 1
+                AND (EXISTS 
+                        (SELECT 1
+                        FROM ConsultationFields cf
+                        WHERE cr.RowId = cf.RowId
+                        AND (cf.FieldValue IS NOT NULL
+                                OR EXISTS
+                                (
+                                    SELECT 1
+                                    FROM ConsultationFieldOptions cfo
+                                    WHERE cfo.FieldId = cf.FieldId
+                                        AND cfo.IsSelected = 1
+                                )
+                            )
                         )
-                    )
+                    OR EXISTS (SELECT 1
+                               FROM ConsultationVitals cv
+                               WHERE cr.RowId = cv.RowId)
+                    OR EXISTS (SELECT 1
+                                FROM ConsultationTestResultGroups cg
+                                WHERE cr.RowId = cg.RowId)
                 )
                 ORDER BY cs.DisplayOrder;";
 
@@ -1056,7 +1138,9 @@ namespace DAL
                         DisplayOrder = Convert.ToInt32(rdr["DisplayOrder"]),
                         IsVisible = Convert.ToBoolean(rdr["IsVisible"]),
                         Multiline = Convert.ToBoolean(rdr["Multiline"]),
-                        IsPharmacologyAdvice = Convert.ToBoolean(rdr["IsPharmacologyAdvice"])
+                        IsPharmacologyAdvice = Convert.ToBoolean(rdr["IsPharmacologyAdvice"]),
+                        IsVital = Convert.ToBoolean(rdr["IsVital"]),
+                        IsTestResult = Convert.ToBoolean(rdr["IsTestResult"])
                     };
 
                     vms.Add(section);
@@ -1081,22 +1165,26 @@ namespace DAL
                     ON cs.SectionId = cr.SectionId
                 WHERE cs.ConsultationId = @ConsultationId
                 AND cr.IsTemplate = 0
-                AND EXISTS
-                (
-                    SELECT 1
-                    FROM ConsultationFields cf
-                    WHERE cf.RowId = cr.RowId
-                        AND
-                        (
-                            cf.FieldValue IS NOT NULL
-                            OR EXISTS
-                            (
-                                SELECT 1
-                                FROM ConsultationFieldOptions cfo
-                                WHERE cfo.FieldId = cf.FieldId
-                                AND cfo.IsSelected = 1
+                AND (EXISTS 
+                        (SELECT 1
+                        FROM ConsultationFields cf
+                        WHERE cr.RowId = cf.RowId
+                        AND (cf.FieldValue IS NOT NULL
+                                OR EXISTS
+                                (
+                                    SELECT 1
+                                    FROM ConsultationFieldOptions cfo
+                                    WHERE cfo.FieldId = cf.FieldId
+                                        AND cfo.IsSelected = 1
+                                )
                             )
                         )
+                    OR EXISTS (SELECT 1
+                               FROM ConsultationVitals cv
+                               WHERE cr.RowId = cv.RowId)
+                    OR EXISTS (SELECT 1
+                                FROM ConsultationTestResultGroups cg
+                                WHERE cr.RowId = cg.RowId)
                 )
                 ORDER BY
                     cr.SectionId,
@@ -1187,6 +1275,104 @@ namespace DAL
             }
 
             return vms;
+        }
+
+        public List<PrescriptionVitalVM> ListPrescriptionVitals(int consultationId, int clinicId, 
+                                                                SqlConnection conn, SqlTransaction? tran = null)
+        {
+            var list = new List<PrescriptionVitalVM>();
+
+            const string sql = @"
+                SELECT v.VitalId, v.RowId, v.VisitDate, v.VitalLabel, v.VitalCode, v.VitalType, v.VitalValue, v.VitalUnit,
+                        ISNULL(v.DisplayOrder,0) AS DisplayOrder
+                FROM ConsultationVitals v
+                INNER JOIN ConsultationRows r
+                    ON r.RowId = v.RowId
+                INNER JOIN ConsultationSections s
+                    ON s.SectionId = r.SectionId
+                WHERE s.ConsultationId = @ConsultationId
+                AND v.ClinicId = @ClinicId
+                ORDER BY
+                    ISNULL(v.DisplayOrder,0),
+                    v.VitalLabel;";
+
+            using var cmd = new SqlCommand(sql, conn, tran);
+
+            cmd.Parameters.AddWithValue("@ConsultationId", consultationId);
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+
+            using var rdr = cmd.ExecuteReader();
+
+            while (rdr.Read())
+            {
+                list.Add(new PrescriptionVitalVM
+                    {
+                        VitalId = Convert.ToInt32(rdr["VitalId"]),
+                        RowId = Convert.ToInt32(rdr["RowId"]),
+                        VisitDate = Convert.ToDateTime(rdr["VisitDate"]),
+                        VitalLabel = Convert.ToString(rdr["VitalLabel"]) ?? "",
+                        VitalCode = Convert.ToString(rdr["VitalCode"]) ?? "",
+                        VitalType = Convert.ToString(rdr["VitalType"]) ?? "",
+                        VitalValue = Convert.ToString(rdr["VitalValue"]) ?? "",
+                        VitalUnit = Convert.ToString(rdr["VitalUnit"]) ?? "",
+                        DisplayOrder = Convert.ToInt32(rdr["DisplayOrder"])
+                    });
+            }
+
+            return list;
+        }
+
+        public List<PrescriptionTestResultVM> ListPrescriptionTestResults(int consultationId, int clinicId,
+                                                                            SqlConnection conn, SqlTransaction? tran = null)
+        {
+            var list = new List<PrescriptionTestResultVM>();
+
+            const string sql = @"
+                SELECT tr.TestResultId, tg.RowId, tg.TestDate, tr.TestPanelCode, tr.TestPanelName, tr.TestParameterCode,
+                        tr.TestParameterName, tr.Value, tr.Unit,  tr.ResultFlag, tr.PanelDisplayOrder, tr.ParameterDisplayOrder
+                FROM ConsultationTestResults tr
+                INNER JOIN ConsultationTestResultGroups tg
+                    ON tr.ConsultationTestResultGroupId = tg.ConsultationTestResultGroupId
+                INNER JOIN ConsultationRows r
+                    ON r.RowId = tg.RowId
+                INNER JOIN ConsultationSections s
+                    ON s.SectionId = r.SectionId
+                WHERE s.ConsultationId = @ConsultationId
+                AND tr.ClinicId = @ClinicId
+                ORDER BY
+                    tg.TestDate DESC,
+                    tr.PanelDisplayOrder,
+                    tr.ParameterDisplayOrder,
+                    tr.TestPanelName,
+                    tr.TestParameterName;";
+
+            using var cmd = new SqlCommand(sql, conn, tran);
+
+            cmd.Parameters.AddWithValue("@ConsultationId", consultationId);
+            cmd.Parameters.AddWithValue("@ClinicId", clinicId);
+
+            using var rdr = cmd.ExecuteReader();
+
+            while (rdr.Read())
+            {
+                list.Add(new PrescriptionTestResultVM
+                    {
+                        TestResultId = Convert.ToInt32(rdr["TestResultId"]),
+                        RowId = Convert.ToInt32(rdr["RowId"]),
+                        TestDate = Convert.ToDateTime(rdr["TestDate"]),
+                        TestPanelCode = Convert.ToString(rdr["TestPanelCode"]) ?? "",
+                        TestPanelName = Convert.ToString(rdr["TestPanelName"]) ?? "",
+                        TestParameterCode = Convert.ToString(rdr["TestParameterCode"]) ?? "",
+                        TestParameterName = Convert.ToString( rdr["TestParameterName"]) ?? "",
+                        Value = Convert.ToString(rdr["Value"]) ?? "",
+                        Unit = Convert.ToString(rdr["Unit"]) ?? "",
+                        ResultFlag = Convert.ToString(rdr["ResultFlag"]) ?? "",
+                        PanelDisplayOrder = Convert.ToInt32(rdr["PanelDisplayOrder"]),
+                        ParameterDisplayOrder = Convert.ToInt32(rdr["ParameterDisplayOrder"])
+                    });
+            }
+
+            return list;
         }
 
         public List<PrescriptionOptionVM> ListPrescriptionOptions(int consultationId, SqlConnection conn, SqlTransaction? tran = null)

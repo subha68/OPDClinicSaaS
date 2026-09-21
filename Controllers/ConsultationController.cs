@@ -39,8 +39,6 @@ namespace Controllers
 
         public IActionResult Start(int appointmentId)
         {
-           // _appointment.UpdateStatus(appointmentId, "In Consultation");
-
             return RedirectToAction("Consult", new { appointmentId });
         }
 
@@ -93,18 +91,5 @@ namespace Controllers
             return View(vm);
         }
 
-    /*    public IActionResult Download(int appointmentId)
-        {
-            var vm = _consultation.GetPrescription(appointmentId);
-
-            var pdf = new PrescriptionPdfDocument(vm);
-
-            byte[] bytes = pdf.GeneratePdf();
-
-            return File(
-                bytes,
-                "application/pdf",
-                $"Prescription_{appointmentId}.pdf");
-        } */
     }
 }

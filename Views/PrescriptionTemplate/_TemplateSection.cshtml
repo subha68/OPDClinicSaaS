@@ -34,15 +34,16 @@
 
             </button>
 
-            <div class="section-content">
+            <div class="section-content"
+                data-section-id="@Model.SectionId">
 
                 <div class="section-name" data-id="@Model.SectionId">
                     @Model.SectionName
                 </div>
 
-                <div class="section-options mt-1">
+                <div class="section-options mt-1 d-flex align-items-center gap-3">
 
-                    <div class="form-check form-switch d-inline-block me-3">
+                    <div class="form-check form-switch mb-0">
                         <input class="form-check-input section-multiline"
                             type="checkbox"
                             id="multiline_@Model.SectionId"
@@ -55,17 +56,59 @@
                         </label>
                     </div>
 
-                    <div class="form-check form-switch d-inline-block me-3">
-                        <input class="form-check-input section-rx"
-                            type="checkbox"
+                    <div class="btn-group btn-group-sm section-type-group ">
+
+                        <input type="radio"
+                            id="normal_@Model.SectionId"
+                            class="btn-check section-normal"
+                            name="sectionType_@Model.SectionId"
+                            value="Normal"
+                            @( !Model.IsPharmacologyAdvice &&
+                                !Model.IsVital &&
+                                !Model.IsTestResult
+                                ? "checked" : "") />
+
+                        <label class="btn btn-outline-secondary"
+                                for="normal_@Model.SectionId">
+                            Normal
+                        </label>
+
+                        <input type="radio"
                             id="rx_@Model.SectionId"
-                            data-section-id="@Model.SectionId"
+                            class="btn-check section-rx"
+                            name="sectionType_@Model.SectionId"
+                            value="Rx"
                             @(Model.IsPharmacologyAdvice ? "checked" : "") />
 
-                        <label class="form-check-label small"
-                            for="rx_@Model.SectionId">
+                        <label class="btn btn-outline-primary"
+                                for="rx_@Model.SectionId">
                             Rx
                         </label>
+
+                        <input type="radio"
+                            id="vital_@Model.SectionId"
+                            class="btn-check section-vital"
+                            name="sectionType_@Model.SectionId"
+                            value="Vital"
+                            @(Model.IsVital ? "checked" : "") />
+
+                        <label class="btn btn-outline-success"
+                                for="vital_@Model.SectionId">
+                            Vital
+                        </label>
+
+                        <input type="radio"
+                            id="testresult_@Model.SectionId"
+                            class="btn-check section-testresult"
+                            name="sectionType_@Model.SectionId"
+                            value="TestResult"
+                            @(Model.IsTestResult ? "checked" : "") />
+
+                        <label class="btn btn-outline-info"
+                                for="testresult_@Model.SectionId">
+                            Test Result
+                        </label>
+
                     </div>
 
                 </div>

@@ -18,6 +18,23 @@
                     #
                 </th>
 
+@if (Model == null)
+{
+    throw new Exception("Model is NULL");
+}
+
+@if (Model.TemplateRow == null)
+{
+    throw new Exception(
+        $"TemplateRow is NULL. Section = {Model.SectionName}");
+}
+
+@if (Model.TemplateRow.Fields == null)
+{
+    throw new Exception(
+        $"Fields collection is NULL. Section = {Model.SectionName}");
+}
+
                 @foreach (var field in Model.TemplateRow.Fields
                     .Where(f => f.FieldTypeCode != "Hidden")
                     .OrderBy(f => f.DisplayOrder))

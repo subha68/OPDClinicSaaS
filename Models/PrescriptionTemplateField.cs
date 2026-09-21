@@ -9,10 +9,10 @@ namespace Models
         public int FieldId { get; set; }
         public int ClinicId { get; set; }
 
-        public string FieldLabel { get; set; }
-        public string FieldTypeCode { get; set; }
-        public string FieldCode { get; set; }
-        public string FieldSource { get; set; }
+        public string FieldLabel { get; set; } = string.Empty;
+        public string FieldTypeCode { get; set; } = string.Empty;
+        public string FieldCode { get; set; } = string.Empty;
+        public string FieldSource { get; set; } = string.Empty;
         public bool IsActive { get; set; }
         public bool IsArchived { get; set; }
         public int DisplayOrder { get; set; }

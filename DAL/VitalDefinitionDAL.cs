@@ -19,10 +19,10 @@ namespace DAL
 
             string query = @"INSERT INTO VitalDefinitions 
                             (ClinicId, VitalLabel, VitalCode, VitalType, DataType, VitalUnit, IsDerived,
-                            DeriveFormula, DisplayComposition, IsStandard, IsActive)
+                            DeriveFormula, DisplayComposition, IsStandard, IsActive, DisplayOrder)
                             VALUES 
                             (@ClinicId, @VitalLabel, @VitalCode, @VitalType, @DataType, @VitalUnit, @IsDerived,
-                            @DeriveFormula, @DisplayComposition, @IsStandard, @IsActive);
+                            @DeriveFormula, @DisplayComposition, @IsStandard, @IsActive, @DisplayOrder);
                             SELECT SCOPE_IDENTITY();";
 
             SqlCommand cmd = new SqlCommand(query, conn, tran);
@@ -38,6 +38,7 @@ namespace DAL
             cmd.Parameters.AddWithValue("@DisplayComposition", string.IsNullOrWhiteSpace(model.DisplayComposition) ? DBNull.Value : model.DisplayComposition);
             cmd.Parameters.AddWithValue("@IsStandard", model.IsStandard ? 1 : 0);
             cmd.Parameters.AddWithValue("@IsActive", model.IsActive ? 1 : 0);
+            cmd.Parameters.AddWithValue("@DisplayOrder", model.DisplayOrder.HasValue ? model.DisplayOrder.Value : DBNull.Value);
 
             vitalDefId = Convert.ToInt32(cmd.ExecuteScalar());
 
@@ -57,7 +58,8 @@ namespace DAL
                                 DeriveFormula = @DeriveFormula,
                                 DisplayComposition = @DisplayComposition,
                                 IsStandard = @IsStandard,
-                                IsActive = @IsActive
+                                IsActive = @IsActive,
+                                DisplayOrder = @DisplayOrder
                             WHERE VitalDefId = @VitalDefId";
 
             SqlCommand cmd = new SqlCommand(query, conn, tran);
@@ -74,6 +76,7 @@ namespace DAL
             cmd.Parameters.AddWithValue("@IsStandard", model.IsStandard ? 1 : 0);
             cmd.Parameters.AddWithValue("@IsActive", model.IsActive ? 1 : 0);
             cmd.Parameters.AddWithValue("@VitalDefId", model.VitalDefId);
+            cmd.Parameters.AddWithValue("@DisplayOrder", model.DisplayOrder.HasValue ? model.DisplayOrder.Value : DBNull.Value);
 
             int rowsAffected = cmd.ExecuteNonQuery();
             return rowsAffected > 0;
@@ -141,11 +144,11 @@ namespace DAL
                     VitalType = reader["VitalType"].ToString(),
                     DataType = reader["DataType"].ToString(),
                     VitalUnit = reader["VitalUnit"] != DBNull.Value ? reader["VitalUnit"].ToString() : null,
-                    IsDerived = Convert.ToBoolean(reader["IsDerived"]),
                     DeriveFormula = reader["DeriveFormula"] != DBNull.Value ? reader["DeriveFormula"].ToString() : null,
                     DisplayComposition = reader["DisplayComposition"] != DBNull.Value ? reader["DisplayComposition"].ToString() : null,
                     IsStandard = Convert.ToBoolean(reader["IsStandard"]),
-                    IsActive = Convert.ToBoolean(reader["IsActive"])
+                    IsActive = Convert.ToBoolean(reader["IsActive"]),
+                    DisplayOrder = reader["DisplayOrder"] != DBNull.Value ? (int?)reader["DisplayOrder"] : null
                 };
             }
 
@@ -182,11 +185,11 @@ namespace DAL
                     VitalType = reader["VitalType"].ToString(),
                     DataType = reader["DataType"].ToString(),
                     VitalUnit = reader["VitalUnit"] != DBNull.Value ? reader["VitalUnit"].ToString() : null,
-                    IsDerived = Convert.ToBoolean(reader["IsDerived"]),
                     DeriveFormula = reader["DeriveFormula"] != DBNull.Value ? reader["DeriveFormula"].ToString() : null,
                     DisplayComposition = reader["DisplayComposition"] != DBNull.Value ? reader["DisplayComposition"].ToString() : null,
                     IsStandard = Convert.ToBoolean(reader["IsStandard"]),
-                    IsActive = Convert.ToBoolean(reader["IsActive"])
+                    IsActive = Convert.ToBoolean(reader["IsActive"]),
+                    DisplayOrder = reader["DisplayOrder"] != DBNull.Value ? (int?)reader["DisplayOrder"] : null
                 };
             }
 
@@ -226,11 +229,11 @@ namespace DAL
                     VitalType = reader["VitalType"].ToString(),
                     DataType = reader["DataType"].ToString(),
                     VitalUnit = reader["VitalUnit"] != DBNull.Value ? reader["VitalUnit"].ToString() : null,
-                    IsDerived = Convert.ToBoolean(reader["IsDerived"]),
                     DeriveFormula = reader["DeriveFormula"] != DBNull.Value ? reader["DeriveFormula"].ToString() : null,
                     DisplayComposition = reader["DisplayComposition"] != DBNull.Value ? reader["DisplayComposition"].ToString() : null,
                     IsStandard = Convert.ToBoolean(reader["IsStandard"]),
-                    IsActive = Convert.ToBoolean(reader["IsActive"])
+                    IsActive = Convert.ToBoolean(reader["IsActive"]),
+                    DisplayOrder = reader["DisplayOrder"] != DBNull.Value ? (int?)reader["DisplayOrder"] : null
                 });
             }
 
@@ -265,11 +268,11 @@ namespace DAL
                     VitalType = reader["VitalType"].ToString(),
                     DataType = reader["DataType"].ToString(),
                     VitalUnit = reader["VitalUnit"] != DBNull.Value ? reader["VitalUnit"].ToString() : null,
-                    IsDerived = Convert.ToBoolean(reader["IsDerived"]),
                     DeriveFormula = reader["DeriveFormula"] != DBNull.Value ? reader["DeriveFormula"].ToString() : null,
                     DisplayComposition = reader["DisplayComposition"] != DBNull.Value ? reader["DisplayComposition"].ToString() : null,
                     IsStandard = Convert.ToBoolean(reader["IsStandard"]),
-                    IsActive = Convert.ToBoolean(reader["IsActive"])
+                    IsActive = Convert.ToBoolean(reader["IsActive"]),
+                    DisplayOrder = reader["DisplayOrder"] != DBNull.Value ? (int?)reader["DisplayOrder"] : null
                 });
             }
 
@@ -280,10 +283,10 @@ namespace DAL
         {
             string query = @"INSERT INTO VitalDefinitions
                             (ClinicId, VitalLabel, VitalCode, VitalType, DataType, VitalUnit, IsDerived,
-                                DeriveFormula, DisplayComposition, IsStandard, IsActive)
+                                DeriveFormula, DisplayComposition, IsStandard, IsActive, DisplayOrder)
                             SELECT
                                 @ClinicId, V.VitalLabel, V.VitalCode, V.VitalType, V.DataType, V.VitalUnit, V.IsDerived,
-                                V.DeriveFormula, V.DisplayComposition, V.IsStandard, V.IsActive
+                                V.DeriveFormula, V.DisplayComposition, V.IsStandard, V.IsActive, V.DisplayOrder
                             FROM VitalDefinitions V
                             WHERE V.ClinicId IS NULL
                             AND NOT EXISTS

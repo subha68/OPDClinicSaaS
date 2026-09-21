@@ -14,11 +14,45 @@ namespace Models
         public bool IsVisible { get; set; }
         public bool Multiline { get; set; }
         public bool IsPharmacologyAdvice { get; set; }
+        public bool IsVital { get; set; }
+        public bool IsTestResult { get; set; }
 
         public ConsultationRow TemplateRow { get; set; }
         public List<ConsultationRow> Rows { get; set; } = new();
 
         public bool IsMultiline => Multiline || IsPharmacologyAdvice;
+
+        public SectionType SectionType
+        {
+            get
+            {
+                var count = 0;
+
+                //if (Multiline) count++;
+                if (IsVital) count++;
+                if (IsTestResult) count++;
+                if (IsPharmacologyAdvice) count++;
+
+                if (count > 1)
+                {
+                    throw new InvalidOperationException($"Section '{SectionName}' has conflicting section flags.");
+                }
+
+                if (IsPharmacologyAdvice)
+                    return SectionType.Rx;
+
+                if (IsVital)
+                    return SectionType.Vital;
+
+                if (IsTestResult)
+                    return SectionType.TestResult;
+
+            //    if (Multiline)
+            //        return SectionType.Multiline;
+
+                return SectionType.Standard;
+            }
+        }
 
         public ConsultationSection()
         {
@@ -26,10 +60,7 @@ namespace Models
             Rows = new List<ConsultationRow>();
         }
 
-        public ConsultationSection(
-            PrescriptionTemplateSection templateSection,
-            int clinicId,
-            PharmacologyAdvice rx = null)
+        public ConsultationSection(PrescriptionTemplateSection templateSection, int clinicId, PharmacologyAdvice rx = null)
         {
             ClinicId = clinicId;
             TemplateId = templateSection.TemplateId;
@@ -39,12 +70,31 @@ namespace Models
             IsVisible = true;
             Multiline = templateSection.Multiline;
             IsPharmacologyAdvice = templateSection.IsPharmacologyAdvice;
-
+            IsVital = templateSection.IsVital;
+            IsTestResult = templateSection.IsTestResult;
+ 
             TemplateRow = new ConsultationRow();
 
             if (templateSection.Fields != null)
             {
-                if (!IsMultiline)
+                if (templateSection.SectionType == SectionType.Vital ||
+                    templateSection.SectionType == SectionType.TestResult)
+                {
+                    Rows.Add(new ConsultationRow());
+
+                    // do nothing else - do not copy fields / options from template
+                    // retrieval of data from Vital & TestResult are handled by ConsultationService
+                }
+                else if (IsMultiline)
+                {
+                    foreach (var templateField in templateSection.Fields)
+                    {
+                        var field = new ConsultationField(templateField, clinicId);
+                        field.HideLabel = true;
+                        TemplateRow.Fields.Add(field);
+                    }
+                }
+                else
                 {
                     var row = new ConsultationRow();
 
@@ -55,16 +105,8 @@ namespace Models
 
                     Rows.Add(row);
                 }
-                else
-                {
-                    foreach (var templateField in templateSection.Fields)
-                    {
-                        var field = new ConsultationField(templateField, clinicId);
-                        field.HideLabel = true;
-                        TemplateRow.Fields.Add(field);
-                    }
-                }
             }
         }
+
     }
 }

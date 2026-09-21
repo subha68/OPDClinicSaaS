@@ -131,6 +131,8 @@
 
                 calculateDerivedVitals();
 
+                updateCompositionValues();
+
             }
         );
 
@@ -526,35 +528,20 @@
          * Metadata required by SaveVitals.
          */
 
-        input.dataset.vitalId =
-            vital.vitalId || 0;
-
-        input.dataset.vitalDefId =
-            vital.vitalDefId || 0;
-
-        input.dataset.vitalCode =
-            vital.vitalCode || "";
-
-        input.dataset.vitalType =
-            vital.vitalType || "";
-
-        input.dataset.dataType =
-            vital.dataType || "";
-
-        input.dataset.isDerived =
-            vital.isDerived
-                ? "true"
-                : "false";
-
+        input.dataset.vitalId = vital.vitalId || 0;
+        input.dataset.vitalDefId = vital.vitalDefId || 0;
+        input.dataset.vitalCode = vital.vitalCode || "";
+        input.dataset.vitalType = vital.vitalType || "";
+        input.dataset.dataType = vital.dataType || "";
+        input.dataset.isDerived = vital.isDerived ? "true" : "false";
+        input.dataset.isComposition = vital.isComposition ? "true" : "false";
 
         /*
          * HTML input type.
          */
 
-        switch (
-            (vital.dataType || "").toLowerCase()
-        ) {
-
+        switch ((vital.dataType || "").toLowerCase())
+        {
             case "decimal":
             case "number":
 
@@ -646,42 +633,33 @@
     // COMPOSITION
     // ============================================================
 
-    function renderComposition(
-        composition,
-        byCode
-    ) {
+    function renderComposition(composition, byCode) 
+    {
+        const column = document.createElement("div");
+        column.className = "col-md-6";
+        const wrapper = document.createElement("div");
+        wrapper.className = "mb-2";
 
-        const column =
-            document.createElement("div");
+        const label = document.createElement("label");
+        label.className = "form-label";
+        label.textContent = composition.vitalLabel || composition.vitalCode;
 
-        column.className =
-            "col-md-6";
+        const inputGroup = document.createElement("div");
+        inputGroup.className = "input-group";
 
-
-        const wrapper =
-            document.createElement("div");
-
-        wrapper.className =
-            "mb-2";
-
-
-        const label =
-            document.createElement("label");
-
-        label.className =
-            "form-label";
-
-        label.textContent =
-            composition.vitalLabel ||
-            composition.vitalCode;
-
-
-        const inputGroup =
-            document.createElement("div");
-
-        inputGroup.className =
-            "input-group";
-
+        const hiddenComposition = document.createElement("input");
+        hiddenComposition.type = "hidden";
+        hiddenComposition.id = "vital_" + composition.vitalCode;
+        hiddenComposition.className = "vital-input composition-value";
+        hiddenComposition.dataset.vitalId = composition.vitalId || 0;
+        hiddenComposition.dataset.vitalDefId = composition.vitalDefId || 0;
+        hiddenComposition.dataset.vitalCode = composition.vitalCode || "";
+        hiddenComposition.dataset.vitalType = "composition";
+        hiddenComposition.dataset.dataType = composition.dataType || "";
+        hiddenComposition.dataset.isDerived = "false";
+        hiddenComposition.value = composition.vitalValue || "";
+        wrapper.appendChild(hiddenComposition);
+        hiddenComposition.dataset.displayComposition = composition.displayComposition || "";
 
         /*
          * Find CompositionItems.
@@ -954,6 +932,51 @@
 
     }
 
+    function updateCompositionValues() {
+
+        document
+            .querySelectorAll(
+                '#vitalFields .composition-value')
+            .forEach(function (compositionInput) {
+
+                const compositionCode =
+                    compositionInput.dataset.vitalCode;
+
+                const displayComposition =
+                    compositionInput.dataset.displayComposition;
+
+                if (!displayComposition) {
+                    return;
+                }
+
+                let value =
+                    displayComposition;
+
+                const codes =
+                    extractVitalCodes(
+                        displayComposition);
+
+                codes.forEach(function (code) {
+
+                    const source =
+                        document.getElementById(
+                            "vital_" + code);
+
+                    const sourceValue =
+                        source?.value || "";
+
+                    value =
+                        value.replace(
+                            new RegExp(
+                                "\\b" + code + "\\b",
+                                "g"),
+                            sourceValue);
+                });
+
+                compositionInput.value =
+                    value;
+            });
+    }
 
     // ============================================================
     // COLLECT CURRENT VALUES
@@ -1132,13 +1155,13 @@
                 result.vitals.forEach(
                     function (vital) {
 
-                        updateVitalValue(
-                            vital.vitalCode,
-                            vital.vitalValue
+                        updateVitalValue(vital.vitalCode, vital.vitalValue
                         );
 
                     }
                 );
+
+                updateCompositionValues();
 
             }
 
@@ -1195,48 +1218,14 @@
 
     async function saveVitals() {
 
-        const button =
-            document.getElementById(
-                "btnSaveVitals"
-            );
-
+        const button = document.getElementById("btnSaveVitals");
 
         clearVitalError();
 
+        const vitals = [];
 
-        const vitals =
-            [];
-
-
-        document
-            .querySelectorAll(
-                "#vitalFields .vital-input"
-            )
+        document.querySelectorAll("#vitalFields .vital-input")
             .forEach(function (input) {
-
-                /*
-                 * Derived values are calculated server-side.
-                 */
-
-                if (
-                    input.dataset.isDerived === "true"
-                ) {
-                    return;
-                }
-
-
-                /*
-                 * Composition itself isn't persisted.
-                 */
-
-                if (
-                    (input.dataset.vitalType || "")
-                        .toLowerCase()
-                    === "composition"
-                ) {
-                    return;
-                }
-
 
                 const vital = {
 

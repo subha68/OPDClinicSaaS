@@ -515,3 +515,16 @@
 .toggle-option:hover .toggle-text {
     color: white;
 }
+
+.section-type-group .btn
+{
+    padding: 0.15rem 0.75rem;
+    font-size: 0.85rem;
+    line-height: 1.2;
+}
+
+.section-type-group
+{
+    display: inline-flex;
+    vertical-align: middle;
+}
