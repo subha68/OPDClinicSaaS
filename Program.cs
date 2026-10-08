@@ -75,6 +75,8 @@ builder.Services.AddScoped<BillLineDAL>();
 builder.Services.AddScoped<BillService>();
 builder.Services.AddScoped<PaymentDAL>();
 builder.Services.AddScoped<PaymentService>();
+builder.Services.AddScoped<RefundDAL>();
+builder.Services.AddScoped<RefundService>();
 builder.Services.AddScoped<BillingChargeDAL>();
 builder.Services.AddScoped<BillingChargeService>();
 builder.Services.AddScoped<VisitDAL>();

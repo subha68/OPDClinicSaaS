@@ -1,0 +1,37 @@
+@model Models.Refund
+
+@await Html.PartialAsync(
+    "_RefundDetails",
+    new ViewModels.RefundCreateVM
+    {
+        Refund = Model
+    },
+    new ViewDataDictionary(ViewData)
+    {
+        ["IsDraft"] = false,
+        ["IsReadOnly"] = true
+    })
+
+<div class="d-flex justify-content-end gap-2 mt-3">
+
+    <button type="button"
+            id="btnRejectRefund"
+            class="btn btn-danger"
+            data-refund-id="@Model.RefundId">
+
+        <i class="fa-solid fa-ban me-1"></i>
+        Reject
+
+    </button>
+
+    <button type="button"
+            id="btnApproveRefund"
+            class="btn btn-success"
+            data-refund-id="@Model.RefundId">
+
+        <i class="fa-solid fa-check me-1"></i>
+        Approve
+
+    </button>
+
+</div>

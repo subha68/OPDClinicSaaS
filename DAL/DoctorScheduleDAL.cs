@@ -7,7 +7,7 @@ using System.Data;
 
 namespace DAL
 {
-    public class DoctorScheduleDAL : IDAL<DoctorScheduleVM>
+    public class DoctorScheduleDAL : BaseDAL, IDAL<DoctorScheduleVM>
     {
         private readonly DbHelper _db;
 

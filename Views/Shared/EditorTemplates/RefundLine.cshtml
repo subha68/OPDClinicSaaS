@@ -1,0 +1,132 @@
+@model Models.RefundLine
+
+@{
+    bool isDraft = (bool?)ViewData["IsDraft"] ?? false;
+    bool isReadOnly = (bool?)ViewData["IsReadOnly"] ?? true;
+}
+
+<tr class="refund-line">
+
+    <td>
+
+        <input asp-for="RefundLineId" type="hidden" />
+        <input asp-for="RefundId" type="hidden" />
+        <input asp-for="RefundLineNo" type="hidden" />
+        <input asp-for="BillLineId" type="hidden" />
+        <input asp-for="BillLineNo" type="hidden" />
+
+        <input asp-for="ServiceType" type="hidden" />
+        <input asp-for="Description" type="hidden" />
+        <input asp-for="Rate" type="hidden" />
+
+        <input asp-for="DiscountPercent" type="hidden" />
+        <input asp-for="TaxPercent" type="hidden" />
+
+        <input asp-for="CGST" type="hidden" />
+        <input asp-for="SGST" type="hidden" />
+        <input asp-for="IGST" type="hidden" />
+
+        <span class="line-no">
+            @(Model.RefundLineNo == 0
+                ? 1
+                : Model.RefundLineNo)
+        </span>
+
+    </td>
+
+    <td>
+
+        @Model.Description
+
+    </td>
+
+    <td style="width:120px;">
+
+        @if (!isReadOnly)
+        {
+            <input asp-for="Quantity"
+                type="number"
+                min="1"
+                max="@Model.Quantity"
+                class="form-control text-end refund-qty" readonly="@isReadOnly"/>
+
+            <small class="text-muted">
+
+                Available: @Model.Quantity
+
+            </small>
+        }
+        else
+        {
+            <span class="form-control-plaintext">
+                @Model.Quantity
+            </span>
+        }
+
+    </td>
+
+    <td class="text-end">
+
+        @Model.Rate.ToString("N2")
+
+    </td>
+
+    <td class="text-end refund-gross">
+
+        @Model.GrossAmount.ToString("N2")
+
+    </td>
+
+    <td class="text-end">
+
+        @Model.DiscountPercent.ToString("N2")
+
+    </td>
+
+    <td class="text-end refund-discount">
+
+        @Model.DiscountAmount.ToString("N2")
+
+    </td>
+
+    <td class="text-end refund-taxable">
+
+        @Model.TaxableAmount.ToString("N2")
+
+    </td>
+
+    <td class="text-end">
+
+        @Model.TaxPercent.ToString("N2")
+
+    </td>
+
+    <td class="text-end refund-tax">
+
+        @Model.TaxAmount.ToString("N2")
+
+    </td>
+
+    <td class="text-end refund-net">
+
+        @Model.NetAmount.ToString("N2")
+
+    </td>
+
+    <td style="width:80px;">
+
+        @if (ViewBag.IsDraft)
+        {
+            <button type="button"
+                    class="btn btn-sm btn-outline-danger delete-line"
+                    title="Delete Line">
+
+                <i class="fa-solid fa-trash"></i>
+
+            </button>
+        }
+
+    </td>
+
+
+</tr>

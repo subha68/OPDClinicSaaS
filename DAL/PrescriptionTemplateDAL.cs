@@ -4,7 +4,7 @@ using ViewModels;
 
 namespace DAL
 {
-    public class PrescriptionTemplateDAL : IDAL<PrescriptionTemplate>
+    public class PrescriptionTemplateDAL : BaseDAL, IDAL<PrescriptionTemplate>
     {
         private readonly DbHelper _db;
 

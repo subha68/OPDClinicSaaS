@@ -4,7 +4,7 @@ using Models;
 
 namespace DAL
 {
-    public class TestDefinitionDAL : IDAL<TestPanel>
+    public class TestDefinitionDAL : BaseDAL, IDAL<TestPanel>
     {
         private readonly DbHelper _db;
 

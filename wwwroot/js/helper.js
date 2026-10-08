@@ -128,11 +128,20 @@ function wireChargeAutocomplete(
 
         function (item) {
 
+            const description =
+                item.description ||
+                item.text ||
+                "";
+
+            const rate =
+                parseFloat(item.rate) || 0;
+
             return {
-                label: item.text,
-                value: item.text,
+                label: `${description} - ₹${rate.toFixed(2)}`,
+                value: description,
                 id: item.id,
-                rate: item.rate
+                rate: rate,
+                description: description
             };
         },
 
@@ -269,3 +278,22 @@ function showMessage(message, type = "success") {
     }, 4000);
 }
 
+function formatDate(dateValue) {
+
+    if (!dateValue)
+        return "";
+
+    const date = new Date(dateValue);
+
+    const months = [
+        "Jan", "Feb", "Mar", "Apr",
+        "May", "Jun", "Jul", "Aug",
+        "Sep", "Oct", "Nov", "Dec"
+    ];
+
+    return String(date.getDate()).padStart(2, '0')
+        + "-"
+        + months[date.getMonth()]
+        + "-"
+        + date.getFullYear();
+}

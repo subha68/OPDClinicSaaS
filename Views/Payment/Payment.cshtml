@@ -2,12 +2,48 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewData["Title"] = "Payment";
+    ViewData["Title"] = Model.TransactionTitle;
+
+    bool isRefund = Model.IsRefund;
+    bool isReceipt = Model.IsReceipt;
+
+    decimal totalAmount = isRefund
+        ? Model.Refund.NetAmount
+        : Model.Bill.NetAmount;
+
+    decimal paidAmount = isRefund
+        ? Model.Refund.RefundedAmount
+        : Model.Bill.TotalPaidAmount;
+
+    decimal balanceAmount = Model.OutstandingAmount;
+
+    int patientId = isRefund
+        ? Model.Refund.PatientId ?? 0
+        : Model.Bill.PatientId;
+
+    string documentLabel = isRefund
+        ? "Refund No"
+        : "Bill No";
+
+    string documentNumber = isRefund
+        ? Model.Refund.RefundNo
+        : Model.Bill.BillNo;
+
+    string amountLabel = isRefund
+        ? "Refund Amount"
+        : "Bill Amount";
+
+    string paidLabel = isRefund
+        ? "Refunded"
+        : "Paid";
+
+    string balanceLabel = isRefund
+        ? "Refund Balance"
+        : "Balance";
 }
 
-<h3>Receive Payment</h3>
-
-@await Html.PartialAsync("_Breadcrumb",
+@await Html.PartialAsync(
+    "_Breadcrumb",
     new List<ViewModels.BreadcrumbItemVM>
     {
         new ViewModels.BreadcrumbItemVM
@@ -19,170 +55,404 @@
 
         new ViewModels.BreadcrumbItemVM
         {
-            Text = "Bills",
-            Controller = "Billing",
-            Action = "SearchByPatientId",
-            PatientId = Model.Bill.PatientId
+            Text = isRefund ? "Refunds" : "Bills",
+            Controller = isRefund ? "Refund" : "Billing",
+            Action = isRefund
+                ? "Index"
+                : "SearchByPatientId",
+            PatientId = patientId
         },
 
         new ViewModels.BreadcrumbItemVM
         {
-            Text = "Payments"
+            Text = isRefund
+                ? "Refund Payment"
+                : "Payments"
         }
     })
 
+
 <hr />
 
-<div class="row mb-3">
-    <div class="col-md-2"><b>Bill No</b><br />@Model.Bill.BillId</div>
-    <div class="col-md-2"><b>Bill</b><br />@Model.Bill.NetAmount</div>
-    <div class="col-md-2"><b>Paid</b><br />@Model.Bill.TotalPaidAmount</div>
-    <div class="col-md-2"><b>Balance</b><br />@Model.Bill.BalanceAmount</div>
-    <div class="col-md-2"><b>Status</b><br />@Model.Bill.PaymentStatus</div>
+
+<!-- ============================================================= -->
+<!-- TRANSACTION SUMMARY -->
+<!-- ============================================================= -->
+
+<div class="card mb-4">
+
+    <div class="card-header">
+        <strong>
+            @(isRefund ? "Refund Details" : "Bill Details")
+        </strong>
+    </div>
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <div class="col-md-2">
+                <strong>@documentLabel</strong>
+                <br />
+                @documentNumber
+            </div>
+
+            <div class="col-md-2">
+                <strong>@amountLabel</strong>
+                <br />
+                @totalAmount.ToString("0.00")
+            </div>
+
+            <div class="col-md-2">
+                <strong>@paidLabel</strong>
+                <br />
+                @paidAmount.ToString("0.00")
+            </div>
+
+            <div class="col-md-2">
+                <strong>@balanceLabel</strong>
+                <br />
+                @balanceAmount.ToString("0.00")
+            </div>
+
+            @if (isReceipt)
+            {
+                <div class="col-md-2">
+                    <strong>Status</strong>
+                    <br />
+                    @Model.Bill.PaymentStatus
+                </div>
+            }
+            else
+            {
+                <div class="col-md-2">
+                    <strong>Status</strong>
+                    <br />
+                    @Model.Refund.RefundStatus
+                </div>
+            }
+
+        </div>
+
+    </div>
+
 </div>
 
-<hr />
 
-@await Html.PartialAsync("_BackButton", new ViewModels.BackButtonVM
-    {
-        Controller = "Billing",
-        Action = "SearchByPatient",
-        PatientId = @Model.Bill.PatientId,
-        Text = "Back to Bills"
-    })
+<!-- ============================================================= -->
+<!-- BACK BUTTON -->
+<!-- ============================================================= -->
 
-@if(Model.Bill.BalanceAmount > 0)
+@if (isRefund)
 {
-    <form method="post">
-
-        <input type="hidden" name="Payment.BillId" value="@Model.Bill.BillId" />
-        <input type="hidden" name="Payment.PatientId" value="@Model.Bill.PatientId" />
-
-        <div class="mb-3">
-            <label class="form-label">Payment Type</label>
-
-            <div>
-                <input type="radio" name="PaymentType" id="fullPayment" value="Full" checked />
-                <label for="fullPayment">Full Payment</label>
-
-                &nbsp;&nbsp;
-
-                <input type="radio" name="PaymentType" id="partialPayment" value="Partial" />
-                <label for="partialPayment">Partial Payment</label>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <label>Date</label>
-
-                <input asp-for="Payment.PaymentDate"
-                    type="date"
-                    class="form-control" />
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label>Amount</label>
-
-                <input type="number"
-                    step="0.01"
-                    id="paymentAmount"
-                    name="Payment.Amount"
-                    max="@Model.Bill.BalanceAmount"
-                    value="@Model.Bill.BalanceAmount"
-                    class="form-control" />
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <label>Mode</label>
-
-                <select name="Payment.Mode"
-                        class="form-control">
-                    <option value="Cash">Cash</option>
-                    <option value="Card">Card</option>
-                    <option value="UPI">UPI</option>
-                    <option value="Bank Transfer">Bank Transfer</option>
-                </select>
-            </div>
-
-            <div class="col-md-8 mb-3">
-                <label>Reference No</label>
-
-                <input type="text"
-                    name="Payment.ReferenceNo"
-                    class="form-control" />
-            </div>
-        </div>
-
-        <button type="submit"
-                class="btn btn-success">
-            Save Payment
-        </button>
-    </form>
-
+    @await Html.PartialAsync(
+        "_BackButton",
+        new ViewModels.BackButtonVM
+        {
+            Controller = "Refund",
+            Action = "Index",
+            Text = "Back to Refunds"
+        })
+}
+else
+{
+    @await Html.PartialAsync(
+        "_BackButton",
+        new ViewModels.BackButtonVM
+        {
+            Controller = "Billing",
+            Action = "SearchByPatient",
+            PatientId = patientId,
+            Text = "Back to Bills"
+        })
 }
 
 <hr />
 
-<h4>Payment History</h4>
 
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Date</th>
-            <th>Amount</th>
-            <th>Mode</th>
-            <th>Reference</th>
-        </tr>
-    </thead>
+<!-- ============================================================= -->
+<!-- PAYMENT ENTRY -->
+<!-- ============================================================= -->
 
-    <tbody>
+@if (balanceAmount > 0)
+{
+    <div class="card mb-4">
 
-        @foreach(var p in Model.Bill.Payments)
-        {
+        <div class="card-header">
+            <strong>
+                @(isRefund
+                    ? "Make Payment to Patient"
+                    : "Receive Payment from Patient")
+            </strong>
+        </div>
+
+        <div class="card-body">
+
+            <form asp-action="Create"
+                  asp-controller="Payment"
+                  method="post"
+                  id="paymentForm"
+                  data-balance="@balanceAmount.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                  data-payment-type="@(isRefund ? "Refund" : "Receipt")">
+
+                @Html.AntiForgeryToken()
+
+
+                <!-- ================================================= -->
+                <!-- HIDDEN CONTEXT -->
+                <!-- ================================================= -->
+
+                <input type="hidden"
+                       asp-for="Payment.PaymentType" />
+
+                <input type="hidden"
+                       asp-for="Payment.PatientId" />
+
+                <input type="hidden"
+                       asp-for="Payment.BillId" />
+
+                <input type="hidden"
+                       asp-for="Payment.RefundId" />
+
+
+                <!-- ================================================= -->
+                <!-- PAYMENT DATE -->
+                <!-- ================================================= -->
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label asp-for="Payment.PaymentDate"
+                               class="form-label">
+                            Date
+                        </label>
+
+                        <input asp-for="Payment.PaymentDate"
+                               type="date"
+                               class="form-control" />
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- FULL / PARTIAL -->
+                <!-- ================================================= -->
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Payment Type
+                    </label>
+
+                    <div>
+
+                        <input type="radio"
+                               name="entryType"
+                               id="fullPayment"
+                               value="Full"
+                               checked />
+
+                        <label for="fullPayment">
+                            Full @(isRefund ? "Payment" : "Payment")
+                        </label>
+
+
+                        &nbsp;&nbsp;
+
+
+                        <input type="radio"
+                               name="entryType"
+                               id="partialPayment"
+                               value="Partial" />
+
+                        <label for="partialPayment">
+                            Partial Payment
+                        </label>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- AMOUNT -->
+                <!-- ================================================= -->
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label asp-for="Payment.Amount"
+                               class="form-label">
+                            Amount
+                        </label>
+
+                        <input asp-for="Payment.Amount"
+                               type="number"
+                               step="0.01"
+                               min="0.01"
+                               max="@balanceAmount"
+                               id="paymentAmount"
+                               class="form-control" />
+
+                        <div class="form-text">
+                            Maximum:
+                            @balanceAmount.ToString("0.00")
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- MODE / REFERENCE -->
+                <!-- ================================================= -->
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label asp-for="Payment.Mode"
+                               class="form-label">
+                            Mode
+                        </label>
+
+                        <select asp-for="Payment.Mode"
+                                class="form-control">
+
+                            <option value="Cash">
+                                Cash
+                            </option>
+
+                            <option value="Card">
+                                Card
+                            </option>
+
+                            <option value="UPI">
+                                UPI
+                            </option>
+
+                            <option value="Bank Transfer">
+                                Bank Transfer
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="col-md-8 mb-3">
+
+                        <label asp-for="Payment.ReferenceNo"
+                               class="form-label">
+                            Reference No
+                        </label>
+
+                        <input asp-for="Payment.ReferenceNo"
+                               class="form-control" />
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- SUBMIT -->
+                <!-- ================================================= -->
+
+                <button type="submit"
+                        class="btn btn-success">
+
+                    @(isRefund
+                        ? "Make Payment"
+                        : "Receive Payment")
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+}
+
+
+<!-- ============================================================= -->
+<!-- HISTORY -->
+<!-- ============================================================= -->
+
+<hr />
+
+<h4>@Model.HistoryTitle</h4>
+
+
+@{
+    var payments = isRefund
+        ? Model.Refund.Payments
+        : Model.Bill.Payments;
+}
+
+
+@if (payments != null && payments.Any())
+{
+    <table class="table table-bordered table-striped">
+
+        <thead>
+
             <tr>
-                <td>
-                    @p.CreatedAt.ToString("dd/MM/yyyy hh:mm tt")
-                </td>
-
-                <td>
-                    @p.Amount
-                </td>
-
-                <td>
-                    @p.Mode
-                </td>
-
-                <td>
-                    @p.ReferenceNo
-                </td>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Mode</th>
+                <th>Reference</th>
             </tr>
-        }
 
-    </tbody>
-</table>
+        </thead>
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
+        <tbody>
 
-    const balance = @Model.Bill.BalanceAmount;
-    const amountBox = document.getElementById("paymentAmount");
+            @foreach (var p in payments)
+            {
+                <tr>
 
-    document.getElementById("fullPayment")
-        .addEventListener("change", function () {
+                    <td>
+                        @p.PaymentDate.ToString("dd/MM/yyyy")
+                    </td>
 
-            amountBox.value = balance;
-            amountBox.readOnly = true;
-        });
+                    <td>
+                        @p.Amount.ToString("0.00")
+                    </td>
 
-    document.getElementById("partialPayment")
-        .addEventListener("change", function () {
+                    <td>
+                        @p.Mode
+                    </td>
 
-            amountBox.readOnly = false;
-        });
+                    <td>
+                        @p.ReferenceNo
+                    </td>
 
-    amountBox.readOnly = true;
-});
-</script>
+                </tr>
+            }
+
+        </tbody>
+
+    </table>
+}
+else
+{
+    <div class="alert alert-info">
+        No payment has been recorded yet.
+    </div>
+}
+
+
+<!-- ============================================================= -->
+<!-- JAVASCRIPT -->
+<!-- ============================================================= -->
+
+@section Scripts {
+    <script src="~/js/payment/payment.js"></script>
+}

@@ -4,7 +4,7 @@ using Models;
 
 namespace DAL
 {
-    public class TestResultDAL : IDAL<TestResult>
+    public class TestResultDAL : BaseDAL, IDAL<TestResult>
     {
         private readonly DbHelper _db;
 

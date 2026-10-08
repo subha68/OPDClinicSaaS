@@ -4,7 +4,7 @@ using Models;
 
 namespace DAL
 {
-    public class AccountGroupDAL : IDAL<AccountGroup>
+    public class AccountGroupDAL : BaseDAL, IDAL<AccountGroup>
     {
         private readonly DbHelper _db;
 

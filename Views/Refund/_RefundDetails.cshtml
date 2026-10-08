@@ -1,0 +1,555 @@
+@model ViewModels.RefundCreateVM
+
+@using Models
+@using Helpers
+
+@{
+    bool isDraft = ViewData["IsDraft"] as bool? ?? false;
+    bool isReadOnly = ViewData["IsReadOnly"] as bool? ?? true;
+}
+
+<div class="card shadow-sm mb-3">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+
+        <h5 class="mb-0">
+            Refund Details
+        </h5>
+
+        @if ((Model.Refund.RefundStatus == RefundStatus.Approved ||
+            Model.Refund.RefundStatus == RefundStatus.PartiallyRefunded)
+            && Model.Refund.BalanceAmount > 0)
+        {
+            <a asp-controller="Payment"
+            asp-action="Refund"
+            asp-route-id="@Model.Refund.RefundId"
+            class="btn btn-success btn-sm">
+
+                <i class="fa-solid fa-money-bill-transfer me-1"></i>
+
+                Pay to Patient
+
+            </a>
+        }
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <div class="col-md-3">
+
+                <label asp-for="Refund.RefundNo"
+                       class="form-label">
+                </label>
+
+                <input asp-for="Refund.RefundNo"
+                       class="form-control"
+                       readonly />
+
+            </div>
+
+            <div class="col-md-3">
+
+                <label asp-for="Refund.RefundDate"
+                       class="form-label">
+                </label>
+
+                <input asp-for="Refund.RefundDate"
+                       type="date"
+                       class="form-control"
+                       readonly="@isReadOnly" />
+
+            </div>
+
+            <div class="col-md-3">
+
+                <label class="form-label">
+                    Status
+                </label>
+
+                <input value="@Model.Refund.RefundStatus.GetDisplayName()"
+                       class="form-control"
+                       readonly />
+
+            </div>
+
+            <div class="col-md-3">
+
+                <label class="form-label">
+                    Refund Balance
+                </label>
+
+                <input value="@Model.Refund.BalanceAmount.ToString("N2")"
+                    class="form-control text-end"
+                    readonly />
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="card shadow-sm mb-3">
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <div class="col-md-4">
+
+                <label class="form-label">
+                    Bill
+                </label>
+
+                @if (isDraft)
+                {
+                    <select asp-for="Refund.BillId"
+                            id="BillId"
+                            class="form-select">
+
+                        <option value="">
+                            Select Bill
+                        </option>
+
+                        @foreach (var bill in Model.Bills)
+                        {
+                            <option value="@bill.Value">
+                                @bill.Text
+                            </option>
+                        }
+
+                    </select>
+                }
+                else
+                {
+                    <input asp-for="Refund.BillNo"
+                           class="form-control"
+                           readonly />
+
+                    <input type="hidden" id="BillId" asp-for="Refund.BillId" />
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="card shadow-sm mb-3">
+
+    <div class="card-header">
+
+        <h5 class="mb-0">
+            Bill Information
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <div class="col-md-3">
+
+                <label class="form-label">
+                    Bill No
+                </label>
+
+                <input id="BillNo"
+                       class="form-control"
+                       readonly />
+
+            </div>
+
+            <div class="col-md-3">
+
+                <label class="form-label">
+                    Bill Date
+                </label>
+
+                <input id="BillDate"
+                       class="form-control"
+                       readonly />
+
+            </div>
+
+            <div class="col-md-3">
+
+                <label class="form-label">
+                    Visit Date
+                </label>
+
+                <input id="VisitDate"
+                       class="form-control"
+                       readonly />
+
+            </div>
+
+            <div class="col-md-3">
+
+                <label class="form-label">
+                    Bill Amount
+                </label>
+
+                <input id="BillAmount"
+                       class="form-control text-end"
+                       readonly />
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="card shadow-sm mb-3">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+
+        <h5 class="mb-0">
+            Refund Lines
+        </h5>
+
+        @if (isDraft)
+        {
+            <button type="button"
+                    id="btnAddLine"
+                    class="btn btn-primary btn-sm">
+
+                <i class="fa-solid fa-plus"></i>
+                Add Line
+
+            </button>
+        }
+
+    </div>
+
+    <div class="card-body p-0">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle mb-0">
+
+                <thead class="table-light">
+
+                    <tr>
+
+                        <th style="width:60px;">
+                            Refund #
+                        </th>
+
+                        <th>
+                            Description
+                        </th>
+
+                        <th class="text-end">
+                            Qty
+                        </th>
+
+                        <th class="text-end">
+                            Rate
+                        </th>
+
+                        <th class="text-end">
+                            Gross
+                        </th>
+
+                        <th class="text-end">
+                            Disc %
+                        </th>
+
+                        <th class="text-end">
+                            Disc Amt
+                        </th>
+
+                        <th class="text-end">
+                            Taxable Amt
+                        </th>
+
+                        <th class="text-end">
+                            Tax %
+                        </th>
+
+                        <th class="text-end">
+                            Tax Amt
+                        </th>
+
+                        <th class="text-end">
+                            Net
+                        </th>
+
+                        <th style="width:80px;">
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="refundLines">
+
+                    @Html.EditorFor(
+                        m => m.Refund.Lines,
+                        new
+                        {
+                            IsDraft = isDraft,
+                            IsReadOnly = isReadOnly
+                        })
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div id="refundTotals">
+
+    <div class="card shadow-sm mb-3">
+
+        <div class="card-header">
+
+            <h5 class="mb-0">
+                Totals
+            </h5>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <div class="col-md-2">
+
+                    <label class="form-label">
+                        Gross
+                    </label>
+
+                    <input asp-for="Refund.GrossAmount"
+                           class="form-control text-end"
+                           readonly />
+
+                </div>
+
+                <div class="col-md-2">
+
+                    <label class="form-label">
+                        Discount
+                    </label>
+
+                    <input asp-for="Refund.DiscountAmount"
+                           class="form-control text-end"
+                           readonly />
+
+                </div>
+
+                <div class="col-md-2">
+
+                    <label class="form-label">
+                        Taxable
+                    </label>
+
+                    <input asp-for="Refund.TaxableAmount"
+                           class="form-control text-end"
+                           readonly />
+
+                </div>
+
+                <div class="col-md-2">
+
+                    <label class="form-label">
+                        Tax
+                    </label>
+
+                    <input asp-for="Refund.TaxAmount"
+                           class="form-control text-end"
+                           readonly />
+
+                </div>
+
+                <div class="col-md-2">
+
+                    <label class="form-label">
+                        Net
+                    </label>
+
+                    <input asp-for="Refund.NetAmount"
+                           class="form-control text-end"
+                           readonly />
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="card shadow-sm mb-3">
+
+    <div class="card-header">
+
+        <h5 class="mb-0">
+            Refund Reason
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        <textarea asp-for="Refund.Reason"
+                  rows="3"
+                  class="form-control"
+                  readonly="@isReadOnly">
+        </textarea>
+
+    </div>
+
+</div>
+
+<!-- ============================================================= -->
+<!-- REFUND PAYMENT HISTORY -->
+<!-- ============================================================= -->
+
+<div class="card shadow-sm mb-3">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+
+        <h5 class="mb-0">
+            Refund Payment History
+        </h5>
+
+        @if ((Model.Refund.RefundStatus == RefundStatus.Approved ||
+              Model.Refund.RefundStatus == RefundStatus.PartiallyRefunded)
+              && Model.Refund.BalanceAmount > 0)
+        {
+            <a asp-controller="Payment"
+               asp-action="Refund"
+               asp-route-id="@Model.Refund.RefundId"
+               class="btn btn-success btn-sm">
+
+                <i class="fa-solid fa-money-bill-transfer me-1"></i>
+                Pay to Patient
+
+            </a>
+        }
+
+    </div>
+
+
+    <div class="card-body p-0">
+
+        @if (Model.Refund.Payments != null &&
+             Model.Refund.Payments.Any())
+        {
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th>
+                                Date
+                            </th>
+
+                            <th class="text-end">
+                                Amount
+                            </th>
+
+                            <th>
+                                Mode
+                            </th>
+
+                            <th>
+                                Reference No
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var payment in Model.Refund.Payments)
+                        {
+                            <tr>
+
+                                <td>
+                                    @payment.PaymentDate.ToString("dd/MM/yyyy")
+                                </td>
+
+                                <td class="text-end">
+                                    @payment.Amount.ToString("N2")
+                                </td>
+
+                                <td>
+                                    @payment.Mode
+                                </td>
+
+                                <td>
+                                    @(string.IsNullOrWhiteSpace(payment.ReferenceNo)
+                                        ? "-"
+                                        : payment.ReferenceNo)
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                    <tfoot class="table-light">
+
+                        <tr>
+
+                            <th>
+                                Total Paid
+                            </th>
+
+                            <th class="text-end">
+                                @Model.Refund.RefundedAmount.ToString("N2")
+                            </th>
+
+                            <th colspan="2">
+                            </th>
+
+                        </tr>
+
+                    </tfoot>
+
+                </table>
+
+            </div>
+        }
+        else
+        {
+            <div class="p-3">
+
+                <div class="alert alert-info mb-0">
+                    No payment has been made to the patient yet.
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+</div>

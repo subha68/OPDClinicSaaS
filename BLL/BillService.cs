@@ -3,6 +3,7 @@ using Models;
 using ViewModels;
 using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BLL
 {
@@ -116,6 +117,7 @@ namespace BLL
                     line.ReferenceCode = charge.ChargeCode;
                     line.Description = charge.Description;
                     line.ServiceType = charge.ServiceType;
+                    line.AvailableQuantity = line.Quantity;
 
                     if (bill.BillType == "Service")
                     {
@@ -135,6 +137,13 @@ namespace BLL
                                 throw new InvalidOperationException(
                                     "Consultation fee is not configured for the selected doctor.");
 
+                            // Append doctor name to consultation description
+                            if (!string.IsNullOrWhiteSpace(bill.Appointment.DoctorName))
+                            {
+                                line.Description =
+                                    $"{charge.Description} - {bill.Appointment.DoctorName}";
+                            }
+
                             line.Rate = bill.Appointment.Fee.Value; 
                         }
                         else
@@ -147,7 +156,7 @@ namespace BLL
                 bill.GrossAmount = bill.BillLines.Sum(x => x.GrossAmount);
                 bill.DiscountAmount = bill.BillLines.Sum(x => x.DiscountAmount);
 
-                bill.BillNo = _billDAL.GetNextBillNo(ClinicId, bill.BillDate, conn, tran);
+                bill.BillNo = _billDAL.GetNextNo(ClinicId, bill.BillDate, "Bill", conn, tran);
 
                 bill.CreatedBy = UserId;
 
@@ -173,6 +182,27 @@ namespace BLL
                 tran.Rollback();
                 throw;
             }
+        }
+
+        public bool UpdateAvailableQuantities(List<BillLine> lines)
+        {
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            using var tran = conn.BeginTransaction();
+
+            try
+            {
+                bool result = _billLineDAL.UpdateAvailableQuantities(lines, conn, tran);
+                tran.Commit();
+
+                return result;
+            }
+            catch
+            {
+                tran.Rollback();
+                throw;
+            }            
         }
 
         public override Bill Get(int BillId)
@@ -467,7 +497,6 @@ namespace BLL
             return vm;
         }
 
-
         public override List<Bill> List()
         {
             using var conn = _db.GetConnection();
@@ -498,6 +527,51 @@ namespace BLL
                 throw;
             }
 
+        }
+
+        public List<SelectListItem>  ListRefundableBillsByPatient(int patientId, int? selectedBillId = null)
+        {
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return ListRefundableBillsByPatient(patientId, selectedBillId, conn);
+            }
+            catch
+            {
+                throw;
+            }
+
+        }
+
+        public List<SelectListItem>  ListRefundableBillsByPatient(int patientId, int? selectedBillId,
+                                                                    SqlConnection conn, SqlTransaction? tran=null)
+        {
+            List<Bill> bills = _billDAL.ListRefundableBillsByPatient(ClinicId, patientId, selectedBillId, conn, tran);
+
+            return bills.Select(x => new SelectListItem
+            {
+                Value = x.BillId.ToString(),
+                Text = x.BillNo + " " + x.BillDate.ToString("dd-MMM-yyyy") + " " + x.NetAmount,
+                Selected = x.BillId == selectedBillId
+            }).ToList();            
+        }
+
+        public List<BillLine> ListBillLines(int billId)
+        {
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            try
+            {
+                return _billLineDAL.GetByBillId(billId, conn);
+            }
+            catch
+            {
+                throw;
+            }
+            
         }
 
     }

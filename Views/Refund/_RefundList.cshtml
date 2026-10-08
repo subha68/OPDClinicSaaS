@@ -1,0 +1,159 @@
+@model List<ViewModels.RefundListItemVM>
+
+@if (Model == null || !Model.Any())
+{ <div class="alert alert-warning mb-0">
+No refund records found for this patient. </div>
+}
+else
+{ 
+    <div class="table-responsive">
+
+        <table class="table table-striped table-hover align-middle">
+
+            <thead class="table-light">
+
+                <tr>
+                    <th>Refund #</th>
+                    <th>Date</th>
+                    <th>Bill #</th>
+                    <th class="text-end">Refunded</th>
+                    <th class="text-end">Balance</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th style="width:260px;">Action</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @foreach (var refund in Model)
+                {
+                    <tr>
+
+                        <td>
+                            @refund.RefundNo
+                        </td>
+
+                        <td>
+                            @refund.RefundDate.ToString("dd-MMM-yyyy")
+                        </td>
+
+                        <td>
+                            @refund.BillNo
+                        </td>
+
+                        <td class="text-end">
+                            @refund.RefundedAmount.ToString("N2")
+                        </td>
+
+                        <td class="text-end">
+                            @refund.BalanceAmount.ToString("N2")
+                        </td>
+
+                        <td>
+                            @refund.Reason
+                        </td>
+
+                        <td>
+
+                            @if (refund.RefundStatus == Models.RefundStatus.PendingApproval)
+                            {
+                                <span class="badge bg-warning">
+                                    Pending
+                                </span>
+                            }
+                            else if (refund.RefundStatus == Models.RefundStatus.Approved)
+                            {
+                                <span class="badge bg-success">
+                                    Approved
+                                </span>
+                            }
+                            else if (refund.RefundStatus == Models.RefundStatus.PartiallyRefunded)
+                            {
+                                <span class="badge bg-info">
+                                    Partially Refunded
+                                </span>
+                            }
+                            else if (refund.RefundStatus == Models.RefundStatus.Completed)
+                            {
+                                <span class="badge bg-success">
+                                    Completed
+                                </span>
+                            }
+                            else if (refund.RefundStatus == Models.RefundStatus.Cancelled)
+                            {
+                                <span class="badge bg-danger">
+                                    Cancelled
+                                </span>
+                            }
+                            else if (refund.RefundStatus == Models.RefundStatus.Rejected)
+                            {
+                                <span class="badge bg-danger">
+                                    Rejected
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">
+                                    @refund.RefundStatus
+                                </span>
+                            }
+
+                        </td>
+
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+
+                                <!-- View -->
+                                <a asp-action="Edit"
+                                asp-route-id="@refund.RefundId"
+                                class="btn btn-outline-primary btn-sm"
+                                title="View Refund">
+
+                                    <i class="fa-solid fa-eye me-1"></i>
+                                    View
+
+                                </a>
+
+                                <!-- Pay -->
+                                @if ((refund.RefundStatus == Models.RefundStatus.Approved ||
+                                    refund.RefundStatus == Models.RefundStatus.PartiallyRefunded)
+                                    && refund.BalanceAmount > 0)
+                                {
+                                    <a asp-controller="Payment"
+                                    asp-action="Refund"
+                                    asp-route-id="@refund.RefundId"
+                                    class="btn btn-outline-success btn-sm"
+                                    title="Pay to Patient">
+
+                                        <i class="fa-solid fa-money-bill-transfer me-1"></i>
+                                        Pay
+
+                                    </a>
+                                }
+
+                                <!-- Print -->
+                                <a asp-action="Print"
+                                asp-route-id="@refund.RefundId"
+                                class="btn btn-outline-secondary btn-sm"
+                                title="Print Refund">
+
+                                    <i class="fa-solid fa-print me-1"></i>
+                                    Print
+
+                                </a>
+
+                            </div>
+                        </td>
+
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+}

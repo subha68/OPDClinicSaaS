@@ -28,6 +28,20 @@ namespace Models
             Lines = new List<JournalLine>();
         }
 
+        public Journal(Refund refund)
+        {
+            ClinicId = refund.ClinicId;
+            JournalDate = DateTime.Now;
+            VoucherType = "Refund";
+            ReferenceType = "Refund";
+            ReferenceId = refund.RefundId;
+            Narration = refund.RefundStatus == RefundStatus.PendingApproval 
+                                                ? $"Refund Approval #{refund.RefundId}" 
+                                                : $"Refund Payment #{refund.RefundId}";
+        
+            Lines = new List<JournalLine>();
+        }
+
         public Journal(Payment payment)
         {
             ClinicId = payment.ClinicId;

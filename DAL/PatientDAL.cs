@@ -5,7 +5,7 @@ using ViewModels;
 
 namespace DAL
 {
-    public class PatientDAL : IDAL<Patient>
+    public class PatientDAL : BaseDAL, IDAL<Patient>
     {
         private readonly DbHelper _db;
 

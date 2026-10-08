@@ -547,22 +547,24 @@ CREATE TABLE BillingCharges (
     ChargeCode NVARCHAR(20),
     ChargeName NVARCHAR(100) NOT NULL,
     Description NVARCHAR(250),
-    ServiceType NVARCHAR(50) NOT NULL,
+    ServiceType INT NOT NULL,
     Rate DECIMAL(18,2) NOT NULL,
     IsActive BIT DEFAULT 1
 );
 
-CREATE TABLE BillNoGenerators (
+CREATE TABLE InstrumentNoGenerators (
     ClinicId INT NOT NULL,
-    BillNoPrefix NVARCHAR(20) NOT NULL DEFAULT 'B',
-    BillNoFY INT NOT NULL,
-    BillNo BIGINT NOT NULL
+    InstrumentType NVARCHAR(50) NOT NULL,  -- "Bill", "Refund", "PharmacyBill"
+    Prefix NVARCHAR(20) NOT NULL DEFAULT 'B',
+    FY INT NOT NULL,
+    InstrumentNo BIGINT NOT NULL
 );
 
 CREATE TABLE Bills (
     BillId INT IDENTITY PRIMARY KEY,
     BillNo NVARCHAR(20) NOT NULL,
     BillDate DATE NOT NULL,
+    PatientId INT NOT NULL,
     VisitId INT NOT NULL,
     AppointmentId INT NULL,
     ClinicId INT NOT NULL,
@@ -586,12 +588,13 @@ CREATE TABLE BillLines (
     LineId INT IDENTITY PRIMARY KEY,
     LineNo INT NOT NULL,
     BillId INT NOT NULL,
-    ServiceType NVARCHAR(50),
+    ServiceType INT NOT NULL,
     ReferenceId INT,
     ReferenceCode NVARCHAR(50),
     ReferenceName NVARCHAR(100),
     Description NVARCHAR(200),
     Quantity INT,
+    AvailableQuantity INT,
     Rate DECIMAL(18,2),
     GrossAmount DECIMAL(18,2),
     DiscountPercent DECIMAL(5,2),
@@ -604,28 +607,75 @@ CREATE TABLE BillLines (
 
 CREATE TABLE Payments (
     PaymentId INT IDENTITY PRIMARY KEY,
-    BillId INT NOT NULL,
+    PatientId INT NOT NULL,
+    BillId INT NULL,
+    RefundId INT NULL,
     ClinicId INT NOT NULL,
     PaymentDate DATE NOT NULL,
+    PaymentType INT NOT NULL DEFAULT 1,
     Amount DECIMAL(10,2),
     Mode NVARCHAR(50),
     ReferenceNo NVARCHAR(100),
     CreatedAt DATETIME DEFAULT GETDATE(),
 
     FOREIGN KEY (BillId) REFERENCES Bills(BillId),
+    FOREIGN KEY (RefundId) REFERENCES Refunds(RefundId),
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
 );
 
-CREATE TABLE Refunds (
+CREATE TABLE Refunds
+(
     RefundId INT IDENTITY PRIMARY KEY,
-    BillId INT,
+    RefundNo NVARCHAR(50) NOT NULL,
     ClinicId INT NOT NULL,
+    BillId INT NOT NULL,
+    VisitId INT NULL,
+    PatientId INT NOT NULL,
     RefundDate DATE NOT NULL,
-    Mode NVARCHAR(50),
-    Amount DECIMAL(10,2),
-    Reason NVARCHAR(200),
+    RefundStatus INT NOT NULL DEFAULT 0,
+    GrossAmount DECIMAL(18,2) NOT NULL DEFAULT 0,
+    DiscountAmount DECIMAL(18,2) NOT NULL DEFAULT 0,
+    TaxAmount DECIMAL(18,2) NOT NULL DEFAULT 0,
+    NetAmount DECIMAL(18,2) NOT NULL DEFAULT 0,
+    RefundedAmount DECIMAL(10,2),
+    Reason NVARCHAR(500) NULL,
+    RequestedBy INT NULL,
+    RequestedOn DATETIME NULL,
+    ApprovedBy INT NULL,
+    ApprovedOn DATETIME NULL,
+    RejectedBy INT NULL,
+    RejectedOn DATETIME NULL,
+    RejectionReason NVARCHAR(500) NULL,
+    CompletedBy INT NULL,
+    CompletedOn DATETIME NULL,
+    CancelledBy INT NULL,
+    CancelledOn DATETIME NULL,
+    CreatedOn DATETIME NOT NULL,
+    ModifiedOn DATETIME NULL,
 
     FOREIGN KEY (BillId) REFERENCES Bills(BillId)
+);
+
+CREATE TABLE RefundLines
+(
+    RefundLineId INT IDENTITY PRIMARY KEY,
+    RefundId INT NOT NULL,
+    RefundLineNo INT NOT NULL,
+    BillLineId INT NOT NULL,
+    BillLineNo INT NOT NULL,
+    ServiceType INT NULL,
+    Description NVARCHAR(200),
+    Quantity INT NOT NULL,
+    Rate DECIMAL(18,2) NOT NULL,
+    GrossAmount DECIMAL(18,2) NOT NULL,
+    DiscountPercent DECIMAL(5,2) NOT NULL,
+    DiscountAmount DECIMAL(18,2) NOT NULL,
+    TaxPercent DECIMAL(5,2) NOT NULL,
+    TaxAmount DECIMAL(18,2) NOT NULL,
+    NetAmount DECIMAL(18,2) NOT NULL,
+
+    FOREIGN KEY (RefundId) REFERENCES Refunds(RefundId),
+    FOREIGN KEY (BillLineId) REFERENCES BillLines(LineId)
 );
 
 -- Features

@@ -5,7 +5,7 @@ using ViewModels;
 
 namespace DAL
 {
-    public class BillDAL : IDAL<Bill>
+    public class BillDAL : BaseDAL, IDAL<Bill>
     {
         private readonly DbHelper _db;
 
@@ -19,14 +19,15 @@ namespace DAL
             int billId = 0;
 
             string query = @"INSERT INTO Bills 
-                                (BillNo, VisitId, AppointmentId, ClinicId, BillDate, GrossAmount, DiscountAmount, 
+                                (BillNo, PatientId, VisitId, AppointmentId, ClinicId, BillDate, GrossAmount, DiscountAmount, 
                                 NetAmount, PaidAmount, Status, CreatedBy) 
-                                VALUES (@BillNo, @visitId, @AppointmentId, @ClinicId, @billDate, @grossAmount, @discountAmount,
+                                VALUES (@BillNo, @patientId, @visitId, @AppointmentId, @ClinicId, @billDate, @grossAmount, @discountAmount,
                                 @netAmount, @paidAmount, @Status, @CreatedBy);
                             SELECT SCOPE_IDENTITY();";
 
             SqlCommand cmd = new SqlCommand(query, conn, tran);
             cmd.Parameters.AddWithValue("@BillNo", bill.BillNo);
+            cmd.Parameters.AddWithValue("@patientId", bill.PatientId);
             cmd.Parameters.AddWithValue("@visitId", bill.VisitId);
             cmd.Parameters.AddWithValue("@AppointmentId", bill.AppointmentId.HasValue ? bill.AppointmentId.Value : DBNull.Value);
             cmd.Parameters.AddWithValue("@billDate", bill.BillDate);
@@ -47,29 +48,6 @@ namespace DAL
         {
             // bills once created cannot be updated
             throw new NotSupportedException("Bills cannot be modified.");
-
-        /*    string query = @"UPDATE Bills
-                                SET PatientId = @patientId,
-                                    VisitId = @visitId,
-                                    BillDate = @billDate,
-                                    GrossAmount = @grossAmount,
-                                    DiscountAmount = @discountAmount,
-                                    NetAmount = @netAmount,
-                                    PaidAmount = @paidAmount
-                                WHERE BillId = @id";
-
-            SqlCommand cmd = new SqlCommand(query, conn, tran);
-            cmd.Parameters.AddWithValue("@patientId", bill.PatientId);
-            cmd.Parameters.AddWithValue("@visitId", bill.VisitId);
-            cmd.Parameters.AddWithValue("@billDate", bill.BillDate);
-            cmd.Parameters.AddWithValue("@grossAmount", bill.GrossAmount);
-            cmd.Parameters.AddWithValue("@discountAmount", bill.DiscountAmount);
-            cmd.Parameters.AddWithValue("@netAmount", bill.NetAmount);
-            cmd.Parameters.AddWithValue("@paidAmount", bill.TotalPaidAmount);
-            cmd.Parameters.AddWithValue("@id", bill.BillId);
-
-            int rowsAffected = cmd.ExecuteNonQuery();
-            return rowsAffected > 0; */
         }
 
         public bool UpdatePayment(int billId, decimal totalPaid, SqlConnection conn, SqlTransaction tran)
@@ -92,19 +70,11 @@ namespace DAL
             // bills once created cannot be deleted
             throw new NotSupportedException("Bills cannot be deleted.");
 
-    /*        string query = @"DELETE FROM Bills WHERE BillId = @id";
-
-            SqlCommand cmd = new SqlCommand(query, conn, tran);
-            cmd.Parameters.AddWithValue("@id", id);
-
-            int rowsAffected = cmd.ExecuteNonQuery();
-            return rowsAffected > 0;  */
         }
 
         public Bill Get(int id, int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             string query = @"SELECT b.*,
-                                    v.PatientId,
                                     v.VisitDate,
                                     a.DoctorId 
                             FROM Bills b 
@@ -157,7 +127,6 @@ namespace DAL
             string query = @"
                 SELECT
                     b.*,
-                    v.PatientId,
                     v.VisitDate,
                     a.DoctorId
                 FROM Bills b
@@ -216,7 +185,6 @@ namespace DAL
             string query = @"
                 SELECT
                     b.*,
-                    v.PatientId,
                     v.VisitDate,
                     a.DoctorId
                 FROM Bills b
@@ -336,6 +304,7 @@ namespace DAL
                 {
                     BillId = (int)reader["BillId"],
                     BillNo = reader["BillNo"].ToString(),
+                    PatientId = (int)reader["PatientId"],
                     VisitId = (int)reader["VisitId"],
                     AppointmentId = reader["AppointmentId"] != DBNull.Value ? (int)reader["AppointmentId"] : null,
                     DoctorId = reader["DoctorId"] != DBNull.Value ? (int)reader["DoctorId"] : null,
@@ -355,7 +324,7 @@ namespace DAL
         {
             var list = new List<Bill>();
 
-            string query = @"SELECT b.*, v.VisitDate, p.PatientId, p.FirstName + ' ' + p.LastName as PatientName,
+            string query = @"SELECT b.*, v.VisitDate, p.FirstName + ' ' + p.LastName as PatientName,
                                         a.DoctorId 
                                 FROM Bills b 
                                 JOIN Visits v 
@@ -404,7 +373,7 @@ namespace DAL
         {
             var list = new List<Bill>();
 
-            string query = @"SELECT b.*, p.PatientId, p.FirstName + ' ' + p.LastName as PatientName, v.VisitDate,
+            string query = @"SELECT b.*, p.FirstName + ' ' + p.LastName as PatientName, v.VisitDate,
                                         a.DoctorId 
                                 FROM Bills b
                                 JOIN Visits v 
@@ -450,84 +419,89 @@ namespace DAL
             return list;
         }
 
-        public string GetNextBillNo(int clinicId, DateTime billDate, SqlConnection conn, SqlTransaction tran)
+        public List<Bill> ListRefundableBillsByPatient(int clinicId, int patientId, int? selectedBillId,
+                                                            SqlConnection conn, SqlTransaction? tran = null)
         {
-            // Indian financial year:
-            // 01-Apr-2026 to 31-Mar-2027 => FY 2026
-            int fy = billDate.Month >= 4
-                ? billDate.Year
-                : billDate.Year - 1;
+            var list = new List<Bill>();
 
-            const string selectSql = @"
-                SELECT BillNoPrefix, BillNoFY, BillNo
-                FROM BillNoGenerators WITH (UPDLOCK, HOLDLOCK)
-                WHERE ClinicId = @ClinicId;";
+            string query;
 
-            var billNoGenerator = new BillNoGenerator();
-
-            using (var cmd = new SqlCommand(selectSql, conn, tran))
+            if (selectedBillId.HasValue && selectedBillId.Value > 0)
             {
-                cmd.Parameters.AddWithValue("@ClinicId", clinicId);
-
-                using (var reader = cmd.ExecuteReader())
-                {
-                    if (!reader.Read())
-                    {
-                        throw new InvalidOperationException(
-                            $"Bill number generator is not configured for clinic {clinicId}.");
-                    }
-
-                    billNoGenerator.Prefix = reader["BillNoPrefix"]?.ToString();
-                    billNoGenerator.FY = Convert.ToInt32(reader["BillNoFY"]);
-                    billNoGenerator.Number = Convert.ToInt64(reader["BillNo"]);
-                }
-            }   // reader is definitely closed here
-
-
-            // ----------------------------------------
-            // Generate next number
-            // ----------------------------------------
-
-            if (fy == billNoGenerator.FY)
-            {
-                billNoGenerator.Number++;
+                query = @"SELECT b.*, p.FirstName + ' ' + p.LastName as PatientName, v.VisitDate, a.DoctorId 
+                                FROM Bills b
+                                JOIN Visits v 
+                                    ON b.VisitId = v.VisitId
+                                JOIN Patients p 
+                                    ON v.PatientId = p.PatientId
+                                LEFT JOIN Appointments a
+                                    ON b.AppointmentId = a.AppointmentId
+                                WHERE p.PatientId = @patientId
+                                AND b.ClinicId = @clinicId
+                                AND EXISTS (SELECT 1
+                                            FROM BillLines bl
+                                            WHERE bl.BillId = b.BillId
+                                            AND (bl.AvailableQuantity > 0
+                                            OR bl.BillId = @SelectedBillId))
+                                ORDER BY b.BillDate DESC";
             }
             else
             {
-                // New financial year
-                billNoGenerator.FY = fy;
-                billNoGenerator.Number = 1;
+                query = @"SELECT b.*, p.FirstName + ' ' + p.LastName as PatientName, v.VisitDate, a.DoctorId 
+                                FROM Bills b
+                                JOIN Visits v 
+                                    ON b.VisitId = v.VisitId
+                                JOIN Patients p 
+                                    ON v.PatientId = p.PatientId
+                                LEFT JOIN Appointments a
+                                    ON b.AppointmentId = a.AppointmentId
+                                WHERE p.PatientId = @patientId
+                                AND b.ClinicId = @clinicId
+                                AND EXISTS (SELECT 1
+                                            FROM BillLines bl
+                                            WHERE bl.BillId = b.BillId
+                                            AND bl.AvailableQuantity > 0)
+                                ORDER BY b.BillDate DESC";                
             }
 
-
-            // ----------------------------------------
-            // Persist generator
-            // ----------------------------------------
-
-            const string updateSql = @"
-                UPDATE BillNoGenerators
-                SET
-                    BillNoFY = @BillNoFY,
-                    BillNo = @BillNo
-                WHERE ClinicId = @ClinicId;";
-
-            using (var updateCmd = new SqlCommand(updateSql, conn, tran))
+            SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
             {
-                updateCmd.Parameters.AddWithValue("@BillNoFY", billNoGenerator.FY);
-                updateCmd.Parameters.AddWithValue("@BillNo", billNoGenerator.Number);
-                updateCmd.Parameters.AddWithValue("@ClinicId", clinicId);
-
-                int rows = updateCmd.ExecuteNonQuery();
-
-                if (rows != 1)
-                {
-                    throw new InvalidOperationException(
-                        $"Unable to update bill number generator for clinic {clinicId}.");
-                }
+                cmd.Transaction = tran;
             }
 
-            return billNoGenerator.BillNo;
+            cmd.Parameters.AddWithValue("@patientId", patientId);
+            cmd.Parameters.AddWithValue("@clinicId", clinicId);
+            if (selectedBillId.HasValue && selectedBillId.Value > 0)
+            {
+                cmd.Parameters.AddWithValue("@SelectedBillId", selectedBillId.Value);
+            }
+
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                list.Add(new Bill
+                {
+                    BillId = (int)reader["BillId"],
+                    BillNo = reader["BillNo"].ToString(),
+                    PatientId = (int)reader["PatientId"],
+                    VisitId = (int)reader["VisitId"],
+                    AppointmentId = reader["AppointmentId"] != DBNull.Value ? (int)reader["AppointmentId"] : null,
+                    DoctorId = reader["DoctorId"] != DBNull.Value ? (int)reader["DoctorId"] : null,
+                    VisitDate = (DateTime)reader["VisitDate"],
+                    BillDate = (DateTime)reader["BillDate"],
+                    PatientName = reader["PatientName"].ToString(),
+                    GrossAmount = (decimal)reader["GrossAmount"],
+                    DiscountAmount = (decimal)reader["DiscountAmount"],
+                    TotalPaidAmount = (decimal)reader["PaidAmount"]
+                });
+            }
+
+            return list;
         }
+
+
 
     }
 

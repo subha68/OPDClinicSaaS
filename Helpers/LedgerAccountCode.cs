@@ -23,6 +23,7 @@ namespace Helpers
         public const string SalaryPayable = "CL003";
         public const string ProfessionalFeesPayable = "CL004";
         public const string OutputGSTPayable = "CL005";
+        public const string PatientRefundPayable = "CL006";
 
         // EQUITY
         public const string CapitalAccount = "EQ001";

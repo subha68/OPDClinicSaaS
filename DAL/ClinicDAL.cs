@@ -4,7 +4,7 @@ using Models;
 
 namespace DAL
 {
-    public class ClinicDAL : IDAL<Clinic>
+    public class ClinicDAL : BaseDAL, IDAL<Clinic>
     {
         private readonly DbHelper _db;
 

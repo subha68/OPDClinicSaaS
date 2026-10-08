@@ -5,7 +5,7 @@ using Helpers;
 
 namespace DAL
 {
-    public class DepartmentDAL : IDAL<Department>
+    public class DepartmentDAL : BaseDAL, IDAL<Department>
     {
         private readonly DbHelper _db;
 

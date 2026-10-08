@@ -8,7 +8,7 @@ using Microsoft.Extensions.Options;
 
 namespace DAL
 {
-    public class ConsultationDAL : IDAL<Consultation>
+    public class ConsultationDAL : BaseDAL, IDAL<Consultation>
     {
         private readonly DbHelper _db;
 

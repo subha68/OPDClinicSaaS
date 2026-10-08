@@ -114,7 +114,8 @@ namespace Controllers
                                             id = x.ChargeId,
                                             text = x.ChargeName,
                                             rate = x.Rate,
-                                            serviceType = x.ServiceType
+                                            serviceType = x.ServiceType,
+                                            description = x.Description
                                         })
                                         .ToList();
 

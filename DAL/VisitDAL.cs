@@ -5,7 +5,7 @@ using ViewModels;
 
 namespace DAL
 {
-    public class VisitDAL : IDAL<Visit>
+    public class VisitDAL : BaseDAL, IDAL<Visit>
     {
         private readonly DbHelper _db;
 

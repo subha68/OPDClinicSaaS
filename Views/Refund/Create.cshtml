@@ -1,0 +1,158 @@
+@model ViewModels.RefundCreateVM
+
+@using Models
+@using Helpers
+
+@{
+    bool isEdit = Model != null && Model.Refund != null && Model.Refund.RefundId > 0;
+    bool isDraft = Model!.Refund!.RefundStatus == RefundStatus.Draft;
+
+    ViewData["Title"] = isEdit ? "Refund Details" : "Initiate Refund";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+
+    <form asp-action="@(Model!.Refund!.RefundId == 0 ? "Create" : "Edit")"
+          method="post"
+          id="refundForm">
+
+        <input asp-for="Refund.RefundId" type="hidden" />
+        <input asp-for="Refund.ClinicId" type="hidden" />
+        <input asp-for="Refund.PatientId" type="hidden" />
+        <input asp-for="Refund.VisitId" type="hidden" />
+        <input asp-for="Refund.RefundStatus" type="hidden" />
+
+        <input id="IsDraft"
+               type="hidden"
+               value="@isDraft.ToString().ToLower()" />
+
+        <div id="refundPatientContext"
+             data-patient-selection-context>
+
+            <input asp-for="Refund.PatientId"
+                   data-patient-id
+                   type="hidden" />
+
+        </div>
+
+        @await Html.PartialAsync("_RefundDetails",
+                                Model,
+                                new ViewDataDictionary(ViewData)
+                                {
+                                    ["IsDraft"] = isDraft,
+                                    ["IsReadOnly"] = !isDraft
+                                })
+
+        <div class="d-flex justify-content-end gap-2">
+
+            <a asp-action="Index"
+               class="btn btn-secondary">
+                Back
+            </a>
+
+            @if (isDraft)
+            {
+                <button type="submit"
+                        name="action"
+                        value="draft"
+                        class="btn btn-primary">
+
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Save Draft
+
+                </button>
+
+                <button type="submit"
+                        name="action"
+                        value="submit"
+                        class="btn btn-success">
+
+                    <i class="fa-solid fa-paper-plane"></i>
+                    Submit For Approval
+
+                </button>
+
+                @if (isEdit)
+                {
+                    <button type="submit"
+                            name="action"
+                            value="cancel"
+                            class="btn btn-danger">
+
+                        <i class="fa-solid fa-ban"></i>
+                        Cancel Refund
+
+                    </button>
+                }
+            }
+
+        </div>
+
+    </form>
+
+</div>
+
+<div class="modal fade"
+     id="billLineModal"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-xl">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title">
+                    Select Bill Line
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div id="billLineContainer">
+
+                    <div class="text-center py-4">
+
+                        <div class="spinner-border">
+                        </div>
+
+                        <div class="mt-2">
+                            Loading bill lines...
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+
+                    Close
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts
+{
+    <script src="~/js/refund/create-refund.js" asp-append-version="true"></script>
+}

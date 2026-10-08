@@ -4,7 +4,7 @@ using Models;
 
 namespace DAL
 {
-    public class MenuDAL : IDAL<MenuItem>
+    public class MenuDAL : BaseDAL, IDAL<MenuItem>
     {
         private readonly DbHelper _db;
 

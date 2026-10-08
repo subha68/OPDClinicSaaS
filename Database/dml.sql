@@ -79,7 +79,9 @@ INSERT INTO Features (Name, Code) VALUES
 ('Vital Definition', 'VITAL_DEFINITION'),
 ('Vital', 'VITAL'),
 ('Test Definition', 'TEST_DEFINITION'),
-('Test Result', 'TEST_RESULT');
+('Test Result', 'TEST_RESULT'),
+('Manage Refunds', 'REFUND_VIEW'),
+('Approve Refunds', 'REFUND_APPROVAL');
 
 -- Role Mapping
 
@@ -90,11 +92,11 @@ SELECT 1, FeatureId FROM Features WHERE Code IN ('CLINIC_VIEW', 'USER_VIEW', 'RO
 -- ClinicAdmin
 INSERT INTO RoleFeatures (RoleId, FeatureId)
 SELECT 2, FeatureId FROM Features WHERE Code IN ('DEPT_VIEW','DOC_VIEW','USER_VIEW','DOCTOR_SCHEDULE', 'PRESCRIPTION_TEMPLATE', 
-                                                    'VITAL_DEFINITION', 'TEST_DEFINITION');
+                                                    'VITAL_DEFINITION', 'TEST_DEFINITION', 'REFUND_APPROVAL');
 -- ClinicUser
 INSERT INTO RoleFeatures (RoleId, FeatureId)
 SELECT 3, FeatureId FROM Features WHERE Code IN ('APPOINTMENT_BOOKING', 'PATIENT_HISTORY', 'VITAL', 'TEST_DEFINITION',
-                                                'TEST_RESULT');
+                                                'TEST_RESULT', 'REFUND_VIEW');
 
 -- Doctor
 INSERT INTO RoleFeatures (RoleId, FeatureId)
@@ -114,36 +116,39 @@ SELECT 7, FeatureId FROM Features WHERE Code IN ('APPOINTMENT_BOOKING', 'PATIENT
 
 
 -- Menus
-INSERT INTO Menus (Title, Controller, Action, Icon, FeatureCode, DisplayOrder)
+INSERT INTO Menus (Title, Controller, Action, Icon, FeatureCode, ParentId, DisplayOrder, IsActive, ReportCode)
 VALUES
-('Clinics','Clinic','Index','fa-hospital','CLINIC_VIEW',1),
-('Roles','Role','Index','fa-user-shield','ROLE_VIEW',2),
-('Users','User','Index','fa-users','USER_VIEW',3),
-('Departments','Department','Index','fa-building','DEPT_VIEW',4),
-('Doctors','Doctor','Index','fa-user-md','DOC_VIEW',5),
-('Doctor Schedule','DoctorSchedule','Index','fa-calendar','DOCTOR_SCHEDULE',6),
-('Patients', 'Patient', 'Index', 'fa fa-users', 'PATIENT_HISTORY', 7),
-('Appointment','AppointmentBooking','Index','fa-calendar-check','APPOINTMENT_BOOKING',8),
-('Consultation','Consultation','Index','fa-stethoscope','CONSULTATION_MANAGEMENT',9),
-('Billing','Billing','Index','fa-file-invoice-dollar','BILLING_MANAGEMENT', 10),
-('Billing Charges', 'BillingCharge', 'Index', 'fa fa-money-bill', 'BILLING_CHARGES', 11),
-('Medicines', 'Medicine', 'Index', 'fa fa-pills', 'MEDICINE_MANAGEMENT', 12),
-('Prescription Templates', 'PrescriptionTemplate', 'Index', 'fa-file-medical', 'PRESCRIPTION_TEMPLATE', 13),
-('Vital Definition', 'VitalDefinition', 'Index', 'fa-heartbeat', 'VITAL_DEFINITION', 14),
-('Vitals', null, null, 'fa-heartbeat', 'VITAL', 15),
-('Test Definition', 'TestDefinition', 'Index', 'fa-flask', 'TEST_DEFINITION', 16),
-('Test Results', NULL, NULL, 'fa-flask', 'TEST_RESULT', 16);
+('Clinics','Clinic','Index','fa-hospital','CLINIC_VIEW',NULL,1,1,NULL),
+('Roles','Role','Index','fa-user-shield','ROLE_VIEW',NULL,2,1,NULL),
+('Users','User','Index','fa-users','USER_VIEW',NULL,3,1,NULL),
+('Departments','Department','Index','fa-building','DEPT_VIEW',NULL,4,1,NULL),
+('Doctors','Doctor','Index','fa-user-md','DOC_VIEW',NULL,5,1,NULL),
+('Doctor Schedule','DoctorSchedule','Index','fa-calendar','DOCTOR_SCHEDULE',NULL,6,1,NULL),
+('Patients', 'Patient', 'Index', 'fa fa-users', 'PATIENT_HISTORY',NULL,7,1,NULL),
+('Appointment','AppointmentBooking','Index','fa-calendar-check','APPOINTMENT_BOOKING',NULL,8,1,NULL),
+('Consultation','Consultation','Index','fa-stethoscope','CONSULTATION_MANAGEMENT',NULL,9,1,NULL),
+('Billing','Billing','Index','fa-file-invoice-dollar','BILLING_MANAGEMENT',NULL,10,1,NULL),
+('Billing Charges', 'BillingCharge', 'Index', 'fa fa-money-bill', 'BILLING_CHARGES',NULL,11,1,NULL),
+('Refunds', 'Refund', 'Index', 'fa-solid fa-rotate-left', 'REFUND_VIEW',NULL,12,1,NULL),
+('Medicines', 'Medicine', 'Index', 'fa fa-pills', 'MEDICINE_MANAGEMENT',NULL,13,1,NULL),
+('Prescription Templates', 'PrescriptionTemplate', 'Index', 'fa-file-medical', 'PRESCRIPTION_TEMPLATE',NULL,14,1,NULL),
+('Vital Definition', 'VitalDefinition', 'Index', 'fa-heartbeat', 'VITAL_DEFINITION',NULL,15,1,NULL),
+('Vitals', null, null, 'fa-heartbeat', 'VITAL',NULL,16,1,NULL),
+('Test Definition', 'TestDefinition', 'Index', 'fa-flask', 'TEST_DEFINITION',NULL,17,1,NULL),
+('Test Results', NULL, NULL, 'fa-flask', 'TEST_RESULT',NULL,18,1,NULL),
+('Refund Approval', 'Refund', 'Approval', 'fa-file-invoice-dollar', 'REFUND_APPROVAL', NULL, 19, 1, NULL);;
 
 -- Mandatory line
 INSERT INTO BillingCharges
 (ClinicId, ChargeCode, ChargeName, Description, ServiceType, Rate, IsActive)
 VALUES
-(0, 'CONSULT', 'Consultation', 'Doctor consultation fee', 'Consultation', 0.00, 1);
+(0, 'CONSULT', 'Consultation', 'Doctor consultation fee', 1, 0.00, 1);
 
-INSERT INTO BillNoGenerators
-(ClinicId, BillNoPrefix, BillNoFY, BillNo)
+INSERT INTO InstrumentNoGenerators
+(ClinicId, InstrumentType, Prefix, FY, InstrumentNo)
 VALUES
-(1, 'B', 2026, 100);
+(1, 'Bill', 'B', 2026, 100),
+(1, 'Refund', 'R', 2026, 100);
 
 -- Change ClinicId before running below script
 SET IDENTITY_INSERT AccountGroups ON;
@@ -200,6 +205,7 @@ VALUES
 (503, 1, 5, 'CL003', 'Salary Payable', 1),
 (504, 1, 5, 'CL004', 'Professional Fees Payable', 1),
 (505, 1, 5, 'CL005', 'Output GST Payable', 1),
+(506, 1, 5, 'CL006', 'Patient Refund Payable', 1),
 
 -- EQUITY
 

@@ -4,7 +4,7 @@ using Models;
 
 namespace DAL
 {
-    public class LedgerAccountDAL : IDAL<LedgerAccount>
+    public class LedgerAccountDAL : BaseDAL, IDAL<LedgerAccount>
     {
         private readonly DbHelper _db;
 

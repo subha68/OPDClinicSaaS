@@ -454,20 +454,29 @@ function addConsultationLine(appointment)
         return;
     }
 
+    const description = appointment.doctorName
+                        ? `Consultation - ${appointment.doctorName}`
+                        : "Consultation";
+
     const row = `
         <tr class="consultation-line">
 
             <td>
 
                 <input type="text"
-                       class="form-control chargeSearch"
-                       value="Consultation"
-                       readonly />
+                    class="form-control description"
+                    value="${description}"
+                    readonly />
 
                 <input type="hidden"
-                       name="Bill.BillLines[${lineIndex}].ReferenceId"
-                       class="chargeId"
-                       value="${consultationChargeId}" />
+                    name="Bill.BillLines[${lineIndex}].Description"
+                    class="chargeDescription"
+                    value="${description}" />
+
+                <input type="hidden"
+                    name="Bill.BillLines[${lineIndex}].ReferenceId"
+                    class="chargeId"
+                    value="${consultationChargeId}" />
 
             </td>
 
@@ -557,6 +566,10 @@ $("#addLine").click(function () {
                 <input type="hidden"
                         name="Bill.BillLines[${lineIndex}].ReferenceId"
                         class="chargeId" />
+
+                <input type="hidden"
+                        name="Bill.BillLines[${lineIndex}].Description"
+                        class="chargeDescription" />
 
             </td>
 
@@ -713,8 +726,19 @@ function initializeChargeAutocomplete(row)
 
         function (charge) {
 
+            const description =
+                charge.description ||
+                charge.value ||
+                "";
+
             row.find(".chargeId")
                 .val(charge.id);
+
+            row.find(".chargeDescription")
+                .val(description);
+
+            row.find(".chargeSearch")
+                .val(description);
 
             row.find(".rate")
                 .val(charge.rate);

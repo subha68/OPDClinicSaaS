@@ -11,5 +11,6 @@ namespace DAL
         bool Delete(int id, int clinicId, SqlConnection conn, SqlTransaction tran);
         T Get(int id, int clinicId, SqlConnection conn, SqlTransaction? tran = null);
         List<T> GetAll(int clinicId, SqlConnection conn, SqlTransaction? tran = null);
+
     }
 }

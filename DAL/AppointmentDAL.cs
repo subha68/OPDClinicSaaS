@@ -8,7 +8,7 @@ using System.Transactions;
 
 namespace DAL
 {
-    public class AppointmentDAL : IDAL<Appointment>
+    public class AppointmentDAL : BaseDAL, IDAL<Appointment>
     {
         private readonly DbHelper _db;
 

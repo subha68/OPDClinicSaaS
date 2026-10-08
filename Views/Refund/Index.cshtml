@@ -1,0 +1,75 @@
+@model ViewModels.RefundVM
+
+@{
+ViewData["Title"] = "Refunds";
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+
+    <div class="card shadow-sm">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+
+            <button id="btnInitiateRefund"
+                    type="button"
+                    class="btn btn-primary d-none">
+
+                <i class="fa-solid fa-plus me-1"></i>
+                Initiate Refund
+
+            </button>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="row mb-4">
+
+                <div class="col-md-6">
+
+                    <label class="form-label">
+                        Patient
+                    </label>
+
+                    <div id="refundPatientContext">
+
+                        <div data-patient-selection-context>
+
+                            <input asp-for="PatientId" type="hidden"
+                                data-patient-id />
+
+                            <input type="text"
+                                id="PatientSearch"
+                                class="form-control"
+                                data-patient-search
+                                placeholder="Search patient by name, phone or UHID" />
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div id="refundContainer">
+
+                <div class="alert alert-info mb-0">
+
+                    Please select a patient to view refunds.
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts
+{ 
+    <script src="~/js/refund/refund.js" asp-append-version="true"></script>
+}

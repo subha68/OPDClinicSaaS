@@ -25,7 +25,7 @@ namespace Models
         public int? DoctorId { get; set; }
         public Doctor? Doctor { get; set; }
 
-        public string BillType { get; set;}
+        public string BillType { get; set;} = "Service";
 
         public decimal GrossAmount { get; set; } = 0;
         public decimal DiscountAmount { get; set; } = 0;

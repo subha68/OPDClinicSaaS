@@ -4,7 +4,7 @@ using Models;
 
 namespace DAL
 {
-    public class VitalDAL : IDAL<Vital>
+    public class VitalDAL : BaseDAL, IDAL<Vital>
     {
         private readonly DbHelper _db;
 

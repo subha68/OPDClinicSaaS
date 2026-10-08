@@ -153,35 +153,90 @@ namespace BLL
             // Credit - Consultation Revenue
             BuildLine(bill.ClinicId, journal, LedgerAccountCode.RegistrationRevenue, "CR", 
                                     bill.BillLines
-                                        .Where(x => x.ServiceType == "Registration")
+                                        .Where(x => x.ServiceType == ServiceType.Registration)
                                         .Sum(x => x.GrossAmount), conn, tran);
 
             // Credit - Radiology Revenue
             BuildLine(bill.ClinicId, journal, LedgerAccountCode.RadiologyRevenue, "CR", 
                                     bill.BillLines
-                                        .Where(x => x.ServiceType == "Radiology")
+                                        .Where(x => x.ServiceType == ServiceType.Radiology)
                                         .Sum(x => x.GrossAmount), conn, tran);
 
             // Credit - Consultation Revenue
             BuildLine(bill.ClinicId, journal, LedgerAccountCode.ConsultationRevenue, "CR", 
                                     bill.BillLines
-                                        .Where(x => x.ServiceType == "Consultation")
+                                        .Where(x => x.ServiceType == ServiceType.Consultation)
                                         .Sum(x => x.GrossAmount), conn, tran);
 
             // Credit - Lab Revenue
             BuildLine(bill.ClinicId, journal, LedgerAccountCode.LabRevenue, "CR", 
                                     bill.BillLines
-                                        .Where(x => x.ServiceType == "Lab Tests")
+                                        .Where(x => x.ServiceType == ServiceType.Lab)
                                         .Sum(x => x.GrossAmount), conn, tran);
 
             // Credit - Pharmacy Revenue
             BuildLine(bill.ClinicId, journal, LedgerAccountCode.PharmacyRevenue, "CR", 
                                     bill.BillLines
-                                        .Where(x => x.ServiceType == "Pharmacy")
+                                        .Where(x => x.ServiceType == ServiceType.Pharmacy)
                                         .Sum(x => x.GrossAmount), conn, tran);
 
             // Credit - Output GST Payable
             BuildLine(bill.ClinicId, journal, LedgerAccountCode.OutputGSTPayable, "CR", bill.TaxAmount, conn, tran);
+
+            return journal;
+        }
+
+        public Journal BuildJournal(Refund refund, SqlConnection conn, SqlTransaction tran)
+        {
+            if (!refund.Lines.Any())
+                throw new InvalidOperationException("Refund must contain at least one line.");
+
+            if (refund.NetAmount <= 0)
+                throw new InvalidOperationException("Refund amount must be greater than zero.");
+
+            Journal journal = new Journal(refund);
+
+            if (refund.RefundStatus == RefundStatus.Approved)
+            {
+                BuildLine(refund.ClinicId, journal, LedgerAccountCode.RegistrationRevenue, "DR", 
+                                        refund.Lines
+                                            .Where(x => x.ServiceType == ServiceType.Registration)
+                                            .Sum(x => x.NetAmount - x.TaxAmount), conn, tran);
+
+                BuildLine(refund.ClinicId, journal, LedgerAccountCode.ConsultationRevenue, "DR", 
+                                        refund.Lines
+                                            .Where(x => x.ServiceType == ServiceType.Consultation)
+                                            .Sum(x => x.NetAmount - x.TaxAmount), conn, tran);
+
+                BuildLine(refund.ClinicId, journal, LedgerAccountCode.LabRevenue, "DR", 
+                                        refund.Lines
+                                            .Where(x => x.ServiceType == ServiceType.Lab)
+                                            .Sum(x => x.NetAmount - x.TaxAmount), conn, tran);
+
+                BuildLine(refund.ClinicId, journal, LedgerAccountCode.RadiologyRevenue, "DR", 
+                                        refund.Lines
+                                            .Where(x => x.ServiceType == ServiceType.Radiology)
+                                            .Sum(x => x.NetAmount - x.TaxAmount), conn, tran);
+
+                BuildLine(refund.ClinicId, journal, LedgerAccountCode.PharmacyRevenue, "DR", 
+                                        refund.Lines
+                                            .Where(x => x.ServiceType == ServiceType.Pharmacy)
+                                            .Sum(x => x.NetAmount - x.TaxAmount), conn, tran);
+
+                BuildLine(refund.ClinicId, journal, LedgerAccountCode.OutputGSTPayable, "DR", refund.TaxAmount, conn, tran);
+
+                BuildLine(refund.ClinicId, journal, LedgerAccountCode.PatientRefundPayable, "CR", refund.NetAmount, conn, tran);
+            }
+            else if (refund.RefundStatus == RefundStatus.Completed)
+            {
+                BuildLine(refund.ClinicId, journal, LedgerAccountCode.PatientRefundPayable, "DR", refund.NetAmount, conn, tran);
+
+                BuildLine(refund.ClinicId, journal, LedgerAccountCode.CashInHand, "CR", refund.NetAmount, conn, tran);
+            }
+            else
+            {
+                // do nothing - should not try posting journal when refund not in Approved / completed status
+            }
 
             return journal;
         }
@@ -192,11 +247,26 @@ namespace BLL
         {
             Journal journal = new Journal(payment);
 
-            // Debit - Cash
-            BuildLine(payment.ClinicId, journal, LedgerAccountCode.CashInHand, "DR", payment.Amount, conn, tran);
-    
-            // Credit - Patient Receivable
-            BuildLine(payment.ClinicId, journal, LedgerAccountCode.PatientReceivable, "CR", payment.Amount, conn, tran);
+            switch(payment.PaymentType)
+            {
+                case PaymentType.Receipt:
+                    // Debit - Cash
+                    BuildLine(payment.ClinicId, journal, LedgerAccountCode.CashInHand, "DR", payment.Amount, conn, tran);
+            
+                    // Credit - Patient Receivable
+                    BuildLine(payment.ClinicId, journal, LedgerAccountCode.PatientReceivable, "CR", payment.Amount, conn, tran);
+                    break;
+
+                case PaymentType.Refund:
+                    // Debit - Patient Refund Payable
+                    BuildLine(payment.ClinicId, journal, LedgerAccountCode.PatientRefundPayable, "DR", payment.Amount, conn, tran);
+                    // Credit - Cash
+                    BuildLine(payment.ClinicId, journal, LedgerAccountCode.CashInHand, "CR", payment.Amount, conn, tran);
+                    break;
+
+                default:
+                    throw new InvalidOperationException("Invalid payment type.");
+            }                
 
             return journal;
         }

@@ -4,7 +4,7 @@ using Models;
 
 namespace DAL
 {
-    public class BillingChargeDAL : IDAL<BillingCharge>
+    public class BillingChargeDAL : BaseDAL, IDAL<BillingCharge>
     {
         private readonly DbHelper _db;
 
@@ -92,7 +92,7 @@ namespace DAL
                         ChargeCode = reader["ChargeCode"].ToString(),
                         ChargeName = reader["ChargeName"].ToString(),
                         Description = reader["Description"].ToString(),
-                        ServiceType = reader["ServiceType"].ToString(),
+                        ServiceType = (ServiceType)reader["ServiceType"],
                         Rate = Convert.ToDecimal(reader["Rate"]),
                         IsActive = (bool)reader["IsActive"]
                     };
@@ -126,7 +126,7 @@ namespace DAL
                     ChargeCode = reader["ChargeCode"].ToString(),
                     ChargeName = reader["ChargeName"].ToString(),
                     Description = reader["Description"].ToString(),
-                    ServiceType = reader["ServiceType"].ToString(),
+                    ServiceType = (ServiceType)reader["ServiceType"],
                     Rate = Convert.ToDecimal(reader["Rate"]),
                     IsActive = (bool)reader["IsActive"]
                 });
@@ -160,7 +160,7 @@ namespace DAL
                     ChargeCode = reader["ChargeCode"].ToString(),
                     ChargeName = reader["ChargeName"].ToString(),
                     Description = reader["Description"].ToString(),
-                    ServiceType = reader["ServiceType"].ToString(),
+                    ServiceType = (ServiceType)reader["ServiceType"],
                     Rate = Convert.ToDecimal(reader["Rate"]),
                     IsActive = (bool)reader["IsActive"]
                 });
@@ -193,7 +193,7 @@ namespace DAL
                     ChargeCode = reader["ChargeCode"].ToString(),
                     ChargeName = reader["ChargeName"].ToString(),
                     Description = reader["Description"].ToString(),
-                    ServiceType = reader["ServiceType"].ToString(),
+                    ServiceType = (ServiceType)reader["ServiceType"],
                     Rate = Convert.ToDecimal(reader["Rate"]),
                     IsActive = (bool)reader["IsActive"]
                 };
@@ -239,7 +239,7 @@ namespace DAL
                     ChargeCode = reader["ChargeCode"].ToString(),
                     ChargeName = reader["ChargeName"].ToString(),
                     Description = reader["Description"].ToString(),
-                    ServiceType = reader["ServiceType"].ToString(),
+                    ServiceType = (ServiceType)reader["ServiceType"],
                     Rate = Convert.ToDecimal(reader["Rate"]),
                     IsActive = (bool)reader["IsActive"]
                 });

@@ -3,7 +3,7 @@ using Models;
 
 namespace DAL
 {
-    public class ReportLookupDAL
+    public class ReportLookupDAL : BaseDAL
     {
         private readonly DbHelper _db;
 

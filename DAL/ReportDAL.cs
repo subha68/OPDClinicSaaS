@@ -4,7 +4,7 @@ using Models;
 
 namespace DAL
 {
-    public class ReportDAL
+    public class ReportDAL : BaseDAL
     {
         private readonly DbHelper _db;
 

@@ -2,250 +2,338 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    const int linesPerPage = 7;
+
+    var lineCount = Model.BillLines?.Count ?? 0;
+
+    var pageCount =
+        Math.Max(
+            1,
+            (int)Math.Ceiling(
+                lineCount / (double)linesPerPage
+            )
+        );
 }
 
 <div class="container mt-4">
-    <input type="hidden" name="BillId" id="BillId" value="@Model.BillId" />
 
-    <!-- Print Button -->
+    <input type="hidden"
+           name="BillId"
+           id="BillId"
+           value="@Model.BillId" />
+
+
+    <!-- =====================================================
+         SCREEN-ONLY CONTROLS
+         ===================================================== -->
+
     <div class="mb-3 text-end no-print">
-        <button onclick="window.print()" class="btn btn-primary">
+
+        <button onclick="window.print()"
+                class="btn btn-primary">
             Print Bill
         </button>
 
         @if (Model.PaymentStatus != "Paid")
         {
-            <a asp-controller="Payment" asp-action="Pay" asp-route-id="@Model.BillId" class="btn btn-primary">
+            <a asp-controller="Payment"
+               asp-action="Pay"
+               asp-route-id="@Model.BillId"
+               class="btn btn-primary">
                 Pay
             </a>
         }
 
-        @await Html.PartialAsync("_BackButton", new ViewModels.BackButtonVM
+        @await Html.PartialAsync(
+            "_BackButton",
+            new ViewModels.BackButtonVM
             {
                 Controller = "Billing",
                 Action = "SearchByPatient",
-                PatientId = @Model.PatientId,
+                PatientId = Model.PatientId,
                 Text = "Back to Bills"
-            })
+            }
+        )
 
     </div>
 
-    <!-- Bill Card -->
+
+    <!-- =====================================================
+         PRINT AREA
+         ===================================================== -->
+
     <div id="billArea">
-        <div class="bill-container">
 
-            <div class="card-body">
+        @for (
+            int page = 0;
+            page < pageCount;
+            page++
+        )
+        {
+            var pageStart =
+                page * linesPerPage;
 
-                <!-- Clinic Header -->
-                <div class="text-center mb-4">
-                    <h2>@Model.Clinic?.Name</h2>
-                    <div>@Model.Clinic?.Address</div>
-                    <div>@Model.Clinic?.Phone</div>
-                </div>
+            var pageEnd =
+                Math.Min(
+                    pageStart + linesPerPage,
+                    lineCount
+                );
 
-                <hr />
+            var isLastPage =
+                page == pageCount - 1;
 
-                <!-- Bill Header -->
-                <div class="row mb-4">
 
-                    <div class="col-md-6">
-                        <h5>Patient Details</h5>
+            <!-- =================================================
+                 HALF-A4 PAGE
+                 ================================================= -->
 
-                        <table class="table table-borderless table-sm">
-                            <tr>
-                                <th>Patient</th>
-                                <td>
+            <div class="bill-print-page">
+
+                <div class="bill-container">
+
+
+                    <!-- =============================================
+                         CLINIC HEADER
+                         ============================================= -->
+
+                    <div class="bill-clinic-header">
+
+                        <div class="bill-clinic-name">
+                            @Model.Clinic?.Name
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(
+                            Model.Clinic?.Address))
+                        {
+                            <div class="bill-clinic-address">
+                                @Model.Clinic.Address
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(
+                            Model.Clinic?.Phone))
+                        {
+                            <div class="bill-clinic-phone">
+                                @Model.Clinic.Phone
+                            </div>
+                        }
+
+                        <div class="bill-title">
+                            BILL
+                        </div>
+
+                    </div>
+
+
+                    <!-- =============================================
+                         PATIENT + BILL DETAILS
+                         ============================================= -->
+
+                    <div class="bill-header-grid">
+
+
+                        <!-- Patient -->
+
+                        <div class="bill-info-block">
+
+                            <div class="bill-info-row">
+
+                                <span class="bill-label">
+                                    Patient
+                                </span>
+
+                                <span class="bill-value">
                                     @Model.Patient?.FirstName
                                     @Model.Patient?.LastName
-                                </td>
-                            </tr>
+                                </span>
 
-                            <tr>
-                                <th>Visit Date</th>
-                                <td>
-                                    @Model.VisitDate?.ToString("dd-MMM-yyyy")
-                                </td>
-                            </tr>
+                            </div>
 
-                            @if (Model.Doctor != null &&
-                                !string.IsNullOrWhiteSpace(Model.Doctor.DoctorName))
+
+                            <div class="bill-info-row">
+
+                                <span class="bill-label">
+                                    Visit Date
+                                </span>
+
+                                <span class="bill-value">
+                                    @(Model.VisitDate?.ToString("dd-MMM-yyyy") ?? "")
+                                </span>
+
+                            </div>
+
+
+                            @if (
+                                Model.Doctor != null &&
+                                !string.IsNullOrWhiteSpace(
+                                    Model.Doctor.DoctorName))
                             {
-                                <tr>
-                                    <th>Doctor</th>
-                                    <td>
+                                <div class="bill-info-row">
+
+                                    <span class="bill-label">
+                                        Doctor
+                                    </span>
+
+                                    <span class="bill-value">
                                         @Model.Doctor.DoctorName
-                                    </td>
-                                </tr>
+                                    </span>
+
+                                </div>
                             }
 
-                        </table>
-                    </div>
+                        </div>
 
-                    <div class="col-md-6">
-                        <h5>Bill Details</h5>
 
-                        <table class="table table-borderless table-sm">
-                            <tr>
-                                <th>Bill No</th>
-                                <td>@Model.BillNo</td>
-                            </tr>
+                        <!-- Bill -->
 
-                            <tr>
-                                <th>Bill Date</th>
-                                <td>
+                        <div class="bill-info-block">
+
+                            <div class="bill-info-row">
+
+                                <span class="bill-label">
+                                    Bill No
+                                </span>
+
+                                <span class="bill-value">
+                                    @Model.BillNo
+                                </span>
+
+                            </div>
+
+
+                            <div class="bill-info-row">
+
+                                <span class="bill-label">
+                                    Bill Date
+                                </span>
+
+                                <span class="bill-value">
                                     @Model.BillDate.ToString("dd-MMM-yyyy")
-                                </td>
-                            </tr>
+                                </span>
 
-                            <tr>
-                                <th>Status</th>
-                                <td>
+                            </div>
+
+
+                            <div class="bill-info-row">
+
+                                <span class="bill-label">
+                                    Status
+                                </span>
+
+                                <span class="bill-value">
                                     @Model.PaymentStatus
-                                </td>
-                            </tr>
-                        </table>
+                                </span>
+
+                            </div>
+
+                        </div>
+
                     </div>
 
-                </div>
 
-                <!-- Bill Lines -->
-                <table class="table table-bordered">
+                    <!-- =============================================
+                         BILL LINES
+                         ============================================= -->
 
-                    <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Charge</th>
-                            <th class="text-end">Rate</th>
-                            <th class="text-end">Quantity</th>
-                            <th class="text-end">Gross Amount</th>
-                            <th class="text-end">Discount %</th>
-                            <th class="text-end">Discount Amount</th>
-                            <th class="text-end">Net Amount</th>
-                        </tr>
-                    </thead>
+                    <table class="bill-lines-table">
 
-                    <tbody>
+                        <colgroup>
 
-                        @{
-                            int sl = 1;
-                        }
+                            <col class="col-sl" />
+                            <col class="col-charge" />
+                            <col class="col-rate" />
+                            <col class="col-quantity" />
+                            <col class="col-gross" />
+                            <col class="col-discount-percent" />
+                            <col class="col-discount" />
+                            <col class="col-net" />
 
-                        @foreach (var line in Model.BillLines)
-                        {
-                            <tr>
-                                <td>@sl</td>
+                        </colgroup>
 
-                                <td>
-                                    @line.ReferenceName
-                                </td>
-
-                                <td class="text-end">
-                                    @line.Rate.ToString("0.00")
-                                </td>
-
-                                <td class="text-end">
-                                    @line.Quantity
-                                </td>
-
-                                <td class="text-end">
-                                    @line.GrossAmount.ToString("0.00")
-                                </td>
-
-                                <td class="text-end">
-                                    @line.DiscountPercent.ToString("0.00")%
-                                </td>
-
-                                <td class="text-end">
-                                    @line.DiscountAmount.ToString("0.00")
-                                </td>
-
-                                <td class="text-end">
-                                    @line.NetAmount.ToString("0.00")
-                                </td>
-                            </tr>
-
-                            sl++;
-                        }
-
-                    </tbody>
-
-                    <tfoot>
-
-                        <tr>
-                            <th colspan="5" class="text-end">
-                                Gross Amount
-                            </th>
-
-                            <th class="text-end">
-                                @Model.GrossAmount.ToString("0.00")
-                            </th>
-                        </tr>
-
-                        <tr>
-                            <th colspan="5" class="text-end">
-                                Discount
-                            </th>
-
-                            <th class="text-end">
-                                @Model.DiscountAmount.ToString("0.00")
-                            </th>
-                        </tr>
-
-                        <tr>
-                            <th colspan="5" class="text-end">
-                                Net Amount
-                            </th>
-
-                            <th class="text-end">
-                                @Model.NetAmount.ToString("0.00")
-                            </th>
-                        </tr>
-
-                    </tfoot>
-
-                </table>
-
-                <!-- Amount in words -->
-                <div class="mt-4">
-                    <strong>Amount in Words:</strong>
-                    @Model.AmountInWords
-                </div>
-
-                @if (Model.Payments != null && Model.Payments.Count > 0)
-                {
-                    <h4>Payments</h4>
-
-                    <table class="table table-bordered">
 
                         <thead>
+
                             <tr>
-                                <th>Date</th>
-                                <th>Mode</th>
-                                <th>Reference</th>
-                                <th>Amount</th>
+
+                                <th>#</th>
+
+                                <th>
+                                    Charge
+                                </th>
+
+                                <th class="text-end">
+                                    Rate
+                                </th>
+
+                                <th class="text-end">
+                                    Qty
+                                </th>
+
+                                <th class="text-end">
+                                    Gross
+                                </th>
+
+                                <th class="text-end">
+                                    Disc %
+                                </th>
+
+                                <th class="text-end">
+                                    Discount
+                                </th>
+
+                                <th class="text-end">
+                                    Net
+                                </th>
+
                             </tr>
+
                         </thead>
+
 
                         <tbody>
 
-                            @foreach(var p in Model.Payments)
+                            @for (
+                                int i = pageStart;
+                                i < pageEnd;
+                                i++
+                            )
                             {
+                                var line =
+                                    Model.BillLines.ElementAt(i);
+
                                 <tr>
 
                                     <td>
-                                        @p.PaymentDate.ToString("dd-MMM-yyyy")
+                                        @(i + 1)
                                     </td>
 
                                     <td>
-                                        @p.Mode
+                                        @line.Description
                                     </td>
 
-                                    <td>
-                                        @p.ReferenceNo
+                                    <td class="text-end">
+                                        @line.Rate.ToString("0.00")
                                     </td>
 
-                                    <td>
-                                        @p.Amount
+                                    <td class="text-end">
+                                        @line.Quantity
+                                    </td>
+
+                                    <td class="text-end">
+                                        @line.GrossAmount.ToString("0.00")
+                                    </td>
+
+                                    <td class="text-end">
+                                        @line.DiscountPercent.ToString("0.00")%
+                                    </td>
+
+                                    <td class="text-end">
+                                        @line.DiscountAmount.ToString("0.00")
+                                    </td>
+
+                                    <td class="text-end">
+                                        @line.NetAmount.ToString("0.00")
                                     </td>
 
                                 </tr>
@@ -253,118 +341,202 @@
 
                         </tbody>
 
+
+                        <!-- =========================================
+                             TOTAL — FINAL PAGE ONLY
+                             ========================================= -->
+
+                        @if (isLastPage)
+                        {
+                            <tfoot>
+
+                                <tr>
+
+                                    <th></th>
+
+                                    <th class="text-end">
+                                        Total
+                                    </th>
+
+                                    <th></th>
+
+                                    <th></th>
+
+                                    <th class="text-end">
+                                        @Model.GrossAmount.ToString("0.00")
+                                    </th>
+
+                                    <th></th>
+
+                                    <th class="text-end">
+                                        @Model.DiscountAmount.ToString("0.00")
+                                    </th>
+
+                                    <th class="text-end">
+                                        @Model.NetAmount.ToString("0.00")
+                                    </th>
+
+                                </tr>
+
+                            </tfoot>
+                        }
+
                     </table>
 
-                    <h4>
-                        Total Paid :
-                        @Model.TotalPaidAmount
-                    </h4>
 
-                    <h4>
-                        Balance :
-                        @Model.BalanceAmount
-                    </h4>
-                }            
+                    <!-- =============================================
+                         FINAL PAGE INFORMATION
+                         ============================================= -->
 
-                <!-- Footer -->
-                <div class="row mt-5">
+                    @if (isLastPage)
+                    {
 
-                    <div class="col-md-6">
-                        <small>
+                        <!-- Amount in Words -->
+
+                        <div class="bill-amount-words">
+
+                            <strong>
+                                Amount in Words:
+                            </strong>
+
+                            @Model.AmountInWords
+
+                        </div>
+
+
+                        <!-- Payments -->
+
+                        @if (
+                            Model.Payments != null &&
+                            Model.Payments.Count > 0
+                        )
+                        {
+
+                            <table class="bill-payments-table">
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th>
+                                            Date
+                                        </th>
+
+                                        <th>
+                                            Mode
+                                        </th>
+
+                                        <th>
+                                            Reference
+                                        </th>
+
+                                        <th class="text-end">
+                                            Amount
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody>
+
+                                    @foreach (
+                                        var p in Model.Payments)
+                                    {
+                                        <tr>
+
+                                            <td>
+                                                @p.PaymentDate.ToString("dd-MMM-yyyy")
+                                            </td>
+
+                                            <td>
+                                                @p.Mode
+                                            </td>
+
+                                            <td>
+                                                @p.ReferenceNo
+                                            </td>
+
+                                            <td class="text-end">
+                                                @p.Amount.ToString("0.00")
+                                            </td>
+
+                                        </tr>
+                                    }
+
+                                </tbody>
+
+                            </table>
+
+
+                            <div class="bill-payment-summary">
+
+                                <div>
+                                    Total Paid:
+                                    <strong>
+                                        @Model.TotalPaidAmount.ToString("0.00")
+                                    </strong>
+                                </div>
+
+                                <div>
+                                    Balance:
+                                    <strong>
+                                        @Model.BalanceAmount.ToString("0.00")
+                                    </strong>
+                                </div>
+
+                            </div>
+
+                        }
+
+                    }
+
+
+                    <!-- =============================================
+                         FOOTER — EVERY HALF-A4 PAGE
+                         ============================================= -->
+
+                    <div class="bill-footer">
+
+                        <span>
                             This is a computer generated bill.
-                        </small>
-                    </div>
+                        </span>
 
-                    <div class="col-md-6 text-end">
-                        <br /><br />
-                        Authorized Signatory
+                        <span>
+                            Authorized Signatory
+                        </span>
+
                     </div>
 
                 </div>
 
             </div>
-
-        </div>
+        }
 
     </div>
 
 </div>
 
-<style>
 
-    .bill-container{
-        border:1px solid #000;
-        padding:15px;
-    }
+@section Styles {
 
-    @@media print {
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-size: 12px;
-        }
-
-        .container {
-            max-width: 100%;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-        }
-
-        .card {
-            border: 1px solid #000 !important;
-            box-shadow: none !important;
-        }
-
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .table th,
-        .table td {
-            border: 1px solid #000 !important;
-        }
-
-        .table-light {
-            background-color: #f0f0f0 !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
-
-        .no-print {
-            display: none !important;
-        }
-
-        body * {
-            visibility: hidden;
-        }
-
-        #billArea,
-        #billArea * {
-            visibility: visible;
-        }
-
-        #billArea {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-        }
-
-        .no-print {
-            display: none !important;
-        }
-    }
-</style>
-
-<script>
-function payBill() {
-    var billId = $("#BillId").val();
-
-    window.location =
-        '/Payment/Pay?' +
-        'id=' + billId;
+    <link rel="stylesheet" href="~/css/billing/bill-print.css" asp-append-version="true" />
 }
-</script>
+
+
+@section Scripts {
+
+    <script>
+        function payBill() {
+
+            var billId =
+                $("#BillId").val();
+
+            window.location =
+                '/Payment/Pay?id=' +
+                billId;
+        }
+    </script>
+
+}

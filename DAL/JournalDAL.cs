@@ -4,7 +4,7 @@ using Models;
 
 namespace DAL
 {
-    public class JournalDAL : IDAL<Journal>
+    public class JournalDAL : BaseDAL, IDAL<Journal>
     {
         private readonly DbHelper _db;
 

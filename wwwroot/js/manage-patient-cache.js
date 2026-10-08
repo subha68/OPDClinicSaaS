@@ -570,21 +570,24 @@ async function refreshPatientSelection(context, onPatientChanged) {
         const patient =
             result.patient;
 
+        /*
+        * IMPORTANT:
+        * Restore the global currentPatient state as well.
+        */
+        currentPatient = normalizePatient(patient);
 
         /*
          * Update the common patient-selection component.
          */
 
-        setPatientContext(context, patient);
+        setPatientContext(context, currentPatient);
 
         /*
          * Update the parent page's common
          * Patient Header.
          */
 
-        updatePatientHeader(
-            patient
-        );
+        updatePatientHeader(currentPatient);
 
 
         /*
@@ -604,14 +607,12 @@ async function refreshPatientSelection(context, onPatientChanged) {
             "function"
         ) {
 
-            await onPatientChanged(
-                patient
-            );
+            await onPatientChanged(currentPatient);
 
         }
 
 
-        return patient;
+        return currentPatient;
 
     }
     catch (error) {
@@ -631,7 +632,8 @@ async function refreshPatientSelection(context, onPatientChanged) {
 
 async function saveSelectedPatient(
     context,
-    button
+    button,
+    notify = true
 ) {
 
     if (!currentPatient) {
@@ -786,15 +788,19 @@ async function saveSelectedPatient(
 
 
         /*
-         * Notify the parent page that the patient has
-         * successfully changed.
-         */
+        * Notify the parent page that the patient has
+        * successfully changed.
+        *
+        * Silent saves intentionally skip this notification.
+        */
+        if (notify) {
 
-        await notifyPatientChanged(
-            context,
-            currentPatient
-        );
+            await notifyPatientChanged(
+                context,
+                currentPatient
+            );
 
+        }
 
         /*
          * Allow the consuming page to close the modal.
@@ -836,6 +842,36 @@ async function saveSelectedPatient(
         );
 
     }
+
+}
+
+// ============================================================
+// SILENT SAVE SELECTED PATIENT
+// ============================================================
+
+async function saveSelectedPatientSilent(
+    context
+) {
+
+    /*
+     * Save the selected patient to the server-side cache
+     * without notifying the consuming page that the patient
+     * has changed.
+     *
+     * This is useful when leaving a page where the patient
+     * has already been processed, for example:
+     *
+     * Refund Index
+     *     -> View
+     *     -> Pay
+     *     -> Print
+     *     -> Initiate Refund
+     */
+    return await saveSelectedPatient(
+        context,
+        null,
+        false
+    );
 
 }
 
@@ -1327,6 +1363,8 @@ window.PatientCache = {
     refreshModal: refreshPatientModal,
 
     save: saveSelectedPatient,
+
+    saveSilent: saveSelectedPatientSilent,
 
     updateHeader: updatePatientHeader
 

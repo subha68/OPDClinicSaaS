@@ -124,6 +124,17 @@ namespace BLL
             set => _session.LastVisitDate = value;
         }
 
+        public bool IsSuperAdmin()
+        {
+            return RoleName == "SuperAdmin";
+        }
+
+        public bool IsClinicAdmin()
+        {
+            return RoleName == "ClinicAdmin";
+        }
+
+
         public int? GetClinicId()
         {
             return RoleName == "SuperAdmin" ? null : ClinicId;

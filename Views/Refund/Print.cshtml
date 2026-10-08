@@ -1,0 +1,572 @@
+@model Models.Refund
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    /*
+     * Maximum refund lines per half-A4 page.
+     *
+     * Keep this conservative because Description can wrap
+     * to multiple lines.
+     */
+    const int linesPerPage = 8;
+
+    var lineCount = Model.Lines?.Count ?? 0;
+
+    /*
+     * Always produce at least one print page.
+     */
+    var pageCount =
+        Math.Max(
+            1,
+            (int)Math.Ceiling(
+                lineCount / (double)linesPerPage
+            )
+        );
+}
+
+<div class="container mt-4">
+
+    <input type="hidden"
+           name="RefundId"
+           id="RefundId"
+           value="@Model.RefundId" />
+
+
+    <!-- =====================================================
+         SCREEN-ONLY CONTROLS
+         ===================================================== -->
+
+    <div class="mb-3 text-end no-print">
+
+        <button onclick="window.print()"
+                class="btn btn-primary">
+            Print Refund
+        </button>
+
+        @await Html.PartialAsync(
+            "_BackButton",
+            new ViewModels.BackButtonVM
+            {
+                Controller = "Refund",
+                Action = "Index",
+                PatientId = Model.PatientId,
+                Text = "Back to Refunds"
+            }
+        )
+
+    </div>
+
+
+    <!-- =====================================================
+         PRINT AREA
+         ===================================================== -->
+
+    <div id="refundArea">
+
+        @for (
+            int page = 0;
+            page < pageCount;
+            page++
+        )
+        {
+            var pageStart =
+                page * linesPerPage;
+
+            var pageEnd =
+                Math.Min(
+                    pageStart + linesPerPage,
+                    lineCount
+                );
+
+            var isLastPage =
+                page == pageCount - 1;
+
+
+            <!-- =================================================
+                 HALF-A4 PRINT PAGE
+                 ================================================= -->
+
+            <div class="refund-print-page">
+
+                <div class="refund-container">
+
+
+                    <!-- =============================================
+                         CLINIC HEADER
+                         ============================================= -->
+
+                    <div class="clinic-header text-center">
+
+                        <div class="clinic-name">
+                            @Model.Clinic?.Name
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(
+                            Model.Clinic?.Address))
+                        {
+                            <div class="clinic-address">
+                                @Model.Clinic.Address
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(
+                            Model.Clinic?.Phone))
+                        {
+                            <div class="clinic-phone">
+                                @Model.Clinic.Phone
+                            </div>
+                        }
+
+                        <div class="refund-title">
+                            REFUND RECEIPT
+                        </div>
+
+                    </div>
+
+
+                    <!-- =============================================
+                         PATIENT + REFUND DETAILS
+                         SIDE BY SIDE
+                         ============================================= -->
+
+                    <div class="refund-header-grid">
+
+
+                        <!-- Patient -->
+
+                        <div class="refund-info-block">
+
+                            <div class="refund-info-row">
+                                <span class="refund-label">
+                                    Patient
+                                </span>
+
+                                <span class="refund-value">
+                                    @Model.PatientName
+                                </span>
+                            </div>
+
+                            <div class="refund-info-row">
+                                <span class="refund-label">
+                                    Visit Date
+                                </span>
+
+                                <span class="refund-value">
+                                    @(Model.Bill?.VisitDate?.ToString("dd-MMM-yyyy") ?? "")
+                                </span>
+                            </div>
+
+                            <div class="refund-info-row">
+                                <span class="refund-label">
+                                    Bill No
+                                </span>
+
+                                <span class="refund-value">
+                                    @Model.BillNo
+                                </span>
+                            </div>
+
+                        </div>
+
+
+                        <!-- Refund -->
+
+                        <div class="refund-info-block">
+
+                            <div class="refund-info-row">
+                                <span class="refund-label">
+                                    Refund No
+                                </span>
+
+                                <span class="refund-value">
+                                    @Model.RefundNo
+                                </span>
+                            </div>
+
+                            <div class="refund-info-row">
+                                <span class="refund-label">
+                                    Refund Date
+                                </span>
+
+                                <span class="refund-value">
+                                    @Model.RefundDate.ToString("dd-MMM-yyyy")
+                                </span>
+                            </div>
+
+                            <div class="refund-info-row">
+                                <span class="refund-label">
+                                    Status
+                                </span>
+
+                                <span class="refund-value">
+                                    @Model.RefundStatus
+                                </span>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =============================================
+                         REFUND LINES
+                         ============================================= -->
+
+                    <table class="refund-lines-table">
+
+                        <colgroup>
+
+                            <col class="col-sl" />
+                            <col class="col-charge" />
+                            <col class="col-rate" />
+                            <col class="col-quantity" />
+                            <col class="col-gross" />
+                            <col class="col-discount-percent" />
+                            <col class="col-discount" />
+                            <col class="col-net" />
+
+                        </colgroup>
+
+                        <thead>
+
+                            <tr>
+                                <th>#</th>
+                                <th>Charge</th>
+                                <th class="text-end">Rate</th>
+                                <th class="text-end">Qty</th>
+                                <th class="text-end">Gross</th>
+                                <th class="text-end">Disc %</th>
+                                <th class="text-end">Discount</th>
+                                <th class="text-end">Net</th>
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            @for (
+                                int i = pageStart;
+                                i < pageEnd;
+                                i++
+                            )
+                            {
+                                var line =
+                                    Model.Lines.ElementAt(i);
+
+                                <tr>
+
+                                    <td>
+                                        @(i + 1)
+                                    </td>
+
+                                    <td>
+                                        @line.Description
+                                    </td>
+
+                                    <td class="text-end">
+                                        @line.Rate.ToString("0.00")
+                                    </td>
+
+                                    <td class="text-end">
+                                        @line.Quantity
+                                    </td>
+
+                                    <td class="text-end">
+                                        @line.GrossAmount.ToString("0.00")
+                                    </td>
+
+                                    <td class="text-end">
+                                        @line.DiscountPercent.ToString("0.00")%
+                                    </td>
+
+                                    <td class="text-end">
+                                        @line.DiscountAmount.ToString("0.00")
+                                    </td>
+
+                                    <td class="text-end">
+                                        @line.NetAmount.ToString("0.00")
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+
+                        @if (isLastPage)
+                        {
+                            <tfoot>
+
+                                <tr>
+
+                                    <th></th>
+
+                                    <th class="text-end">
+                                        Total
+                                    </th>
+
+                                    <th></th>
+
+                                    <th></th>
+
+                                    <th class="text-end">
+                                        @Model.GrossAmount.ToString("0.00")
+                                    </th>
+
+                                    <th></th>
+
+                                    <th class="text-end">
+                                        @Model.DiscountAmount.ToString("0.00")
+                                    </th>
+
+                                    <th class="text-end">
+                                        @Model.NetAmount.ToString("0.00")
+                                    </th>
+
+                                </tr>
+
+                            </tfoot>
+                        }
+
+                    </table>
+
+
+                    @if (isLastPage)
+                    {
+
+                        <!-- =========================================
+                             AMOUNT IN WORDS
+                             ========================================= -->
+
+                        <div class="refund-amount-words">
+
+                            <strong>Amount in Words:</strong>
+
+                            @Model.AmountInWords
+
+                        </div>
+
+
+                        <!-- =========================================
+                             REFUND REASON
+                             ========================================= -->
+
+                        @if (!string.IsNullOrWhiteSpace(
+                            Model.Reason))
+                        {
+                            <div class="refund-reason">
+
+                                <strong>
+                                    Reason:
+                                </strong>
+
+                                @Model.Reason
+
+                            </div>
+                        }
+
+
+                        <!-- =========================================
+                             PAYMENTS
+                             ========================================= -->
+
+                        @if (
+                            Model.Payments != null &&
+                            Model.Payments.Count > 0
+                        )
+                        {
+
+                            <table class="refund-payments-table">
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th>Date</th>
+                                        <th>Mode</th>
+                                        <th>Reference</th>
+
+                                        <th class="text-end">
+                                            Amount
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    @foreach (
+                                        var p in Model.Payments)
+                                    {
+                                        <tr>
+
+                                            <td>
+                                                @p.PaymentDate.ToString("dd-MMM-yyyy")
+                                            </td>
+
+                                            <td>
+                                                @p.Mode
+                                            </td>
+
+                                            <td>
+                                                @p.ReferenceNo
+                                            </td>
+
+                                            <td class="text-end">
+                                                @p.Amount.ToString("0.00")
+                                            </td>
+
+                                        </tr>
+                                    }
+
+                                </tbody>
+
+                            </table>
+
+
+                            <div class="refund-payment-summary">
+
+                                <div>
+                                    Total Refunded:
+                                    <strong>
+                                        @Model.RefundedAmount.ToString("0.00")
+                                    </strong>
+                                </div>
+
+                                @if (Model.BalanceAmount > 0)
+                                {
+                                    <div>
+                                        Balance:
+                                        <strong>
+                                            @Model.BalanceAmount.ToString("0.00")
+                                        </strong>
+                                    </div>
+                                }
+
+                            </div>
+
+                        }
+
+
+                        <!-- =========================================
+                             AUTHORIZATION
+                             ========================================= -->
+
+                        <div class="refund-authorization">
+
+                            <div>
+
+                                @if (Model.RequestedByName != null)
+                                {
+                                    <div>
+                                        <strong>Initiated By:</strong>
+                                        @Model.RequestedByName
+                                    </div>
+                                }
+
+                                @if (Model.RequestedOn.HasValue)
+                                {
+                                    <div>
+                                        <strong>On:</strong>
+                                        @Model.RequestedOn.Value.ToString("dd-MMM-yyyy")
+                                    </div>
+                                }
+
+                            </div>
+
+
+                            <div>
+
+                                @if (Model.ApprovedByName != null)
+                                {
+                                    <div>
+                                        <strong>Approved By:</strong>
+                                        @Model.ApprovedByName
+                                    </div>
+                                }
+
+                                @if (Model.ApprovedOn.HasValue)
+                                {
+                                    <div>
+                                        <strong>On:</strong>
+                                        @Model.ApprovedOn.Value.ToString("dd-MMM-yyyy")
+                                    </div>
+                                }
+
+                            </div>
+
+
+                            <div>
+
+                                @if (Model.CompletedByName != null)
+                                {
+                                    <div>
+                                        <strong>Completed By:</strong>
+                                        @Model.CompletedByName
+                                    </div>
+                                }
+
+                                @if (Model.CompletedOn.HasValue)
+                                {
+                                    <div>
+                                        <strong>On:</strong>
+                                        @Model.CompletedOn.Value.ToString("dd-MMM-yyyy")
+                                    </div>
+                                }
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- =========================================
+                             FOOTER
+                             ========================================= -->
+
+                        <div class="refund-footer">
+
+                            <span>
+                                This is a computer generated refund.
+                            </span>
+
+                            <span>
+                                Authorized Signatory
+                            </span>
+
+                        </div>
+
+                    }
+                    else
+                    {
+                        <div class="refund-footer">
+
+                            <span>
+                                This is a computer generated refund.
+                            </span>
+
+                            <span>
+                                Continued on next page...
+                            </span>
+
+                        </div>
+                    }
+
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+</div>
+
+
+@section Styles {
+
+    <link rel="stylesheet" href="~/css/refund/refund-print.css" asp-append-version="true" />
+}
+
+
