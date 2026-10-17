@@ -99,7 +99,8 @@ namespace Controllers
                             label = x.MedicineName,
                             value = x.MedicineName,
                             dosageForm = x.DosageForm,
-                            scheduleType = x.ScheduleType
+                            scheduleType = x.ScheduleType,
+                            genericName = x.GenericName
                         });
 
             return Json(medicines);

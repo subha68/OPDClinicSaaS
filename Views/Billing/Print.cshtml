@@ -45,16 +45,27 @@
             </a>
         }
 
-        @await Html.PartialAsync(
-            "_BackButton",
-            new ViewModels.BackButtonVM
-            {
-                Controller = "Billing",
-                Action = "SearchByPatient",
-                PatientId = Model.PatientId,
-                Text = "Back to Bills"
-            }
-        )
+        @if (ViewBag.ReturnUrl is string returnUrl)
+        {
+            <a href="@returnUrl"
+            class="btn btn-outline-secondary">
+                <i class="fa-solid fa-arrow-left me-1"></i>
+                Back to Patient History
+            </a>
+        }
+        else
+        {
+            @await Html.PartialAsync(
+                "_BackButton",
+                new ViewModels.BackButtonVM
+                {
+                    Controller = "Billing",
+                    Action = "SearchByPatient",
+                    PatientId = Model.PatientId,
+                    Text = "Back to Bills"
+                }
+            )
+        }
 
     </div>
 

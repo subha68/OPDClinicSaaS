@@ -8,27 +8,40 @@ namespace BLL
     {
         private readonly DoctorDAL _doctorDAL;
         private readonly RoleDAL _roleDAL;
+        private readonly DepartmentDAL _departmentDAL;
+
         private readonly UserService _user;
+        private readonly PrescriptionTemplateService _template;
 
         public DoctorService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
                                 : base(config, httpContextAccessor)
         {
             _doctorDAL = new DoctorDAL(config);
             _roleDAL = new RoleDAL(config);
+            _departmentDAL = new DepartmentDAL(config);
             _user = new UserService(config, httpContextAccessor);
+            _template = new PrescriptionTemplateService(config, httpContextAccessor);
             _dal = _doctorDAL;
         }
 
         public override int Create(Doctor model)
         {
-            if (model.DepartmentId == 0)
-                throw new Exception("Department required");
-
             using var conn = _db.GetConnection();
             conn.Open();
             using var tran = conn.BeginTransaction();
             try
             {
+                model.ClinicId = ClinicId;
+
+                if (model.DepartmentId == 0)
+                    throw new Exception("Department required");
+
+                // check if department belongs to this clinic
+                var department = _departmentDAL.Get(model.DepartmentId, ClinicId, conn, tran);
+
+                if (department == null)
+                    throw new InvalidOperationException($"Department {model.DepartmentId} not found for clinic {model.ClinicId}.");
+
                 int doctorRoleId =_roleDAL.GetRoleByName("Doctor", conn, tran).RoleId;
 
                 // STEP 1: create user
@@ -49,20 +62,14 @@ namespace BLL
                 int newUserId = _user.Add(user, conn, tran);
 
                 // STEP 2: create doctor
-                var doctor = new Doctor
-                {
-                    Salutation = model.Salutation,
-                    FirstName = model.FirstName,
-                    LastName = model.LastName,
-                    DepartmentId = model.DepartmentId,
-                    RegistrationNo = model.RegistrationNo,
-                    Qualification = model.Qualification,
-                    ClinicId = model.ClinicId,
-                    Username = model.Username,
-                    UserId = newUserId
-                };
+                model.UserId = newUserId;
 
-                int id = base.Add(doctor, conn, tran);
+                int id = base.Add(model, conn, tran);
+                model.DoctorId = id;
+
+                // create template
+                int templateId = _template.SyncClinicDoctorTemplate(ClinicId, model.DoctorId, conn, tran);
+                model.PrescriptionTemplateId = templateId;
 
                 tran.Commit();
                 return id;
@@ -76,17 +83,24 @@ namespace BLL
 
         public override bool Modify(Doctor model)
         {
-            // cannot change ClinicId as doctor is tied to a clinic.
-
-            if (model.DepartmentId == 0)
-                throw new Exception("Department required");
-
             using var conn = _db.GetConnection();
             conn.Open();
             using var tran = conn.BeginTransaction();
 
             try
             {
+                // cannot change ClinicId as doctor is tied to a clinic.
+                model.ClinicId = ClinicId;
+
+                if (model.DepartmentId == 0)
+                    throw new Exception("Department required");
+
+                // check if department belongs to this clinic
+                var department = _departmentDAL.Get(model.DepartmentId, ClinicId, conn, tran);
+
+                if (department == null)
+                    throw new InvalidOperationException($"Department {model.DepartmentId} not found for clinic {model.ClinicId}.");
+
                 int doctorRoleId =_roleDAL.GetRoleByName("Doctor", conn, tran).RoleId;
 
                 var user = new User
@@ -103,6 +117,15 @@ namespace BLL
                     throw new Exception("Associated user not found");
 
                 bool result = base.Update(model, conn, tran);
+
+                if (!result)
+                    throw new InvalidOperationException(
+                        $"Doctor {model.DoctorId} could not be modified for clinic {model.ClinicId}.");
+
+
+                int templateId = _template.SyncClinicDoctorTemplate(ClinicId, model.DoctorId, conn, tran);
+                model.PrescriptionTemplateId = templateId;
+
                 tran.Commit();
                 return result;
             }

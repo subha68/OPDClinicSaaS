@@ -667,8 +667,8 @@ namespace DAL
                         LEFT JOIN Visits V
                             ON tg.VisitId = V.VisitId
 
-                        WHERE tg.PatientId = 4
-                        AND tr.ClinicId = 1
+                        WHERE tg.PatientId = @PatientId
+                        AND tr.ClinicId = @ClinicId
                     )
 
                     SELECT *

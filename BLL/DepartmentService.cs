@@ -10,34 +10,39 @@ namespace BLL
     public class DepartmentService : BaseService<Department>
     {
         private readonly DepartmentDAL _departmentDAL;
-        private readonly PrescriptionTemplateDAL _templateDAL;
+        private readonly PrescriptionTemplateService _template;
         public DepartmentService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
                                 : base(config, httpContextAccessor)
         {
             _departmentDAL = new DepartmentDAL(config);
-            _templateDAL = new PrescriptionTemplateDAL(config);
+            _template = new PrescriptionTemplateService(config, httpContextAccessor);
             _dal = _departmentDAL;
         }
 
         public override int Create(Department model)
         {
-            model.ClinicId = ClinicId;
-
-            if (string.IsNullOrEmpty(model.Name))
-                throw new Exception("Department Name is required");
-
             using var conn = _db.GetConnection();
             conn.Open();
             using var tran = conn.BeginTransaction();
             try
             {
+                model.ClinicId = ClinicId;
+
+                if (string.IsNullOrWhiteSpace(model.Name))
+                    throw new Exception("Department Name is required");
+
+                if (string.IsNullOrWhiteSpace(model.DepartmentCode))
+                    throw new InvalidOperationException("Department Code is required");
+
+                int count = _departmentDAL.CountByCode(ClinicId, null, model.DepartmentCode, conn, tran);
+
+                if (count > 0)
+                    throw new InvalidOperationException($"Department already exists with code {model.DepartmentCode}");
+
                 int departmentId = Add(model, conn, tran);
 
-                if (model.ToBeSourceTemplateId != 0)
-                {
-                    int templateId = _templateDAL.CloneTemplate((int)model.ToBeSourceTemplateId, 0, ClinicId, departmentId, conn, tran);
-                    model.PrescriptionTemplateId = templateId;
-               }
+                int templateId = _template.SyncClinicDepartmentTemplate(ClinicId, departmentId, conn, tran);
+                model.PrescriptionTemplateId = templateId;
 
                 tran.Commit();
                 return departmentId;
@@ -53,23 +58,36 @@ namespace BLL
         {
             model.ClinicId = ClinicId;
 
-            if (string.IsNullOrEmpty(model.Name))
-                throw new Exception("Department Name is required");
-
             using var conn = _db.GetConnection();
             conn.Open();
             using var tran = conn.BeginTransaction();
             try
             {
+                if (string.IsNullOrEmpty(model.Name))
+                    throw new Exception("Department Name is required");
+
+                if (string.IsNullOrWhiteSpace(model.DepartmentCode))
+                    throw new InvalidOperationException("Department Code is required");
+
+                int count = _departmentDAL.CountByCode(ClinicId, model.DepartmentId, model.DepartmentCode, conn, tran);
+
+                if (count > 0)
+                    throw new InvalidOperationException($"Department already exists with code {model.DepartmentCode}");
+
+                // check if department belongs to this clinic
+                var department = _departmentDAL.Get(model.DepartmentId, ClinicId, conn, tran);
+
+                if (department == null || department.ClinicId != ClinicId)
+                    throw new InvalidOperationException($"Department {model.DepartmentId} not found for clinic {model.ClinicId}.");
+
                 bool result = Update(model, conn, tran);
 
-                if (model.ToBeSourceTemplateId != model.SourceTemplateId)
-                {
-                    int templateId = ReplaceDepartmentTemplate(model.DepartmentId, (int)model.ToBeSourceTemplateId,  
-                                                                                conn, tran);
-                    model.PrescriptionTemplateId = templateId;
-                    model.SourceTemplateId = model.ToBeSourceTemplateId;
-                }
+                if (!result)
+                    throw new InvalidOperationException(
+                        $"Department {model.DepartmentId} could not be modified for clinic {model.ClinicId}.");
+
+                int templateId = _template.SyncClinicDepartmentTemplate(ClinicId, model.DepartmentId, conn, tran);
+                model.PrescriptionTemplateId = templateId;
 
                 tran.Commit();
                 return true;
@@ -79,35 +97,6 @@ namespace BLL
                 tran.Rollback();
                 throw;
             }
-        }
-
-        public int ReplaceDepartmentTemplate(int departmentId, int toBeSourceTemplateId, 
-                                                        SqlConnection conn, SqlTransaction tran)
-        {
-            if (departmentId <= 0)
-                return 0;
-
-            PrescriptionTemplate template = _templateDAL.GetByDepartment(departmentId, ClinicId, conn, tran);
-
-            if (template == null)
-                return 0;
-
-            if (toBeSourceTemplateId == template.SourceTemplateId)
-                // no change required
-                return template.TemplateId;
-
-            _templateDAL.Delete(template.TemplateId, ClinicId, conn, tran);
-
-            if (toBeSourceTemplateId == 0)
-                // No new template should be associated.
-                // Simply delete the existing department-specific template.
-                return 0;
-
-            // Replace existing department-specific template
-            // with a clone of the selected source template.
-            int newTemplateId = _templateDAL.CloneTemplate(toBeSourceTemplateId, 0, ClinicId, departmentId, conn, tran);
-
-            return newTemplateId;                
         }
 
         public override List<Department> List()

@@ -150,7 +150,8 @@ namespace Controllers
         // CLONE DEFAULT VITALS - called by ClinicAdmin from Vital Definition page
         // ============================================================
 
-        [HttpGet]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult CloneDefaults()
         {
             if (!IsClinicAdmin())
@@ -181,7 +182,7 @@ namespace Controllers
         [HttpPost]
         public IActionResult CloneVitalDefinitions(int clinicId)
         {
-            int count = _vitalDef.CloneDefaults(clinicId);
+            int count = _vitalDef.CloneDefaults();
 
             if (count == 0)
             {

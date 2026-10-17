@@ -2,13 +2,13 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewData["Title"] = "Department Management";
 
     ViewData["Title"] = "Department Management";
 
     ViewBag.Fields = new []
     {
-        new { Name="Name", Label="Department Name", Type="text", Color="" },
+        new { Name="DepartmentCode", Label="Department Code", Type="text", Color="" },
+        new { Name="Name", Label="Name", Type="text", Color="" },
         new { Name="Description", Label="Description", Type="text", Color="" },
         new { Name="ClinicName", Label="Clinic", Type="text", Color="" }
     };

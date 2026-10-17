@@ -11,12 +11,11 @@
 
     ViewBag.Fields = new[]
     {
-        new { Name="Name", Label="Name", Type="text", Col="6"},
-        new { Name="Description", Label="Description", Type="text", Col="6"},
+        new { Name="DepartmentCode", Label="Department Code", Type="text", Col="3"},
+        new { Name="Name", Label="Name", Type="text", Col="4"},
+        new { Name="Description", Label="Description", Type="text", Col="5"},
         new { Name="ClinicName", Label="Clinic", Type="readonly", Col="6"},
-        new { Name="PrescriptionTemplateId", Label="Prescription Template", Type="autocomplete", Col="6"},
-//        new { Name="PrescriptionTemplateId", Label="", Type="hidden", Col="7"},
-        new { Name="ToBeSourceTemplateId", Label="", Type="hidden", Col="7"}
+        new { Name="PrescriptionTemplateName", Label="Prescription Template", Type="readonly", Col="6"},
     };
 
     ViewBag.Dropdowns = new Dictionary<string, object>()
@@ -26,38 +25,4 @@
     ViewBag.KeyField = "DepartmentId";
 }
 
-<input type="hidden" name="PrescriptionTemplateId" id="PrescriptionTemplateId" />
-<input type="hidden" name="SourceTemplateId" id="SourceTemplateId" value="@(Model?.SourceTemplateId ?? 0)" />
-
 @await Html.PartialAsync("_CrudForm", Model)
-
-@section Styles {
-    <style>
-        .ui-autocomplete {
-            z-index: 99999 !important;
-            max-height: 250px;
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-    </style>
-}
-
-@section Scripts {
-<script src="~/js/helper.js"></script>
-
-<script>
-$(function () {
-
-    wireTemplateAutocomplete("#PrescriptionTemplateId_Text");
-
-    // Populate autocomplete display text when editing.
-    const templateName = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-                                        Model?.PrescriptionTemplateName ?? ""
-                                    ));
-
-    $("#PrescriptionTemplateId_Text")
-        .val(templateName);
-
-});
-</script>
-}

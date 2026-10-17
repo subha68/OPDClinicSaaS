@@ -663,7 +663,7 @@ namespace BLL
                 {
                     row.Fields = fields
                         .Where(r => r.RowId == row.RowId)
-                        .ToList();                    
+                        .ToList();
                 }
 
                 foreach (var row in rows)

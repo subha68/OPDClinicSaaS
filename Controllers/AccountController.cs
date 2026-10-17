@@ -61,53 +61,53 @@ namespace Controllers
 
             var user = _user.ValidateUser(username, password);
 
-            if (user != null)
+            if (user == null)
             {
-                var claims = new List<System.Security.Claims.Claim>
-                {
-                    new System.Security.Claims.Claim("UserId", user.UserId.ToString()),
-                    new System.Security.Claims.Claim("RoleId", user.RoleId.ToString())
-                };
-
-                if (user.ClinicId.HasValue)
-                {
-                    claims.Add(
-                        new System.Security.Claims.Claim(
-                            "ClinicId",
-                            user.ClinicId.Value.ToString()));
-                }
-
-                var identity = new System.Security.Claims.ClaimsIdentity(
-                    claims,
-                    CookieAuthenticationDefaults.AuthenticationScheme);
-
-                var principal = new System.Security.Claims.ClaimsPrincipal(identity);
-
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
-
-                // keep your session too
-                String rolename = _user.GetUserRole(user).RoleName;
-                int doctorId = _user.GetUserDoctor(user)?.DoctorId ?? 0;
-
-                if (doctorId != 0)
-                {
-                    HttpContext.Session.SetString("DoctorId", doctorId.ToString());
-                }
-                HttpContext.Session.SetString("RoleId", user.RoleId.ToString());
-                HttpContext.Session.SetString("UserId", user.UserId.ToString());
-                HttpContext.Session.SetString("Username", username);
-                HttpContext.Session.SetString("RoleName", rolename);
-                HttpContext.Session.SetString("UserFirstName", user.FirstName ?? "");
-                HttpContext.Session.SetString("UserLastName", user.LastName ?? "");
-                HttpContext.Session.SetString("UserDisplayName", (user.FirstName ?? "") + " " + (user.LastName ?? ""));
-                HttpContext.Session.SetString("Features", _user.GetUserFeaturesAsString(user));
-                HttpContext.Session.SetString("IsFirstLogin", user.IsFirstLogin.ToString());
-
-                return RedirectToAction("Index", "Home");
+                ViewBag.Error = "Invalid credentials";
+                return View();
             }
 
-            ViewBag.Error = "Invalid credentials";
-            return View();
+            var claims = new List<System.Security.Claims.Claim>
+            {
+                new System.Security.Claims.Claim("UserId", user.UserId.ToString()),
+                new System.Security.Claims.Claim("RoleId", user.RoleId.ToString())
+            };
+
+            if (user.ClinicId.HasValue)
+            {
+                claims.Add(
+                    new System.Security.Claims.Claim(
+                        "ClinicId",
+                        user.ClinicId.Value.ToString()));
+            }
+
+            var identity = new System.Security.Claims.ClaimsIdentity(
+                claims,
+                CookieAuthenticationDefaults.AuthenticationScheme);
+
+            var principal = new System.Security.Claims.ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+            // keep your session too
+            String rolename = _user.GetUserRole(user).RoleName;
+            int doctorId = _user.GetUserDoctor(user)?.DoctorId ?? 0;
+
+            if (doctorId != 0)
+            {
+                HttpContext.Session.SetString("DoctorId", doctorId.ToString());
+            }
+            HttpContext.Session.SetString("RoleId", user.RoleId.ToString());
+            HttpContext.Session.SetString("UserId", user.UserId.ToString());
+            HttpContext.Session.SetString("Username", username);
+            HttpContext.Session.SetString("RoleName", rolename);
+            HttpContext.Session.SetString("UserFirstName", user.FirstName ?? "");
+            HttpContext.Session.SetString("UserLastName", user.LastName ?? "");
+            HttpContext.Session.SetString("UserDisplayName", (user.FirstName ?? "") + " " + (user.LastName ?? ""));
+            HttpContext.Session.SetString("Features", _user.GetUserFeaturesAsString(user));
+            HttpContext.Session.SetString("IsFirstLogin", user.IsFirstLogin.ToString());
+
+            return RedirectToAction("Index", "Home");
         }
 
         [HttpPost]

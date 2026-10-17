@@ -4,6 +4,9 @@
     <div class="glass-card">
 
         <form method="post">
+            
+            @Html.AntiForgeryToken()
+
             @{
                 var keyProp = Model?.GetType().GetProperty(ViewBag.KeyField);
                 var keyValue = keyProp?.GetValue(Model);
@@ -94,8 +97,9 @@
                     @if(field.Type == "number")
                     {
                         <div class="col-md-@field.Col mb-4">
-                            <label>@field.Label</label>
-                            <input name="@field.Name"
+                            <label class="form-label">@field.Label</label>
+                            <input type="number"
+                                name="@field.Name"
                                 value="@Model?.GetType().GetProperty(field.Name)?.GetValue(Model)"
                                 class="form-control"
                                 step="0.01" />

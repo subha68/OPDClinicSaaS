@@ -561,13 +561,20 @@ namespace BLL
             return _testDefinitionDAL.GetPanelsByParameter(parameterId, clinicId, conn);
         }
 
-        public int CloneMasterDefinitions(int clinicId)
+        public int CloneMasterDefinitions(int clinicId, SqlConnection conn, SqlTransaction? tran = null)
         {
             if (clinicId <= 0)
             {
                 throw new ArgumentException("Invalid clinic.");
             }
 
+            int rowsAffected = _testDefinitionDAL.CloneMasterDefinitions(clinicId, conn, tran);
+
+            return rowsAffected;
+        }
+
+        public int CloneMasterDefinitions(int clinicId)
+        {
             using var conn = _db.GetConnection();
             conn.Open();
 
@@ -575,7 +582,7 @@ namespace BLL
 
             try
             {
-                int rowsAffected = _testDefinitionDAL.CloneMasterDefinitions(clinicId, conn, tran);
+                int rowsAffected = CloneMasterDefinitions(clinicId, conn, tran);
 
                 tran.Commit();
 

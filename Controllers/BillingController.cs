@@ -164,13 +164,21 @@ public class BillingController : Controller
     // -------------------------------------------------
 
     [HttpGet]
-    public IActionResult Print(int id)
+    public IActionResult Print(int id, string? returnUrl = null)
     {
         var bill = _bill.Get(id);
 
+        if (bill == null)
+            return NotFound();
+
+        ViewBag.ReturnUrl =
+            !string.IsNullOrWhiteSpace(returnUrl) &&
+            Url.IsLocalUrl(returnUrl)
+                ? returnUrl
+                : null;
+
         return View(bill);
     }
-
 
     // -------------------------------------------------
     // AJAX: Previous bills for a VISIT

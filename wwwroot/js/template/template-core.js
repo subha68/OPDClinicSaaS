@@ -52,12 +52,7 @@ $("#DoctorId").change(function () {
 });
 
 function updateShowButtonState() {
-    const deptSelected = $("#DepartmentId").val();
-    const doctorSelected = $("#DoctorId").val();
-
-    const enable = deptSelected && deptSelected !== "";
-
-    $("#btnShowTemplate").prop("disabled", !enable);
+    $("#btnShowTemplate").prop("disabled", false);
 }
 
 // run on change

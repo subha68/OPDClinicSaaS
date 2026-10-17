@@ -242,6 +242,10 @@ namespace BLL
             try
             {
                 bool result = Delete(id, conn, tran);
+
+                if (!result)
+                    throw new InvalidOperationException("Could not delete");
+
                 tran.Commit();
                 return result;
             }

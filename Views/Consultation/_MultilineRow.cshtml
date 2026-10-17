@@ -35,11 +35,42 @@
     {
         var field = Model.Fields[i];
 
-        <td class="field-cell">
+        if (!string.IsNullOrWhiteSpace(field.MergeWith))
+        {
+            // Retain the editor for MVC form binding, but do not show
+            // a separate table column for this merged field.
+            <td class="field-cell merged-field-cell"
+                data-field-code="@field.FieldCode"
+                data-merge-with="@field.MergeWith"
+                style="display:none">
 
-            @Html.EditorFor(m => m.Fields[i])
+                @Html.EditorFor(m => m.Fields[i])
 
-        </td>
+            </td>
+        }
+        else
+        {
+            var mergedField = Model.Fields.FirstOrDefault(f =>
+                string.Equals(
+                    f.MergeWith?.Trim(),
+                    field.FieldCode?.Trim(),
+                    StringComparison.OrdinalIgnoreCase));
+
+            <td class="field-cell"
+                data-field-code="@field.FieldCode">
+
+                @Html.EditorFor(m => m.Fields[i])
+
+                @if (mergedField != null)
+                {
+                    <div class="merged-field-display text-muted small"
+                        data-merge-with="@field.FieldCode">
+                        @mergedField.FieldValue
+                    </div>
+                }
+            </td>
+        }
+    
     }
 
 </tr>

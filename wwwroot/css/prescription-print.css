@@ -121,7 +121,7 @@ body {
 }
 
 .patient-name {
-    font-size: 10.5pt !important;
+    font-size: 10pt !important;
     font-weight: 600 !important;
 }
 
@@ -291,4 +291,13 @@ body {
 * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+}
+
+/* Prescription print: smaller text, but retain the normal text color. */
+.prescription-merged-name {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.82em;
+    font-weight: 400;
+    color: inherit;
 }

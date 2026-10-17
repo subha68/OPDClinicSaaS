@@ -14,15 +14,15 @@
         new { Name="Name", Label="Clinic Name", Type="text", Col="12"},
         new { Name="Address", Label="Address", Type="text", Col="12"},
         new { Name="Phone", Label="Phone", Type="text", Col="4"},
-        new { Name="ClinicCode", Label="Clinic Code", Type="text", Col="2"},
-        new { Name="LogoPath", Label="Logo Path", Type="file", Col="6"},
+        new { Name="ClinicCode", Label="Clinic Code", Type="readonly", Col="2"},
+        new { Name="LogoPath", Label="Logo Path", Type="text", Col="6"},
     };
 
     ViewBag.Dropdowns = new Dictionary<string, object>()
     {
     };
 
-    ViewBag.CustomActions = new[]
+    ViewBag.CustomActions = isEdit ? new[]
     {
         new
         {
@@ -47,7 +47,8 @@
             SpinnerText = "Cloning Vital Definitions...",
             SubmitForm = true
         }        
-    };
+    }
+    : null;
 
     ViewBag.KeyField = "ClinicId";
 }

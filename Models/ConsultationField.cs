@@ -20,7 +20,7 @@ namespace Models
         public int DisplayOrder { get; set; }
         public bool IsMandatory { get; set; }
         public string? FieldValue { get; set; }
-        public string Unit { get; set; }
+        public string MergeWith { get; set; }
         public bool HideLabel { get; set; }
         public ConsultationRow? Row { get; set; }
         public List<ConsultationFieldOption> Options { get; set; } = new();
@@ -86,6 +86,7 @@ namespace Models
             FieldCode = templateField.FieldCode;
             FieldSource = templateField.FieldSource;
             DisplayOrder = templateField.DisplayOrder;
+            MergeWith = templateField.MergeWith;
             //IsTemplateRow = true; // Mark as a template row
             //IsMandatory = templateField.IsMandatory;
             //LineNumber = 0; // Default line number for new fields
@@ -117,7 +118,7 @@ namespace Models
                 FieldSource = FieldSource,
                 FieldDataId = FieldDataId,
                 IsMandatory = IsMandatory,
-                Unit = Unit,
+                MergeWith = MergeWith,
                 FieldValue = null
             };
 

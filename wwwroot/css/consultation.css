@@ -555,6 +555,14 @@ textarea.form-control {
     margin-right: 6px;
 }
 
+/* Consultation editor: generic name on a second line beneath the medicine input. */
+.medicine-generic-name {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.82em;
+    font-weight: 400;
+    color: var(--bs-secondary-color, #6c757d);
+}
 
 /*---------------------------------------------------------
     Responsive

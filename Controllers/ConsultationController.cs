@@ -84,9 +84,19 @@ namespace Controllers
             return RedirectToAction("Index");
         }
 
-        public IActionResult Preview(int appointmentId)
+        [HttpGet]
+        public IActionResult Preview(int appointmentId, string? returnUrl = null)
         {
             var vm = _consultation.GetPrescription(appointmentId);
+
+            if (vm == null)
+                return NotFound();
+
+            ViewBag.ReturnUrl =
+                !string.IsNullOrWhiteSpace(returnUrl) &&
+                Url.IsLocalUrl(returnUrl)
+                    ? returnUrl
+                    : null;
 
             return View(vm);
         }

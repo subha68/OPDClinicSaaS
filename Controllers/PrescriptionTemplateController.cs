@@ -57,6 +57,18 @@ namespace Controllers
             return PartialView("_TemplateDesigner", model);
         }
 
+        public IActionResult GetDefault()
+        {
+            var model = _template.GetDefault();
+
+            if (model == null)
+                return PartialView("_NoTemplateFound");
+
+            model.FieldTypes = PopulateFieldTypes();
+
+            return PartialView("_TemplateDesigner", model);
+        }        
+
         public IActionResult SectionIndex(int templateId)
         {
             var sections = _template.GetSections(templateId);

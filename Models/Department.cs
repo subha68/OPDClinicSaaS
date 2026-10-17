@@ -5,6 +5,7 @@ namespace Models
     public class Department
     {
         public int DepartmentId { get; set; }
+        public string DepartmentCode { get; set; }
         public int ClinicId { get; set; }
         public string? ClinicName { get; set; }
 
@@ -15,6 +16,5 @@ namespace Models
         public int? PrescriptionTemplateId { get; set; }
         public string? PrescriptionTemplateName { get; set; }
         public int? SourceTemplateId { get; set; }
-        public int? ToBeSourceTemplateId { get; set; }
     }
 }

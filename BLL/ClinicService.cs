@@ -6,13 +6,17 @@ namespace BLL
     public class ClinicService : BaseService<Clinic>
     {
         private readonly ClinicDAL _clinicDAL;
-        private readonly PrescriptionTemplateDAL _templateDAL;
+        private readonly PrescriptionTemplateService _template;
+        private readonly TestDefinitionService _testDefinition;
+        private readonly VitalDefinitionService _vitalDefinition;
 
         public ClinicService(IConfiguration config, IHttpContextAccessor httpContextAccessor) 
                                 : base(config, httpContextAccessor)
         {
             _clinicDAL = new ClinicDAL(config);
-            _templateDAL = new PrescriptionTemplateDAL(config);
+            _template = new PrescriptionTemplateService(config, httpContextAccessor);
+            _testDefinition = new TestDefinitionService(config, httpContextAccessor);
+            _vitalDefinition = new VitalDefinitionService(config, httpContextAccessor);
             _dal = _clinicDAL;
         }
 
@@ -28,8 +32,14 @@ namespace BLL
                 int clinicId = base.Add(clinic, conn, tran);
 
                 // copy default template for new Clinic
-                _templateDAL.CloneTemplate("DEFAULT", 0, clinicId, 0, conn, tran);
+                _template.SyncClinicTemplate(clinicId, conn, tran);
 
+                // clone test definitions
+                _testDefinition.CloneMasterDefinitions(clinicId, conn, tran);
+
+                // clone vital definitions
+                _vitalDefinition.CloneDefaults(clinicId, conn, tran);
+               
                 tran.Commit();
                 return clinicId;
             }
@@ -65,7 +75,7 @@ namespace BLL
             try
             {
                 // copy default template for new Clinic
-                _templateDAL.CloneTemplate("DEFAULT", 0, ClinicId, 0, conn, tran);
+                _template.SyncClinicTemplate(ClinicId, conn, tran);
 
                 tran.Commit();
                 return ClinicId;

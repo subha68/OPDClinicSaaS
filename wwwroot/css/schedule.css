@@ -1,218 +1,245 @@
-.schedule-day
-{
-    margin-bottom:20px;
+/* =========================================================
+   Doctor Schedule
+   Header labels and tick marks are anchored to the same
+   06:00–22:00 timeline positions as the schedule rows.
+   ========================================================= */
+
+.schedule-day {
+    margin-bottom: 20px;
 }
 
-.day-name
-{
-    font-weight:600;
-    margin-bottom:6px;
+.day-name {
+    font-weight: 600;
+    margin-bottom: 6px;
 }
 
-
-.slot
-{
-    background:#f5f5f5;
-    cursor:pointer;
+.slot {
+    background: #f5f5f5;
+    cursor: pointer;
 }
 
-.slot.active
-{
-    background:#0d6efd;
+.slot.active {
+    background: #0d6efd;
 }
 
-.slot:hover
-{
-    opacity:0.8;
+.slot:hover {
+    opacity: 0.8;
 }
 
-/* New styles */
-
-.schedule-header
-{
-    display:flex;
-    margin-bottom:10px;
-    border-bottom:1px solid #dee2e6;
-    padding-bottom:10px;
+/* Header: day column + time scale */
+.schedule-header {
+    display: flex;
+    align-items: stretch;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #dee2e6;
 }
 
-.day-header
-{
-    width:120px;
-    flex-shrink:0;
+.day-header,
+.day-label {
+    flex: 0 0 105px;
+    width: 105px;
+    box-sizing: border-box;
 }
 
-.hour-header
-{
-    flex:1;
-    display:flex;
+ .hour-header {
+    position: relative;
+    flex: 0 0 1280px !important;
+    width: 1280px !important;
+    min-width: 1280px !important;
+    height: 26px;
+    overflow: visible;
+    border: 0;
+    background: transparent;
 }
 
-.hour-cell
-{
-    flex:1;
-    text-align:center;
-    font-size:12px;
-    font-weight:600;
-    color:#6c757d;
-    border-left:1px solid #e9ecef;
+/*
+   Match the JavaScript scale: 20px per 15 minutes = 80px/hour.
+   There are 16 hours between 06:00 and 22:00, so the timeline
+   and header both use 1280px. Each label is centered on its tick.
+*/
+.hour-cell {
+    position: absolute;
+    top: 0;
+    width: 56px;
+    height: 26px;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    overflow: visible;
+    border: 0 !important;
+    background: transparent !important;
+    text-align: center;
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6c757d;
+    line-height: 18px;
+    transform: translateX(-50%);
 }
 
-.schedule-row
-{
-    display:flex;
-    align-items:center;
-    margin-bottom:12px;
+/* Hourly ticks sit directly below their labels. */
+.hour-cell::before {
+    content: "";
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    width: 1px;
+    height: 8px;
+    background: #dee2e6;
 }
 
-.day-label
-{
-    width:120px;
-    flex-shrink:0;
-    font-weight:600;
-    color:#495057;
+/* Hour boundaries: 06:00 to 22:00 inclusive, at 80px/hour. */
+.hour-cell:nth-child(1)  { left: 0px; }
+.hour-cell:nth-child(2)  { left: 80px; }
+.hour-cell:nth-child(3)  { left: 160px; }
+.hour-cell:nth-child(4)  { left: 240px; }
+.hour-cell:nth-child(5)  { left: 320px; }
+.hour-cell:nth-child(6)  { left: 400px; }
+.hour-cell:nth-child(7)  { left: 480px; }
+.hour-cell:nth-child(8)  { left: 560px; }
+.hour-cell:nth-child(9)  { left: 640px; }
+.hour-cell:nth-child(10) { left: 720px; }
+.hour-cell:nth-child(11) { left: 800px; }
+.hour-cell:nth-child(12) { left: 880px; }
+.hour-cell:nth-child(13) { left: 960px; }
+.hour-cell:nth-child(14) { left: 1040px; }
+.hour-cell:nth-child(15) { left: 1120px; }
+.hour-cell:nth-child(16) { left: 1200px; }
+.hour-cell:nth-child(17) { left: 1280px; }
+
+/* Schedule rows */
+.schedule-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
 }
 
-.timeline
-{
-    position:relative;
-    flex:1;
-    height:52px;
-
-    border:1px solid #dee2e6;
-    border-radius:6px;
-
-    background:#fff;
-
-    overflow:hidden;
+.day-label {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    font-weight: 600;
+    color: #495057;
 }
 
-
-.timeline-grid
-{
-    position:absolute;
-
-    top:0;
-    bottom:0;
-
-    width:1px;
-
-    background:#e9ecef;
+/* Timeline width is flexible; it matches the header's time scale. */
+.timeline {
+    position: relative;
+    flex: 0 0 1280px;
+    width: 1280px;
+    min-width: 1280px;
+    height: 46px;
+    box-sizing: border-box;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background: #fff;
+    overflow: hidden;
+    padding: 0;
 }
 
-.shift-bar
-{
-    position:absolute;
-
-    top:8px;
-    height:34px;
-
-    border-radius:6px;
-
-    background:#0d6efd;
-    color:#fff;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    cursor:move;
-
-    overflow:visible;
+.timeline-grid {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: #e9ecef;
+    pointer-events: none;
 }
 
-.shift-delete
-{
-    position:absolute;
-
-    top:2px;
-    right:2px;
-
-    width:16px;
-    height:16px;
-
-    border-radius:50%;
-
-    background:#dc3545;
-    color:#fff;
-
-    z-index:1000;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    font-size:11px;
+.timeline:hover {
+    background: #fafbfc;
 }
 
-.shift-bar:hover .shift-delete
-{
-    display:flex;
+/* Shift bars */
+.shift-bar {
+    position: absolute;
+    top: 7px;
+    height: 32px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0;
+    background: #0d6efd;
+    color: #fff;
+    cursor: move;
+    overflow: visible;
+    transition: background-color .15s, box-shadow .15s;
 }
 
-/* New */
-
-.shift-text
-{
-    pointer-events:none;
-    white-space:nowrap;
+.shift-bar:hover {
+    background: #0b5ed7;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .20);
 }
 
-.timeline:hover
-{
-    background:#fafbfc;
+.shift-text {
+    pointer-events: none;
+    white-space: nowrap;
 }
 
-.shift-bar
-{
-    transition:
-        background-color .15s,
-        box-shadow .15s;
+.shift-delete {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #dc3545;
+    color: #fff;
+    font-size: 11px;
 }
 
-.shift-bar:hover
-{
-    background:#0b5ed7;
-
-    box-shadow:
-        0 2px 8px rgba(0,0,0,.20);
+.shift-bar:hover .shift-delete {
+    display: flex;
 }
 
+/* jQuery UI resize handles */
 .ui-resizable-e,
-.ui-resizable-w
-{
-    width:20px !important;
-    z-index:9999;
+.ui-resizable-w {
+    width: 20px !important;
+    z-index: 9999;
 }
 
-.ui-resizable-e
-{
-    right:0 !important;
+.ui-resizable-e {
+    right: 0 !important;
+    background: rgba(255, 255, 255, .6);
+    border-right: 4px solid #fff;
+    cursor: ew-resize;
 }
 
-.ui-resizable-w
-{
-    left:0 !important;
-}
-
-.ui-resizable-e
-{
-    background:rgba(255,255,255,.6);
-    border-right:4px solid #fff;
-    cursor:ew-resize;
-}
-
-.ui-resizable-w
-{
-    background:rgba(255,255,255,.6);
-    border-left:4px solid #fff;
-    cursor:ew-resize;
+.ui-resizable-w {
+    left: 0 !important;
+    background: rgba(255, 255, 255, .6);
+    border-left: 4px solid #fff;
+    cursor: ew-resize;
 }
 
 .shift-bar:hover .ui-resizable-e,
-.shift-bar:hover .ui-resizable-w
-{
-    background:rgba(255,255,255,.75);
+.shift-bar:hover .ui-resizable-w {
+    background: rgba(255, 255, 255, .75);
+}
+
+.ui-resizable-e::before,
+.ui-resizable-w::before {
+    content: "";
+    position: absolute;
+    top: 20%;
+    height: 60%;
+    width: 2px;
+    background: #fff;
+}
+
+.ui-resizable-e::before {
+    left: 4px;
+}
+
+.ui-resizable-w::before {
+    right: 4px;
 }
 
 .shift-block {
@@ -229,7 +256,7 @@
     height: 100%;
     cursor: ew-resize;
     z-index: 999;
-    background: rgba(0,0,0,0.1);
+    background: rgba(0, 0, 0, .1);
 }
 
 .resize-handle-left {
@@ -258,91 +285,50 @@
     left: 2px;
 }
 
-.ui-resizable-e::before,
-.ui-resizable-w::before
-{
-    content:'';
-
-    position:absolute;
-
-    top:20%;
-    height:60%;
-    width:2px;
-
-    background:white;
+/* Slot cards */
+.slot-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
 }
 
-.ui-resizable-e::before
-{
-    left:4px;
+.slot-card {
+    width: 140px;
+    height: 90px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: .2s;
 }
 
-.ui-resizable-w::before
-{
-    right:4px;
+.slot-card:hover {
+    transform: translateY(-2px);
 }
 
-
-/* For Slots */
-
-.slot-container
-{
-    display:flex;
-    flex-wrap:wrap;
-    gap:12px;
-    margin-top:20px;
+.slot-available {
+    background: #198754;
+    color: #fff;
 }
 
-.slot-card
-{
-    width:140px;
-    height:90px;
-
-    border-radius:10px;
-
-    display:flex;
-    flex-direction:column;
-
-    justify-content:center;
-    align-items:center;
-
-    cursor:pointer;
-
-    transition:.2s;
+.slot-booked {
+    background: #dc3545;
+    color: #fff;
 }
 
-.slot-card:hover
-{
-    transform:translateY(-2px);
+.slot-time {
+    font-size: 18px;
+    font-weight: 700;
 }
 
-.slot-available
-{
-    background:#198754;
-    color:white;
+.slot-patient {
+    text-align: center;
+    font-size: 12px;
 }
 
-.slot-booked
-{
-    background:#dc3545;
-    color:white;
+.slot-free {
+    font-size: 12px;
 }
-
-.slot-time
-{
-    font-size:18px;
-    font-weight:700;
-}
-
-.slot-patient
-{
-    text-align:center;
-    font-size:12px;
-}
-
-.slot-free
-{
-    font-size:12px;
-}
-
-

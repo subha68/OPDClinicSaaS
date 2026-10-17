@@ -32,12 +32,23 @@ namespace BLL
 
         public List<Patient> Search(PatientSearchVM searchVM)
         {
+            if (searchVM == null)
+                throw new ArgumentNullException(nameof(searchVM));
+
+            string searchString = searchVM.SearchString?.Trim() ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(searchString))
+                return new List<Patient>();
+
             using var conn = _db.GetConnection();
             conn.Open();
 
             try
             {
+                // Always use the current clinic context.
                 searchVM.ClinicId = ClinicId;
+                searchVM.SearchString = searchString;
+
                 return _patientDAL.Search(searchVM, conn);
             }
             catch
@@ -48,14 +59,22 @@ namespace BLL
 
         public List<Patient> Search(string term)
         {
+            string searchString = term?.Trim() ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(searchString))
+                return new List<Patient>();
+
             using var conn = _db.GetConnection();
             conn.Open();
 
             try
             {
-                PatientSearchVM vm = new PatientSearchVM();
-                vm.ClinicId = ClinicId;
-                vm.SearchString = term;
+                var vm = new PatientSearchVM
+                {
+                    ClinicId = ClinicId,
+                    SearchString = searchString
+                };
+
                 return _patientDAL.Search(vm, conn);
             }
             catch
@@ -121,78 +140,158 @@ namespace BLL
 
         public PatientHistoryVM GetHistory(int patientId, int page = 1)
         {
+            const int pageSize = 3;
+
+            // Never allow an invalid page number.
+            page = Math.Max(page, 1);
+
             using var conn = _db.GetConnection();
             conn.Open();
 
             try
             {
+                // ---------------------------------------------------------
+                // Get patient
+                // ---------------------------------------------------------
+
                 var patient = _dal.Get(patientId, ClinicId, conn);
 
+                if (patient == null)
+                {
+                    return new PatientHistoryVM();
+                }
+
+                // Keep the selected patient in the global patient cache.
                 SetCache(new PatientSelectionVM(patient));
 
-                if (patient == null)
-                    return new PatientHistoryVM();
 
-                PatientHistoryVM vm = new PatientHistoryVM(patient);
+                // ---------------------------------------------------------
+                // Create ViewModel
+                // ---------------------------------------------------------
 
-                var visits = _visitDAL.ListByPatient(patientId, conn)
-                        .OrderByDescending(x => x.VisitDate)
-                        .Skip((page - 1) * 3)
-                        .Take(3)
-                        .ToList();
+                var vm = new PatientHistoryVM(patient)
+                {
+                    CurrentPage = page,
+                    PageSize = pageSize
+                };
 
-                vm.TotalVisits = _visitDAL.ListByPatient(patientId, conn).Count();
+
+                // ---------------------------------------------------------
+                // Get visits ONCE
+                // ---------------------------------------------------------
+
+                var allVisits = _visitDAL
+                    .ListByPatient(patientId, conn)
+                    .OrderByDescending(x => x.VisitDate)
+                    .ToList();
+
+
+                // Total number of visits
+                vm.TotalVisits = allVisits.Count;
+
+
+                // ---------------------------------------------------------
+                // Get only the visits required for this page
+                // ---------------------------------------------------------
+
+                var visits = allVisits
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                // ---------------------------------------------------------
+                // Retrieve related information
+                // ---------------------------------------------------------
 
                 var appointments = _appointmentDAL.ListByPatient(patientId, conn);
-
                 var bills = _billDAL.ListByPatient(ClinicId, patientId, conn);
-
                 var billLines = _billLineDAL.ListByPatient(patientId, conn);
-
                 var payments = _paymentDAL.ListByPatient(patientId, conn);
+
+                vm.TotalAppointments = appointments.Count;
+                vm.TotalBills = bills.Count;
+                vm.TotalPayments = payments.Count;
+
+                // ---------------------------------------------------------
+                // No visits for requested page
+                // ---------------------------------------------------------
+
+                if (visits.Count == 0)
+                {
+                    return vm;
+                }
+
+                // ---------------------------------------------------------
+                // Build visit history
+                // ---------------------------------------------------------
 
                 foreach (var visit in visits)
                 {
-                    VisitHistoryVM visitHistoryVM = new VisitHistoryVM(visit);
+                    var visitHistoryVM = new VisitHistoryVM(visit);
+
+
+                    // -----------------------------------------------------
+                    // Appointments / Prescriptions
+                    // -----------------------------------------------------
 
                     foreach (var appointment in appointments)
                     {
-                        if (visit.VisitId == appointment.VisitId)
-                        {
-                            var prescription = _consultationDAL.GetPrescription(appointment.AppointmentId, conn);
+                        if (visit.VisitId != appointment.VisitId)
+                            continue;
 
-                            AppointmentHistoryVM appointmentHistoryVM = new AppointmentHistoryVM(appointment, prescription);
 
-                            visitHistoryVM.Appointments.Add(appointmentHistoryVM);
-                        }
+                        var prescription =
+                            _consultationDAL.GetPrescription(
+                                appointment.AppointmentId,
+                                conn);
+
+
+                        var appointmentHistoryVM =
+                            new AppointmentHistoryVM(
+                                appointment,
+                                prescription);
+
+
+                        visitHistoryVM.Appointments.Add(
+                            appointmentHistoryVM);
                     }
+
+
+                    // -----------------------------------------------------
+                    // Bills / Bill Lines / Payments
+                    // -----------------------------------------------------
 
                     foreach (var bill in bills)
                     {
-                        if (visit.VisitId == bill.VisitId)
+                        if (visit.VisitId != bill.VisitId)
+                            continue;
+
+
+                        foreach (var line in billLines)
                         {
-                            foreach (var line in billLines)
+                            if (line.BillId == bill.BillId)
                             {
-                                if (line.BillId == bill.BillId)
-                                {
-                                    bill.BillLines.Add(line);
-                                }
+                                bill.BillLines.Add(line);
                             }
+                        }
 
-                            foreach (var payment in payments)
+
+                        foreach (var payment in payments)
+                        {
+                            if (payment.BillId == bill.BillId)
                             {
-                                if (payment.BillId == bill.BillId)
-                                {
-                                    bill.Payments.Add(payment);
-                                }
+                                bill.Payments.Add(payment);
                             }
+                        }
 
-                            visitHistoryVM.Bills.Add(bill);
-                        }  
+
+                        visitHistoryVM.Bills.Add(bill);
                     }
+
 
                     vm.Visits.Add(visitHistoryVM);
                 }
+
 
                 return vm;
             }

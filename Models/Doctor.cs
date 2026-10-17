@@ -21,6 +21,7 @@ namespace Models
         }
 
         public int DepartmentId { get; set; }
+        public string? DepartmentCode { get; set; }
         public string? DepartmentName { get; set; }
         public string RegistrationNo { get; set; }
         public string Qualification { get; set; }
@@ -30,6 +31,9 @@ namespace Models
         public string Username { get; set; }
         public string Password { get; set; }
         public decimal Fee { get; set; }
+        public int? PrescriptionTemplateId { get; set; }
+        public string? PrescriptionTemplateName { get; set; }
+        public int? SourceTemplateId { get; set; }
 
     }
 }

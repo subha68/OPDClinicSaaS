@@ -19,10 +19,11 @@
         new { Name="Qualification", Label="Qualification", Type="text", Col="12"},
         new { Name="Phone", Label="Phone", Type="text", Col="4"},
         new { Name="Email", Label="Email", Type="text", Col="6"},
-        new { Name="Fee", Label="Fee (Rs.)", Type="text", Col="2"},
+        new { Name="Fee", Label="Fee (Rs.)", Type="number", Col="2"},
         new { Name="Username", Label="User Name", Type="text", Col="6"},
         new { Name="Password", Label="Password", Type="password", Col="6"},
-        new { Name="UserId", Label="UserId", Type="hidden", Col="7"}
+        new { Name="UserId", Label="User Id", Type="hidden", Col="7"},
+        new { Name="PrescriptionTemplateName", Label="Prescription Template", Type="readonly", Col="7"}        
     };
 
     ViewBag.Dropdowns = new Dictionary<string, object>()

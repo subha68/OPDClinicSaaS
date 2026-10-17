@@ -151,45 +151,114 @@ function wireChargeAutocomplete(
     );
 }
 
+
 function wireMedicineAutocomplete(selector, appendToSelector) {
-
     wireAutocomplete(
-
         selector,
-
         '/Medicine/SearchMedicine',
-
         function (item) {
-
             return {
                 label: item.label,
                 value: item.value,
                 id: item.id,
                 dosageForm: item.dosageForm,
-                scheduleType: item.scheduleType
+                scheduleType: item.scheduleType,
+                genericName: item.genericName
             };
         },
-
         function (item) {
-
             const input = $(this);
+            const row = input.closest('tr');
+            const fieldCell = input.closest('.field-cell');
+            const fieldCode = input.attr('data-field-code');
 
-            const row = input.closest("tr");
-
-            // Set the selected medicine ID
-            row.find(".field-data-id")
+            row.find('.field-data-id')
+                .filter(function () {
+                    return $(this).closest('.field-cell')
+                        .is(fieldCell);
+                })
                 .val(item.id);
 
-            // Explicitly trigger change on the actual
-            // FieldValue input so Consultation.js
-            // marks the row as Modified.
-            input.trigger("change");
+            // Find the merged field by its MergeWith relationship.
+            const mergedCell = row.find('.merged-field-cell')
+                .filter(function () {
+                    return ($(this).attr('data-merge-with') || '')
+                        .trim()
+                        .toLowerCase() === (fieldCode || '')
+                        .trim()
+                        .toLowerCase();
+                });
 
+            const mergedInput = mergedCell
+                .find('input[name$=".FieldValue"], textarea[name$=".FieldValue"]')
+                .first();
+
+            const genericName = (item.genericName || '').trim();
+
+            if (mergedInput.length) {
+                mergedInput.val(genericName).trigger('change');
+            }
+
+            // Update the visible second line under the parent field.
+            let display = fieldCell.find('.merged-field-display');
+
+            if (genericName) {
+                if (!display.length) {
+                    display = $('<div>', {
+                        'class': 'merged-field-display text-muted small',
+                        'data-merge-with': fieldCode
+                    }).appendTo(fieldCell);
+                }
+
+                display.text(genericName).show();
+            } else {
+                display.text('').hide();
+            }
+
+            input.trigger('change');
         },
-
         appendToSelector
     );
+
+    // If the medicine value is cleared, clear its linked generic name too.
+    $(selector)
+        .off('change.medicineGeneric')
+        .on('change.medicineGeneric', function () {
+            const input = $(this);
+            const row = input.closest('tr');
+            const fieldCode = input.attr('data-field-code');
+
+            if (input.val()) {
+                return;
+            }
+
+            const mergedCell = row.find('.merged-field-cell')
+                .filter(function () {
+                    return ($(this).attr('data-merge-with') || '')
+                        .trim().toLowerCase() === (fieldCode || '')
+                        .trim().toLowerCase();
+                });
+
+            mergedCell
+                .find('input[name$=".FieldValue"], textarea[name$=".FieldValue"]')
+                .val('')
+                .trigger('change');
+
+            row.find('.merged-field-display')
+                .filter(function () {
+                    return ($(this).attr('data-merge-with') || '')
+                        .trim().toLowerCase() === (fieldCode || '')
+                        .trim().toLowerCase();
+                })
+                .text('')
+                .hide();
+
+            input.closest('.field-cell')
+                .find('.field-data-id')
+                .val('');
+        });
 }
+
 
 function wireTemplateAutocomplete(selector, appendToSelector) {
 

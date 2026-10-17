@@ -5,10 +5,13 @@ namespace Models
     public class PrescriptionTemplateSection
     {
         public int TemplateId { get; set; }
-        public int ClinicId { get; set; }
+        public int? ClinicId { get; set; }
         public int SectionId { get; set; }
+        public int? SourceSectionId { get; set; }
+        public bool IsCustomized { get; set; }
         public string SectionName { get; set; } = string.Empty;
         public bool IsActive { get; set; }
+        public bool IsArchived { get; set; }
         public bool Multiline { get; set; }
         public bool IsVital { get; set; }
         public bool IsTestResult { get; set; }
@@ -47,6 +50,35 @@ namespace Models
 
                 return SectionType.Standard;
             }
+        }
+
+        public PrescriptionTemplateSection()
+        {
+            // default constructor
+        }
+
+        public PrescriptionTemplateSection(PrescriptionTemplateSection source, int targetClinicId)
+        {
+            ClinicId = targetClinicId;
+            SectionName = source.SectionName;
+            DisplayOrder = source.DisplayOrder;
+            IsActive = source.IsActive;
+            Multiline = source.Multiline;
+            IsPharmacologyAdvice = source.IsPharmacologyAdvice;
+            IsVital = source.IsVital;
+            IsTestResult = source.IsTestResult;
+            SourceSectionId = source.SectionId;
+            IsCustomized = false;
+            IsArchived = source.IsArchived;
+            Fields = new List<PrescriptionTemplateField>();
+
+            if (source.Fields != null)
+            {
+                foreach (var sourceField in source.Fields)
+                {
+                    Fields.Add(new PrescriptionTemplateField(sourceField, targetClinicId, 0));
+                }
+            }            
         }
 
     }

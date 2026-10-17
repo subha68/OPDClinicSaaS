@@ -93,7 +93,8 @@ namespace DAL
         {
             var list = new List<Medicine>();
 
-            var cmd = new SqlCommand("SELECT * FROM Medicines", conn);
+            var cmd = new SqlCommand(@"SELECT * FROM Medicines", 
+                                        conn);
             if (tran != null)
             {
                 cmd.Transaction = tran;
@@ -130,8 +131,7 @@ namespace DAL
             var list = new List<Medicine>();
 
             string query = @"SELECT TOP 10
-                                MedicineId,
-                                MedicineName
+                                MedicineId, MedicineName, GenericName, DosageForm, ScheduleType
                             FROM Medicines
                             WHERE MedicineName LIKE '%' + @term + '%'
                             ORDER BY MedicineName";
@@ -143,14 +143,18 @@ namespace DAL
             }
 
             cmd.Parameters.AddWithValue("@term", term);
+
             using var reader = cmd.ExecuteReader();
 
             while (reader.Read())
             {
                 list.Add(new Medicine
                 {
-                    MedicineId = (int)reader["MedicineId"],
-                    MedicineName = reader["MedicineName"].ToString()
+                    MedicineId = Convert.ToInt32(reader["MedicineId"]),
+                    MedicineName = GetNullableString(reader, "MedicineName") ?? string.Empty,
+                    GenericName = GetNullableString(reader, "GenericName"),
+                    DosageForm = GetNullableString(reader, "DosageForm"),
+                    ScheduleType = GetNullableString(reader, "ScheduleType")
                 });
             }
 
@@ -223,9 +227,13 @@ namespace DAL
                     GSTPercent = Convert.ToDecimal(reader["GSTPercent"]),
                     Manufacturer = reader["Manufacturer"].ToString(),
                     ScheduleType = reader["ScheduleType"].ToString(),
-                    CreatedFromPrescription = Convert.ToBoolean(reader["CreatedFromPrescription"]),
-                    IsActive = Convert.ToBoolean(reader["IsActive"])
-                };
+                    CreatedFromPrescription = reader["CreatedFromPrescription"] != DBNull.Value
+                            ? Convert.ToBoolean(reader["CreatedFromPrescription"])
+                            : false,
+
+                    IsActive = reader["IsActive"] != DBNull.Value
+                            ? Convert.ToBoolean(reader["IsActive"])
+                            : true                };
             }
 
             return medicine;

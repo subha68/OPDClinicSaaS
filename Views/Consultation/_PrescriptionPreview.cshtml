@@ -188,6 +188,7 @@
                     var headerFields = orderedRows
                         .FirstOrDefault()?
                         .Fields
+                        .Where(f => string.IsNullOrWhiteSpace(f.MergeWith))
                         .OrderBy(f => f.DisplayOrder)
                         .ToList();
 
@@ -207,30 +208,51 @@
 
                             <tbody>
 
-                                @{
-                                    int rowNo = 1;
-                                }
+                                <tbody>
+                                    @{
+                                        int rowNo = 1;
+                                    }
 
-                                @foreach (var row in orderedRows)
-                                {
-                                    <tr>
-                                        <td>@rowNo</td>
+                                    @foreach (var row in orderedRows)
+                                    {
+                                        var visibleFields = row.Fields
+                                            .Where(f => string.IsNullOrWhiteSpace(f.MergeWith))
+                                            .OrderBy(f => f.DisplayOrder)
+                                            .ToList();
 
-                                        @foreach (var field in row.Fields)
-                                        {
-                                            //var field = row.Fields
-                                            //    .FirstOrDefault(f => f.FieldId == headerField.FieldId);
+                                        <tr>
+                                            <td>@rowNo</td>
 
-                                            <td>
-                                                @field?.FieldValue
-                                            </td>
-                                        }
-                                    </tr>
+                                            @foreach (var field in visibleFields)
+                                            {
+                                                var mergedFields = row.Fields
+                                                    .Where(f => !string.IsNullOrWhiteSpace(field.FieldCode) &&
+                                                        string.Equals(
+                                                            f.MergeWith?.Trim(),
+                                                            field.FieldCode.Trim(),
+                                                            StringComparison.OrdinalIgnoreCase))
+                                                    .OrderBy(f => f.DisplayOrder)
+                                                    .ToList();
 
-                                    rowNo++;
-                                }
+                                                <td>
+                                                    @field.FieldValue
 
-                            </tbody>
+                                                    @foreach (var mergedField in mergedFields)
+                                                    {
+                                                        if (!string.IsNullOrWhiteSpace(mergedField.FieldValue))
+                                                        {
+                                                            <div class="prescription-merged-name">
+                                                                (@mergedField.FieldValue)
+                                                            </div>
+                                                        }
+                                                    }
+                                                </td>
+                                            }
+                                        </tr>
+
+                                        rowNo++;
+                                    }
+                                </tbody>
                         </table>
                     }
                 }
@@ -244,7 +266,9 @@
                     {
                         <div class="consultation-row">
 
-                            @foreach (var field in row.Fields.OrderBy(f => f.DisplayOrder))
+                            @foreach (var field in row.Fields
+                                .Where(f => string.IsNullOrWhiteSpace(f.MergeWith))
+                                .OrderBy(f => f.DisplayOrder))
                             {
                                 var selectedOptions = field.Options
                                                             // .Where(o => o.IsSelected)
@@ -258,6 +282,15 @@
                                 {
                                     continue;
                                 }
+
+                                var mergedFields = row.Fields
+                                    .Where(f => !string.IsNullOrWhiteSpace(field.FieldCode) &&
+                                        string.Equals(
+                                            f.MergeWith?.Trim(),
+                                            field.FieldCode.Trim(),
+                                            StringComparison.OrdinalIgnoreCase))
+                                    .OrderBy(f => f.DisplayOrder)
+                                    .ToList();
 
                                 <div class="consultation-field">
 
@@ -281,6 +314,16 @@
 
                                             @string.Join(", ",
                                                 selectedOptions.Select(o => o.OptionText))
+                                        }
+
+                                        @foreach (var mergedField in mergedFields)
+                                        {
+                                            if (!string.IsNullOrWhiteSpace(mergedField.FieldValue))
+                                            {
+                                                <span class="prescription-merged-name">
+                                                    (@mergedField.FieldValue)
+                                                </span>
+                                            }
                                         }
 
                                     </span>
@@ -322,25 +365,32 @@
     </footer>
 </div>
 
-<!-- PRINT BUTTONS -->
+<!-- SCREEN ACTIONS -->
+<div class="print-buttons no-print">
 
-<div class="print-buttons">
-
-    <button onclick="window.print()"
+    <button type="button"
+            onclick="window.print()"
             class="btn btn-primary">
-
-        <i class="fa fa-print"></i>
+        <i class="fa fa-print me-1"></i>
         Print
-
     </button>
 
-    <a asp-controller="Consultation" 
-            asp-action="Index" 
-            class="btn btn-secondary"> 
-            
-        <i class="fa fa-arrow-left"></i> 
-        Back 
-        
-    </a>
+    @if (ViewBag.ReturnUrl is string returnUrl)
+    {
+        <a href="@returnUrl"
+           class="btn btn-secondary">
+            <i class="fa fa-arrow-left me-1"></i>
+            Back
+        </a>
+    }
+    else
+    {
+        <a asp-controller="Consultation"
+           asp-action="Index"
+           class="btn btn-secondary">
+            <i class="fa fa-arrow-left me-1"></i>
+            Back
+        </a>
+    }
 
 </div>

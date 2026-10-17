@@ -42,7 +42,8 @@ namespace Controllers
         }
 
         [HttpPost]
-        public ActionResult Create(Department model, int sourceTemplateId = 0)
+        [ValidateAntiForgeryToken]
+        public ActionResult Create(Department model)
         {
             foreach (var key in ModelState.Keys)
             {
@@ -55,9 +56,7 @@ namespace Controllers
             
             if (ModelState.IsValid)
             {
-                //model.ToBeSourceTemplateId = sourceTemplateId;
                 _department.Create(model);
-
                 return RedirectToAction("Index");
             }
 
@@ -75,10 +74,8 @@ namespace Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(Department model, int sourceTemplateId = 0)
+        public IActionResult Edit(Department model)
         {
-            //model.ClinicName = _clinic.Get(model.ClinicId).Name;
-
             if (!ModelState.IsValid)
             {
                 foreach (var key in ModelState.Keys)
@@ -93,13 +90,14 @@ namespace Controllers
                 return View("Create", model);
             }
 
-            //model.ToBeSourceTemplateId = sourceTemplateId;
             _department.Modify(model);
 
             TempData["Success"] = "Department updated successfully.";
             return RedirectToAction("Index");
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Delete(int id)
         {
             _department.Remove(id);

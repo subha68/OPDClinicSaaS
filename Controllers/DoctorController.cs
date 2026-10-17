@@ -50,6 +50,7 @@ namespace Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public ActionResult Create(Doctor model)
         {
             model.ClinicId = _doctor.ClinicId;
@@ -112,6 +113,8 @@ namespace Controllers
             return RedirectToAction("Index");
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Delete(int id)
         {
             _doctor.Remove(id);

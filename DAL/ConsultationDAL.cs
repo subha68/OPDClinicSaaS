@@ -141,10 +141,10 @@ namespace DAL
             string queryField = @"
                 INSERT INTO ConsultationFields
                 (RowId, ClinicId, FieldLabel, FieldTypeCode, FieldCode,
-                    FieldSource, FieldDataId, DisplayOrder, IsMandatory, FieldValue)
+                    FieldSource, FieldDataId, DisplayOrder, IsMandatory, FieldValue, MergeWith)
                 VALUES
                 (@RowId, @ClinicId, @FieldLabel, @FieldTypeCode, @FieldCode,
-                    @Fieldsource, @FieldDataId, @DisplayOrder, @IsMandatory, @FieldValue);
+                    @Fieldsource, @FieldDataId, @DisplayOrder, @IsMandatory, @FieldValue, @MergeWith);
                 
                 SELECT SCOPE_IDENTITY();";
 
@@ -162,6 +162,7 @@ namespace DAL
                 cmdField.Parameters.AddWithValue("@DisplayOrder", field.DisplayOrder);
                 cmdField.Parameters.AddWithValue("@IsMandatory", field.IsMandatory);
                 cmdField.Parameters.AddWithValue("@FieldValue", field.FieldValue ?? (object)DBNull.Value);
+                cmdField.Parameters.AddWithValue("@MergeWith", field.MergeWith ?? (object)DBNull.Value);
 
                 fieldId = Convert.ToInt32(cmdField.ExecuteScalar());
 
@@ -822,7 +823,7 @@ namespace DAL
 
             string query = @"
                         SELECT CF.FieldId, CF.RowId, CF.FieldLabel, CF.FieldTypeCode, CF.FieldCode, CF.FieldSource, 
-                                CF.FieldDataId, CF.DisplayOrder, CF.IsMandatory, CF.FieldValue
+                                CF.FieldDataId, CF.DisplayOrder, CF.IsMandatory, CF.FieldValue, CF.MergeWith
                         FROM ConsultationFields CF
                         INNER JOIN ConsultationRows CR
                             ON CR.RowId = CF.RowId
@@ -847,14 +848,15 @@ namespace DAL
                     {
                         FieldId = Convert.ToInt32(drField["FieldId"]),
                         RowId = Convert.ToInt32(drField["RowId"]),
-                        FieldLabel = drField["FieldLabel"].ToString(),
-                        FieldTypeCode = drField["FieldTypeCode"].ToString(),
-                        FieldCode = drField["FieldCode"] != DBNull.Value ? drField["FieldCode"].ToString() : null,
-                        FieldSource = drField["FieldSource"] != DBNull.Value ? drField["FieldSource"].ToString() : null,
-                        FieldDataId = drField["FieldDataId"] != DBNull.Value ? Convert.ToInt32(drField["FieldDataId"]) : 0,
+                        FieldLabel = GetNullableString(drField, "FieldLabel") ?? string.Empty,
+                        FieldTypeCode = GetNullableString(drField, "FieldTypeCode") ?? string.Empty,
+                        FieldCode = GetNullableString(drField, "FieldCode") ?? string.Empty,
+                        FieldSource = GetNullableString(drField, "FieldSource") ?? string.Empty,
+                        FieldDataId = GetNullableInt(drField, "FieldDataId"),
                         DisplayOrder = Convert.ToInt32(drField["DisplayOrder"]),
                         IsMandatory = Convert.ToBoolean(drField["IsMandatory"]),
-                        FieldValue = drField["FieldValue"] != DBNull.Value ? drField["FieldValue"].ToString() : null
+                        FieldValue = GetNullableString(drField, "FieldValue"),
+                        MergeWith = GetNullableString(drField, "MergeWith") ?? string.Empty
                     };
 
                     fields.Add(field);
@@ -1226,8 +1228,11 @@ namespace DAL
                     cf.FieldId,
                     cf.RowId,
                     cf.FieldLabel,
+                    cf.FieldTypeCode,
+                    cf.FieldCode,
                     cf.FieldValue,
-                    cf.DisplayOrder
+                    cf.DisplayOrder,
+                    cf.MergeWith
                 FROM ConsultationFields cf
                 INNER JOIN ConsultationRows cr
                     ON cr.RowId = cf.RowId
@@ -1266,6 +1271,9 @@ namespace DAL
                         FieldId = Convert.ToInt32(rdr["FieldId"]),
                         RowId = Convert.ToInt32(rdr["RowId"]),
                         FieldLabel = rdr["FieldLabel"].ToString(),
+                        FieldCode = rdr["FieldCode"].ToString(),
+                        FieldTypeCode = rdr["FieldTypeCode"].ToString(),
+                        MergeWith = rdr["MergeWith"].ToString(),
                         FieldValue = rdr["FieldValue"].ToString(),
                         DisplayOrder = Convert.ToInt32(rdr["DisplayOrder"]),
                     };

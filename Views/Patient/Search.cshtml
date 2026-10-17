@@ -2,76 +2,287 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewData["Title"] = "Patient Search";
+    ViewData["Title"] = "Select Patient";
+
+    var hasSearch =
+        !string.IsNullOrWhiteSpace(Model.SearchString);
+
+    var hasResults =
+        Model.Results != null && Model.Results.Any();
 }
 
-<h3>Patient Search</h3>
+<div class="page-card">
 
-<form method="post">
+    <div class="page-card-body">
 
-    <input type="hidden" asp-for="ReturnTo" />
-    <input type="hidden" asp-for="DepartmentId" />
-    <input type="hidden" asp-for="DoctorId" />
-    <input type="hidden" asp-for="AppointmentDate"
-                        value="@Model.AppointmentDate?.ToString("yyyy-MM-dd")" />
-    <input type="hidden" asp-for="SlotTime" />
-    <input type="hidden" asp-for="AppointmentDateTime"
-                        value="@Model.AppointmentDateTime?.ToString("yyyy-MM-ddTHH:mm")" />
+        <!-- ===================================================== -->
+        <!-- HEADER                                                 -->
+        <!-- ===================================================== -->
 
-    <div class="row mb-3">
+        <div class="mb-4">
 
-        <div class="col-md-6">
-            <input asp-for="SearchString"
-                   class="form-control"
-                   placeholder="Patient ID / Phone / Name" />
+            <h4 class="mb-1">
+                Select Patient
+            </h4>
+
+            <div class="text-muted small">
+                Search for an existing patient or register a new patient.
+            </div>
+
         </div>
 
-        <div class="col-md-2">
-            <button class="btn btn-primary">
-                Search
-            </button>
-        </div>
+
+        <!-- ===================================================== -->
+        <!-- SEARCH FORM                                            -->
+        <!-- ===================================================== -->
+
+        <form asp-action="Search"
+              method="post">
+
+            <!-- Preserve workflow context -->
+
+            <input type="hidden"
+                   asp-for="ReturnTo" />
+
+            <input type="hidden"
+                   asp-for="DepartmentId" />
+
+            <input type="hidden"
+                   asp-for="DoctorId" />
+
+            <input type="hidden"
+                   asp-for="AppointmentDate"
+                   value="@Model.AppointmentDate?.ToString("yyyy-MM-dd")" />
+
+            <input type="hidden"
+                   asp-for="SlotTime" />
+
+            <input type="hidden"
+                   asp-for="AppointmentDateTime"
+                   value="@Model.AppointmentDateTime?.ToString("yyyy-MM-ddTHH:mm")" />
+
+
+            <div class="row g-2 mb-4">
+
+                <div class="col-md-8">
+
+                    <label asp-for="SearchString"
+                           class="form-label">
+
+                        Patient ID / Mobile / Name
+
+                    </label>
+
+                    <input asp-for="SearchString"
+                           class="form-control"
+                           autocomplete="off"
+                           autofocus
+                           placeholder="Enter Patient ID, mobile number or name" />
+
+                </div>
+
+                <div class="col-md-2 align-self-end">
+
+                    <button type="submit"
+                            class="btn btn-primary w-100">
+
+                        <i class="fa fa-search me-1"></i>
+                        Search
+
+                    </button>
+
+                </div>
+
+                @if (hasSearch)
+                {
+                    <div class="col-md-2 align-self-end">
+
+                        <a asp-action="Search"
+                           asp-route-returnTo="@Model.ReturnTo"
+                           asp-route-departmentId="@Model.DepartmentId"
+                           asp-route-doctorId="@Model.DoctorId"
+                           asp-route-appointmentDateTime="@Model.AppointmentDateTime?.ToString("yyyy-MM-ddTHH:mm")"
+                           class="btn btn-outline-secondary w-100">
+
+                            <i class="fa fa-times me-1"></i>
+                            Clear
+
+                        </a>
+
+                    </div>
+                }
+
+            </div>
+
+        </form>
+
+
+        <!-- ===================================================== -->
+        <!-- INITIAL STATE                                         -->
+        <!-- ===================================================== -->
+
+        @if (!hasSearch)
+        {
+            <div class="text-center py-5">
+
+                <i class="fa fa-user-search fa-2x text-muted mb-3"></i>
+
+                <h5>
+                    Search for a patient
+                </h5>
+
+                <p class="text-muted">
+                    Enter a Patient ID, mobile number or name.
+                </p>
+
+            </div>
+        }
+
+
+        <!-- ===================================================== -->
+        <!-- MATCHING PATIENTS                                      -->
+        <!-- ===================================================== -->
+
+        @if (hasSearch && hasResults)
+        {
+            <h6 class="mb-3">
+                Matching Patients
+            </h6>
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                ID
+                            </th>
+
+                            <th>
+                                Name
+                            </th>
+
+                            <th>
+                                DOB
+                            </th>
+
+                            <th>
+                                Gender
+                            </th>
+
+                            <th>
+                                Mobile
+                            </th>
+
+                            <th class="text-end">
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    @foreach (var p in Model.Results)
+                    {
+                        <tr>
+
+                            <td>
+                                <strong>
+                                    @p.PatientId
+                                </strong>
+                            </td>
+
+                            <td>
+                                @p.FirstName @p.LastName
+                            </td>
+
+                            <td>
+                                @(p.DOB?.ToString("dd MMM yyyy") ?? "—")
+                            </td>
+
+                            <td>
+                                @p.Gender
+                            </td>
+
+                            <td>
+                                @p.Phone
+                            </td>
+
+                            <td class="text-end">
+
+                                <a asp-action="SelectPatient"
+                                   asp-route-patientId="@p.PatientId"
+                                   asp-route-returnTo="@Model.ReturnTo"
+                                   asp-route-departmentId="@Model.DepartmentId"
+                                   asp-route-doctorId="@Model.DoctorId"
+                                   asp-route-appointmentDateTime="@Model.AppointmentDateTime?.ToString("yyyy-MM-ddTHH:mm")"
+                                   class="btn btn-primary btn-sm">
+
+                                    <i class="fa fa-check me-1"></i>
+                                    Select
+
+                                </a>
+
+                            </td>
+
+                        </tr>
+                    }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+
+
+        <!-- ===================================================== -->
+        <!-- NO MATCH                                               -->
+        <!-- ===================================================== -->
+
+        @if (hasSearch && !hasResults)
+        {
+            <div class="text-center py-5">
+
+                <div class="mb-3">
+
+                    <i class="fa fa-user-slash fa-2x text-muted"></i>
+
+                </div>
+
+                <h5>
+                    No patient found
+                </h5>
+
+                <p class="text-muted mb-4">
+
+                    No patient matched
+                    <strong>
+                        "@Model.SearchString"
+                    </strong>.
+
+                </p>
+
+                <a asp-action="Create"
+                    asp-route-searchString="@Model.SearchString"
+                    asp-route-returnTo="@Context.Request.Path@Context.Request.QueryString"
+                    asp-route-departmentId="@Model.DepartmentId"
+                    asp-route-doctorId="@Model.DoctorId"
+                    asp-route-appointmentDateTime="@Model.AppointmentDateTime?.ToString("o")"
+                    class="btn btn-primary">
+
+                    <i class="fa fa-user-plus me-1"></i>
+                    Register New Patient
+
+                </a>
+
+            </div>
+        }
 
     </div>
 
-</form>
-
-@if (Model.Results.Any())
-{
-    <table class="table table-bordered table-hover">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>DOB</th>
-                <th>Gender</th>
-                <th>Phone</th>
-                <th></th>
-            </tr>
-        </thead>
-
-        <tbody>
-        @foreach (var p in Model.Results)
-        {
-            <tr>
-                <td>@p.PatientId</td>
-                <td>@p.FirstName @p.LastName</td>
-                <td>@p.DOB</td>
-                <td>@p.Gender</td>
-                <td>@p.Phone</td>
-                <td>
-                    <a asp-action="SelectPatient"
-                    asp-route-patientId="@p.PatientId"
-                    asp-route-returnTo="@Model.ReturnTo"
-                    asp-route-departmentId="@Model.DepartmentId"
-                    asp-route-doctorId="@Model.DoctorId"
-                    asp-route-appointmentDateTime="@Model.AppointmentDateTime?.ToString("yyyy-MM-ddTHH:mm")"
-                    class="btn btn-primary btn-sm">
-                        Select
-                    </a>
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table>
-}
+</div>

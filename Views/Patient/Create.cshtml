@@ -2,214 +2,424 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+
     bool isEdit = Model != null && Model.PatientId > 0;
-    ViewData["Title"] = isEdit ? "Edit Patient" : "Create Patient";
+
+    ViewData["Title"] = isEdit ? "Edit Patient" : "Register New Patient";
+
+    string? returnTo = ViewBag.ReturnTo as string;
+    int? departmentId = ViewBag.DepartmentId as int?;
+    int? doctorId = ViewBag.DoctorId as int?;
+    DateTime? appointmentDateTime = ViewBag.AppointmentDateTime as DateTime?;
+    string? searchString = ViewBag.SearchString as string;
 }
 
-<form asp-action=@(isEdit ? "Edit" : "Create")>
 
-<div class="page-card">
+<form asp-action="@(isEdit ? "Edit" : "Create")"
+      method="post">
 
-    <div class="page-card-body">
+    @Html.AntiForgeryToken()
 
-        <!-- BASIC DETAILS -->
+    <div class="page-card">
 
-        <h5 class="mb-3">
-            Basic Details
-        </h5>
+        <div class="page-card-body">
 
-        <div class="row g-3">
-            <input asp-for="PatientId"
-                       class="form-control" hidden/>
+            <!-- ================================================= -->
+            <!-- WORKFLOW CONTEXT                                  -->
+            <!-- ================================================= -->
 
-            <div class="col-md-1">
-                <label>Title</label>
-                <select asp-for="Title"
-                        class="form-select">
+            @if (!isEdit)
+            {
+                <input type="hidden" name="returnTo" value="@returnTo" />
+                <input type="hidden" name="departmentId" value="@departmentId" />
+                <input type="hidden" name="doctorId" value="@doctorId" />
+                <input type="hidden" name="appointmentDateTime" value="@appointmentDateTime?.ToString("o")" />
+            }
 
-                    <option>Mr</option>
-                    <option>Mrs</option>
-                    <option>Miss</option>
+            <!-- ================================================= -->
+            <!-- BASIC DETAILS                                     -->
+            <!-- ================================================= -->
 
-                </select>
+            <h5 class="mb-3">
+                Basic Details
+            </h5>
+
+            <div class="row g-3">
+
+                <input asp-for="PatientId"
+                       class="form-control"
+                       hidden />
+
+                <div class="col-md-1">
+
+                    <label asp-for="Title"
+                           class="form-label">
+                        Title
+                    </label>
+
+                    <select asp-for="Title"
+                            class="form-select">
+
+                        <option value="Mr">Mr</option>
+                        <option value="Mrs">Mrs</option>
+                        <option value="Miss">Miss</option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <label asp-for="FirstName"
+                           class="form-label">
+                        First Name
+                    </label>
+
+                    <input asp-for="FirstName"
+                           class="form-control" />
+
+                    <span asp-validation-for="FirstName"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <label asp-for="LastName"
+                           class="form-label">
+                        Last Name
+                    </label>
+
+                    <input asp-for="LastName"
+                           class="form-control" />
+
+                    <span asp-validation-for="LastName"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+
+                <div class="col-md-1">
+
+                    <label asp-for="Gender"
+                           class="form-label">
+                        Gender
+                    </label>
+
+                    <select asp-for="Gender"
+                            class="form-select">
+
+                        <option value="Male">
+                            Male
+                        </option>
+
+                        <option value="Female">
+                            Female
+                        </option>
+
+                    </select>
+
+                    <span asp-validation-for="Gender"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+
+                <div class="col-md-2">
+
+                    <label asp-for="DOB"
+                           class="form-label">
+                        DOB
+                    </label>
+
+                    <input asp-for="DOB"
+                           type="date"
+                           class="form-control" />
+
+                    <span asp-validation-for="DOB"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+
+                <div class="col-md-2">
+
+                    <label asp-for="Phone"
+                           class="form-label">
+                        Mobile Number
+                    </label>
+
+                    <input asp-for="Phone"
+                           class="form-control" />
+
+                    <span asp-validation-for="Phone"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
             </div>
 
-            <div class="col-md-3">
-                <label>First Name</label>
-                <input asp-for="FirstName"
-                       class="form-control" />
+
+            <hr />
+
+
+            <!-- ================================================= -->
+            <!-- ADDRESS                                           -->
+            <!-- ================================================= -->
+
+            <h5 class="mb-3">
+                Address
+            </h5>
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+
+                    <label asp-for="Address1"
+                           class="form-label">
+                        Address Line 1
+                    </label>
+
+                    <input asp-for="Address1"
+                           class="form-control" />
+
+                </div>
+
+
+                <div class="col-md-6">
+
+                    <label asp-for="Address2"
+                           class="form-label">
+                        Address Line 2
+                    </label>
+
+                    <input asp-for="Address2"
+                           class="form-control" />
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <label asp-for="City"
+                           class="form-label">
+                        City
+                    </label>
+
+                    <input asp-for="City"
+                           class="form-control" />
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <label asp-for="State"
+                           class="form-label">
+                        State
+                    </label>
+
+                    <input asp-for="State"
+                           class="form-control" />
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <label asp-for="PinCode"
+                           class="form-label">
+                        Pin Code
+                    </label>
+
+                    <input asp-for="PinCode"
+                           class="form-control" />
+
+                </div>
+
             </div>
 
-            <div class="col-md-3">
-                <label>Last Name</label>
-                <input asp-for="LastName"
-                       class="form-control" />
+
+            <hr />
+
+
+            <!-- ================================================= -->
+            <!-- IDENTIFICATION                                    -->
+            <!-- ================================================= -->
+
+            <h5 class="mb-3">
+                Identification
+            </h5>
+
+            <div class="row g-3">
+
+                <div class="col-md-3">
+
+                    <label asp-for="IdType"
+                           class="form-label">
+                        ID Type
+                    </label>
+
+                    <select asp-for="IdType"
+                            class="form-select">
+
+                        <option value="Aadhaar">
+                            Aadhaar
+                        </option>
+
+                        <option value="PAN">
+                            PAN
+                        </option>
+
+                        <option value="Passport">
+                            Passport
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="col-md-4">
+
+                    <label asp-for="IdNumber"
+                           class="form-label">
+                        ID Number
+                    </label>
+
+                    <input asp-for="IdNumber"
+                           class="form-control" />
+
+                </div>
+
+
+                <div class="col-md-5">
+
+                    <label class="form-label">
+                        Upload ID Proof
+                    </label>
+
+                    <input type="file"
+                           class="form-control" />
+
+                </div>
+
             </div>
 
-            <div class="col-md-1">
-                <label>Gender</label>
-                <select asp-for="Gender"
-                        class="form-select">
 
-                    <option>Male</option>
-                    <option>Female</option>
+            <hr />
 
-                </select>
-            </div>
 
-            <div class="col-md-2">
-                <label>DOB</label>
-                <input asp-for="DOB"
-                       type="date"
-                       class="form-control" />
-            </div>
+            <!-- ================================================= -->
+            <!-- EMERGENCY CONTACT                                 -->
+            <!-- ================================================= -->
 
-            <div class="col-md-2">
-                <label>Mobile Number</label>
-                <input asp-for="Phone"
-                       class="form-control" />
+            <h5 class="mb-3">
+                Emergency Contact
+            </h5>
+
+            <div class="row g-3">
+
+                <div class="col-md-4">
+
+                    <label asp-for="EmergencyContactName"
+                           class="form-label">
+                        Name
+                    </label>
+
+                    <input asp-for="EmergencyContactName"
+                           class="form-control" />
+
+                </div>
+
+
+                <div class="col-md-4">
+
+                    <label asp-for="EmergencyRelationship"
+                           class="form-label">
+                        Relationship
+                    </label>
+
+                    <input asp-for="EmergencyRelationship"
+                           class="form-control" />
+
+                </div>
+
+
+                <div class="col-md-4">
+
+                    <label asp-for="EmergencyPhone"
+                           class="form-label">
+                        Mobile Number
+                    </label>
+
+                    <input asp-for="EmergencyPhone"
+                           class="form-control" />
+
+                </div>
+
             </div>
 
         </div>
 
-        <hr />
 
-        <!-- ADDRESS -->
+        <!-- ===================================================== -->
+        <!-- FOOTER                                                -->
+        <!-- ===================================================== -->
 
-        <h5 class="mb-3">
-            Address
-        </h5>
+        <div class="card-footer bg-white">
 
-        <div class="row g-3">
+            <div class="d-flex justify-content-end gap-2">
 
-            <div class="col-md-6">
-                <label>Address Line 1</label>
-                <input asp-for="Address1"
-                       class="form-control" />
-            </div>
+                @if (!string.IsNullOrWhiteSpace(returnTo))
+                {
+                    <a href="@returnTo"
+                       class="btn btn-secondary">
 
-            <div class="col-md-6">
-                <label>Address Line 2</label>
-                <input asp-for="Address2"
-                       class="form-control" />
-            </div>
+                        Cancel
 
-            <div class="col-md-3">
-                <label>City</label>
-                <input asp-for="City"
-                       class="form-control" />
-            </div>
+                    </a>
+                }
+                else
+                {
+                    <a asp-action="Index"
+                       class="btn btn-secondary">
 
-            <div class="col-md-3">
-                <label>State</label>
-                <input asp-for="State"
-                       class="form-control" />
-            </div>
+                        Cancel
 
-            <div class="col-md-3">
-                <label>Pin Code</label>
-                <input asp-for="PinCode"
-                       class="form-control" />
-            </div>
+                    </a>
+                }
 
-        </div>
 
-        <hr />
+                <button type="submit"
+                        class="btn btn-primary">
 
-        <!-- IDENTIFICATION -->
+                    <i class="fa fa-save me-1"></i>
 
-        <h5 class="mb-3">
-            Identification
-        </h5>
+                    @(isEdit
+                        ? "Save Changes"
+                        : "Register Patient")
 
-        <div class="row g-3">
+                </button>
 
-            <div class="col-md-3">
-
-                <label>ID Type</label>
-
-                <select asp-for="IdType"
-                        class="form-select">
-
-                    <option>Aadhaar</option>
-                    <option>PAN</option>
-                    <option>Passport</option>
-
-                </select>
-
-            </div>
-
-            <div class="col-md-4">
-                <label>ID Number</label>
-                <input asp-for="IdNumber"
-                       class="form-control" />
-            </div>
-
-            <div class="col-md-5">
-
-                <label>Upload ID Proof</label>
-
-                <input type="file"
-                       class="form-control" />
-
-            </div>
-
-        </div>
-
-        <hr />
-
-        <!-- EMERGENCY CONTACT -->
-
-        <h5 class="mb-3">
-            Emergency Contact
-        </h5>
-
-        <div class="row g-3">
-
-            <div class="col-md-4">
-                <label>Name</label>
-                <input asp-for="EmergencyContactName"
-                       class="form-control" />
-            </div>
-
-            <div class="col-md-4">
-                <label>Relationship</label>
-                <input asp-for="EmergencyRelationship"
-                       class="form-control" />
-            </div>
-
-            <div class="col-md-4">
-                <label>Mobile Number</label>
-                <input asp-for="EmergencyPhone"
-                       class="form-control" />
             </div>
 
         </div>
 
     </div>
-
-    <div class="card-footer bg-white">
-
-        <div class="d-flex justify-content-end gap-2">
-
-            <a asp-action="Index"
-               class="btn btn-secondary">
-
-                Cancel
-
-            </a>
-
-            <button type="submit"
-                    class="btn btn-primary">
-
-                Save & Continue
-
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
 
 </form>
+
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+}

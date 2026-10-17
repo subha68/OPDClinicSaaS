@@ -50,6 +50,7 @@ CREATE TABLE Users (
 -- Departments
 CREATE TABLE Departments (
     DepartmentId INT IDENTITY PRIMARY KEY,
+    DepartmentCode NVARCHAR(30) NOT NULL,
     ClinicId INT NOT NULL,
     Name NVARCHAR(100),
     Description NVARCHAR(300)
@@ -97,16 +98,20 @@ CREATE TABLE PrescriptionTemplateSections
     SectionId INT IDENTITY PRIMARY KEY,
     TemplateId INT NOT NULL,
     ClinicId INT,
+    SourceSectionId INT NULL,
+    IsCustomized BIT NOT NULL DEFAULT 0,
     SectionName VARCHAR(100) NOT NULL,
     DisplayOrder INT NOT NULL,
     IsActive BIT NOT NULL DEFAULT 1,
     Multiline BIT NOT NULL DEFAULT 0,
     IsPharmacologyAdvice BIT NOT NULL DEFAULT 0,
     IsVital BIT NOT NULL DEFAULT 0,
-    IsTestResult BIT NOT NULL DEFAULT 0,
+    IsTestResult BIT NOT NULL DEFAULT 0,    
+    IsArchived BIT NOT NULL DEFAULT 0,
 
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
-    FOREIGN KEY (TemplateId) REFERENCES PrescriptionTemplates(TemplateId)
+    FOREIGN KEY (TemplateId) REFERENCES PrescriptionTemplates(TemplateId),
+    FOREIGN KEY (SourceSectionId) REFERENCES PrescriptionTemplateSections(SectionId)
 );
 
 CREATE TABLE PrescriptionTemplateFields
@@ -115,6 +120,8 @@ CREATE TABLE PrescriptionTemplateFields
     SectionId INT NOT NULL,
     TemplateId INT NOT NULL,
     ClinicId INT,
+    SourceFieldId INT NULL,
+    IsCustomized BIT NOT NULL DEFAULT 0,
     FieldLabel VARCHAR(100) NOT NULL,
     FieldTypeCode VARCHAR(30) NOT NULL,
     FieldCode VARCHAR(50),
@@ -123,12 +130,13 @@ CREATE TABLE PrescriptionTemplateFields
     DisplayOrder INT NOT NULL,
     IsActive BIT NOT NULL DEFAULT 1,
     IsArchived bit NOT NULL DEFAULT 0,
-    MergeWith VARCHAR(50), -- use the fieldcode of other field with which it should appear
+    MergeWith VARCHAR(200), -- use the fieldcode of other field with which it should appear
 
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
     FOREIGN KEY (SectionId) REFERENCES PrescriptionTemplateSections(SectionId),
     FOREIGN KEY (TemplateId) REFERENCES PrescriptionTemplates(TemplateId),
-    FOREIGN KEY (FieldTypeCode) REFERENCES FieldTypes(FieldTypeCode)
+    FOREIGN KEY (FieldTypeCode) REFERENCES FieldTypes(FieldTypeCode),
+    FOREIGN KEY (SourceFieldId) REFERENCES PrescriptionTemplateFields(FieldId)
 );
 
 CREATE TABLE PrescriptionTemplateFieldOptions
@@ -138,8 +146,9 @@ CREATE TABLE PrescriptionTemplateFieldOptions
     SectionId INT NOT NULL,
     TemplateId int not null,
     ClinicId INT,
+    SourceOptionId INT NULL,
+    IsCustomized BIT NOT NULL DEFAULT 0,
     OptionText VARCHAR(100) NOT NULL,
-    IsRequired BIT NOT NULL DEFAULT 0,
     DisplayOrder INT NOT NULL,
     IsActive BIT NOT NULL DEFAULT 1,
     IsArchived bit NOT NULL DEFAULT 0,
@@ -147,7 +156,8 @@ CREATE TABLE PrescriptionTemplateFieldOptions
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId),
     FOREIGN KEY (SectionId) REFERENCES PrescriptionTemplateSections(SectionId),
     FOREIGN KEY (TemplateId) REFERENCES PrescriptionTemplates(TemplateId),
-    FOREIGN KEY (FieldId) REFERENCES PrescriptionTemplateFields(FieldId)
+    FOREIGN KEY (FieldId) REFERENCES PrescriptionTemplateFields(FieldId),
+    FOREIGN KEY (SourceOptionId) REFERENCES PrescriptionTemplateFieldOptions(OptionId)
 );
 
 CREATE TABLE Patients (
@@ -365,6 +375,7 @@ CREATE TABLE PharmacologyAdvices
     LineNumber INT NOT NULL DEFAULT 1,
     MedicineId INT,
     MedicineName NVARCHAR(200),
+    GenericName NVARCHAR(200),
     Dosage NVARCHAR(100),
     Frequency NVARCHAR(100),
     Duration NVARCHAR(100),
@@ -394,8 +405,6 @@ CREATE TABLE ConsultationSections
     SectionId  INT IDENTITY PRIMARY KEY,
     ConsultationId INT NOT NULL,
     ClinicId INT NOT NULL,
---    TemplateId INT NOT NULL,
---    TemplateSectionId INT NOT NULL,
     SectionName  NVARCHAR(200) NOT NULL,
     DisplayOrder INT NOT NULL,
     IsVisible  BIT NOT NULL DEFAULT(1),
@@ -498,12 +507,8 @@ CREATE TABLE ConsultationTestResults
 CREATE TABLE ConsultationFields
 (
     FieldId INT IDENTITY PRIMARY KEY,
---    ConsultationId INT NOT NULL,
     ClinicId            INT NOT NULL,
---    TemplateId INT NOT NULL,
---    SectionId INT NOT NULL,
     RowId INT NOT NULL,
---    TemplateFieldId INT NOT NULL,
     FieldLabel NVARCHAR(200) NOT NULL,
     FieldTypeCode NVARCHAR(50) NOT NULL,
     FieldCode NVARCHAR(50),     -- identifies special fields e.g. Medicine, Dose, Frequency, Duration 
@@ -512,10 +517,8 @@ CREATE TABLE ConsultationFields
     DisplayOrder INT NOT NULL,
     IsMandatory BIT NOT NULL,
     FieldValue NVARCHAR(MAX),
---    Unit NVARCHAR(50) NULL,
+    MergeWith NVARCHAR(200), -- use the fieldcode of other field with which it should appear
 
---    FOREIGN KEY (ConsultationId) REFERENCES Consultations(ConsultationId),
---    FOREIGN KEY (SectionId) REFERENCES ConsultationSections(SectionId),
     FOREIGN KEY (RowId) REFERENCES ConsultationRows(RowId),
     FOREIGN KEY (ClinicId) REFERENCES Clinics(ClinicId)
 );
@@ -790,7 +793,7 @@ CREATE TABLE Medicines
     GSTPercent DECIMAL(5,2) NULL,
     Manufacturer NVARCHAR(200) NULL,
     ScheduleType NVARCHAR(20) NULL,    -- OTC (Over-the-counter), H (Prescription Drug), H1 (Restricted Antibiotics), X (Controlled Drugs)
-    CreatedFromPrescription BIT,
+    CreatedFromPrescription BIT NOT NULL DEFAULT 0,
     IsActive BIT NOT NULL DEFAULT 1,
     CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
     UpdatedAt DATETIME NULL

@@ -282,10 +282,10 @@ namespace DAL
         public int CloneVitalDefinitions(int clinicId, SqlConnection conn, SqlTransaction tran)
         {
             string query = @"INSERT INTO VitalDefinitions
-                            (ClinicId, VitalLabel, VitalCode, VitalType, DataType, VitalUnit, IsDerived,
+                            (ClinicId, VitalLabel, VitalCode, VitalType, DataType, VitalUnit,
                                 DeriveFormula, DisplayComposition, IsStandard, IsActive, DisplayOrder)
                             SELECT
-                                @ClinicId, V.VitalLabel, V.VitalCode, V.VitalType, V.DataType, V.VitalUnit, V.IsDerived,
+                                @ClinicId, V.VitalLabel, V.VitalCode, V.VitalType, V.DataType, V.VitalUnit,
                                 V.DeriveFormula, V.DisplayComposition, V.IsStandard, V.IsActive, V.DisplayOrder
                             FROM VitalDefinitions V
                             WHERE V.ClinicId IS NULL

@@ -28,10 +28,18 @@ namespace Controllers
 
         public ActionResult Index(string? SearchString)
         {
-            var vm = new PatientSearchVM();
-            vm.SearchString = SearchString ?? "";
+            var vm = new PatientSearchVM
+            {
+                ClinicId = _patient.ClinicId,
+                SearchString = SearchString?.Trim() ?? ""
+            };
 
-            vm.Results = _patient.Search(vm);
+            // Do not retrieve the complete patient population
+            // when the page is opened without a search term.
+            if (!string.IsNullOrWhiteSpace(vm.SearchString))
+            {
+                vm.Results = _patient.Search(vm);
+            }
 
             return View(vm);
         }
@@ -67,24 +75,45 @@ namespace Controllers
                         returnTo = vm.ReturnTo,
                         departmentId = vm.DepartmentId,
                         doctorId = vm.DoctorId,
-                        appointmentDateTime = vm.AppointmentDateTime,
-                        LastVisitDate = vm.LastVisitDate
+                        appointmentDateTime = vm.AppointmentDateTime
                     });
             }
 
             return View(vm);
         }
-
+       
         [HttpGet]
-        public IActionResult Create()
+        public IActionResult Create(string? searchString, string? returnTo, int? departmentId, int? doctorId,
+                                    DateTime? appointmentDateTime)
         {
             var model = new Patient();
+
+            // Pre-populate the phone number when the failed
+            // search looks like a phone number.
+            if (!string.IsNullOrWhiteSpace(searchString))
+            {
+                searchString = searchString.Trim();
+
+                if (searchString.All(char.IsDigit))
+                {
+                    model.Phone = searchString;
+                }
+            }
+
+            // Preserve the originating workflow.
+            ViewBag.ReturnTo = returnTo;
+            ViewBag.DepartmentId = departmentId;
+            ViewBag.DoctorId = doctorId;
+            ViewBag.AppointmentDateTime = appointmentDateTime;
+            ViewBag.SearchString = searchString;
 
             return View(model);
         }
 
         [HttpPost]
-        public IActionResult Create(Patient model)
+        [ValidateAntiForgeryToken]
+        public IActionResult Create(Patient model, string? returnTo, int? departmentId, int? doctorId,
+                                    DateTime? appointmentDateTime)
         {
             if (model == null)
             {
@@ -95,21 +124,20 @@ namespace Controllers
 
             if (!ModelState.IsValid)
             {
-                foreach (var key in ModelState.Keys)
-                {
-                    var errors = ModelState[key].Errors;
-                    foreach (var err in errors)
-                    {
-                        Console.WriteLine($"Field: {key} → Error: {err.ErrorMessage}");
-                    }
-                }
+                // Preserve workflow context when returning to the form.
+                ViewBag.ReturnTo = returnTo;
+                ViewBag.DepartmentId = departmentId;
+                ViewBag.DoctorId = doctorId;
+                ViewBag.AppointmentDateTime = appointmentDateTime;
 
                 return View(model);
             }
 
+            // PatientService.Create() also places the newly
+            // created patient into the global patient cache.
             _patient.Create(model);
 
-            return RedirectToAction("Index");
+            return ReturnToWorkflow(returnTo, model.PatientId, departmentId, doctorId, appointmentDateTime);
         }
 
         [HttpGet]
@@ -167,21 +195,30 @@ namespace Controllers
         }
 
         [HttpGet]
-        public JsonResult SearchPatient(string term)
+        public JsonResult SearchPatient(string? term)
         {
-            var patients = _patient.Search(term)
-                                        .Take(10)
-                                        .Select(x => new
-                                        {
-                                            id = x.PatientId,
-                                            text = "ID: " + x.PatientId + " - " + x.FirstName + " " + x.LastName + 
-                                                            " (" + x.Phone + ")",
-                                            patientName = x.FirstName + ' ' + x.LastName,
-                                            phone = x.Phone,
-                                            age = x.Age,
-                                            gender = x.Gender
-                                        })
-                                        .ToList();
+            string searchTerm = term?.Trim() ?? "";
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                return Json(new List<object>());
+            }
+
+            var patients = _patient.Search(searchTerm)
+                .Select(x => new
+                {
+                    id = x.PatientId,
+                    text = "ID: " + x.PatientId
+                        + " - " + x.FirstName + " " + x.LastName
+                        + " (" + x.Phone + ")",
+
+                    patientName = x.FirstName + " " + x.LastName,
+                    phone = x.Phone,
+                    age = x.Age,
+                    gender = x.Gender,
+                    lastVisitDate = x.LastVisitDate
+                })
+                .ToList();
 
             return Json(patients);
         }
@@ -245,6 +282,75 @@ namespace Controllers
                     phone = patient.Phone
                 }
             });
+        }
+
+        [HttpGet]
+        public IActionResult SelectPatient(int patientId, string? returnTo, int? departmentId, int? doctorId,
+                                            DateTime? appointmentDateTime, DateTime? lastVisitDate)
+        {
+            var patient = _patient.Get(patientId);
+
+            if (patient == null)
+            {
+                return NotFound();
+            }
+
+            if (patient.ClinicId != _patient.ClinicId)
+            {
+                return Forbid();
+            }
+
+            var selection = new PatientSelectionVM(patient)
+            {
+                LastVisitDate = lastVisitDate
+            };
+
+            _patient.SetCache(selection);
+
+            return ReturnToWorkflow(returnTo, patient.PatientId, departmentId, doctorId, appointmentDateTime);
+        }
+
+        private IActionResult ReturnToWorkflow(string? returnTo, int patientId, int? departmentId, int? doctorId,
+                                                DateTime? appointmentDateTime)
+        {
+            switch (returnTo?.Trim())
+            {
+                case "AppointmentBooking":
+
+                    if (!departmentId.HasValue ||
+                        !doctorId.HasValue ||
+                        !appointmentDateTime.HasValue)
+                    {
+                        return RedirectToAction(
+                            "Index",
+                            "AppointmentBooking");
+                    }
+
+                    return RedirectToAction(
+                        "Book",
+                        "AppointmentBooking",
+                        new
+                        {
+                            departmentId = departmentId.Value,
+                            doctorId = doctorId.Value,
+                            appointmentDateTime = appointmentDateTime.Value,
+                            patientId = patientId
+                        });
+
+                case "Billing":
+
+                    return RedirectToAction(
+                        "SearchByPatient",
+                        "Billing",
+                        new
+                        {
+                            patientId = patientId
+                        });
+
+                default:
+
+                    return RedirectToAction(nameof(Index));
+            }
         }
     
     }

@@ -254,5 +254,11 @@ h5{
     font-weight:500;
 }
 
-
+/* Prescription print: smaller text, but retain the normal text color. */
+.prescription-merged-name {
+    display: block;
+    font-size: 0.85em;
+    font-weight: normal;
+    color: inherit;
+}
 

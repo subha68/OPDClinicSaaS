@@ -2,32 +2,101 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+    
     ViewData["Title"] = "Patient History";
 }
 
-<div class="card mb-3">
+@section Styles {
+<link rel="stylesheet" href="~/css/patient/patient-history.css" asp-append-version="true" />
+}
+
+<div class="container-fluid patient-history-page">
+
+<!-- ============================================================
+     Patient Header
+     ============================================================ -->
+<div class="patient-history-header card border-0 shadow-sm mb-4">
     <div class="card-body">
 
-        <div class="row">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
 
-            <div class="col-md-2">
-                <strong>Patient Id</strong><br />
-                @Model.PatientId
+            <div class="d-flex align-items-center gap-3">
+
+                <div class="patient-avatar">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+
+                <div>
+                    <h4 class="mb-1 fw-semibold">
+                        @Model.FirstName @Model.LastName
+                    </h4>
+
+                    <div class="patient-meta">
+
+                        <span>
+                            <i class="fa-solid fa-id-card me-1"></i>
+                            Patient ID:
+                            <strong>@Model.PatientId</strong>
+                        </span>
+
+                        @if (!string.IsNullOrWhiteSpace(Model.Gender))
+                        {
+                            <span>
+                                <i class="fa-solid fa-venus-mars me-1"></i>
+                                @Model.Gender
+                            </span>
+                        }
+
+                        <span>
+                            <i class="fa-solid fa-calendar-days me-1"></i>
+                            @Model.Age years
+                        </span>
+
+                        @if (!string.IsNullOrWhiteSpace(Model.Phone))
+                        {
+                            <span>
+                                <i class="fa-solid fa-phone me-1"></i>
+                                @Model.Phone
+                            </span>
+                        }
+
+                    </div>
+                </div>
+
             </div>
 
-            <div class="col-md-2">
-                <strong>Gender</strong><br />
-                @Model.Gender
+            <div>
+                <a asp-controller="Patient"
+                   asp-action="Index"
+                   class="btn btn-outline-primary btn-sm">
+                    <i class="fa-solid fa-user-pen me-1"></i>
+                    Change Patient
+                </a>
             </div>
 
-            <div class="col-md-2">
-                <strong>Age</strong><br />
-                @Model.Age
+        </div>
+
+        <!-- Patient summary -->
+        <div class="patient-summary-strip mt-4">
+
+            <div class="patient-summary-item">
+                <span class="summary-label">Visits</span>
+                <span class="summary-value">@Model.TotalVisits</span>
             </div>
 
-            <div class="col-md-3">
-                <strong>Phone</strong><br />
-                @Model.Phone
+            <div class="patient-summary-item">
+                <span class="summary-label">Appointments</span>
+                <span class="summary-value">@Model.TotalAppointments</span>
+            </div>
+
+            <div class="patient-summary-item">
+                <span class="summary-label">Bills</span>
+                <span class="summary-value">@Model.TotalBills</span>
+            </div>
+
+            <div class="patient-summary-item">
+                <span class="summary-label">Payments</span>
+                <span class="summary-value">@Model.TotalPayments</span>
             </div>
 
         </div>
@@ -35,149 +104,298 @@
     </div>
 </div>
 
-<div class="accordion" id="visitAccordion">
 
-    @foreach (var visit in Model.Visits)
+<!-- ============================================================
+     Visit Timeline
+     ============================================================ -->
+<div class="patient-history-timeline">
+
+    @if (Model.Visits != null && Model.Visits.Any())
     {
-        <div class="accordion-item">
+        foreach (var visit in Model.Visits)
+        {
+            <div class="timeline-item">
 
-            <h2 class="accordion-header">
+                <!-- Timeline marker -->
+                <div class="timeline-marker">
+                    <i class="fa-solid fa-hospital-user"></i>
+                </div>
 
-                <button class="accordion-button collapsed"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#visit_@visit.VisitId">
 
-                    Visit : @visit.VisitDate.ToString("dd/MM/yyyy")
-                    (@visit.VisitType)
-                </button>
+                <!-- ====================================================
+                     Visit Card
+                     ==================================================== -->
+                <div class="visit-card card border-0 shadow-sm">
 
-            </h2>
+                    <!-- Visit Header -->
+                    <div class="visit-card-header">
+                        <div class="visit-header-icon">
+                            <i class="fa-solid fa-clipboard-list"></i>
+                        </div>
 
-            <div id="visit_@visit.VisitId"
-                 class="accordion-collapse collapse"
-                 data-bs-parent="#visitAccordion">
+                        <div class="visit-header-content">
+                            <div class="visit-date">
+                                @visit.VisitDate.ToString("dd MMM yyyy")
+                            </div>
 
-                <div class="accordion-body">
+                            <div class="visit-meta">
+                                <span>
+                                    <i class="fa-regular fa-calendar me-1"></i>
+                                    Visit #@visit.VisitId
+                                </span>
 
-                    <h5>Appointments</h5>
+                                @if (!string.IsNullOrWhiteSpace(visit.VisitType))
+                                {
+                                    <span class="visit-type">
+                                        @visit.VisitType
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </div>
 
-                    @if (visit.Appointments.Any())
-                    {
-                        <table class="table table-bordered table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Doctor</th>
-                                    <th>Time</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
+                    <!-- Visit Body -->
+                    <div class="visit-card-body">
 
-                            <tbody>
+                        <!-- ==================================================
+                             Clinical Activity
+                             ================================================== -->
+                        @if (visit.Appointments != null &&
+                             visit.Appointments.Any())
+                        {
+                            <div class="activity-section">
+
                                 @foreach (var appt in visit.Appointments)
                                 {
-                                    <tr>
-                                        <td>@appt.AppointmentDate.ToString("dd/MM/yyyy")</td>
-                                        <td>@appt.DoctorName</td>
-                                        <td>@appt.SlotTime</td>
-                                        <td>@appt.Status</td>
-                                        <td>
-                                            @if (appt.Status == "Completed")
-                                            {
+                                    <div class="clinical-activity-row">
+                                        <div class="clinical-activity-main">
+
+                                            <div class="clinical-doctor">
+                                                <i class="fa-solid fa-user-doctor me-2"></i>
+                                                @if (!string.IsNullOrWhiteSpace(appt.DoctorName))
+                                                {
+                                                    @appt.DoctorName
+                                                }
+                                                else
+                                                {
+                                                    <span>Doctor</span>
+                                                }
+
+                                                @if (!string.IsNullOrWhiteSpace(appt.DepartmentName))
+                                                {
+                                                    <span class="clinical-department">
+                                                        @appt.DepartmentName
+                                                    </span>
+                                                }
+                                            </div>
+
+                                            <div class="clinical-meta">
+                                                <span>
+                                                    <i class="fa-regular fa-clock me-1"></i>
+                                                    @appt.AppointmentDate.ToString("hh:mm tt")
+                                                </span>
+
+                                                @if (!string.IsNullOrWhiteSpace(appt.Status))
+                                                {
+                                                    <span class="clinical-status">@appt.Status</span>
+                                                }
+                                            </div>
+
+                                            <div class="clinical-inline-action">
                                                 <a asp-controller="Consultation"
-                                                    asp-action="Preview"
-                                                    asp-route-appointmentId="@appt.AppointmentId"
-                                                    target="_blank"
-                                                    class="btn btn-sm btn-info">
+                                                asp-action="Preview"
+                                                asp-route-appointmentId="@appt.AppointmentId"
+                                                asp-route-returnUrl="@Url.Action(
+                                                    "History",
+                                                    "Patient",
+                                                    new { id = Model.PatientId, page = Model.CurrentPage })"
+                                                class="btn btn-sm btn-outline-primary">
+                                                    <i class="fa-solid fa-file-prescription me-1"></i>
                                                     View Prescription
                                                 </a>
-                                            }
-                                        </td>
-                                    </tr>
+                                            </div>
+
+                                        </div>
+                                    </div>
                                 }
-                            </tbody>
-                        </table>
-                    }
-                    else
-                    {
-                        <p>No appointments found.</p>
-                    }
 
-                    <hr />
+                            </div>
+                        }
 
-                    <h5>Bills</h5>
 
-                    @if (visit.Bills.Any())
-                    {
-                        <table class="table table-bordered table-sm">
-
-                            <thead>
-                                <tr>
-                                    <th>Bill Id</th>
-                                    <th>Date</th>
-                                    <th>Amount</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
+                        <!-- ==================================================
+                             Financial Activity
+                             ================================================== -->
+                        @if (visit.Bills != null &&
+                             visit.Bills.Any())
+                        {
+                            <div class="activity-section">
 
                                 @foreach (var bill in visit.Bills)
                                 {
-                                    <tr>
-                                        <td>@bill.BillId</td>
-                                        <td>@bill.BillDate.ToString("dd/MM/yyyy")</td>
-                                        <td>@bill.GrossAmount</td>
-                                        <td>
-                                            @(bill.BalanceAmount == 0
-                                                ? "Paid"
-                                                : "Pending")
-                                        </td>
-                                        <td>
-                                            <a asp-controller="Billing"
+                                    <div class="financial-activity-row">
+                                        <div class="financial-main">
+                                            <div class="financial-bill-number">
+                                                <i class="fa-solid fa-receipt me-2"></i>
+                                                Bill # @bill.BillNo
+                                            </div>
+
+                                            <div class="financial-meta">
+
+                                                <span>
+                                                    @bill.BillLines.Count line@(bill.BillLines.Count == 1 ? "" : "s")
+                                                </span>
+
+                                                <span>
+                                                    @bill.Payments.Count payment@(bill.Payments.Count == 1 ? "" : "s")
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div class="financial-actions">
+                                            <div class="financial-amount">
+                                                <div class="bill-amount">
+                                                    @bill.NetAmount.ToString("C")
+                                                </div>
+                                            </div>
+
+                                            <div class="financial-action-row">
+                                                @{
+                                                    var paidAmount = bill.Payments?
+                                                        .Sum(p => p.Amount) ?? 0;
+
+                                                    var isPaid = paidAmount >= bill.NetAmount;
+                                                }
+
+                                                @if (isPaid)
+                                                {
+                                                    <span class="payment-status payment-paid">
+                                                        Paid
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="payment-status payment-due">
+                                                        Due
+                                                    </span>
+                                                }
+
+                                                <a asp-controller="Billing"
                                                 asp-action="Print"
                                                 asp-route-id="@bill.BillId"
-                                                target="_blank"
-                                                class="btn btn-sm btn-info">
-                                                View Bill
-                                            </a>
-                                        </td>
-                                    </tr>
+                                                asp-route-returnUrl="@Url.Action(
+                                                    "History",
+                                                    "Patient",
+                                                    new { id = Model.PatientId, page = Model.CurrentPage })"
+                                                class="btn btn-sm btn-outline-secondary">
+                                                    <i class="fa-solid fa-eye me-1"></i>
+                                                    View Bill
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 }
 
-                            </tbody>
+                            </div>
+                        }
 
-                        </table>
-                    }
-                    else
-                    {
-                        <p>No bills found.</p>
-                    }
+
+                        <!-- ==================================================
+                             No activity
+                             ================================================== -->
+                        @if ((visit.Appointments == null || !visit.Appointments.Any()) &&
+                             (visit.Bills == null || !visit.Bills.Any()))
+                        {
+                            <div class="empty-visit-activity">
+                                <i class="fa-regular fa-folder-open"></i>
+                                <span>No clinical or financial activity recorded for this visit.</span>
+                            </div>
+                        }
+
+                    </div>
 
                 </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+
+                <div class="empty-history-icon mb-3">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+
+                <h5 class="mb-2">No Visit History</h5>
+
+                <p class="text-muted mb-0">
+                    No visits have been recorded for this patient.
+                </p>
 
             </div>
-
         </div>
     }
 
 </div>
 
-@if (Model.HasMoreVisits)
+
+<!-- ============================================================
+     Pagination
+     ============================================================ -->
+@if (Model.TotalVisits > 3)
 {
-    <div class="text-center mt-3">
+    var currentPage = Model.CurrentPage;
+    var totalPages = (int)Math.Ceiling(Model.TotalVisits / 3.0);
 
-        <a asp-action="History"
-           asp-route-id="@Model.PatientId"
-           asp-route-page="@(Model.CurrentPage + 1)"
-           class="btn btn-outline-primary">
+    <div class="patient-history-pagination mt-4">
 
-            More Visits
+        <nav aria-label="Patient history pagination">
 
-        </a>
+            <ul class="pagination justify-content-center">
+
+                <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                    <a class="page-link"
+                       asp-action="History"
+                       asp-route-patientId="@Model.PatientId"
+                       asp-route-page="@(currentPage - 1)">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </a>
+                </li>
+
+
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(i == currentPage ? "active" : "")">
+
+                        <a class="page-link"
+                           asp-action="History"
+                           asp-route-patientId="@Model.PatientId"
+                           asp-route-page="@i">
+                            @i
+                        </a>
+
+                    </li>
+                }
+
+
+                <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+
+                    <a class="page-link"
+                       asp-action="History"
+                       asp-route-patientId="@Model.PatientId"
+                       asp-route-page="@(currentPage + 1)">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+
+                </li>
+
+            </ul>
+
+        </nav>
 
     </div>
 }
+
+</div>

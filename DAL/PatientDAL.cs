@@ -187,24 +187,82 @@ namespace DAL
             var patients = new List<Patient>();
 
             string sql = @"
-                SELECT p.*, v.LastVisitDate
+                SELECT TOP 10
+                    p.*,
+                    v.LastVisitDate
                 FROM Patients p
-                LEFT OUTER JOIN (SELECT PatientId, MAX(VisitDate) AS LastVisitDate FROM Visits GROUP BY PatientId) v
+                LEFT OUTER JOIN
+                (
+                    SELECT
+                        PatientId,
+                        MAX(VisitDate) AS LastVisitDate
+                    FROM Visits
+                    GROUP BY PatientId
+                ) v
                     ON p.PatientId = v.PatientId
+
                 WHERE
-                   (p.PatientId LIKE '%' + @searchString + '%')
-                OR (p.Phone LIKE '%' + @searchString + '%')
-                OR (p.FirstName + ' ' + p.LastName LIKE '%' + @searchString + '%')
-                AND p.ClinicId = @ClinicId
-                ORDER BY p.PatientId DESC";
+                    p.ClinicId = @ClinicId
+                    AND
+                    (
+                        CAST(p.PatientId AS VARCHAR(20)) = @SearchString
+
+                        OR p.Phone = @SearchString
+
+                        OR (p.FirstName + ' ' + p.LastName) = @SearchString
+
+                        OR CAST(p.PatientId AS VARCHAR(20)) LIKE @SearchString + '%'
+
+                        OR p.Phone LIKE @SearchString + '%'
+
+                        OR (p.FirstName + ' ' + p.LastName) LIKE @SearchString + '%'
+
+                        OR (p.FirstName + ' ' + p.LastName) LIKE '%' + @SearchString + '%'
+                    )
+
+                ORDER BY
+                    CASE
+                        -- Exact Patient ID
+                        WHEN CAST(p.PatientId AS VARCHAR(20)) = @SearchString
+                            THEN 1
+
+                        -- Exact phone
+                        WHEN p.Phone = @SearchString
+                            THEN 2
+
+                        -- Exact full name
+                        WHEN (p.FirstName + ' ' + p.LastName) = @SearchString
+                            THEN 3
+
+                        -- Patient ID starts with search
+                        WHEN CAST(p.PatientId AS VARCHAR(20)) LIKE @SearchString + '%'
+                            THEN 4
+
+                        -- Phone starts with search
+                        WHEN p.Phone LIKE @SearchString + '%'
+                            THEN 5
+
+                        -- Name starts with search
+                        WHEN (p.FirstName + ' ' + p.LastName) LIKE @SearchString + '%'
+                            THEN 6
+
+                        -- Name contains search
+                        WHEN (p.FirstName + ' ' + p.LastName) LIKE '%' + @SearchString + '%'
+                            THEN 7
+
+                        ELSE 99
+                    END,
+
+                    p.PatientId DESC;";
 
             using var cmd = new SqlCommand(sql, conn);
+
             if (tran != null)
             {
                 cmd.Transaction = tran;
             }
 
-            cmd.Parameters.AddWithValue("@searchString", vm.SearchString);
+            cmd.Parameters.AddWithValue("@SearchString", vm.SearchString?.Trim() ?? string.Empty);
             cmd.Parameters.AddWithValue("@ClinicId", vm.ClinicId);
 
             using var reader = cmd.ExecuteReader();
@@ -230,7 +288,8 @@ namespace DAL
                     EmergencyRelationship = reader["EmergencyRelationship"]?.ToString() ?? "",
                     EmergencyPhone = reader["EmergencyPhone"]?.ToString() ?? "",
                     ClinicId = Convert.ToInt32(reader["ClinicId"]),
-                    LastVisitDate = reader["LastVisitDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["LastVisitDate"])
+                    LastVisitDate = reader["LastVisitDate"] == DBNull.Value ? null 
+                                                                            : Convert.ToDateTime(reader["LastVisitDate"])
                 });
             }
 

@@ -1,3 +1,4 @@
+
 @model Models.ConsultationField
 
 <partial name="_ConsultationFieldHidden" model="Model" />
@@ -6,9 +7,13 @@
        class="form-control consultation-autocomplete"
        autocomplete="off"
        data-field-id="@Model.FieldId"
+       data-field-code="@Model.FieldCode"
+       data-merge-with="@Model.MergeWith"
        data-source="@Model.FieldSource"
        data-field-data-id="@Model.FieldDataId" />
 
 <input asp-for="FieldSource" type="hidden" />
-<input asp-for="FieldDataId" type="hidden"
+
+<input asp-for="FieldDataId"
+       type="hidden"
        class="field-data-id" />

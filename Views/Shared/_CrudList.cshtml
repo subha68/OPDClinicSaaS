@@ -195,13 +195,17 @@
                                     Edit
                                 </a>
 
-                                <a asp-action="Delete"
-                                   asp-route-id="@keyValue"
-                                   class="btn btn-sm btn-outline-danger"
-                                   onclick="return confirm('Are you sure?');">
-                                    Delete
-                                </a>
-                            }
+                                <form asp-action="Delete"
+                                    asp-route-id="@keyValue"
+                                    method="post"
+                                    class="d-inline"
+                                    onsubmit="return confirm('Are you sure?');">
+
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-danger">
+                                        Delete
+                                    </button>
+                                </form>                            }
 
                         </td>
                     </tr>

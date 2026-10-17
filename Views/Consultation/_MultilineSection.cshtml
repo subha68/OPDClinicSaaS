@@ -37,9 +37,11 @@
 
                 @foreach (var field in Model.TemplateRow.Fields
                     .Where(f => f.FieldTypeCode != "Hidden")
+                    .Where(f => string.IsNullOrWhiteSpace(f.MergeWith))
                     .OrderBy(f => f.DisplayOrder))
                 {
-                    <th>
+                    <th class="field-column"
+                        data-field-code="@field.FieldCode">
 
                         @field.FieldLabel
 

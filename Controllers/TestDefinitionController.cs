@@ -467,6 +467,7 @@ namespace YourProject.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult CloneTestDefinitions(int clinicId)
         {
             int rowsAffected = _testDefinition.CloneMasterDefinitions(clinicId);

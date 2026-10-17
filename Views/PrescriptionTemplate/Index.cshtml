@@ -123,9 +123,8 @@ $("#btnShowTemplate").click(function () {
     }
     // PRIORITY 3: Default clinic template
     else {
-
-        url = "/PrescriptionTemplate/GetByClinic";
-        data = { clinicId: $("#ClinicId").val() }; // or hidden field
+        url = "/PrescriptionTemplate/GetDefault";
+        data = {}; 
     }
 
     $.get(url, data, function (html) {

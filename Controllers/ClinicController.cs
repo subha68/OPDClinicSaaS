@@ -6,7 +6,7 @@ using Helpers;
 
 namespace Controllers
 {
-    //[AuthorizeRole(1)] // SuperAdmin only
+    [AuthorizeRole(1)] // SuperAdmin only
     public class ClinicController : Controller
     {
         private readonly ClinicService _clinic;
@@ -31,6 +31,7 @@ namespace Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Create(Clinic clinic)
         {
             if (clinic == null)
@@ -69,6 +70,7 @@ namespace Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Edit(Clinic clinic)
         {
             if (clinic == null)
@@ -87,7 +89,7 @@ namespace Controllers
                     }
                 }
 
-                return View(clinic);
+                return View("Create", clinic);
             }
 
             _clinic.Modify(clinic);
@@ -96,6 +98,7 @@ namespace Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Delete(int id)
         {
             _clinic.Remove(id);
@@ -103,6 +106,8 @@ namespace Controllers
         }
 
         // use - https://localhost:7036/Clinic/CloneDefaultTemplate
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult CloneDefaultTemplate()
         {
             _clinic.CloneDefaultTemplate();
