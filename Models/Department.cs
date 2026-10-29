@@ -5,7 +5,10 @@ namespace Models
     public class Department
     {
         public int DepartmentId { get; set; }
-        public string DepartmentCode { get; set; }
+        
+        [Required(ErrorMessage = "Department Code is required.")]
+        [StringLength(30, ErrorMessage = "Department Code cannot exceed 30 characters.")]
+        public string DepartmentCode { get; set; } = string.Empty;
         public int ClinicId { get; set; }
         public string? ClinicName { get; set; }
 

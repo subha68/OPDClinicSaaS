@@ -1,5 +1,7 @@
 @model Models.Doctor
 
+@using Models
+
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
 
@@ -9,29 +11,35 @@
 
     ViewData["Title"] = isEdit ? "Edit Doctor" : "Create Doctor";
 
-    ViewBag.Fields = new[]
+    ViewBag.Fields = new List<CrudField>
     {
-        new { Name="Salutation", Label="Salutation", Type="text", Col="2"},
-        new { Name="FirstName", Label="First Name", Type="text", Col="5"},
-        new { Name="LastName", Label="Last Name", Type="text", Col="5"},
-        new { Name="DepartmentId", Label="Department", Type="dropdown", Col="6"},
-        new { Name="RegistrationNo", Label="Registration No", Type="text", Col="6"},
-        new { Name="Qualification", Label="Qualification", Type="text", Col="12"},
-        new { Name="Phone", Label="Phone", Type="text", Col="4"},
-        new { Name="Email", Label="Email", Type="text", Col="6"},
-        new { Name="Fee", Label="Fee (Rs.)", Type="number", Col="2"},
-        new { Name="Username", Label="User Name", Type="text", Col="6"},
-        new { Name="Password", Label="Password", Type="password", Col="6"},
-        new { Name="UserId", Label="User Id", Type="hidden", Col="7"},
-        new { Name="PrescriptionTemplateName", Label="Prescription Template", Type="readonly", Col="7"}        
-    };
-
-    ViewBag.Dropdowns = new Dictionary<string, object>()
-    {
-        { "DepartmentId", ViewBag.Departments }
+        new CrudField { Name="Salutation", Label="Salutation", Type="text", Col="2"},
+        new CrudField { Name="FirstName", Label="First Name", Type="text", Col="5"},
+        new CrudField { Name="LastName", Label="Last Name", Type="text", Col="5"},
+        new CrudField { Name="DepartmentId", Label="Department", Type="dropdown", Col="6"},
+        new CrudField { Name="CloneTemplate", Id = "CloneTemplate", Label="Clone Template", Type="checkbox", Col="2",
+                        CssClass = "clone-template-checkbox", Disabled = false, HelpText = "Use the department's prescription template for this doctor.",
+                        DataAttributes = new Dictionary<string, string>
+                            {["data-has-doctor-template"] = (ViewBag.HasDoctorTemplate == true)
+                                                                        .ToString()
+                                                                        .ToLowerInvariant(),
+                            ["data-template-check-url"] = Url.Action("HasDepartmentTemplate", "Doctor") ?? ""}
+                      },             
+        new CrudField { Name="RegistrationNo", Label="Registration No", Type="text", Col="4"},
+        new CrudField { Name="Qualification", Label="Qualification", Type="text", Col="12"},
+        new CrudField { Name="Phone", Label="Phone", Type="text", Col="4"},
+        new CrudField { Name="Email", Label="Email", Type="text", Col="6"},
+        new CrudField { Name="Fee", Label="Fee (Rs.)", Type="number", Col="2"},
+        new CrudField { Name="Username", Label="User Name", Type="text", Col="6"},
+        new CrudField { Name="Password", Label="Password", Type="password", Col="6"},
+        new CrudField { Name="UserId", Label="User Id", Type="hidden", Col="6"}
     };
 
     ViewBag.KeyField = "DoctorId";
 }
 
 @await Html.PartialAsync("_CrudForm", Model)
+
+@section Scripts {
+    <script src="~/js/doctor/doctor.js" asp-append-version="true"></script>
+}

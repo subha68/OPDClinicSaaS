@@ -1,5 +1,3 @@
-using System.Reflection.Metadata.Ecma335;
-
 namespace Models
 {
     public class PrescriptionTemplateSection
@@ -26,14 +24,14 @@ namespace Models
             {
                 var count = 0;
 
-                if (Multiline && IsPharmacologyAdvice) count++;
-                if (Multiline && !IsPharmacologyAdvice) count++;
+                if (Multiline || IsPharmacologyAdvice) count++;
                 if (IsVital) count++;
                 if (IsTestResult) count++;
 
                 if (count > 1)
                 {
-                    throw new InvalidOperationException($"Section '{SectionName}' has conflicting section flags.");
+                    throw new InvalidOperationException(
+                        $"Section '{SectionName}' has conflicting section flags.");
                 }
 
                 if (IsPharmacologyAdvice)
@@ -55,6 +53,19 @@ namespace Models
         public PrescriptionTemplateSection()
         {
             // default constructor
+        }
+
+        public PrescriptionTemplateSection(int clinicId)
+        {
+            ClinicId = clinicId;
+            SectionName = "New Section";
+            DisplayOrder = 1;
+            IsActive = true;
+            IsArchived = false;
+            Fields = new List<PrescriptionTemplateField>
+                        {
+                            new PrescriptionTemplateField(clinicId)
+                        };
         }
 
         public PrescriptionTemplateSection(PrescriptionTemplateSection source, int targetClinicId)

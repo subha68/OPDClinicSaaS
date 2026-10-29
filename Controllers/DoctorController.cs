@@ -18,18 +18,21 @@ namespace Controllers
         private UserService _user;
         private RoleService _role;
         private ClinicService _clinic;
+        private PrescriptionTemplateService _template;
 
         public DoctorController(DoctorService doctor, 
                                 DepartmentService department, 
                                 UserService user, 
                                 RoleService role, 
-                                ClinicService clinic)
+                                ClinicService clinic,
+                                PrescriptionTemplateService template)
         {
             _doctor = doctor;
             _department = department;
             _user = user;
             _role = role;
             _clinic = clinic;
+            _template = template;
         }
 
         public ActionResult Index()
@@ -42,9 +45,16 @@ namespace Controllers
         [HttpGet]
         public ActionResult Create()
         {
-            var model = new Doctor();
-            
-            ViewBag.Departments = GetDepartments();
+            var model = new Doctor
+            {
+                CloneTemplate = false
+            };
+
+            // Initial state; JavaScript will check the selected department.
+            ViewBag.HasDoctorTemplate = false;
+            ViewBag.HasDepartmentTemplate = false;
+
+            PopulateDropdowns();
 
             return View(model);
         }
@@ -55,6 +65,11 @@ namespace Controllers
         {
             model.ClinicId = _doctor.ClinicId;
 
+            if (string.IsNullOrWhiteSpace(model.Password))
+            {
+                ModelState.AddModelError(nameof(model.Password), "Password is required.");
+            }
+
             if (!ModelState.IsValid)
             {
                 if (model.Username != null && _user.UsernameExists(model.Username))
@@ -62,7 +77,10 @@ namespace Controllers
                     ModelState.AddModelError("Username", "Username already exists");
                 }
 
-                ViewBag.Departments = GetDepartments();
+                ViewBag.HasDoctorTemplate = false;
+                ViewBag.HasDepartmentTemplate = false;
+
+                PopulateDropdowns();
 
                 return View(model);
             }
@@ -80,9 +98,15 @@ namespace Controllers
             if (doctor == null)
                 return NotFound();
 
-            ViewBag.Departments = GetDepartments();
+            // Preserve the doctor's existing template state.
+            doctor.CloneTemplate = doctor.PrescriptionTemplateId.HasValue;
 
-            return View("Create", doctor);   // reuse same screen
+            ViewBag.HasDoctorTemplate = doctor.CloneTemplate;
+            ViewBag.HasDepartmentTemplate = false;
+
+            PopulateDropdowns();
+
+            return View("Create", doctor);
         }
 
         [HttpPost]
@@ -93,16 +117,11 @@ namespace Controllers
 
             if (!ModelState.IsValid)
             {
-                foreach (var key in ModelState.Keys)
-                {
-                    var errors = ModelState[key].Errors;
-                    foreach (var err in errors)
-                    {
-                        Console.WriteLine($"Field: {key} → Error: {err.ErrorMessage}");
-                    }
-                }
+                var existingDoctor = _doctor.Get(model.DoctorId);
 
-                ViewBag.Departments = GetDepartments();
+                ViewBag.HasDoctorTemplate = existingDoctor?.PrescriptionTemplateId.HasValue;
+
+                PopulateDropdowns();
 
                 return View("Create", model);
             }
@@ -111,6 +130,19 @@ namespace Controllers
 
             TempData["Success"] = "Doctor updated successfully.";
             return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public IActionResult HasDepartmentTemplate(int departmentId)
+        {
+            if (departmentId <= 0)
+            {
+                return Json(new { hasTemplate = false });
+            }
+
+            var template = _template.GetByDepartment(departmentId);
+
+            return Json(new { hasTemplate = template != null });
         }
 
         [HttpPost]
@@ -136,6 +168,14 @@ namespace Controllers
                         Value = d.DepartmentId.ToString(),
                         Text = d.Name
                     }).ToList();
+        }
+
+        private void PopulateDropdowns()
+        {
+            ViewBag.Dropdowns = new Dictionary<string, IEnumerable<SelectListItem>>
+            {
+                ["DepartmentId"] = GetDepartments()
+            };
         }
 
     }

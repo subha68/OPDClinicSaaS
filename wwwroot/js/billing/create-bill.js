@@ -30,6 +30,11 @@ $(function () {
 
     initializeBillDate();
 
+    // Use the server-rendered value as an initial fallback when billing
+    // was opened directly from an appointment.
+    consultationChargeId =
+        $("#doctorContainer").data("consultation-charge-id") || null;
+
     /*
         * If Create was opened from an appointment,
         * PatientId is already populated by the server.
@@ -190,7 +195,8 @@ function loadBillingContext()
 
         $("#VisitId").val(res.visitId || "");
 
-        consultationChargeId = res.consultationChargeId || null;
+        consultationChargeId =
+            res.consultationChargeId || consultationChargeId || null;
 
         const previousBillCount = Number(res.previousBillCount) || 0;
 

@@ -39,7 +39,7 @@ namespace BLL
         {
             if (string.IsNullOrWhiteSpace(user.PasswordHash))
             {
-                user.PasswordHash = Get(user.UserId).PasswordHash;
+                user.PasswordHash = Get(user.UserId, conn, tran).PasswordHash;
             }
             else
             {

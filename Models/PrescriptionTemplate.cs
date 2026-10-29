@@ -22,6 +22,21 @@ namespace Models
             // default constructor
         }
 
+        public PrescriptionTemplate(int clinicId, int? departmentId, int? doctorId, string templateCode)
+        {
+            ClinicId = clinicId;
+            DepartmentId = departmentId;
+            DoctorId = doctorId;
+            TemplateCode = templateCode;
+            TemplateName = "New Template";
+            SourceTemplateId = null;
+            IsActive = true;
+            Sections = new List<PrescriptionTemplateSection>
+                        {
+                            new PrescriptionTemplateSection(clinicId)
+                        };
+        }
+
         public PrescriptionTemplate(PrescriptionTemplate source, int targetClinicId, int? targetDepartmentId, 
                                                                 int? targetDoctorId, string templateCode)
         {

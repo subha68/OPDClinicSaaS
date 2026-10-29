@@ -1103,40 +1103,43 @@ namespace DAL
                 optionRowsAffected = optionCmd.ExecuteNonQuery();
 
                 // start deletion from Field records
-                string fieldQuery = @"DELETE FROM PrescriptionTemplateFields tf
-                                        WHERE tf.TemplateId = @TemplateId
-                                        AND tf.IsCustomized = 0
-                                        AND NOT EXISTS (SELECT 1
-                                                        FROM PrescriptionTemplateFieldOptions to
-                                                        WHERE tf.FieldId = to.FieldId)";
+                string fieldQuery = @"DELETE FROM PrescriptionTemplateFields
+                                        WHERE TemplateId = @TemplateId
+                                        AND IsCustomized = 0
+                                        AND NOT EXISTS
+                                        (
+                                            SELECT 1
+                                            FROM PrescriptionTemplateFieldOptions tfo
+                                            WHERE PrescriptionTemplateFields.FieldId = tfo.FieldId
+                                        );";
                 using SqlCommand fieldCmd = new SqlCommand(fieldQuery, conn, tran);
                 fieldCmd.Parameters.AddWithValue("@TemplateId", templateId);
                 fieldRowsAffected = fieldCmd.ExecuteNonQuery();
 
                 // then delete Section records
-                string sectionQuery = @"DELETE FROM PrescriptionTemplateSections ts
-                                        WHERE ts.TemplateId = @TemplateId
-                                        AND ts.IsCustomized = 0
+                string sectionQuery = @"DELETE FROM PrescriptionTemplateSections
+                                        WHERE TemplateId = @TemplateId
+                                        AND IsCustomized = 0
                                         AND NOT EXISTS (SELECT 1
                                                         FROM PrescriptionTemplateFields tf
-                                                        WHERE ts.SectionId = tf.SectionId)";
+                                                        WHERE PrescriptionTemplateSections.SectionId = tf.SectionId)";
                 using SqlCommand sectionCmd = new SqlCommand(sectionQuery, conn, tran);
                 sectionCmd.Parameters.AddWithValue("@TemplateId", templateId);
                 sectionRowsAffected = sectionCmd.ExecuteNonQuery();
 
                 // and finally delete the Template
-                string templateQuery = @"DELETE FROM PrescriptionTemplates t
-                                            WHERE t.TemplateId = @TemplateId
+                string templateQuery = @"DELETE FROM PrescriptionTemplates
+                                            WHERE TemplateId = @TemplateId
                                             AND NOT EXISTS (SELECT 1
                                                             FROM PrescriptionTemplateSections ts
-                                                            WHERE t.TemplateId = ts.TemplateId)";
+                                                            WHERE PrescriptionTemplates.TemplateId = ts.TemplateId)";
                 using SqlCommand templateCmd = new SqlCommand(templateQuery, conn, tran);
                 templateCmd.Parameters.AddWithValue("@TemplateId", templateId);
                 templateRowsAffected = templateCmd.ExecuteNonQuery();
 
             }
 
-            return templateRowsAffected > 0 || sectionRowsAffected > 0 || fieldRowsAffected > 0 || optionRowsAffected > 0;
+            return templateRowsAffected > 0; // || sectionRowsAffected > 0 || fieldRowsAffected > 0 || optionRowsAffected > 0;
 
         }
 
@@ -2099,6 +2102,62 @@ namespace DAL
             rowsAffected = cmd.ExecuteNonQuery();
 
             return rowsAffected > 0;            
+        }
+
+        public List<string> ListTemplateCodes(SqlConnection conn, SqlTransaction? tran = null)
+        {
+            List<string> codes = new List<string>();
+
+            // retrieve template
+
+            string query = @"SELECT DISTINCT (TemplateCode) AS TemplateCode
+                                    FROM PrescriptionTemplates
+                                    WHERE TemplateCode <> 'DEFAULT'
+                                    AND ClinicId IS NULL
+                                    AND DepartmentId IS NULL
+                                    AND DoctorId IS NULL;";
+
+            using SqlCommand cmd = new SqlCommand(query, conn);
+            if (tran != null)
+            {
+                cmd.Transaction = tran;
+            }
+
+            using (var reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    codes.Add(reader["TemplateCode"].ToString());
+                }
+            }
+
+            return codes;
+        }
+
+        public void DeleteSyncRows(string tableName, string idColumn, int templateId, IEnumerable<int> ids,
+                                    SqlConnection conn, SqlTransaction tran)
+        {
+            if (ids == null)
+                return;
+
+            // Table and column names are supplied only by the fixed calls above.
+            string query = $@"
+                DELETE FROM {tableName}
+                WHERE TemplateId = @TemplateId
+                  AND {idColumn} = @NodeId;";
+
+            foreach (int id in ids.Distinct())
+            {
+                if (id <= 0)
+                    continue;
+
+                using SqlCommand cmd = new SqlCommand(query, conn, tran);
+
+                cmd.Parameters.AddWithValue("@TemplateId", templateId);
+                cmd.Parameters.AddWithValue("@NodeId", id);
+
+                cmd.ExecuteNonQuery();
+            }
         }
 
         private PrescriptionTemplate MapTemplate(SqlDataReader reader)

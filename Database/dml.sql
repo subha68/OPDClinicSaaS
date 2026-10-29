@@ -5,6 +5,7 @@ INSERT INTO FieldTypes VALUES
 ('Date'),
 ('CheckboxGroup'),
 ('Dropdown'),
+('related-dropdown-input'),
 ('RadioGroup'),
 ('MultiSelect'),
 ('Lookup'),
@@ -31,12 +32,12 @@ VALUES (1,'superadmin','admin123');
 
 INSERT INTO Users (ClinicId, RoleId, Username, PasswordHash)
 VALUES
-(1,2,'clinicadmin','admin123'),
-(1,3,'user1','user123'),
-(1,4,'doctor1','doc123'),
-(1,5,'billing1','bill123'),
-(1,6,'doctor2','doc123'),
-(1,7,'doctor3','doc123');
+(1,2,'clinicadmin','admin123');
+--(1,3,'user1','user123'),
+--(1,4,'doctor1','doc123'),
+--(1,5,'billing1','bill123'),
+--(1,6,'doctor2','doc123'),
+--(1,7,'doctor3','doc123');
 
 -- Departments
 INSERT INTO Departments (ClinicId, Name)
@@ -96,7 +97,7 @@ SELECT 2, FeatureId FROM Features WHERE Code IN ('DEPT_VIEW','DOC_VIEW','USER_VI
 -- ClinicUser
 INSERT INTO RoleFeatures (RoleId, FeatureId)
 SELECT 3, FeatureId FROM Features WHERE Code IN ('APPOINTMENT_BOOKING', 'PATIENT_HISTORY', 'VITAL', 'TEST_DEFINITION',
-                                                'TEST_RESULT', 'REFUND_VIEW');
+                                                'TEST_RESULT', 'BILLING_MANAGEMENT', 'REFUND_VIEW');
 
 -- Doctor
 INSERT INTO RoleFeatures (RoleId, FeatureId)

@@ -9,6 +9,7 @@ namespace BLL
         private readonly DoctorDAL _doctorDAL;
         private readonly RoleDAL _roleDAL;
         private readonly DepartmentDAL _departmentDAL;
+        private readonly PrescriptionTemplateDAL _templateDAL;
 
         private readonly UserService _user;
         private readonly PrescriptionTemplateService _template;
@@ -68,8 +69,12 @@ namespace BLL
                 model.DoctorId = id;
 
                 // create template
-                int templateId = _template.SyncClinicDoctorTemplate(ClinicId, model.DoctorId, conn, tran);
-                model.PrescriptionTemplateId = templateId;
+                if (model.CloneTemplate && 
+                    _template.GetByDepartment(model.DepartmentId, model.ClinicId, conn, tran) != null)
+                {
+                    int templateId = _template.SyncClinicDoctorTemplate(ClinicId, model.DoctorId, conn, tran);
+                    model.PrescriptionTemplateId = templateId;
+                }
 
                 tran.Commit();
                 return id;
@@ -85,46 +90,97 @@ namespace BLL
         {
             using var conn = _db.GetConnection();
             conn.Open();
+
             using var tran = conn.BeginTransaction();
 
             try
             {
-                // cannot change ClinicId as doctor is tied to a clinic.
+                // Doctor remains tied to the current clinic.
                 model.ClinicId = ClinicId;
 
                 if (model.DepartmentId == 0)
-                    throw new Exception("Department required");
+                    throw new InvalidOperationException("Department required.");
 
-                // check if department belongs to this clinic
+                // Validate that the department belongs to this clinic.
                 var department = _departmentDAL.Get(model.DepartmentId, ClinicId, conn, tran);
 
                 if (department == null)
-                    throw new InvalidOperationException($"Department {model.DepartmentId} not found for clinic {model.ClinicId}.");
-
-                int doctorRoleId =_roleDAL.GetRoleByName("Doctor", conn, tran).RoleId;
-
-                var user = new User
                 {
-                    UserId = model.UserId,
-                    Username = model.Username,
-                    PasswordHash = model.Password,
-                    RoleId = doctorRoleId,   // Doctor Role
-                    FirstName = model.Salutation + " " + model.FirstName,
-                    LastName = model.LastName
-                };
+                    throw new InvalidOperationException($"Department {model.DepartmentId} not found for clinic {ClinicId}.");
+                }
 
-                if (_user.Update(user, conn, tran) == false)
-                    throw new Exception("Associated user not found");
+                // Retrieve the existing associated User.
+                var user = _user.Get(model.UserId);
+
+                if (user == null)
+                    throw new InvalidOperationException("Associated user not found.");
+
+                int doctorRoleId = _roleDAL.GetRoleByName("Doctor", conn, tran).RoleId;
+
+                user.Username = model.Username;
+
+                // IMPORTANT:
+                // Blank means retain the existing password.
+                // A supplied password will be hashed by UserService.Update().
+                user.PasswordHash = model.Password;
+
+                user.RoleId = doctorRoleId;
+                user.FirstName = $"{model.Salutation} {model.FirstName}".Trim();
+                user.LastName = model.LastName;
+
+                if (!_user.Update(user, conn, tran))
+                {
+                    throw new InvalidOperationException(
+                        $"Associated user {model.UserId} could not be updated.");
+                }
+
+                var existingDoctor = _doctorDAL.Get(model.DoctorId, model.ClinicId, conn, tran);
+                bool departmentChanged = existingDoctor.DepartmentId != model.DepartmentId;
 
                 bool result = base.Update(model, conn, tran);
 
                 if (!result)
+                {
                     throw new InvalidOperationException(
-                        $"Doctor {model.DoctorId} could not be modified for clinic {model.ClinicId}.");
+                        $"Doctor {model.DoctorId} could not be modified for clinic {ClinicId}.");
+                }
 
+                var doctorTemplate = _template.GetByDoctor(model.DoctorId, model.ClinicId, conn, tran);
+                var departmentTemplate = _template.GetByDepartment(model.DepartmentId, model.ClinicId, conn, tran);
 
-                int templateId = _template.SyncClinicDoctorTemplate(ClinicId, model.DoctorId, conn, tran);
-                model.PrescriptionTemplateId = templateId;
+                // Clone the department template if requested and the doctor
+                // does not already have a template.
+                if (model.CloneTemplate && departmentTemplate != null)
+                {
+                    if (doctorTemplate == null || departmentChanged)
+                    {
+                        int templateId = _template.SyncClinicDoctorTemplate(ClinicId, model.DoctorId, conn, tran);
+                        model.PrescriptionTemplateId = templateId;
+                    }
+                }
+                // Remove the doctor's template if cloning is no longer requested.
+                else if (!model.CloneTemplate && doctorTemplate != null)
+                {
+                    bool deleted = _templateDAL.Delete(doctorTemplate.TemplateId, model.ClinicId, conn, tran);
+
+                    if (!deleted)
+                    {
+                        throw new InvalidOperationException(
+                            $"Could not remove prescription template {doctorTemplate.TemplateId} " +
+                            $"for doctor {model.DoctorId}.");
+                    }
+
+                    model.PrescriptionTemplateId = null;
+
+                    bool updated = _doctorDAL.Update(model, conn, tran);
+
+                    if (!updated)
+                    {
+                        throw new InvalidOperationException(
+                            $"Could not clear the prescription template reference " +
+                            $"for doctor {model.DoctorId}.");
+                    }
+                }
 
                 tran.Commit();
                 return result;

@@ -199,6 +199,105 @@ namespace BLL
             return affected;
         }
 
+        public int CreateNewTemplate(int departmentId, int? doctorId)
+        {
+            if (departmentId <= 0)
+                throw new ArgumentException("A valid DepartmentId is required.", nameof(departmentId));
+
+            if (doctorId.HasValue && doctorId.Value <= 0)
+                throw new ArgumentException("A valid DoctorId is required.", nameof(doctorId));
+
+            int? currentClinicId = GetClinicId();
+
+            if (!currentClinicId.HasValue || currentClinicId.Value <= 0)
+                throw new InvalidOperationException("A valid clinic context is required to create a template.");
+
+            int clinicId = currentClinicId.Value;
+
+            using var conn = _db.GetConnection();
+            conn.Open();
+
+            using var tran = conn.BeginTransaction();
+
+            try
+            {
+                // 1. Validate that the department belongs to this clinic.
+                var department = _departmentDAL.Get(departmentId, clinicId, conn, tran);
+
+                if (department == null)
+                    throw new InvalidOperationException("The selected department was not found for this clinic.");
+
+                // 2. Validate the doctor, if this is a doctor-specific template.
+                Doctor doctor = null;
+
+                if (doctorId.HasValue)
+                {
+                    doctor = _doctorDAL.Get(doctorId.Value, clinicId, conn, tran);
+
+                    if (doctor == null)
+                        throw new InvalidOperationException("The selected doctor was not found for this clinic.");
+
+                    if (doctor.DepartmentId != departmentId)
+                        throw new InvalidOperationException("The selected doctor does not belong to the selected department.");
+                }
+
+                // 3. Do not create a duplicate template for the same scope.
+                PrescriptionTemplate existingTemplate = doctorId.HasValue
+                                                        ? _templateDAL.GetByDoctor(doctorId.Value, clinicId, conn, tran)
+                                                        : _templateDAL.GetByDepartment(departmentId, clinicId, conn, tran);
+
+                if (existingTemplate != null)
+                    throw new InvalidOperationException("A prescription template already exists for the selected scope.");
+
+                // 4. Verify that Text is a valid field type in the database.
+                var fieldTypes = _templateDAL.ListFieldTypes(conn, tran);
+
+                if (!fieldTypes.Any(ft => string.Equals(ft.FieldTypeCode, "Text", StringComparison.OrdinalIgnoreCase)))
+                {
+                    throw new InvalidOperationException("The Text field type is not configured in FieldTypes.");
+                }
+
+                // 5. Generate the scope-specific TemplateCode.
+                string codePrefix = doctorId.HasValue
+                                        ? doctorId.Value.ToString()
+                                        : department.DepartmentCode;
+
+                codePrefix = (codePrefix ?? string.Empty).Trim();
+
+                if (string.IsNullOrWhiteSpace(codePrefix))
+                    throw new InvalidOperationException("Unable to generate a TemplateCode for the selected scope.");
+
+                // TemplateCode is VARCHAR(20).
+                // Preserve the complete prefix and shorten the timestamp if necessary.
+                const int maxCodeLength = 20;
+
+                if (codePrefix.Length >= maxCodeLength)
+                    throw new InvalidOperationException("The template code prefix is too long.");
+
+                string timestamp = DateTime.Now.ToString("yyMMddHHmmssfff");
+
+                int timestampLength = Math.Min(timestamp.Length, maxCodeLength - codePrefix.Length);
+
+                string templateCode = codePrefix + timestamp.Substring(timestamp.Length - timestampLength);
+
+                // 6. Build the initial template hierarchy.
+                var template = new PrescriptionTemplate(clinicId, departmentId, doctorId, templateCode);
+
+                // 7. Reuse the existing transactional insertion pipeline.
+                // Add() assigns generated IDs and saves sections, fields and options.
+                int templateId = Add(template, conn, tran);
+
+                tran.Commit();
+
+                return templateId;
+            }
+            catch
+            {
+                tran.Rollback();
+                throw;
+            }
+        }
+
         public PrescriptionTemplate GetDefault()
         {
             using var conn = _db.GetConnection();
@@ -222,13 +321,19 @@ namespace BLL
 
             try
             {
-                return _templateDAL.GetByDepartment(departmentId, ClinicId, conn);
+                return GetByDepartment(departmentId, ClinicId, conn);
             }
             catch
             {
                 throw;
             }
 
+        }
+
+        public PrescriptionTemplate GetByDepartment(int departmentId, int clinicId, 
+                                                    SqlConnection conn, SqlTransaction? tran = null)
+        {
+            return _templateDAL.GetByDepartment(departmentId, clinicId, conn, tran);
         }
 
         public PrescriptionTemplate GetByDoctor(int doctorId)
@@ -238,13 +343,19 @@ namespace BLL
 
             try
             {
-                return _templateDAL.GetByDoctor(doctorId, ClinicId, conn);
+                return GetByDoctor(doctorId, ClinicId, conn);
             }
             catch
             {
                 throw;
             }
 
+        }
+
+        public PrescriptionTemplate GetByDoctor(int doctorId, int clinicId, 
+                                                    SqlConnection conn, SqlTransaction? tran = null)
+        {
+            return _templateDAL.GetByDoctor(doctorId, clinicId, conn, tran);
         }
 
         public List<PrescriptionTemplateSection> GetSections(int templateId)
@@ -1036,7 +1147,6 @@ namespace BLL
             return SyncTemplate(clinicId, null, doctorId, conn, tran);
         }
 
-
         private int SyncTemplate(int clinicId, int? departmentId, int? doctorId, SqlConnection conn, SqlTransaction tran)
         {
             if (clinicId <= 0)
@@ -1083,6 +1193,7 @@ namespace BLL
                                                         doctor.DoctorId.ToString());
                     return Add(target, conn, tran);
                 }
+                
             }
             else if (departmentId.HasValue)
             {
@@ -1116,6 +1227,10 @@ namespace BLL
                                                         department.DepartmentCode);
                     return Add(target, conn, tran);
                 }
+
+                // Keep the existing TemplateId and department association,
+                // but synchronize the code with the department's current code.
+                target.TemplateCode = department.DepartmentCode;
             }          
             else
             {
@@ -1135,28 +1250,74 @@ namespace BLL
                 }
             }
 
+
             // Retain the target TemplateId and synchronize its source reference.
             target.ClinicId = clinicId;
             target.SourceTemplateId = source.TemplateId;
-            // target.TemplateCode = source.TemplateCode; -- retain existing TemplateCode of target template
+            // Retain the existing target TemplateCode.
             target.TemplateName = source.TemplateName;
             target.IsActive = source.IsActive;
 
             target.Sections ??= new List<PrescriptionTemplateSection>();
+            source.Sections ??= new List<PrescriptionTemplateSection>();
 
+            var deletions = new SyncDeletionPlan();
+
+            // Reconcile existing target sections against the current source.
+            foreach (var targetSection in target.Sections.ToList())
+            {
+                var sourceSection = source.Sections.FirstOrDefault(
+                    s => s.SectionId == targetSection.SourceSectionId);
+
+                ReconcileSection(targetSection, sourceSection, target, clinicId, deletions);
+            }
+
+            // Add source sections that do not yet exist in the target.
             foreach (var sourceSection in source.Sections)
             {
-                var targetSection = target.Sections.FirstOrDefault(s => s.SourceSectionId == sourceSection.SectionId);
+                bool exists = target.Sections.Any(s => s.SourceSectionId == sourceSection.SectionId);
 
-                if (targetSection == null)
+                if (!exists)
                 {
-                    // This source section is new to the clinic template.
-                    // Its descendants will be inserted by Update().
                     target.Sections.Add(new PrescriptionTemplateSection(sourceSection, clinicId));
-                    continue;
                 }
+            }
 
-                // Update inherited properties only when the section is not customized.
+            // Delete obsolete persisted records, children first.
+            if (deletions.HasItems)
+            {
+                DeleteSyncNodes(target.TemplateId, deletions.OptionIds, deletions.FieldIds, deletions.SectionIds,
+                                                conn, tran);
+            }
+
+            // Persist updated records and insert new descendants.
+            // The existing TemplateId is retained.
+            Update(target, conn, tran);
+
+            return target.TemplateId;
+        }
+
+
+        private sealed class SyncDeletionPlan
+        {
+            public List<int> OptionIds { get; } = new();
+            public List<int> FieldIds { get; } = new();
+            public List<int> SectionIds { get; } = new();
+
+            public bool HasItems =>
+                OptionIds.Count > 0 ||
+                FieldIds.Count > 0 ||
+                SectionIds.Count > 0;
+        }
+
+        private void ReconcileSection(PrescriptionTemplateSection targetSection, PrescriptionTemplateSection sourceSection,
+                                        PrescriptionTemplate target, int clinicId, SyncDeletionPlan deletions)
+        {
+            targetSection.Fields ??= new List<PrescriptionTemplateField>();
+
+            if (sourceSection != null)
+            {
+                // Refresh inherited properties only for a non-customized section.
                 if (!targetSection.IsCustomized)
                 {
                     targetSection.SectionName = sourceSection.SectionName;
@@ -1169,75 +1330,154 @@ namespace BLL
                     targetSection.IsArchived = sourceSection.IsArchived;
                 }
 
-                // Keep the immediate source relationship even if customized.
                 targetSection.SourceSectionId = sourceSection.SectionId;
-                targetSection.TemplateId = target.TemplateId;
-                targetSection.ClinicId = clinicId;
-                targetSection.Fields ??= new List<PrescriptionTemplateField>();
+            }
 
+            targetSection.TemplateId = target.TemplateId;
+            targetSection.ClinicId = clinicId;
+
+            // Reconcile existing fields, including fields whose source has vanished.
+            foreach (var targetField in targetSection.Fields.ToList())
+            {
+                var sourceField = sourceSection?.Fields.FirstOrDefault(
+                    f => f.FieldId == targetField.SourceFieldId);
+
+                ReconcileField(targetField, sourceField, targetSection, target, clinicId, deletions);
+            }
+
+            // Add fields newly introduced by the source section.
+            if (sourceSection != null)
+            {
                 foreach (var sourceField in sourceSection.Fields)
                 {
-                    var targetField = targetSection.Fields.FirstOrDefault(
+                    bool exists = targetSection.Fields.Any(
                         f => f.SourceFieldId == sourceField.FieldId);
 
-                    if (targetField == null)
+                    if (!exists)
                     {
-                        targetSection.Fields.Add(new PrescriptionTemplateField(sourceField, clinicId, targetSection.SectionId));
-                        continue;
-                    }
-
-                    if (!targetField.IsCustomized)
-                    {
-                        targetField.FieldLabel = sourceField.FieldLabel;
-                        targetField.FieldTypeCode = sourceField.FieldTypeCode;
-                        targetField.FieldCode = sourceField.FieldCode;
-                        targetField.FieldSource = sourceField.FieldSource;
-                        targetField.DisplayOrder = sourceField.DisplayOrder;
-                        targetField.IsActive = sourceField.IsActive;
-                        targetField.IsArchived = sourceField.IsArchived;
-                        targetField.MergeWith = sourceField.MergeWith;
-                    }
-
-                    targetField.SourceFieldId = sourceField.FieldId;
-                    targetField.TemplateId = target.TemplateId;
-                    targetField.SectionId = targetSection.SectionId;
-                    targetField.ClinicId = clinicId;
-                    targetField.Options ??= new List<PrescriptionTemplateFieldOption>();
-
-                    foreach (var sourceOption in sourceField.Options)
-                    {
-                        var targetOption = targetField.Options.FirstOrDefault(
-                            o => o.SourceOptionId == sourceOption.OptionId);
-
-                        if (targetOption == null)
-                        {
-                            targetField.Options.Add(new PrescriptionTemplateFieldOption(sourceOption, clinicId,
-                                                                            targetSection.SectionId, targetField.FieldId));
-                            continue;
-                        }
-
-                        if (!targetOption.IsCustomized)
-                        {
-                            targetOption.OptionText = sourceOption.OptionText;
-                            targetOption.DisplayOrder = sourceOption.DisplayOrder;
-                            targetOption.IsActive = sourceOption.IsActive;
-                            targetOption.IsArchived = sourceOption.IsArchived;
-                        }
-
-                        targetOption.SourceOptionId = sourceOption.OptionId;
-                        targetOption.TemplateId = target.TemplateId;
-                        targetOption.SectionId = targetSection.SectionId;
-                        targetOption.FieldId = targetField.FieldId;
-                        targetOption.ClinicId = clinicId;
+                        targetSection.Fields.Add(
+                            new PrescriptionTemplateField(sourceField, clinicId, targetSection.SectionId));
                     }
                 }
             }
 
-            // Reuse the normal BLL persistence workflow. Existing rows are updated;
-            // rows with zero IDs are inserted. Nothing is deleted.
-            Update(target, conn, tran);
+            // An obsolete section can be removed only when it has no
+            // remaining fields and is itself not customized.
+            if (sourceSection == null &&
+                !targetSection.IsCustomized &&
+                targetSection.Fields.Count == 0)
+            {
+                if (targetSection.SectionId > 0)
+                    deletions.SectionIds.Add(targetSection.SectionId);
 
-            return target.TemplateId;
+                target.Sections.Remove(targetSection);
+            }
+        }
+
+        private void ReconcileField(PrescriptionTemplateField targetField, PrescriptionTemplateField sourceField,
+                                    PrescriptionTemplateSection targetSection, PrescriptionTemplate target,
+                                    int clinicId, SyncDeletionPlan deletions)
+        {
+            targetField.Options ??= new List<PrescriptionTemplateFieldOption>();
+
+            if (sourceField != null)
+            {
+                // Refresh inherited properties only for a non-customized field.
+                if (!targetField.IsCustomized)
+                {
+                    targetField.FieldLabel = sourceField.FieldLabel;
+                    targetField.FieldTypeCode = sourceField.FieldTypeCode;
+                    targetField.FieldCode = sourceField.FieldCode;
+                    targetField.FieldSource = sourceField.FieldSource;
+                    targetField.DisplayOrder = sourceField.DisplayOrder;
+                    targetField.IsActive = sourceField.IsActive;
+                    targetField.IsArchived = sourceField.IsArchived;
+                    targetField.MergeWith = sourceField.MergeWith;
+                }
+
+                targetField.SourceFieldId = sourceField.FieldId;
+            }
+
+            targetField.TemplateId = target.TemplateId;
+            targetField.SectionId = targetSection.SectionId;
+            targetField.ClinicId = clinicId;
+
+            // Reconcile existing options.
+            foreach (var targetOption in targetField.Options.ToList())
+            {
+                var sourceOption = sourceField?.Options.FirstOrDefault(
+                    o => o.OptionId == targetOption.SourceOptionId);
+
+                if (sourceOption == null)
+                {
+                    // An option absent from the current source is obsolete.
+                    // Keep it only when customized.
+                    if (!targetOption.IsCustomized)
+                    {
+                        if (targetOption.OptionId > 0)
+                            deletions.OptionIds.Add(targetOption.OptionId);
+
+                        targetField.Options.Remove(targetOption);
+                    }
+
+                    continue;
+                }
+
+                if (!targetOption.IsCustomized)
+                {
+                    targetOption.OptionText = sourceOption.OptionText;
+                    targetOption.DisplayOrder = sourceOption.DisplayOrder;
+                    targetOption.IsActive = sourceOption.IsActive;
+                    targetOption.IsArchived = sourceOption.IsArchived;
+                }
+
+                targetOption.SourceOptionId = sourceOption.OptionId;
+                targetOption.TemplateId = target.TemplateId;
+                targetOption.SectionId = targetSection.SectionId;
+                targetOption.FieldId = targetField.FieldId;
+                targetOption.ClinicId = clinicId;
+            }
+
+            // Add options newly introduced by the source field.
+            if (sourceField != null)
+            {
+                foreach (var sourceOption in sourceField.Options)
+                {
+                    bool exists = targetField.Options.Any(o => o.SourceOptionId == sourceOption.OptionId);
+
+                    if (!exists)
+                    {
+                        targetField.Options.Add(
+                            new PrescriptionTemplateFieldOption(sourceOption, clinicId, targetSection.SectionId,
+                                                                targetField.FieldId));
+                    }
+                }
+            }
+
+            // Delete an obsolete field only after reconciling its options.
+            // Customized options keep their parent field alive.
+            if (sourceField == null && !targetField.IsCustomized && targetField.Options.Count == 0)
+            {
+                if (targetField.FieldId > 0)
+                    deletions.FieldIds.Add(targetField.FieldId);
+
+                targetSection.Fields.Remove(targetField);
+            }
+        }
+
+
+        public void DeleteSyncNodes(int templateId, IEnumerable<int> optionIds, IEnumerable<int> fieldIds,
+                                    IEnumerable<int> sectionIds, SqlConnection conn, SqlTransaction tran)
+        {
+            if (templateId <= 0)
+                throw new ArgumentException("A valid TemplateId is required.", nameof(templateId));
+
+            // Child records first.
+            _templateDAL.DeleteSyncRows("PrescriptionTemplateFieldOptions", "OptionId", templateId, optionIds, conn, tran);
+
+            _templateDAL.DeleteSyncRows("PrescriptionTemplateFields", "FieldId", templateId, fieldIds, conn, tran);
+
+            _templateDAL.DeleteSyncRows("PrescriptionTemplateSections", "SectionId", templateId, sectionIds, conn, tran);
         }
 
     }

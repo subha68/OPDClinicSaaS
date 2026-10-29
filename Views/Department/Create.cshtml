@@ -1,5 +1,7 @@
 @model Models.Department
 
+@using Models
+
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
 
@@ -9,20 +11,28 @@
 
     ViewData["Title"] = isEdit ? "Edit Department" : "Create Department";
 
-    ViewBag.Fields = new[]
+    ViewBag.Fields = new List<CrudField>
     {
-        new { Name="DepartmentCode", Label="Department Code", Type="text", Col="3"},
-        new { Name="Name", Label="Name", Type="text", Col="4"},
-        new { Name="Description", Label="Description", Type="text", Col="5"},
-        new { Name="ClinicName", Label="Clinic", Type="readonly", Col="6"},
-        new { Name="PrescriptionTemplateName", Label="Prescription Template", Type="readonly", Col="6"},
-    };
-
-    ViewBag.Dropdowns = new Dictionary<string, object>()
-    {
+        new CrudField
+        { Name = "DepartmentCode", Label = "Department Code", Type = "related-dropdown-input", Col = "3",
+            RelatedInputLabel = "Enter a new department code",
+            RelatedInputPlaceholder = "Enter unique code",
+            RelatedInputTriggerValue = "__OTHER__",
+            RelatedInputTriggerLabel = "Other",
+            RelatedInputRequired = true
+        },
+        new CrudField { Name="Name", Label="Name", Type="text", Col="4"},
+        new CrudField { Name="Description", Label="Description", Type="text", Col="5"},
+        new CrudField { Name="ClinicName", Label="Clinic", Type="readonly", Col="6"},
+        new CrudField { Name="PrescriptionTemplateName", Label="Prescription Template", Type="readonly", Col="6"},
     };
 
     ViewBag.KeyField = "DepartmentId";
 }
 
 @await Html.PartialAsync("_CrudForm", Model)
+
+@section Scripts {
+    <script src="~/js/shared/crud-form.js" asp-append-version="true"></script>
+    <script src="~/js/department/department.js" asp-append-version="true"></script>
+}

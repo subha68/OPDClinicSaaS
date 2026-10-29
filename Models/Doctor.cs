@@ -29,11 +29,12 @@ namespace Models
         public string? Phone { get; set; }
 
         public string Username { get; set; }
-        public string Password { get; set; }
+        public string? Password { get; set; }
         public decimal Fee { get; set; }
         public int? PrescriptionTemplateId { get; set; }
         public string? PrescriptionTemplateName { get; set; }
         public int? SourceTemplateId { get; set; }
+        public bool CloneTemplate { get; set; } = true;
 
     }
 }

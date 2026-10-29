@@ -1,75 +1,78 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using DAL;
 using BLL;
 using Models;
-using ViewModels;
 using Filters;
-using Helpers;
 
 namespace Controllers
 {
     [AuthorizeRole(2)] // ClinicAdmin
-
     public class DepartmentController : Controller
     {
         private readonly DepartmentService _department;
         private readonly ClinicService _clinic;
-        private readonly PrescriptionTemplateService _template;
 
-        public DepartmentController(DepartmentService department, 
-                                    ClinicService clinic,
-                                    PrescriptionTemplateService template)
+        public DepartmentController(DepartmentService department, ClinicService clinic)
         {
             _department = department;
             _clinic = clinic;
-            _template = template;
         }
 
-        public ActionResult Index()
+        public IActionResult Index()
         {
-            var list = _department.List();
-            return View(list);
+            return View(_department.List());
         }
 
-        public ActionResult Create()
+        [HttpGet]
+        public IActionResult Create()
         {
-            var model = new Department();
-            model.ClinicId = _clinic.ClinicId;
-            model.ClinicName = _clinic.Get(model.ClinicId).Name;
+            var clinicId = _clinic.ClinicId;
+            var clinic = _clinic.Get(clinicId);
+
+            var model = new Department
+            {
+                ClinicId = clinicId,
+                ClinicName = clinic?.Name
+            };
+
+            PopulateDropdowns(model);
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(Department model)
+        public IActionResult Create(Department model)
         {
-            foreach (var key in ModelState.Keys)
+            if (!ModelState.IsValid)
             {
-                var errors = ModelState[key].Errors;
-                foreach (var err in errors)
-                {
-                    Console.WriteLine($"Field: {key} → Error: {err.ErrorMessage}");
-                }
+                RestoreFormData(model);
+                return View(model);
             }
-            
-            if (ModelState.IsValid)
+
+            try
             {
                 _department.Create(model);
-                return RedirectToAction("Index");
+                TempData["Success"] = "Department created successfully.";
+                return RedirectToAction(nameof(Index));
             }
-
-            return View(model);
+            catch (InvalidOperationException ex)
+            {
+                ModelState.AddModelError(nameof(Department.DepartmentCode), ex.Message);
+                RestoreFormData(model);
+                return View(model);
+            }
         }
 
-        public ActionResult Edit(int id)
+        [HttpGet]
+        public IActionResult Edit(int id)
         {
-            var dept = _department.Get(id);
-            if (dept == null)
+            var department = _department.Get(id);
+
+            if (department == null)
                 return NotFound();
 
-            return View("Create", dept);
+            RestoreFormData(department);
+            return View("Create", department);
         }
 
         [HttpPost]
@@ -78,22 +81,22 @@ namespace Controllers
         {
             if (!ModelState.IsValid)
             {
-                foreach (var key in ModelState.Keys)
-                {
-                    var errors = ModelState[key].Errors;
-                    foreach (var err in errors)
-                    {
-                        Console.WriteLine($"Field: {key} → Error: {err.ErrorMessage}");
-                    }
-                }
-
+                RestoreFormData(model);
                 return View("Create", model);
             }
 
-            _department.Modify(model);
-
-            TempData["Success"] = "Department updated successfully.";
-            return RedirectToAction("Index");
+            try
+            {
+                _department.Modify(model);
+                TempData["Success"] = "Department updated successfully.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (InvalidOperationException ex)
+            {
+                ModelState.AddModelError(nameof(Department.DepartmentCode), ex.Message);
+                RestoreFormData(model);
+                return View("Create", model);
+            }
         }
 
         [HttpPost]
@@ -101,10 +104,45 @@ namespace Controllers
         public IActionResult Delete(int id)
         {
             _department.Remove(id);
-
             TempData["Success"] = "Department deleted successfully.";
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
 
+        private void RestoreFormData(Department model)
+        {
+            // Do not trust a posted ClinicId for tenant scope.
+            model.ClinicId = _clinic.ClinicId;
+
+            var clinic = _clinic.Get(model.ClinicId);
+            model.ClinicName = clinic?.Name;
+
+            PopulateDropdowns(model);
+        }
+
+        private void PopulateDropdowns(Department model)
+        {
+            var codes = _department.ListDepartmentCodes();
+
+            // Build explicit text/value pairs. The SelectList(IEnumerable, string)
+            // overload treats its second argument as a data-value-field name,
+            // not as the selected value. Since codes is a List<string>, use
+            // SelectListItem objects so each option has a real value.
+            var departmentCodeItems = codes
+                .Select(code => new SelectListItem
+                {
+                    Text = code,
+                    Value = code,
+                    Selected = string.Equals(
+                        code,
+                        model.DepartmentCode,
+                        StringComparison.OrdinalIgnoreCase)
+                })
+                .ToList();
+
+            ViewBag.Dropdowns = new Dictionary<string, object>
+            {
+                ["DepartmentCode"] = departmentCodeItems
+            };
+        }
     }
 }

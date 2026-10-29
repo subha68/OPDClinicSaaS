@@ -203,8 +203,6 @@ namespace DAL
 
             cmd.Parameters.AddWithValue("@Username", username);
 
-            conn.Open();
-
             int count = Convert.ToInt32(cmd.ExecuteScalar());
 
             return count;

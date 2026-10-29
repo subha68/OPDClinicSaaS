@@ -109,7 +109,7 @@ namespace DAL
             var cmd = new SqlCommand(@"SELECT ChargeId, ClinicId, ChargeCode, ChargeName, Description, 
                                         ServiceType, Rate, IsActive 
                                         FROM BillingCharges
-                                        AND ChargeCode <> 'CONSULT'", conn);
+                                        WHERE ChargeCode <> 'CONSULT'", conn);
             if (tran != null)
             {
                 cmd.Transaction = tran;

@@ -67,6 +67,42 @@ namespace Controllers
             model.FieldTypes = PopulateFieldTypes();
 
             return PartialView("_TemplateDesigner", model);
+        }
+
+        [HttpPost]
+        public IActionResult CreateNewTemplate(int departmentId, int? doctorId)
+        {
+            if (departmentId <= 0)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Please select a department."
+                });
+            }
+
+            // Create the template, its initial section and Text field.
+            int templateId = _template.CreateNewTemplate(departmentId, doctorId);
+
+            // Load the newly created template into the existing designer.
+            var model = doctorId.HasValue
+                ? _template.GetByDoctor(doctorId.Value)
+                : _template.GetByDepartment(departmentId);
+
+            if (model == null || model.TemplateId != templateId)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "The template was created, but could not be loaded into the designer."
+                });
+            }
+
+            // Populate the field-type dropdown used by the designer.
+            model.FieldTypes = PopulateFieldTypes();
+
+            return PartialView("_TemplateDesigner", model);
+            
         }        
 
         public IActionResult SectionIndex(int templateId)

@@ -12,8 +12,8 @@ namespace Models
         public bool IsCustomized { get; set; }
         public string FieldLabel { get; set; } = string.Empty;
         public string FieldTypeCode { get; set; } = string.Empty;
-        public string FieldCode { get; set; } = string.Empty;
-        public string? FieldSource { get; set; } = string.Empty;
+        public string? FieldCode { get; set; } = null;
+        public string? FieldSource { get; set; } = null;
         public bool IsActive { get; set; }
         public bool IsArchived { get; set; }
         public int DisplayOrder { get; set; }
@@ -37,8 +37,19 @@ namespace Models
             // default constructor
         }
 
+        public PrescriptionTemplateField(int clinicId)
+        {
+            ClinicId = clinicId;
+            FieldLabel = "New Field";
+            FieldTypeCode = "Text";
+            DisplayOrder = 1;
+            IsActive = true;
+            IsArchived = false;
+            Options = new List<PrescriptionTemplateFieldOption>();
+        }
+
         public PrescriptionTemplateField(int templateId, int sectionId, int clinicId, string fieldName,
-                                            string fieldTypeCode, int displayOrder, string fieldCode=null, string fieldSource=null)
+                                            string fieldTypeCode, int displayOrder, string? fieldCode=null, string? fieldSource=null)
         {
             TemplateId = templateId;
             SectionId = sectionId;

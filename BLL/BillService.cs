@@ -56,6 +56,47 @@ namespace BLL
 
                     bill.VisitId = bill.Appointment.VisitId;
                 }
+
+                // The bill form normally adds the consultation line in JavaScript.
+                // Enforce it here as well so a missing/stale AJAX response cannot
+                // produce an appointment bill without its consultation charge.
+                bill.BillLines ??= new List<BillLine>();
+
+                if (bill.BillType == "Service" && bill.Appointment != null)
+                {
+                    var consultationCharge =
+                        _billingChargeDAL.GetByCode("CONSULT", ClinicId, conn, tran);
+
+                    if (consultationCharge == null)
+                    {
+                        throw new InvalidOperationException(
+                            "The CONSULT billing charge is not configured for this clinic.");
+                    }
+
+                    if (!bill.Appointment.Fee.HasValue)
+                    {
+                        throw new InvalidOperationException(
+                            "Consultation fee is not configured for the selected doctor.");
+                    }
+
+                    bool consultationLineExists = bill.BillLines.Any(
+                        line => line.ReferenceId == consultationCharge.ChargeId);
+
+                    if (!consultationLineExists)
+                    {
+                        bill.BillLines.Add(new BillLine
+                        {
+                            PatientId = bill.PatientId,
+                            ReferenceId = consultationCharge.ChargeId,
+                            ReferenceCode = consultationCharge.ChargeCode,
+                            Description = consultationCharge.Description,
+                            Rate = bill.Appointment.Fee.Value,
+                            Quantity = 1,
+                            AvailableQuantity = 1,
+                            DiscountPercent = 0
+                        });
+                    }
+                }
                 else
                 {
                     // Add Bill from Menu - find out any existing visit for today
@@ -312,6 +353,23 @@ namespace BLL
 
             vm.Bill = bill;
             vm.PreviousBillCount = billCount;
+
+            // Populate the same consultation metadata used by the AJAX context.
+            // This keeps appointment-launched billing initialized consistently.
+            var consultationCharge =
+                _billingChargeDAL.GetByCode("CONSULT", ClinicId, conn);
+
+            vm.ConsultationChargeId = consultationCharge?.ChargeId;
+            vm.Appointments = new List<BillingAppointmentVM>
+            {
+                new BillingAppointmentVM
+                {
+                    AppointmentId = appointment.AppointmentId,
+                    DoctorId = appointment.DoctorId,
+                    DoctorName = appointment.DoctorName,
+                    Fee = appointment.Fee
+                }
+            };
 
             return vm;
         }

@@ -55,6 +55,73 @@ function updateShowButtonState() {
     $("#btnShowTemplate").prop("disabled", false);
 }
 
+
+$(document).on("click", "#btnCreateTemplate", function (e) {
+
+    e.preventDefault();
+
+    const departmentId = $("#DepartmentId").val();
+    const doctorId = $("#DoctorId").val() || null;
+
+    if (!departmentId) {
+        alert("Please select a department.");
+        return;
+    }
+
+    const btn = $(this);
+
+    if (btn.prop("disabled"))
+        return;
+
+    if (!confirm("Create a new prescription template for the selected " +
+        (doctorId ? "doctor" : "department") + "?")) {
+        return;
+    }
+
+    btn.prop("disabled", true)
+       .html('<span class="spinner-border spinner-border-sm me-1"></span> Creating...');
+
+    $.ajax({
+        url: "/PrescriptionTemplate/CreateNewTemplate",
+        type: "POST",
+        data: {
+            departmentId: departmentId,
+            doctorId: doctorId
+        },
+
+        success: function (html) {
+
+            // Replace the "No template found" message with the designer.
+            $("#designerContainer").html(html);
+
+            // Initialize the newly loaded designer.
+            // Core handlers are page-level and initialize only once; runtime
+            // handlers (insert buttons, sortables and accordions) must be
+            // initialized for each newly rendered designer.
+            initializeDesignerCore();
+            initializeDesignerRuntime();
+            applyInactiveFilter();
+        },
+
+        error: function (xhr) {
+
+            const message =
+                xhr.responseJSON?.message ||
+                "Unable to create the prescription template.";
+
+            alert(message);
+        },
+
+        complete: function () {
+
+            // The button may have been removed when the designer loaded.
+            // Re-enable it only if it is still present.
+            $("#btnCreateTemplate").prop("disabled", false)
+                .html('<i class="fas fa-plus me-1"></i> Create Template');
+        }
+    });
+});
+
 // run on change
 $("#DepartmentId, #DoctorId").on("change", updateShowButtonState);
 
@@ -172,6 +239,12 @@ function initializeInlineSelects()
                     fieldTypeCode: fieldType,
                     force: force
                 });
+        },
+        afterSave: function (response) {
+            // The server creates the initial option when a field changes from
+            // a non-option type to Dropdown/CheckboxGroup/RadioGroup. Reload
+            // the designer so SupportOptions and the option list are rendered.
+            reloadTemplate();
         }
     });
 

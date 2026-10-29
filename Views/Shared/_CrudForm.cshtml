@@ -1,10 +1,26 @@
 @model dynamic
+@using System.Text.Encodings.Web
+@using System.Collections.Generic
+@using System.Linq
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@functions {
+    // ViewBag.Fields contains anonymous objects whose optional metadata properties
+    // differ by field type and by the view using this shared partial.
+    public static object? GetOptionalProperty(object? source, string propertyName)
+    {
+        if (source == null || string.IsNullOrWhiteSpace(propertyName))
+            return null;
+
+        return source.GetType().GetProperty(propertyName)?.GetValue(source);
+    }
+}
 
 <div class="page-shell">
     <div class="glass-card">
 
         <form method="post">
-            
+
             @Html.AntiForgeryToken()
 
             @{
@@ -13,58 +29,53 @@
             }
 
             <input type="hidden"
-                name="@ViewBag.KeyField"
-                value="@keyValue" />
+                   name="@ViewBag.KeyField"
+                   value="@keyValue" />
 
             <div class="row">
                 @foreach (var field in ViewBag.Fields)
                 {
-                    @if(field.Type == "text")
-                    {
-                        <div class="col-md-@field.Col mb-4">
-                            <label>@field.Label</label>
-
-                            <input name="@field.Name"
-                                value="@Model?.GetType().GetProperty(field.Name)?.GetValue(Model)"
-                                class="form-control"/>
-                        </div>
-                    }
-
-                    @if(field.Type == "readonly")
+                    @if (field.Type == "text")
                     {
                         <div class="col-md-@field.Col mb-4">
                             <label>@field.Label</label>
                             <input name="@field.Name"
-                                value="@Model?.GetType().GetProperty(field.Name)?.GetValue(Model)"
-                                class="form-control"
-                                readonly />
+                                   value="@Model?.GetType().GetProperty((string)field.Name)?.GetValue(Model)"
+                                   class="form-control" />
                         </div>
                     }
 
-                    @if(field.Type == "hidden")
+                    @if (field.Type == "readonly")
+                    {
+                        <div class="col-md-@field.Col mb-4">
+                            <label>@field.Label</label>
+                            <input name="@field.Name"
+                                   value="@Model?.GetType().GetProperty((string)field.Name)?.GetValue(Model)"
+                                   class="form-control"
+                                   readonly />
+                        </div>
+                    }
+
+                    @if (field.Type == "hidden")
                     {
                         <input name="@field.Name"
-                            id="@field.Name"
-                            value="@Model?.GetType().GetProperty(field.Name)?.GetValue(Model)"
-                            type="hidden" />
+                               id="@field.Name"
+                               value="@Model?.GetType().GetProperty((string)field.Name)?.GetValue(Model)"
+                               type="hidden" />
                     }
 
                     @if (field.Type == "password")
                     {
                         <div class="col-md-@field.Col mb-4">
-
-                            <label class="form-label">
-                                @field.Label
-                            </label>
+                            <label class="form-label">@field.Label</label>
 
                             <div class="input-group">
-
                                 <input type="password"
-                                    name="@field.Name"
-                                    id="@field.Name"
-                                    class="form-control"
-                                    placeholder="Enter password"
-                                    autocomplete="new-password" />
+                                       name="@field.Name"
+                                       id="@field.Name"
+                                       class="form-control"
+                                       placeholder="Enter password"
+                                       autocomplete="new-password" />
 
                                 <button type="button"
                                         class="btn btn-outline-secondary password-toggle"
@@ -72,54 +83,169 @@
                                         tabindex="-1"
                                         title="Show password"
                                         aria-label="Show password">
-
                                     <i class="fa-solid fa-eye"></i>
-
                                 </button>
-
                             </div>
-
                         </div>
                     }
 
-                    @if(field.Type == "dropdown")
+                    @if (field.Type == "dropdown")
                     {
                         <div class="col-md-@field.Col mb-4">
                             <label>@field.Label</label>
                             @Html.DropDownList(
-                                field.Name,
-                                ViewBag.Dropdowns[field.Name],
+                                (string)field.Name,
+                                (IEnumerable<SelectListItem>)ViewBag.Dropdowns[field.Name],
                                 "-- Select --",
-                                new { @class="form-select" })
+                                new { @class = "form-select" })
                         </div>
                     }
 
-                    @if(field.Type == "number")
+                    @*
+                        Generic relationship renderer:
+                        - The select and manual input do not post model values.
+                        - The hidden input is the only successful control named after
+                          the model property.
+                        - Metadata is supplied by the individual view in ViewBag.Fields.
+                    *@
+                    @if (field.Type == "related-dropdown-input")
+                    {
+                        var property = Model?.GetType().GetProperty((string)field.Name);
+                        var currentValue = Convert.ToString(property?.GetValue(Model)) ?? "";
+
+                        var options =
+                            ViewBag.Dropdowns[field.Name] as IEnumerable<SelectListItem>
+                            ?? Enumerable.Empty<SelectListItem>();
+
+                        var triggerValue = (string)field.RelatedInputTriggerValue;
+                        var hasMatchingOption = options.Any(o =>
+                            string.Equals(o.Value, currentValue, StringComparison.Ordinal));
+
+                        var useManualInput =
+                            !string.IsNullOrWhiteSpace(currentValue) && !hasMatchingOption;
+
+                        var selectedValue = useManualInput ? triggerValue : currentValue;
+                        var selectorId = (string)field.Name + "__Selector";
+                        var relatedInputId = (string)field.Name + "__RelatedInput";
+                        var relatedInputRequired = field.RelatedInputRequired == true;
+
+                        <div class="col-md-@field.Col mb-4"
+                             data-related-control
+                             data-related-target="@field.Name"
+                             data-related-selector="@selectorId"
+                             data-related-input="@relatedInputId"
+                             data-related-trigger="@triggerValue"
+                             data-related-required="@relatedInputRequired.ToString().ToLowerInvariant()">
+
+                            <label for="@selectorId">@field.Label</label>
+
+                            <select id="@selectorId"
+                                    class="form-select"
+                                    data-related-selector-control>
+                                <option value="">-- Select --</option>
+
+                                @foreach (var option in options)
+                                {
+                                    <option value="@option.Value"
+                                            selected="@(string.Equals(option.Value, selectedValue, StringComparison.Ordinal) ? "selected" : null)"
+                                            disabled="@option.Disabled">
+                                        @option.Text
+                                    </option>
+                                }
+
+                                <option value="@triggerValue"
+                                        selected="@(selectedValue == triggerValue ? "selected" : null)">
+                                    @field.RelatedInputTriggerLabel
+                                </option>
+                            </select>
+
+                            <input type="hidden"
+                                   name="@field.Name"
+                                   id="@field.Name"
+                                   value="@currentValue"
+                                   data-related-value />
+
+                            <div class="mt-2"
+                                 data-related-input-container
+                                 hidden="@(!useManualInput)">
+                                <label class="form-label" for="@relatedInputId">
+                                    @field.RelatedInputLabel
+                                </label>
+                                <input type="text"
+                                       id="@relatedInputId"
+                                       class="form-control"
+                                       value="@(useManualInput ? currentValue : "")"
+                                       placeholder="@field.RelatedInputPlaceholder"
+                                       data-related-manual-input
+                                       required="@(useManualInput && relatedInputRequired)" />
+                            </div>
+                        </div>
+                    }
+
+                    @if (field.Type == "number")
                     {
                         <div class="col-md-@field.Col mb-4">
                             <label class="form-label">@field.Label</label>
                             <input type="number"
-                                name="@field.Name"
-                                value="@Model?.GetType().GetProperty(field.Name)?.GetValue(Model)"
-                                class="form-control"
-                                step="0.01" />
+                                   name="@field.Name"
+                                   value="@Model?.GetType().GetProperty((string)field.Name)?.GetValue(Model)"
+                                   class="form-control"
+                                   step="0.01" />
                         </div>
-
                     }
 
-                    @if(field.Type == "checkbox")
+                    @if (field.Type == "checkbox")
                     {
-                        <div class="col-md-@field.Col mb-4">
-                            <label>@field.Label</label>
-                            @{var isChecked = Convert.ToBoolean(
-                                                            Model?.GetType().GetProperty(field.Name)?.GetValue(Model) ?? false
-                                                        );}
+                        var property = Model?.GetType().GetProperty((string)field.Name);
+                        var rawValue = property?.GetValue(Model);
+                        var isChecked = rawValue != null && Convert.ToBoolean(rawValue);
+                        var checkboxId = Convert.ToString(GetOptionalProperty(field, "Id")) ?? (string)field.Name;
 
-                            <input type="checkbox"
-                                name="@field.Name"
-                                value="true"
-                                class="form-check-input"
-                                checked="@isChecked" />
+                        var htmlAttributes = new Dictionary<string, object>
+                        {
+                            ["id"] = checkboxId,
+                            ["class"] = $"form-check-input {Convert.ToString(GetOptionalProperty(field, "CssClass"))}".Trim()
+                        };
+
+                        if (Convert.ToBoolean(GetOptionalProperty(field, "Disabled") ?? false))
+                        {
+                            htmlAttributes["disabled"] = "disabled";
+                        }
+
+                        var dataAttributes =
+                            GetOptionalProperty(field, "DataAttributes")
+                                as Dictionary<string, string>
+                            ?? new Dictionary<string, string>();
+
+                        foreach (var attr in dataAttributes)
+                        {
+                            if (attr.Key.StartsWith(
+                                "data-", StringComparison.OrdinalIgnoreCase))
+                            {
+                                htmlAttributes[attr.Key] = attr.Value;
+                            }
+                        }
+
+                        <div class="col-md-@field.Col mb-4">
+                            <div class="form-check">
+                                @Html.CheckBox(
+                                    (string)field.Name,
+                                    isChecked,
+                                    htmlAttributes)
+
+                                <label class="form-check-label" for="@checkboxId">
+                                    @field.Label
+                                </label>
+
+                                @{
+                                    var helpText = Convert.ToString(GetOptionalProperty(field, "HelpText"));
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(helpText))
+                                {
+                                    <div class="form-text">@helpText</div>
+                                }
+                            </div>
                         </div>
                     }
 
@@ -128,9 +254,9 @@
                         <div class="col-md-@field.Col mb-4">
                             <label>@field.Label</label>
                             <input type="date"
-                                name="@field.Name"
-                                value="@((Model?.GetType().GetProperty(field.Name)?.GetValue(Model) is DateTime dt) ? dt.ToString("yyyy-MM-dd") : "")"
-                                class="form-control" />
+                                   name="@field.Name"
+                                   value="@((Model?.GetType().GetProperty((string)field.Name)?.GetValue(Model) is DateTime dt) ? dt.ToString("yyyy-MM-dd") : "")"
+                                   class="form-control" />
                         </div>
                     }
 
@@ -142,14 +268,14 @@
                             <label>@field.Label</label>
 
                             <input type="text"
-                                id="@textId"
-                                class="form-control autocomplete-field"
-                                autocomplete="off" />
+                                   id="@textId"
+                                   class="form-control autocomplete-field"
+                                   autocomplete="off" />
 
                             <input type="hidden"
-                                name="@field.Name"
-                                id="@field.Name"
-                                value="@Model?.GetType().GetProperty(field.Name)?.GetValue(Model)" />
+                                   name="@field.Name"
+                                   id="@field.Name"
+                                   value="@Model?.GetType().GetProperty((string)field.Name)?.GetValue(Model)" />
                         </div>
                     }
 
@@ -162,11 +288,11 @@
 
                             <div class="input-group">
                                 <input type="text"
-                                    id="@field.Name"
-                                    name="@field.Name"
-                                    value="@Model?.GetType().GetProperty(field.Name)?.GetValue(Model)"
-                                    class="form-control"
-                                    readonly />
+                                       id="@field.Name"
+                                       name="@field.Name"
+                                       value="@Model?.GetType().GetProperty((string)field.Name)?.GetValue(Model)"
+                                       class="form-control"
+                                       readonly />
 
                                 <button type="button"
                                         class="btn btn-outline-secondary"
@@ -177,24 +303,23 @@
                             </div>
 
                             <input type="file"
-                                id="@pickerId"
-                                class="d-none"
-                                accept="image/*"
-                                onchange="setSelectedFileName(this, '@field.Name')" />
+                                   id="@pickerId"
+                                   class="d-none"
+                                   accept="image/*"
+                                   onchange="setSelectedFileName(this, '@field.Name')" />
                         </div>
                     }
                 }
             </div>
-            <button class="btn btn-future">
-                Save
-            </button>
+
+            <button type="submit" class="btn btn-future">Save</button>
 
             @if (ViewBag.CustomActions != null)
             {
                 foreach (var action in ViewBag.CustomActions)
                 {
                     @if (action.SubmitForm)
-                    {                       
+                    {
                         <button type="submit"
                                 formaction="@action.Url"
                                 formmethod="post"
@@ -206,21 +331,15 @@
                     else
                     {
                         <a href="@action.Url"
-                        class="@action.CssClass crud-action"
-                        data-spinner-text="@action.SpinnerText">
+                           class="@action.CssClass crud-action"
+                           data-spinner-text="@action.SpinnerText">
                             @action.Label
                         </a>
                     }
                 }
             }
-            
-            <a asp-action="Index"
-               class="btn btn-outline-secondary ms-2">
-               Cancel
-            </a>
 
+            <a asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
         </form>
-
     </div>
 </div>
-

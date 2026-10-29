@@ -7,7 +7,7 @@ GO
 -- Field Types
 CREATE TABLE FieldTypes
 (
-    FieldTypeCode VARCHAR(30) PRIMARY KEY
+    FieldTypeCode NVARCHAR(30) PRIMARY KEY
 );
 
 -- Clinics
